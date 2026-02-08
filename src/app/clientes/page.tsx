@@ -64,8 +64,8 @@ export default function ClientesPage() {
     const totalPages = Math.ceil(totalItems / pageSize);
 
     return (
-        <div className="p-8 space-y-8 animate-in fade-in duration-500">
-            <div className="flex justify-between items-end">
+        <div className="h-[calc(100vh-2rem)] flex flex-col p-8 space-y-4 animate-in fade-in duration-500">
+            <div className="flex justify-between items-end flex-none">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
                     <p className="text-muted-foreground">Gestión de personas y participantes vinculados al sistema.</p>
@@ -73,8 +73,8 @@ export default function ClientesPage() {
                 <NuevoClienteDialog />
             </div>
 
-            <Card className="border-slate-200 shadow-sm">
-                <CardHeader className="p-4 border-b">
+            <Card className="flex-1 flex flex-col border-slate-200 shadow-sm overflow-hidden">
+                <CardHeader className="p-4 border-b flex-none">
                     <div className="flex items-center gap-4">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -87,20 +87,24 @@ export default function ClientesPage() {
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="p-0">
-                    {loading ? (
-                        <div className="p-8">
-                            <div className="animate-pulse space-y-4">
-                                <div className="h-8 bg-gray-200 rounded w-full"></div>
-                                <div className="h-8 bg-gray-200 rounded w-full"></div>
-                                <div className="h-8 bg-gray-200 rounded w-full"></div>
+
+                <div className="flex-1 overflow-y-auto p-0">
+                    <CardContent className="p-0">
+                        {loading ? (
+                            <div className="p-8">
+                                <div className="animate-pulse space-y-4">
+                                    <div className="h-8 bg-gray-200 rounded w-full"></div>
+                                    <div className="h-8 bg-gray-200 rounded w-full"></div>
+                                    <div className="h-8 bg-gray-200 rounded w-full"></div>
+                                </div>
                             </div>
-                        </div>
-                    ) : (
-                        <ClientesTable data={personas} onClienteDeleted={fetchPersonas} />
-                    )}
-                </CardContent>
-                <div className="border-t p-4">
+                        ) : (
+                            <ClientesTable data={personas} onClienteDeleted={fetchPersonas} />
+                        )}
+                    </CardContent>
+                </div>
+
+                <div className="border-t p-4 flex-none bg-white">
                     <PaginationControls
                         currentPage={currentPage}
                         totalPages={totalPages}
