@@ -21,7 +21,7 @@ export default async function CarpetasPage() {
             *,
             escrituras (
                 id,
-                nro_escritura,
+                nro_protocolo,
                 fecha_escritura,
                 operaciones (
                     id,
