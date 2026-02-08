@@ -4,7 +4,7 @@
  * Consulta la taxonomía de actos CESBA 2026 para obtener códigos y tasas.
  */
 
-import actsData from '../../.agent/skills/notary-act-coder/data/acts_taxonomy_2026.json';
+import actsData from '@/data/acts_taxonomy_2026.json';
 
 // Types
 export interface ActIntent {
