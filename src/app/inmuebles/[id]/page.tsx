@@ -150,11 +150,11 @@ export default async function InmuebleDetailPage({ params }: { params: Promise<{
                     {/* METADATA EXTRA */}
                     <Card className="border-slate-200 bg-slate-50 shadow-inner">
                         <CardContent className="py-4 space-y-2 text-xs text-slate-500">
-                            <div className="flex justify-between">
+                            <div className="flex justify-between gap-2">
                                 <span>Nomenclatura:</span>
-                                <span className="font-mono text-slate-700">{inmueble.nomenclatura || "-"}</span>
+                                <span className="font-mono text-slate-700 text-right">{inmueble.nomenclatura || "-"}</span>
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between gap-2">
                                 <span>Plano PH:</span>
                                 <span className="font-mono text-slate-700">{inmueble.plano_ph || "-"}</span>
                             </div>
