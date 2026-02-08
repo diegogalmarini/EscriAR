@@ -7,7 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Folder, User, Copy, AlertCircle, FileText } from "lucide-react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { CopyButton } from "@/components/ui/CopyButton"; // Use/Create generic copy button
+import { InmuebleToolbar } from "@/components/inmuebles/InmuebleToolbar";
+
 
 export default async function InmuebleDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -52,7 +53,7 @@ export default async function InmuebleDetailPage({ params }: { params: Promise<{
                                         Transcripción Literal
                                     </CardTitle>
                                 </div>
-                                <CopyButton text={inmueble.transcripcion_literal} />
+                                <InmuebleToolbar inmueble={inmueble} />
                             </div>
                         </CardHeader>
 
