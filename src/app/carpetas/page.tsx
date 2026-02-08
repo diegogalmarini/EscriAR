@@ -40,6 +40,17 @@ export default async function CarpetasPage() {
 
     if (error) {
         console.error("Error fetching carpetas:", error);
+        return (
+            <div className="p-8">
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <strong className="font-bold">Error cargando carpetas:</strong>
+                    <span className="block sm:inline"> {error.message}</span>
+                    <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-x-auto">
+                        {JSON.stringify(error, null, 2)}
+                    </pre>
+                </div>
+            </div>
+        );
     }
 
     return (
