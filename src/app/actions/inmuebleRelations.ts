@@ -96,9 +96,14 @@ export async function getInmuebleWithRelations(id: string) {
                     "FIDUCIARIO", "FIDUCIANTE"
                 ]);
 
+            console.log("Searching participants for Op:", latestOp.id, "Type:", latestOp.tipo_acto);
+
             if (participantes && participantes.length > 0) {
+                console.log("Primary participants found:", participantes.length);
                 // Return them as an array or single
-                titularActual = participantes.map(p => p.persona);
+                titularActual = participantes
+                    .map(p => p.persona)
+                    .filter(p => p !== null);
             } else {
                 // Fallback: Get ALL participants except Escribano if no specific role matches
                 const { data: allParticipantes } = await supabase
@@ -112,10 +117,15 @@ export async function getInmuebleWithRelations(id: string) {
                     .neq("rol", "ESCRIBANO"); // Exclude the notary
 
                 if (allParticipantes && allParticipantes.length > 0) {
-                    titularActual = allParticipantes.map(p => p.persona);
+                    console.log("Fallback participants found:", allParticipantes.length);
+                    titularActual = allParticipantes
+                        .map(p => p.persona)
+                        .filter(p => p !== null);
                 }
             }
         }
+
+        console.log("Final Titular Actual:", titularActual);
 
         return {
             success: true,
