@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabaseServer";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function CarpetasPage() {
+    const supabase = await createClient();
+
     const { data: carpetas, error } = await supabase
         .from("carpetas")
         .select(`
