@@ -5,12 +5,7 @@ import { Copy, Check, FileText, File, FileType, Download } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { downloadAsTxt, downloadAsPdf, downloadAsDocx } from "@/lib/downloadUtils";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 
 interface InmuebleToolbarProps {
     inmueble: any;
