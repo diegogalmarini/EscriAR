@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
     Table,
@@ -12,8 +11,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FileText, ArrowUpDown, FolderKanban } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowUpDown, FolderKanban } from "lucide-react";
 
 interface CarpetasTableProps {
     data: any[];
@@ -35,10 +33,8 @@ export function CarpetasTable({ data }: CarpetasTableProps) {
 
     // 1. Get Acto (Operation Type)
     const getActo = (carpeta: any) => {
-        // Try to find the first operation type
         const op = carpeta.escrituras?.[0]?.operaciones?.[0];
         if (op?.tipo_acto) return op.tipo_acto;
-        // Fallback: Check if there's a caratula hint or return default
         return "SIN ACTO";
     };
 
@@ -52,24 +48,19 @@ export function CarpetasTable({ data }: CarpetasTableProps) {
     const getPartes = (carpeta: any) => {
         const buyers: string[] = [];
 
-        // Iterate through deeds/operations to find buyers
         carpeta.escrituras?.forEach((escritura: any) => {
             escritura.operaciones?.forEach((op: any) => {
                 op.participantes_operacion?.forEach((p: any) => {
-                    // Check for buyer roles
                     const role = p.rol?.toUpperCase();
                     if (['COMPRADOR', 'ADQUIRENTE', 'CESIONARIO', 'FIDUCIARIO', 'ACREEDOR'].some(r => role?.includes(r))) {
-                        // Handle un-aliased 'personas' relation which might be an object or array
                         const personRaw = p.personas || p.persona;
                         const person = Array.isArray(personRaw) ? personRaw[0] : personRaw;
 
                         if (person) {
                             let formattedName = "";
                             if (person.tipo_persona === 'JURIDICA' || person.cuit?.startsWith('30') || person.cuit?.startsWith('33')) {
-                                // Legal Entity: Full Name
                                 formattedName = person.nombre_completo;
                             } else {
-                                // Natural Person: SURNAME Name logic
                                 if (person.nombre_completo.includes(",")) {
                                     const [surname, name] = person.nombre_completo.split(",").map((s: string) => s.trim());
                                     formattedName = `${surname.toUpperCase()} ${name}`;
@@ -138,91 +129,90 @@ export function CarpetasTable({ data }: CarpetasTableProps) {
         }));
     };
 
+    const handleRowClick = (id: string) => {
+        router.push(`/carpeta/${id}`);
+    };
+
     return (
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead className="w-[100px]">
-                        <Button
-                            variant="ghost"
-                            onClick={() => handleSort("numero")}
-                            className="h-8 text-xs font-semibold hover:bg-slate-100 px-2"
-                        >
-                            Número
-                            <ArrowUpDown className="ml-2 h-3 w-3" />
-                        </Button>
-                    </TableHead>
-                    <TableHead>
-                        <Button
-                            variant="ghost"
-                            onClick={() => handleSort("acto")}
-                            className="h-8 text-xs font-semibold hover:bg-slate-100 px-2"
-                        >
-                            Acto
-                            <ArrowUpDown className="ml-2 h-3 w-3" />
-                        </Button>
-                    </TableHead>
-                    <TableHead className="w-[100px]">
-                        <Button
-                            variant="ghost"
-                            onClick={() => handleSort("nro_acto")}
-                            className="h-8 text-xs font-semibold hover:bg-slate-100 px-2"
-                        >
-                            Nº de Acto
-                            <ArrowUpDown className="ml-2 h-3 w-3" />
-                        </Button>
-                    </TableHead>
-                    <TableHead>
-                        <Button
-                            variant="ghost"
-                            onClick={() => handleSort("partes")}
-                            className="h-8 text-xs font-semibold hover:bg-slate-100 px-2"
-                        >
-                            Partes
-                            <ArrowUpDown className="ml-2 h-3 w-3" />
-                        </Button>
-                    </TableHead>
-                    <TableHead className="text-right text-xs font-semibold pr-6">
-                        Acciones
-                    </TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {sortedData.map((carpeta) => (
-                    <TableRow key={carpeta.id} className="group hover:bg-slate-50 transition-colors">
-                        <TableCell className="font-mono text-xs font-medium text-slate-600">
-                            #{carpeta.nro_carpeta_interna}
-                        </TableCell>
-                        <TableCell className="text-xs font-medium text-slate-700">
-                            {carpeta.displayActo}
-                        </TableCell>
-                        <TableCell className="text-center">
-                            <code className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-mono text-xs">
-                                {carpeta.displayNroActo}
-                            </code>
-                        </TableCell>
-                        <TableCell className="text-xs text-slate-600">
-                            {carpeta.displayPartes}
-                        </TableCell>
-                        <TableCell className="text-right">
-                            <Button variant="ghost" size="sm" asChild className="h-7 text-[11px] font-normal text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
-                                <Link href={`/carpeta/${carpeta.id}`}>
-                                    <FileText className="h-3.5 w-3.5 mr-1" />
-                                    Mesa
-                                </Link>
-                            </Button>
-                        </TableCell>
-                    </TableRow>
-                ))}
-                {sortedData.length === 0 && (
+        <div className="w-full">
+            <Table>
+                <TableHeader>
                     <TableRow>
-                        <TableCell colSpan={5} className="text-center py-20 text-muted-foreground">
-                            <FolderKanban className="mx-auto h-12 w-12 opacity-20 mb-4" />
-                            No se encontraron carpetas.
-                        </TableCell>
+                        <TableHead className="w-[80px]">
+                            <Button
+                                variant="ghost"
+                                onClick={() => handleSort("numero")}
+                                className="h-8 text-xs font-semibold hover:bg-slate-100 px-2"
+                            >
+                                Nº
+                                <ArrowUpDown className="ml-1 h-3 w-3" />
+                            </Button>
+                        </TableHead>
+                        <TableHead className="w-[100px]">
+                            <Button
+                                variant="ghost"
+                                onClick={() => handleSort("nro_acto")}
+                                className="h-8 text-xs font-semibold hover:bg-slate-100 px-2"
+                            >
+                                Código
+                                <ArrowUpDown className="ml-1 h-3 w-3" />
+                            </Button>
+                        </TableHead>
+                        <TableHead>
+                            <Button
+                                variant="ghost"
+                                onClick={() => handleSort("acto")}
+                                className="h-8 text-xs font-semibold hover:bg-slate-100 px-2"
+                            >
+                                Acto
+                                <ArrowUpDown className="ml-1 h-3 w-3" />
+                            </Button>
+                        </TableHead>
+                        <TableHead>
+                            <Button
+                                variant="ghost"
+                                onClick={() => handleSort("partes")}
+                                className="h-8 text-xs font-semibold hover:bg-slate-100 px-2"
+                            >
+                                Partes
+                                <ArrowUpDown className="ml-1 h-3 w-3" />
+                            </Button>
+                        </TableHead>
                     </TableRow>
-                )}
-            </TableBody>
-        </Table>
+                </TableHeader>
+                <TableBody>
+                    {sortedData.map((carpeta) => (
+                        <TableRow
+                            key={carpeta.id}
+                            className="cursor-pointer hover:bg-slate-100 transition-colors"
+                            onClick={() => handleRowClick(carpeta.id)}
+                        >
+                            <TableCell className="font-mono text-xs font-medium text-slate-600">
+                                #{carpeta.nro_carpeta_interna}
+                            </TableCell>
+                            <TableCell>
+                                <code className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-mono text-xs">
+                                    {carpeta.displayNroActo}
+                                </code>
+                            </TableCell>
+                            <TableCell className="text-xs font-medium text-slate-700 max-w-[300px] truncate">
+                                {carpeta.displayActo}
+                            </TableCell>
+                            <TableCell className="text-xs text-slate-600 max-w-[200px] truncate">
+                                {carpeta.displayPartes}
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                    {sortedData.length === 0 && (
+                        <TableRow>
+                            <TableCell colSpan={4} className="text-center py-20 text-muted-foreground">
+                                <FolderKanban className="mx-auto h-12 w-12 opacity-20 mb-4" />
+                                No se encontraron carpetas.
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+        </div>
     );
 }
