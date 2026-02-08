@@ -19,23 +19,22 @@ export async function getInmuebleWithRelations(id: string) {
         }
 
         // 2. Find related Escrituras (Link to Carpetas & Owners)
-        // Check junction table first, then direct link
-        // We look for IDs in 'inmuebles_escritura'
-        const { data: links, error: linkError } = await supabase
-            .from("inmuebles_escritura")
-            .select("escritura_id")
-            .eq("inmueble_id", id);
+        // We check if this inmueble is the 'princ' one in any escritura
+        // (Junction table 'inmuebles_escritura' does not exist in current schema)
 
-        let escrituraIds = links?.map(l => l.escritura_id) || [];
+        let escrituraIds: string[] = [];
 
-        // Also check if this inmueble is the 'princ' one in any escritura
         const { data: directEscrituras, error: directError } = await supabase
             .from("escrituras")
             .select("id")
             .eq("inmueble_princ_id", id);
 
+        if (directError) {
+            console.error("Error fetching direct escrituras:", directError);
+        }
+
         if (directEscrituras) {
-            escrituraIds = [...new Set([...escrituraIds, ...directEscrituras.map(e => e.id)])];
+            escrituraIds = directEscrituras.map(e => e.id);
         }
 
         if (escrituraIds.length === 0) {
