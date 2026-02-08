@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, Loader2, Folder, User, Building2 } from "lucide-react";
 import { useDebounce } from "use-debounce";
-import { createClient } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +33,6 @@ export function GlobalSearch() {
 
             setLoading(true);
             try {
-                const supabase = createClient();
                 const { data, error } = await supabase
                     .rpc('global_search', { search_term: debouncedSearchTerm });
 
