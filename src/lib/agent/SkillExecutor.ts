@@ -8,6 +8,7 @@ import { getLatestModel, MODEL_HIERARCHY } from "../aiConfig";
 import fs from "fs";
 import path from "path";
 import os from "os";
+import * as mammoth from "mammoth";
 
 /**
  * SkillExecutor: The "Hybrid Router" of NotiAR.
@@ -225,8 +226,27 @@ export class SkillExecutor {
         `;
 
         const parts: any[] = [{ text: systemPrompt }, { text: userContext }];
-        if (providedFilePart) parts.push(providedFilePart);
-        else if (file) parts.push(await this.fileToGenerativePart(file));
+        if (providedFilePart) {
+            parts.push(providedFilePart);
+        } else if (file) {
+            const mimeType = file.type || file.mimeType;
+            if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+                console.log(`[EXECUTOR] 📄 DOCX detected. Extracting text with Mammoth...`);
+                try {
+                    const buffer = file.buffer || (file.arrayBuffer ? Buffer.from(await file.arrayBuffer()) : file);
+                    const result = await mammoth.extractRawText({ buffer });
+                    const extractedText = result.value;
+                    console.log(`[EXECUTOR] 📄 DOCX Text Extracted (${extractedText.length} chars). sending as TEXT.`);
+                    parts.push({ text: `DOCUMENTO TRANSCRITO (DOCX):\n${extractedText}` });
+                } catch (err) {
+                    console.error("[EXECUTOR] ❌ Mammoth Extraction Failed:", err);
+                    // Fallback to sending as file (will likely fail but good for debug)
+                    parts.push(await this.fileToGenerativePart(file));
+                }
+            } else {
+                parts.push(await this.fileToGenerativePart(file));
+            }
+        }
 
         const result = await model.generateContent(parts);
         const responseText = result.response.text();
