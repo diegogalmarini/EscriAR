@@ -501,5 +501,30 @@ Si un cónyuge grava un bien ganancial, el otro **debe dar consentimiento**.
 
 ---
 
+## 🏠 INMUEBLES (Extracción Literal)
+
+### 🚨 REGLA DE ORO DE DESCRIPCIÓN TÉCNICA
+El campo `transcripcion_literal` **NO** debe cortarse en los linderos. 
+Debe incluir **TODO** el bloque descriptivo hasta la siguiente cláusula contractual (Precio, Deudas, etc.).
+
+**Elementos OBLIGATORIOS en la transcripción:**
+1.  **Ubicación y Medidas:** "Lote de terreno... mide..."
+2.  **Superficie:** "Superficie total de..."
+3.  **Linderos:** "Linda al Norte con..."
+4.  **Nomenclatura Catastral:** "Nomenclatura Catastral: Circunscripción I, Sección..."
+5.  **Partida Inmobiliaria:** "Partida: 2.780"
+6.  **Valuación Fiscal:** "Valuación Fiscal: $..."
+
+### Por qué falla a veces:
+El modelo tiende a pensar que la "Nomenclatura" es un metadato separado. **NO LO ES** en este campo. El Escribano necesita ver la Nomenclatura DENTRO del bloque de texto narrativo.
+
+**Ejemplo Correcto de `transcripcion_literal`:**
+> "...linda con calle sin nombre. NOMENCLATURA CATASTRAL: Circunscripción I, Sección A, Manzana 3, Parcela 4. PARTIDA INMOBILIARIA: 2.780. VALUACIÓN FISCAL: Pesos Cien Mil."
+
+**Ejemplo INCORRECTO (Cortado):**
+> "...linda con calle sin nombre." (Falta Nomenclatura y Partida)
+
+---
+
 **Versión 4.0.0** - Actualizado con casos reales del 24.pdf  
 Complementa las reglas del System Prompt con contexto jurídico argentino.
