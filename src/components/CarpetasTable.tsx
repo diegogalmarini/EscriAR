@@ -19,7 +19,7 @@ interface CarpetasTableProps {
     data: any[];
 }
 
-type SortKey = "numero" | "acto" | "partes";
+type SortKey = "numero" | "acto" | "nro_acto" | "partes";
 type SortDirection = "asc" | "desc";
 
 interface SortConfig {
@@ -40,6 +40,12 @@ export function CarpetasTable({ data }: CarpetasTableProps) {
         if (op?.tipo_acto) return op.tipo_acto;
         // Fallback: Check if there's a caratula hint or return default
         return "SIN ACTO";
+    };
+
+    // 1b. Get Nro Acto (CESBA Code)
+    const getNroActo = (carpeta: any) => {
+        const op = carpeta.escrituras?.[0]?.operaciones?.[0];
+        return op?.nro_acto || "-";
     };
 
     // 2. Get Partes (Buyers/Owners)
@@ -96,6 +102,7 @@ export function CarpetasTable({ data }: CarpetasTableProps) {
     const processedData = data.map(item => ({
         ...item,
         displayActo: getActo(item),
+        displayNroActo: getNroActo(item),
         displayPartes: getPartes(item)
     }));
 
@@ -111,6 +118,10 @@ export function CarpetasTable({ data }: CarpetasTableProps) {
 
         if (key === "acto") {
             return a.displayActo.localeCompare(b.displayActo) * multiplier;
+        }
+
+        if (key === "nro_acto") {
+            return a.displayNroActo.localeCompare(b.displayNroActo) * multiplier;
         }
 
         if (key === "partes") {
@@ -151,6 +162,16 @@ export function CarpetasTable({ data }: CarpetasTableProps) {
                             <ArrowUpDown className="ml-2 h-3 w-3" />
                         </Button>
                     </TableHead>
+                    <TableHead className="w-[100px]">
+                        <Button
+                            variant="ghost"
+                            onClick={() => handleSort("nro_acto")}
+                            className="h-8 text-xs font-semibold hover:bg-slate-100 px-2"
+                        >
+                            Nº de Acto
+                            <ArrowUpDown className="ml-2 h-3 w-3" />
+                        </Button>
+                    </TableHead>
                     <TableHead>
                         <Button
                             variant="ghost"
@@ -175,6 +196,11 @@ export function CarpetasTable({ data }: CarpetasTableProps) {
                         <TableCell className="text-xs font-medium text-slate-700">
                             {carpeta.displayActo}
                         </TableCell>
+                        <TableCell className="text-center">
+                            <code className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-mono text-xs">
+                                {carpeta.displayNroActo}
+                            </code>
+                        </TableCell>
                         <TableCell className="text-xs text-slate-600">
                             {carpeta.displayPartes}
                         </TableCell>
@@ -190,7 +216,7 @@ export function CarpetasTable({ data }: CarpetasTableProps) {
                 ))}
                 {sortedData.length === 0 && (
                     <TableRow>
-                        <TableCell colSpan={4} className="text-center py-20 text-muted-foreground">
+                        <TableCell colSpan={5} className="text-center py-20 text-muted-foreground">
                             <FolderKanban className="mx-auto h-12 w-12 opacity-20 mb-4" />
                             No se encontraron carpetas.
                         </TableCell>
