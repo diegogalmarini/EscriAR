@@ -89,8 +89,15 @@ export default async function InmuebleDetailPage({ params }: { params: Promise<{
                                                     {persona.nombre_completo}
                                                 </p>
                                                 <div className="flex items-center gap-2 text-xs text-slate-500">
-                                                    {persona.cuit && <span>{persona.cuit}</span>}
-                                                    {persona.dni && <span>DNI {persona.dni}</span>}
+                                                    {/* Show CUIT for legal entities, DNI for physical persons */}
+                                                    {persona.tipo_persona === 'JURIDICA' || persona.tipo_persona === 'FIDEICOMISO' ? (
+                                                        persona.cuit && <span>CUIT {persona.cuit}</span>
+                                                    ) : (
+                                                        <>
+                                                            {persona.cuit && <span>CUIT {persona.cuit}</span>}
+                                                            {persona.dni && persona.dni !== persona.cuit && <span>DNI {persona.dni}</span>}
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
                                             {/* Link to client detail */}
