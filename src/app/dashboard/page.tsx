@@ -22,6 +22,8 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 
 export default async function DashboardPage() {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const userName = user?.user_metadata?.full_name?.split(' ')[0] || "Notario";
 
     // Fetch recently created folders (using created_at instead of updated_at)
     const { data: carpetas, error } = await supabase
@@ -35,14 +37,16 @@ export default async function DashboardPage() {
             {/* Header section with Welcome and Global Search */}
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
-                            Bienvenido, Notario
+                    <div className="flex items-center gap-6 flex-1">
+                        <h1 className="text-[2rem] font-extrabold tracking-tight text-slate-900 whitespace-nowrap">
+                            Bienvenido, {userName}
                         </h1>
-                        <p className="text-lg text-slate-500 mt-1">
-                            Tu central de operaciones y gestión registral.
-                        </p>
+                        {/* Global Search Bar - Moved next to title */}
+                        <div className="w-full max-w-xl">
+                            <GlobalSearch />
+                        </div>
                     </div>
+
                     <div className="flex gap-3">
                         <form action={async () => {
                             "use server";
@@ -55,11 +59,6 @@ export default async function DashboardPage() {
                             </Button>
                         </form>
                     </div>
-                </div>
-
-                {/* Global Search Bar */}
-                <div className="w-full">
-                    <GlobalSearch />
                 </div>
             </div>
 
@@ -77,23 +76,26 @@ export default async function DashboardPage() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <p className="text-slate-400 text-xs font-light leading-relaxed">
-                                Continúa trabajando en tus expedientes más recientes.
-                            </p>
                             <div className="space-y-1.5">
-                                {carpetas?.slice(0, 3).map(c => (
-                                    <Link
-                                        key={c.id}
-                                        href={`/carpeta/${c.id}`}
-                                        className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group"
-                                    >
-                                        <div className="truncate pr-4">
-                                            <div className="text-xs font-light truncate text-slate-100">{c.caratula || "Sin título"}</div>
-                                            <div className="text-[9px] text-slate-500 font-light tracking-wide">#{c.nro_carpeta_interna}</div>
-                                        </div>
-                                        <ArrowRight size={12} className="text-slate-600 group-hover:text-primary transition-colors flex-shrink-0" />
-                                    </Link>
-                                ))}
+                                {carpetas?.slice(0, 3).map(c => {
+                                    const isFilename = c.caratula?.toLowerCase().endsWith('.pdf') || c.caratula?.toLowerCase().endsWith('.docx');
+                                    const displayTitle = isFilename ? `Expediente #${c.nro_carpeta_interna}` : (c.caratula || `Carpeta #${c.nro_carpeta_interna}`);
+                                    const displaySubtitle = isFilename ? c.caratula : `Expediente #${c.nro_carpeta_interna}`;
+
+                                    return (
+                                        <Link
+                                            key={c.id}
+                                            href={`/carpeta/${c.id}`}
+                                            className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group"
+                                        >
+                                            <div className="truncate pr-4">
+                                                <div className="text-xs font-light truncate text-slate-100">{displayTitle}</div>
+                                                <div className="text-[9px] text-slate-500 font-light tracking-wide">{displaySubtitle}</div>
+                                            </div>
+                                            <ArrowRight size={12} className="text-slate-600 group-hover:text-primary transition-colors flex-shrink-0" />
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         </CardContent>
                     </Card>

@@ -38,7 +38,7 @@ export default function CarpetasPage() {
                 console.error("Error fetching carpetas:", error);
             } else if (data) {
                 // The RPC returns total_count in each row. We pick it from the first row.
-                const total = data.length > 0 ? Number(data[0].total_count) : 0;
+                const total = data.length > 0 ? (data[0].total_count !== undefined ? Number(data[0].total_count) : data.length) : 0;
                 setCarpetas(data);
                 setTotalItems(total);
             }

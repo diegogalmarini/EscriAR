@@ -37,7 +37,7 @@ export default function InmueblesPage() {
             if (error) {
                 console.error("Error fetching inmuebles:", error);
             } else if (data) {
-                const total = data.length > 0 ? Number(data[0].total_count) : 0;
+                const total = data.length > 0 ? (data[0].total_count !== undefined ? Number(data[0].total_count) : data.length) : 0;
                 setInmuebles(data);
                 setTotalItems(total);
             }
