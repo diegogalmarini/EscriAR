@@ -13,7 +13,9 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { VerInmuebleDialog } from "@/components/VerInmuebleDialog";
 import { useDebounce } from "use-debounce";
 
-export default function InmueblesPage() {
+import { Suspense } from "react";
+
+function InmueblesContent() {
     // ... existing code ...
     const [inmuebles, setInmuebles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -156,5 +158,13 @@ export default function InmueblesPage() {
                 />
             )}
         </div>
+    );
+}
+
+export default function InmueblesPage() {
+    return (
+        <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Cargando buscador...</div>}>
+            <InmueblesContent />
+        </Suspense>
     );
 }
