@@ -34,9 +34,7 @@ export async function InmuebleDetailHeader({ inmueble }: InmuebleDetailHeaderPro
                 <div className="flex items-start justify-between">
                     {/* Left: Info */}
                     <div className="flex items-start gap-4">
-                        <div className="p-3 bg-blue-50 rounded-full border border-blue-100">
-                            <Home size={32} className="text-blue-600" />
-                        </div>
+                        {/* ICON REMOVED AS PER USER REQUEST */}
                         <div className="space-y-1">
                             <div className="flex items-center gap-3">
                                 <h1 className="text-xl font-bold text-slate-900 leading-tight">
@@ -46,12 +44,12 @@ export async function InmuebleDetailHeader({ inmueble }: InmuebleDetailHeaderPro
                                 </h1>
                             </div>
 
-                            <div className="flex flex-wrap gap-4 text-sm pt-1">
+                            <div className="flex flex-wrap gap-6 text-sm pt-2">
                                 <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="text-slate-500 bg-slate-50 font-normal">
-                                        <MapPin className="w-3 h-3 mr-1" />
-                                        {inmueble.partido_id || 'Partido Desconocido'}
-                                    </Badge>
+                                    <span className="text-[10px] uppercase font-bold text-slate-400">Partido</span>
+                                    <span className="font-semibold text-slate-700">
+                                        {inmueble.partido_id || 'Desconocido'}
+                                    </span>
                                 </div>
 
                                 {inmueble.nro_partida && (
