@@ -93,12 +93,28 @@ export async function getInmuebleWithRelations(id: string) {
                 .in("rol", [
                     "COMPRADOR", "ADQUIRENTE", "CESIONARIO", "DONATARIO",
                     "TITULAR", "PROPIETARIO",
-                    "DEUDOR", "CONSTITUYENTE", "FIDEICOMISARIO", "HEREDERO"
+                    "DEUDOR", "CONSTITUYENTE", "FIDEICOMISARIO", "HEREDERO",
+                    "FIDUCIARIO", "FIDUCIANTE"
                 ]);
 
             if (participantes && participantes.length > 0) {
                 // Return them as an array or single
                 titularActual = participantes.map(p => p.persona);
+            } else {
+                // Fallback: Get ALL participants except Escribano if no specific role matches
+                const { data: allParticipantes } = await supabase
+                    .from("participantes_operacion")
+                    .select(`
+                        id, 
+                        rol, 
+                        persona:personas (*)
+                    `)
+                    .eq("operacion_id", latestOp.id)
+                    .neq("rol", "ESCRIBANO"); // Exclude the notary
+
+                if (allParticipantes && allParticipantes.length > 0) {
+                    titularActual = allParticipantes.map(p => p.persona);
+                }
             }
         }
 
