@@ -51,9 +51,9 @@ export async function getInmuebleWithRelations(id: string) {
         // 3. Get Escrituras Details (to get Carpeta ID)
         const { data: escrituras } = await supabase
             .from("escrituras")
-            .select("id, carpeta_id, fecha, nro_protocolo")
+            .select("id, carpeta_id, fecha_escritura, nro_protocolo")
             .in("id", escrituraIds)
-            .order("fecha", { ascending: false }); // Newest first
+            .order("fecha_escritura", { ascending: false }); // Newest first
 
         const carpetaIds = escrituras?.map(e => e.carpeta_id).filter(Boolean) || [];
 
@@ -68,9 +68,9 @@ export async function getInmuebleWithRelations(id: string) {
         // We need Operaciones linked to these Escrituras
         const { data: operaciones } = await supabase
             .from("operaciones")
-            .select("id, escritura_id, tipo_acto, fecha")
+            .select("id, escritura_id, tipo_acto, created_at")
             .in("escritura_id", escrituraIds)
-            .order("fecha", { ascending: false });
+            .order("created_at", { ascending: false });
 
         let titularActual = null;
 
