@@ -74,6 +74,12 @@ export async function getInmuebleWithRelations(id: string) {
 
         let titularActual = null;
 
+        console.log("Escritura IDs found:", escrituraIds);
+        console.log("Operations found:", operaciones?.length);
+        if (operaciones?.length) {
+            console.log("Latest Op:", operaciones[0]);
+        }
+
         if (operaciones && operaciones.length > 0) {
             // Find the most recent acquisition operation
             // This is a heuristic. We assume standard sales/donations.
