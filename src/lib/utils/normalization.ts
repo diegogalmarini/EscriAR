@@ -34,35 +34,87 @@ export function formatCUIT(cuit: string | null | undefined): string | null {
 }
 
 /**
- * Detects and formats surnames to uppercase. 
- * Heuristic: In Argentina, if there are 3+ words, usually the last 2 are surnames. 
- * If 2 words, the second is surname.
+ * Detects if a persona is a legal entity based on tipo_persona or CUIT prefix (30, 33, 34).
+ */
+export function isLegalEntity(persona: any): boolean {
+    if (!persona) return false;
+    if (persona.tipo_persona === 'JURIDICA') return true;
+
+    // Check CUIT/CUIL
+    const cuit = (persona.cuit_cuil || persona.cuit)?.toString()?.replace(/\D/g, '') || '';
+    // Argentinian CUIT prefixes for legal entities: 30, 33, 34
+    // Also 30 is the most common for companies.
+    return ['30', '33', '34'].some(prefix => cuit.startsWith(prefix));
+}
+
+/**
+ * Formats a person/entity name for display.
+ * - Legal Entities (JURIDICA): "BANCO DE LA NACION ARGENTINA" (Fixes "ARGENTINA, BANCO...")
+ * - Natural Persons (FISICA): "APELLIDO, Nombre" (Standardizes "Juan PEREZ" -> "PEREZ, Juan")
+ */
+export function formatClienteDisplayName(persona: any): string {
+    if (!persona?.nombre_completo) return "DESCONOCIDO";
+
+    const nombre = persona.nombre_completo.trim();
+    const esJuridica = isLegalEntity(persona);
+
+    if (esJuridica) {
+        // Fix "ARGENTINA, BANCO DE LA NACION" -> "BANCO DE LA NACION ARGENTINA"
+        if (nombre.includes(",")) {
+            const parts = nombre.split(",").map((s: string) => s.trim());
+            // Usually "SUFFIX, PREFIX" or "MAIN, TYPE" -> We want "PREFIX SUFFIX"
+            // E.g. "ANONIMA, SOMAJOFA SOCIEDAD" -> "SOMAJOFA SOCIEDAD ANONIMA" if that was the case, 
+            // but often it is "ARGENTINA, BANCO..." -> "BANCO... ARGENTINA"
+            // Let's swap them.
+            // If there are multiple commas, we reverse the whole thing? No, safer to just swap first 2 chunks.
+            if (parts.length >= 2) {
+                return `${parts[1]} ${parts[0]}`.toUpperCase();
+            }
+        }
+        return nombre.toUpperCase();
+    } else {
+        // Natural Person: "APELLIDO, Nombre"
+        // Input might be "Juan PEREZ", "PEREZ, Juan", "Juan Perez", "PEREZ Juan"
+
+        // Case 1: Already has comma -> "APELLIDO, Nombre" (Assume input is "Surname, Name")
+        if (nombre.includes(",")) {
+            const [surname, ...names] = nombre.split(",").map((s: string) => s.trim());
+            return `${surname.toUpperCase()}, ${names.join(" ")}`; // Ensure Surname is Upper
+        }
+
+        // Case 2: No comma. formatting "First Last" -> "LAST, First"
+        // We need to guess which part is surname.
+        const parts = nombre.split(/\s+/);
+        if (parts.length > 1) {
+            // Heuristic: Last word is surname
+            const last = parts.pop();
+            const first = parts.join(" ");
+            return `${last?.toUpperCase()}, ${first}`;
+        }
+
+        // Case 3: Single word
+        return nombre.toUpperCase();
+    }
+}
+
+/**
+ * Legacy helper, keeping for compatibility but aliasing or simplifying.
  */
 export function formatPersonName(fullname: string | null | undefined): string {
+    // This was used for "Name SURNAME", but we are moving to specific context formatters.
+    // Let's keep it as is or redirect?
+    // The previous implementation was:
     if (!fullname) return "";
-
-    // Handle "SURNAME, Name" (Standardize to "Name SURNAME")
     if (fullname.includes(",")) {
         const [last, ...firstParts] = fullname.split(",").map(s => s.trim());
         return `${firstParts.join(" ")} ${last.toUpperCase()}`;
     }
-
     const parts = fullname.trim().split(/\s+/);
     if (parts.length >= 2) {
         const last = parts.pop()!.toUpperCase();
         return `${parts.join(" ")} ${last}`;
     }
-
     return fullname.toUpperCase();
-}
-
-export function isLegalEntity(persona: any): boolean {
-    if (!persona) return false;
-    if (persona.tipo_persona === 'JURIDICA') return true;
-
-    const cuit = (persona.cuit_cuil || persona.cuit)?.toString()?.replace(/\D/g, '') || '';
-    // Argentinian CUIT/CUIL prefixes for legal entities: 30, 33, 34
-    return ['30', '33', '34'].some(prefix => cuit.startsWith(prefix));
 }
 
 export function getCuitLabel(tipo: 'CUIT' | 'CUIL' | string | null | undefined, isFormal: boolean = true): string {

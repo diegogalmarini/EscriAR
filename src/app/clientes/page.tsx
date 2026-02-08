@@ -2,26 +2,15 @@
 
 import { supabase } from "@/lib/supabaseClient";
 import { useEffect, useState, useCallback } from "react";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Edit2, UserPlus, Phone, Mail, MapPin, Users, Eye } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Search } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { NuevoClienteDialog } from "@/components/NuevoClienteDialog";
-import { EditarClienteDialog } from "@/components/EditarClienteDialog";
-import { SendFichaDialog } from "@/components/SendFichaDialog";
-import { DeleteClienteDialog } from "@/components/DeleteClienteDialog";
+import { ClientesTable } from "@/components/ClientesTable";
+
 import { useRouter } from "next/navigation";
-import { cn, formatDateInstructions, formatCUIT } from "@/lib/utils";
-import { isLegalEntity, formatPersonName } from "@/lib/utils/normalization";
 
 export default function ClientesPage() {
     const router = useRouter();
@@ -108,114 +97,7 @@ export default function ClientesPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-slate-50/50">
-                                <TableHead className="w-[30%] text-xs font-normal text-muted-foreground">Nombre Completo</TableHead>
-                                <TableHead className="w-[20%] text-xs font-normal text-muted-foreground">Documento</TableHead>
-                                <TableHead className="w-[25%] text-xs font-normal text-muted-foreground">Contacto</TableHead>
-                                <TableHead className="w-[10%] text-center text-xs font-normal text-muted-foreground">Origen</TableHead>
-                                <TableHead className="text-right w-[15%] text-xs font-normal text-muted-foreground">Acciones</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredPersonas?.map((persona) => (
-                                <TableRow key={persona.dni} className="group hover:bg-slate-50/50">
-                                    <TableCell className="py-2.5">
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-normal text-slate-700 leading-tight">
-                                                {isLegalEntity(persona)
-                                                    ? persona.nombre_completo.toUpperCase()
-                                                    : formatPersonName(persona.nombre_completo)}
-                                            </span>
-                                            {persona.fecha_nacimiento && (
-                                                <span className="text-[9px] text-muted-foreground font-light uppercase tracking-tighter">
-                                                    {isLegalEntity(persona) ? 'Const:' : 'Nac:'} {formatDateInstructions(persona.fecha_nacimiento)}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="py-2.5">
-                                        <div className="flex flex-col gap-0.5">
-                                            {!isLegalEntity(persona) && (
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="text-[9px] uppercase font-normal text-slate-400">DNI</span>
-                                                    <span className="font-mono text-[11px] font-light text-slate-700">
-                                                        {persona.dni && persona.dni.startsWith('SIN-DNI-')
-                                                            ? <Badge variant="outline" className="font-mono text-[9px] px-1 py-0 h-4 bg-slate-50 text-slate-500 border-dashed font-light">Pendiente</Badge>
-                                                            : (persona.dni || 'N/A')}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {persona.cuit && (
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="text-[9px] uppercase font-normal text-slate-400">CUIT</span>
-                                                    <span className="font-mono text-[11px] font-light text-slate-700">{formatCUIT(persona.cuit)}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="py-2.5">
-                                        <div className="flex flex-wrap gap-1">
-                                            {persona.contacto?.telefono && (
-                                                <a
-                                                    href={`tel:${persona.contacto.telefono}`}
-                                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 text-slate-600 border border-slate-100 hover:bg-slate-100 hover:text-slate-900 transition-colors text-[10px] font-light"
-                                                    title="Llamar"
-                                                >
-                                                    <Phone size={10} className="text-slate-400" />
-                                                    {persona.contacto.telefono}
-                                                </a>
-                                            )}
-                                            {persona.contacto?.email && (
-                                                <a
-                                                    href={`mailto:${persona.contacto.email}`}
-                                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 text-slate-600 border border-slate-100 hover:bg-slate-100 hover:text-slate-900 transition-colors text-[10px] font-light"
-                                                    title="Email"
-                                                >
-                                                    <Mail size={10} className="text-slate-400" />
-                                                    {persona.contacto.email}
-                                                </a>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-center py-2.5">
-                                        <div className="inline-flex items-center px-1 py-0 h-4 rounded text-[9px] font-light uppercase tracking-tight border bg-slate-100 text-slate-600 border-slate-200">
-                                            {persona.origen_dato || 'Manual'}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right py-2.5">
-                                        <div className="flex justify-end gap-0.5 px-1">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => router.push(`/clientes/${persona.dni}`)}
-                                                className="h-7 w-7 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md"
-                                                title="Ver detalles"
-                                            >
-                                                <Eye size={14} />
-                                            </Button>
-                                            <SendFichaDialog persona={persona} />
-                                            <EditarClienteDialog persona={persona} />
-                                            <DeleteClienteDialog
-                                                personaId={persona.dni}
-                                                personaNombre={persona.nombre_completo}
-                                                onClienteDeleted={fetchPersonas}
-                                            />
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {(!filteredPersonas || filteredPersonas.length === 0) && (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-20 text-muted-foreground">
-                                        <Users className="mx-auto h-12 w-12 opacity-20 mb-4" />
-                                        {searchTerm ? "No se encontraron resultados para tu búsqueda." : "No se encontraron clientes en la base de datos."}
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                    <ClientesTable data={filteredPersonas} onClienteDeleted={fetchPersonas} />
                 </CardContent>
             </Card>
         </div>
