@@ -15,20 +15,25 @@ import { downloadAsTxt, downloadAsPdf, downloadAsDocx } from "@/lib/downloadUtil
 
 interface VerInmuebleDialogProps {
     inmueble: any;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    hideTrigger?: boolean;
 }
 
-export function VerInmuebleDialog({ inmueble }: VerInmuebleDialogProps) {
+export function VerInmuebleDialog({ inmueble, open, onOpenChange, hideTrigger }: VerInmuebleDialogProps) {
     const filename = `Inmueble_${inmueble.nro_partida || 'sin-partida'}`;
 
     return (
-        <Dialog>
-            <DialogTrigger asChild>
-                <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-blue-50 text-blue-600">
-                        <Search size={16} />
-                    </Button>
-                </div>
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            {!hideTrigger && (
+                <DialogTrigger asChild>
+                    <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-blue-50 text-blue-600">
+                            <Search size={16} />
+                        </Button>
+                    </div>
+                </DialogTrigger>
+            )}
             <DialogContent className="sm:max-w-[1200px] w-[95vw] max-h-[90vh] flex flex-col p-10">
                 <DialogHeader>
                     <div className="flex justify-between items-start pr-8">

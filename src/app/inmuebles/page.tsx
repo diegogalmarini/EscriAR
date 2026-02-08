@@ -9,9 +9,11 @@ import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
 import { NuevoInmuebleDialog } from "@/components/NuevoInmuebleDialog";
 import { InmueblesTable } from "@/components/InmueblesTable";
 import { PaginationControls } from "@/components/PaginationControls";
-import { useDebounce } from "use-debounce";
+import { useSearchParams, useRouter } from "next/navigation";
+import { VerInmuebleDialog } from "@/components/VerInmuebleDialog";
 
 export default function InmueblesPage() {
+    // ... existing code ...
     const [inmuebles, setInmuebles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -55,6 +57,43 @@ export default function InmueblesPage() {
     useEffect(() => {
         setCurrentPage(1);
     }, [debouncedSearchTerm]);
+
+    const [selectedInmueble, setSelectedInmueble] = useState<any>(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
+    // ... existing pagination state ...
+
+    // Effects for handling URL query param for deep linking
+    useEffect(() => {
+        const id = searchParams.get('id');
+        if (id) {
+            const fetchInmuebleById = async () => {
+                const { data, error } = await supabase
+                    .from('inmuebles')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+
+                if (data) {
+                    setSelectedInmueble(data);
+                    setDialogOpen(true);
+                }
+            };
+            fetchInmuebleById();
+        }
+    }, [searchParams]);
+
+    const handleDialogChange = (open: boolean) => {
+        setDialogOpen(open);
+        if (!open) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete('id');
+            router.replace(`/inmuebles?${params.toString()}`);
+            setSelectedInmueble(null);
+        }
+    };
 
     const totalPages = Math.ceil(totalItems / pageSize);
 
@@ -106,6 +145,15 @@ export default function InmueblesPage() {
                     />
                 </CardFooter>
             </Card>
+
+            {selectedInmueble && (
+                <VerInmuebleDialog
+                    inmueble={selectedInmueble}
+                    open={dialogOpen}
+                    onOpenChange={handleDialogChange}
+                    hideTrigger={true}
+                />
+            )}
         </div>
     );
 }
