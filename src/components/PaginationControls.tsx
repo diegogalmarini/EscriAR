@@ -22,8 +22,8 @@ export function PaginationControls({
     onPageSizeChange,
 }: PaginationControlsProps) {
     return (
-        <div className="flex items-center justify-between px-2">
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+        <div className="flex flex-col sm:flex-row items-center justify-between px-2 gap-4">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground w-full sm:w-auto text-center sm:text-left">
                 <p>
                     Mostrando {(currentPage - 1) * pageSize + 1} a {Math.min(currentPage * pageSize, totalItems)} de {totalItems} resultados
                 </p>
