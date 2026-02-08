@@ -1,60 +1,64 @@
-import { createClient } from "@/lib/supabaseServer";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+"use client";
+
+import { createClient } from "@/lib/supabaseClient"; // Use client-side client
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { CarpetasTable } from "@/components/CarpetasTable";
+import { PaginationControls } from "@/components/PaginationControls";
+import { useState, useEffect, useCallback } from "react";
+import { useDebounce } from "use-debounce";
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export default function CarpetasPage() {
+    const [carpetas, setCarpetas] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearchTerm] = useDebounce(searchTerm, 500); // Wait 500ms before searching
 
-export default async function CarpetasPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    console.log("[CARPETAS] User:", user?.email);
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
+    const [totalItems, setTotalItems] = useState(0);
 
-    // Using Admin client to bypass RLS and verify data visibility
-    const { data: carpetas, error } = await supabaseAdmin
-        .from("carpetas")
-        .select(`
-            *,
-            escrituras (
-                id,
-                nro_protocolo,
-                fecha_escritura,
-                operaciones (
-                    id,
-                    tipo_acto,
-                    participantes_operacion (
-                        id,
-                        rol,
-                        personas (
-                            nombre_completo,
-                            tipo_persona,
-                            cuit,
-                            dni
-                        )
-                    )
-                )
-            )
-        `)
-        .order('nro_carpeta_interna', { ascending: false });
+    const fetchCarpetas = useCallback(async () => {
+        setLoading(true);
+        try {
+            const offset = (currentPage - 1) * pageSize;
 
-    if (error) {
-        console.error("Error fetching carpetas:", error);
-        return (
-            <div className="p-8">
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-                    <strong className="font-bold">Error cargando carpetas:</strong>
-                    <span className="block sm:inline"> {error.message}</span>
-                    <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-x-auto">
-                        {JSON.stringify(error, null, 2)}
-                    </pre>
-                </div>
-            </div>
-        );
-    }
+            // Call the RPC function
+            const { data, error } = await createClient()
+                .rpc('search_carpetas', {
+                    search_term: debouncedSearchTerm,
+                    p_limit: pageSize,
+                    p_offset: offset
+                });
+
+            if (error) {
+                console.error("Error fetching carpetas:", error);
+            } else if (data) {
+                // The RPC returns total_count in each row. We pick it from the first row.
+                const total = data.length > 0 ? Number(data[0].total_count) : 0;
+                setCarpetas(data);
+                setTotalItems(total);
+            }
+        } catch (err) {
+            console.error("Exception fetching carpetas:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, [debouncedSearchTerm, currentPage, pageSize]);
+
+    useEffect(() => {
+        fetchCarpetas();
+    }, [fetchCarpetas]);
+
+    // Reset to page 1 when search term changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearchTerm]);
+
+    const totalPages = Math.ceil(totalItems / pageSize);
 
     return (
         <div className="p-8 space-y-8 animate-in fade-in duration-500">
@@ -74,13 +78,38 @@ export default async function CarpetasPage() {
                     <div className="flex items-center gap-4">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Buscar por número, acto o partes..." className="pl-10" />
+                            <Input
+                                placeholder="Buscar por número, caratula, personas (nombre, DNI, CUIT)..."
+                                className="pl-10"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <CarpetasTable data={carpetas || []} />
+                    {loading ? (
+                        <div className="p-8">
+                            <div className="animate-pulse space-y-4">
+                                <div className="h-8 bg-gray-200 rounded w-full"></div>
+                                <div className="h-8 bg-gray-200 rounded w-full"></div>
+                                <div className="h-8 bg-gray-200 rounded w-full"></div>
+                            </div>
+                        </div>
+                    ) : (
+                        <CarpetasTable data={carpetas || []} />
+                    )}
                 </CardContent>
+                <CardFooter className="border-t p-4">
+                    <PaginationControls
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={totalItems}
+                        pageSize={pageSize}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                    />
+                </CardFooter>
             </Card>
         </div>
     );

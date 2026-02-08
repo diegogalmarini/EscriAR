@@ -1,52 +1,62 @@
 "use client";
 
 import { supabase } from "@/lib/supabaseClient";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { NuevoInmuebleDialog } from "@/components/NuevoInmuebleDialog";
 import { InmueblesTable } from "@/components/InmueblesTable";
+import { PaginationControls } from "@/components/PaginationControls";
+import { useDebounce } from "use-debounce";
 
 export default function InmueblesPage() {
     const [inmuebles, setInmuebles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
 
-    async function fetchInmuebles() {
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
+    const [totalItems, setTotalItems] = useState(0);
+
+    const fetchInmuebles = useCallback(async () => {
+        setLoading(true);
         try {
+            const offset = (currentPage - 1) * pageSize;
+
             const { data, error } = await supabase
-                .from("inmuebles")
-                .select("*");
+                .rpc('search_inmuebles', {
+                    search_term: debouncedSearchTerm,
+                    p_limit: pageSize,
+                    p_offset: offset
+                });
 
             if (error) {
                 console.error("Error fetching inmuebles:", error);
             } else if (data) {
-                console.log("🏠 Fetched", data.length, "inmuebles");
+                const total = data.length > 0 ? Number(data[0].total_count) : 0;
                 setInmuebles(data);
+                setTotalItems(total);
             }
         } catch (err) {
             console.error("Exception fetching inmuebles:", err);
         } finally {
             setLoading(false);
         }
-    }
+    }, [debouncedSearchTerm, currentPage, pageSize]);
 
     useEffect(() => {
         fetchInmuebles();
-    }, []);
+    }, [fetchInmuebles]);
 
-    if (loading) {
-        return (
-            <div className="p-8">
-                <div className="animate-pulse">
-                    <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-                    <div className="h-64 bg-gray-200 rounded"></div>
-                </div>
-            </div>
-        );
-    }
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearchTerm]);
+
+    const totalPages = Math.ceil(totalItems / pageSize);
 
     return (
         <div className="p-8 space-y-8 animate-in fade-in duration-500">
@@ -63,14 +73,38 @@ export default function InmueblesPage() {
                     <div className="flex items-center gap-4">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Buscar por partida, partido o nomenclatura..." className="pl-10" />
+                            <Input
+                                placeholder="Buscar por partida, partido o nomenclatura..."
+                                className="pl-10"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
-                        <Button variant="outline">Filtrar</Button>
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <InmueblesTable data={inmuebles} onInmuebleDeleted={fetchInmuebles} />
+                    {loading ? (
+                        <div className="p-8">
+                            <div className="animate-pulse space-y-4">
+                                <div className="h-8 bg-gray-200 rounded w-full"></div>
+                                <div className="h-8 bg-gray-200 rounded w-full"></div>
+                                <div className="h-8 bg-gray-200 rounded w-full"></div>
+                            </div>
+                        </div>
+                    ) : (
+                        <InmueblesTable data={inmuebles} onInmuebleDeleted={fetchInmuebles} />
+                    )}
                 </CardContent>
+                <CardFooter className="border-t p-4">
+                    <PaginationControls
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={totalItems}
+                        pageSize={pageSize}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                    />
+                </CardFooter>
             </Card>
         </div>
     );
