@@ -96,10 +96,14 @@ export async function getInmuebleWithRelations(id: string) {
                 `)
                 .eq("operacion_id", latestOp.id)
                 .in("rol", [
-                    "COMPRADOR", "ADQUIRENTE", "CESIONARIO", "DONATARIO",
-                    "TITULAR", "PROPIETARIO",
-                    "DEUDOR", "CONSTITUYENTE", "FIDEICOMISARIO", "HEREDERO",
-                    "FIDUCIARIO", "FIDUCIANTE"
+                    "COMPRADOR", "COMPRADORA", "ADQUIRENTE",
+                    "CESIONARIO", "CESIONARIA",
+                    "DONATARIO", "DONATARIA",
+                    "TITULAR", "PROPIETARIO", "PROPIETARIA",
+                    "DEUDOR", "DEUDORA", "CONSTITUYENTE",
+                    "FIDEICOMISARIO", "FIDEICOMISARIA",
+                    "FIDUCIARIO", "FIDUCIARIA", "FIDUCIANTE",
+                    "HEREDERO", "HEREDERA"
                 ]);
 
             console.log("Searching participants for Op:", latestOp.id, "Type:", latestOp.tipo_acto);
