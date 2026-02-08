@@ -11,6 +11,7 @@ import { InmueblesTable } from "@/components/InmueblesTable";
 import { PaginationControls } from "@/components/PaginationControls";
 import { useSearchParams, useRouter } from "next/navigation";
 import { VerInmuebleDialog } from "@/components/VerInmuebleDialog";
+import { useDebounce } from "use-debounce";
 
 export default function InmueblesPage() {
     // ... existing code ...
