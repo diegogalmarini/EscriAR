@@ -11,65 +11,57 @@ import { NuevoClienteDialog } from "@/components/NuevoClienteDialog";
 import { ClientesTable } from "@/components/ClientesTable";
 
 import { useRouter } from "next/navigation";
+import { PaginationControls } from "@/components/PaginationControls";
+import { useDebounce } from "use-debounce";
 
 export default function ClientesPage() {
     const router = useRouter();
     const [personas, setPersonas] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
-    const [filteredPersonas, setFilteredPersonas] = useState<any[]>([]);
+    const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
+
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
+    const [totalItems, setTotalItems] = useState(0);
 
     const fetchPersonas = useCallback(async () => {
+        setLoading(true);
         try {
+            const offset = (currentPage - 1) * pageSize;
+
             const { data, error } = await supabase
-                .from("personas")
-                .select("*")
-                .order("nombre_completo", { ascending: true });
+                .rpc('search_personas', {
+                    search_term: debouncedSearchTerm,
+                    p_limit: pageSize,
+                    p_offset: offset
+                });
 
             if (error) {
                 console.error("Error fetching personas:", error);
             } else if (data) {
+                const total = data.length > 0 ? (data[0].total_count !== undefined ? Number(data[0].total_count) : data.length) : 0;
                 setPersonas(data);
-                setFilteredPersonas(data);
+                setTotalItems(total);
             }
         } catch (err) {
             console.error("Exception fetching personas:", err);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [debouncedSearchTerm, currentPage, pageSize]);
 
     useEffect(() => {
         fetchPersonas();
     }, [fetchPersonas]);
 
-    // Update filtered list when search term or personas change
+    // Reset to page 1 when search term changes
     useEffect(() => {
-        if (!searchTerm.trim()) {
-            setFilteredPersonas(personas);
-            return;
-        }
+        setCurrentPage(1);
+    }, [debouncedSearchTerm]);
 
-        const lowercaseSearch = searchTerm.toLowerCase();
-        const filtered = personas.filter(p =>
-            p.nombre_completo?.toLowerCase().includes(lowercaseSearch) ||
-            p.dni?.toLowerCase().includes(lowercaseSearch) ||
-            p.cuit?.toLowerCase().includes(lowercaseSearch)
-        );
-        setFilteredPersonas(filtered);
-    }, [searchTerm, personas]);
-
-    if (loading) {
-        return (
-            <div className="p-8">
-                <div className="animate-pulse">
-                    <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-                    <div className="h-64 bg-gray-200 rounded"></div>
-                </div>
-            </div>
-        );
-    }
+    const totalPages = Math.ceil(totalItems / pageSize);
 
     return (
         <div className="p-8 space-y-8 animate-in fade-in duration-500">
@@ -93,12 +85,31 @@ export default function ClientesPage() {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <Button variant="outline" className="h-10">Filtrar</Button>
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <ClientesTable data={filteredPersonas} onClienteDeleted={fetchPersonas} />
+                    {loading ? (
+                        <div className="p-8">
+                            <div className="animate-pulse space-y-4">
+                                <div className="h-8 bg-gray-200 rounded w-full"></div>
+                                <div className="h-8 bg-gray-200 rounded w-full"></div>
+                                <div className="h-8 bg-gray-200 rounded w-full"></div>
+                            </div>
+                        </div>
+                    ) : (
+                        <ClientesTable data={personas} onClienteDeleted={fetchPersonas} />
+                    )}
                 </CardContent>
+                <div className="border-t p-4">
+                    <PaginationControls
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={totalItems}
+                        pageSize={pageSize}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                    />
+                </div>
             </Card>
         </div>
     );
