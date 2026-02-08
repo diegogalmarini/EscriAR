@@ -25,7 +25,7 @@ export default async function CarpetasPage() {
                     participantes_operacion (
                         id,
                         rol,
-                        persona:personas (
+                        personas (
                             id,
                             nombre_completo,
                             tipo_persona,

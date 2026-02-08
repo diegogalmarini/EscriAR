@@ -53,59 +53,28 @@ export function CarpetasTable({ data }: CarpetasTableProps) {
                     // Check for buyer roles
                     const role = p.rol?.toUpperCase();
                     if (['COMPRADOR', 'ADQUIRENTE', 'CESIONARIO', 'FIDUCIARIO', 'ACREEDOR'].some(r => role?.includes(r))) {
-                        const person = p.persona;
+                        // Handle un-aliased 'personas' relation which might be an object or array
+                        const personRaw = p.personas || p.persona;
+                        const person = Array.isArray(personRaw) ? personRaw[0] : personRaw;
+
                         if (person) {
                             let formattedName = "";
                             if (person.tipo_persona === 'JURIDICA' || person.cuit?.startsWith('30') || person.cuit?.startsWith('33')) {
                                 // Legal Entity: Full Name
                                 formattedName = person.nombre_completo;
                             } else {
-                                // Natural Person: SURNAME Name
-                                // We assume nombre_completo is "Surname Name" or we format it
-                                // Based on user request: "APELLIDO Nombre"
-                                const parts = person.nombre_completo.trim().split(/\s+/);
-                                if (parts.length >= 2) {
-                                    // Heuristic: Last parts are usually surname in many systems, 
-                                    // BUT user request implies specific format. 
-                                    // Only way to be sure is if we have separate fields. 
-                                    // If we only have full name string, we assume standarization.
-                                    // Let's use the helper logic: "SURNAME Name"
-                                    // Wait, standard in DB might be "Name Surname". 
-                                    // If we use the 'normalization' logic from plan:
-                                    // "APELLIDO Nombre"
-                                    // Let's try to detect if it's already upper.
-
-                                    // Standard approach: Uppercase the SURNAME (usually the last word(s) if not comma separated)
-                                    // Actually, let's keep it simple for now and rely on visual cues.
-                                    // Most robust way for Argentina: split by comma if exists.
-
-                                    if (person.nombre_completo.includes(",")) {
-                                        const [surname, name] = person.nombre_completo.split(",").map((s: string) => s.trim());
-                                        formattedName = `${surname.toUpperCase()} ${name}`;
-                                    } else {
-                                        // "Juan PEREZ" -> "PEREZ Juan" ?? 
-                                        // Or "PEREZ Juan" -> "PEREZ Juan"
-                                        // Without specific structure, this is tricky. 
-                                        // Let's try to identify UPPERCASE parts as surnames.
-
-                                        // If the user says "Always APELLIDO Nombre", and input is "Juan Perez", 
-                                        // we'll try to guess. 
-                                        // For now, let's display as is but ensure uppercase surname if possible.
-                                        // Let's just UpperCase the whole thing for consistency if mixed? No, request says "APELLIDO y Nombre".
-                                        // Let's assume the DB has "Surname Name" or "Name Surname".
-
-                                        // Re-reading common pattern: 
-                                        // If no comma, usually "First Last". We want "LAST First".
-                                        const allParts = person.nombre_completo.split(" ");
-                                        if (allParts.length > 1) {
-                                            const last = allParts.pop();
-                                            formattedName = `${last?.toUpperCase()} ${allParts.join(" ")}`;
-                                        } else {
-                                            formattedName = person.nombre_completo.toUpperCase();
-                                        }
-                                    }
+                                // Natural Person: SURNAME Name logic
+                                if (person.nombre_completo.includes(",")) {
+                                    const [surname, name] = person.nombre_completo.split(",").map((s: string) => s.trim());
+                                    formattedName = `${surname.toUpperCase()} ${name}`;
                                 } else {
-                                    formattedName = person.nombre_completo;
+                                    const allParts = person.nombre_completo.split(" ");
+                                    if (allParts.length > 1) {
+                                        const last = allParts.pop();
+                                        formattedName = `${last?.toUpperCase()} ${allParts.join(" ")}`;
+                                    } else {
+                                        formattedName = person.nombre_completo.toUpperCase();
+                                    }
                                 }
                             }
                             if (formattedName && !buyers.includes(formattedName)) {
