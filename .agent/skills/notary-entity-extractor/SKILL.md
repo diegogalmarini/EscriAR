@@ -38,6 +38,24 @@ version: 4.1.0 (v1.2.17 - Unión Convivencial Recognition)
 
 **Lección:** Un representante legal es una entidad SEPARADA del representado.
 
+### 🚨 REGLA DE ORO: JERARQUÍA DE REPRESENTACIÓN
+Si el texto dice: *"Nicolás Antonio Martín en nombre y representación del BANCO PATAGONIA"*:
+
+1.  **NO** crees una sola entidad ("Nicolás del Banco").
+2.  **DEBES** crear **DOS** entidades en el array `entidades`:
+    *   **Entidad 1 (Principal):**
+        *   `tipo_persona`: "JURIDICA"
+        *   `razon_social`: "BANCO PATAGONIA S.A."
+        *   `rol`: "ACREEDOR" / "PARTE"
+        *   `representacion.es_representado`: `true`
+    *   **Entidad 2 (Representante):**
+        *   `tipo_persona`: "FISICA"
+        *   `nombre`: "Nicolás Antonio Martín"
+        *   `rol`: "REPRESENTANTE"
+        *   `representacion.es_representado`: `false`
+
+**POR QUÉ:** El sistema necesita validar el CUIT de ambas partes y verificar el Poder (Escritura) que las une.
+
 ---
 
 ## 🎯 PATRONES DE IDENTIFICACIÓN DE ROLES

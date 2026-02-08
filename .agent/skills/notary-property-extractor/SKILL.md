@@ -19,11 +19,15 @@ El sistema debe buscar frases que denotan el inicio de una descripción técnica
 3.  **"UN INMUEBLE"** / **"UNA FINCA"**.
 
 ### 2. Identificación del Bloque de Cierre (Stop Triggers)
-El sistema debe capturar todo el texto hasta encontrar uno de los siguientes encabezados administrativos (que marcan el fin de la descripción visual):
-1.  **"NOMENCLATURA CATASTRAL"**
-2.  **"VALUACIÓN FISCAL"**
-3.  **"PARTIDO DE"** (Si está usado como subtítulo de cierre).
-4.  **"MATRÍCULA"** (Si aparece al final).
+El sistema debe capturar **TODA** la descripción técnica, incluyendo datos catastrales.
+El corte debe realizarse **DESPUÉS** de:
+1.  **"NOMENCLATURA CATASTRAL"** (Incluir su contenido).
+2.  **"PARTIDA"** o **"MATRICULA"** (Incluir sus números).
+3.  **"VALUACIÓN FISCAL"** (Incluir el monto).
+
+El bloque termina SOLO cuando empieza una nueva cláusula legal (ej: "SEGUNDO: PRECIO", "TERCERO: DEUDAS").
+
+**REGLA DE ORO:** NUNCA cortes en "Nomenclatura". El Escribano necesita ver la Nomenclatura dentro del bloque de transcripción.
 
 ### 3. Reglas de Limpieza (Sanitization)
 * **Saltos de Línea:** Mantener los saltos de párrafo originales para la legibilidad en el UI, pero eliminar saltos de línea duros que corten oraciones a la mitad.
@@ -51,9 +55,10 @@ def extract_property_description(full_text):
     # Incluye preambles como "una unidad...que es parte del edificio ubicado en..."
     start_pattern = r"(?:(?:UNA|LA)\s+UNIDAD\s+FUNCIONAL|(?:UN|EL)\s+(?:LOTE|DEPARTAMENTO|INMUEBLE)|(?:UNA|LA)\s+(?:FRACCI[ÓO]N|FINCA)|QUE\s+(?:ES\s+PARTE\s+DEL|SE\s+DESIGNA|FORMA\s+PARTE)|UBICAD[OA]\s+EN)"
     
-    # Fin: Busca donde terminan los linderos y empiezan los datos administrativos
-    # (?=...) es un lookahead positivo para detenerse ANTES de consumir esa frase
-    end_pattern = r"(?=\s*(?:NOMENCLATURA\s+CATASTRAL|VALUACI[ÓO]N\s+FISCAL|PARTIDA\s*:?|MATR[ÍI]CULA|CIRCUNSCRIPCI[ÓO]N))"
+    # Fin: Busca el inicio de cláusulas administrativas NO catastrales o el final del bloque
+    # Ahora somos más permisivos: Queremos que incluya Nomenclatura y Partida.
+    # Detenerse ante cláusulas típicas de cierre como "SEGUNDO", "TERCERO" o firmas.
+    end_pattern = r"(?=\s*(?:SEGUNDO|TERCERO|BAJO TALES CONCEPTOS|LEIDA|TITULO|ANTECEDENTES))"
 
     # 3. Regex Compuesta
     # Flags: re.IGNORECASE (mayúsculas/minúsculas), re.DOTALL (el punto matchea saltos de línea)

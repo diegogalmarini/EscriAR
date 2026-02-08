@@ -127,6 +127,39 @@ export class SkillExecutor {
 
         const modelConfig: any = { model: modelName, generationConfig };
 
+        // ---------------------------------------------------------
+        // DYNAMIC ROUTING v2.0 (The Antigravity Patch)
+        // ---------------------------------------------------------
+        // Detect complexity to avoid "Flash" truncation on long mortgages.
+        const contextString = userContext.toUpperCase();
+        const isHeavyDoc =
+            contextString.includes("HIPOTECA") ||
+            contextString.includes("MUTUO") ||
+            contextString.includes("FIDEICOMISO") ||
+            contextString.includes("CESION") ||
+            skillSlug === "notary-mortgage-reader";
+
+        if (isHeavyDoc) {
+            // Force PRO model if we are in the "Fast" loop but need "Complex" power
+            // But simpler: We just override the model config for this attempt if checking 'fast'
+            // Actually, we should probably respect the loop but upgrade the specific parameters.
+            // However, to be safer and follow the plan: Force Pro features.
+
+            // If the loop provided a Flash model, but we need Pro, we might want to skip or upgrade.
+            // For now, we will Trust the Model passed BUT upgrad the tokens.
+            // AND OR: We might want to just enforce the model name from MODEL_MAPPING.complex if it is not already.
+
+            // Let's check imports to get MODEL_MAPPING
+            const { MODEL_MAPPING } = await import("../aiConfig");
+            modelConfig.model = MODEL_MAPPING.complex; // Force Override to PRO
+
+            console.log(`[EXECUTOR] 🚀 PREFERENCING POWER: Upgraded to ${modelConfig.model} for Complex Document.`);
+            generationConfig.maxOutputTokens = 8192; // 4x standard limit
+        } else {
+            // Standard Flash Limit
+            generationConfig.maxOutputTokens = 2048;
+        }
+
         const model = this.genAI.getGenerativeModel(modelConfig);
 
         // v1.3.0: Critical Rules & Knowledge Injection
