@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabaseServer";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -10,8 +11,11 @@ export const revalidate = 0;
 
 export default async function CarpetasPage() {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    console.log("[CARPETAS] User:", user?.email);
 
-    const { data: carpetas, error } = await supabase
+    // Using Admin client to bypass RLS and verify data visibility
+    const { data: carpetas, error } = await supabaseAdmin
         .from("carpetas")
         .select(`
             *,
