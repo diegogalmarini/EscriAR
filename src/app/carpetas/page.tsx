@@ -30,7 +30,6 @@ export default async function CarpetasPage() {
                         id,
                         rol,
                         personas (
-                            id,
                             nombre_completo,
                             tipo_persona,
                             cuit,
