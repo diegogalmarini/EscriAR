@@ -1,0 +1,114 @@
+"use server";
+
+import { createClient } from "@/lib/supabaseServer";
+
+export async function getInmuebleWithRelations(id: string) {
+    try {
+        const supabase = await createClient();
+
+        // 1. Get Inmueble Data
+        const { data: inmueble, error: inmuebleError } = await supabase
+            .from("inmuebles")
+            .select("*")
+            .eq("id", id)
+            .single();
+
+        if (inmuebleError || !inmueble) {
+            console.error("Error fetching inmueble:", inmuebleError);
+            return { success: false, error: "No se encontró el inmueble" };
+        }
+
+        // 2. Find related Escrituras (Link to Carpetas & Owners)
+        // Check junction table first, then direct link
+        // We look for IDs in 'inmuebles_escritura'
+        const { data: links, error: linkError } = await supabase
+            .from("inmuebles_escritura")
+            .select("escritura_id")
+            .eq("inmueble_id", id);
+
+        let escrituraIds = links?.map(l => l.escritura_id) || [];
+
+        // Also check if this inmueble is the 'princ' one in any escritura
+        const { data: directEscrituras, error: directError } = await supabase
+            .from("escrituras")
+            .select("id")
+            .eq("inmueble_princ_id", id);
+
+        if (directEscrituras) {
+            escrituraIds = [...new Set([...escrituraIds, ...directEscrituras.map(e => e.id)])];
+        }
+
+        if (escrituraIds.length === 0) {
+            return {
+                success: true,
+                data: {
+                    inmueble,
+                    carpetas: [],
+                    titularActual: null
+                }
+            };
+        }
+
+        // 3. Get Escrituras Details (to get Carpeta ID)
+        const { data: escrituras } = await supabase
+            .from("escrituras")
+            .select("id, carpeta_id, fecha, nro_protocolo")
+            .in("id", escrituraIds)
+            .order("fecha", { ascending: false }); // Newest first
+
+        const carpetaIds = escrituras?.map(e => e.carpeta_id).filter(Boolean) || [];
+
+        // 4. Get Carpetas Linked
+        const { data: carpetas } = await supabase
+            .from("carpetas")
+            .select("*")
+            .in("id", carpetaIds);
+
+        // 5. Infer Current Owner (Titular)
+        // We look for the LATEST operation on these escrituras that is an ACQUISITION
+        // We need Operaciones linked to these Escrituras
+        const { data: operaciones } = await supabase
+            .from("operaciones")
+            .select("id, escritura_id, tipo_acto, fecha")
+            .in("escritura_id", escrituraIds)
+            .order("fecha", { ascending: false });
+
+        let titularActual = null;
+
+        if (operaciones && operaciones.length > 0) {
+            // Find the most recent acquisition operation
+            // This is a heuristic. We assume standard sales/donations.
+            // A simplified approach: Get participants of the LATEST operation, filtering for 'COMPRADOR', 'ADQUIRENTE', 'CESIONARIO', 'DONATARIO'
+
+            const latestOp = operaciones[0]; // Since we ordered by date desc (if fecha exists in operaciones, otherwise assume escritura fecha)
+
+            const { data: participantes } = await supabase
+                .from("participantes_operacion")
+                .select(`
+                    id, 
+                    rol, 
+                    persona:personas (*)
+                `)
+                .eq("operacion_id", latestOp.id)
+                .in("rol", ["COMPRADOR", "ADQUIRENTE", "CESIONARIO", "DONATARIO", "TITULAR", "PROPIETARIO"]);
+
+            if (participantes && participantes.length > 0) {
+                // Return them as an array or single
+                titularActual = participantes.map(p => p.persona);
+            }
+        }
+
+        return {
+            success: true,
+            data: {
+                inmueble,
+                carpetas: carpetas || [],
+                titularActual: titularActual // Array of persons
+            }
+        };
+
+    } catch (error: any) {
+        console.error("Error in getInmuebleWithRelations:", error);
+        return { success: false, error: error.message };
+    }
+}

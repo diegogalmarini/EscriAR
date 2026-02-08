@@ -10,8 +10,11 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Building2, ArrowUpDown } from "lucide-react";
-import { VerInmuebleDialog } from "@/components/VerInmuebleDialog";
+import { Building2, ArrowUpDown, Eye } from "lucide-react";
+
+import { useRouter } from "next/navigation";
+// import { VerInmuebleDialog } from "@/components/VerInmuebleDialog"; // REMOVED
+
 import { DeleteInmuebleDialog } from "@/components/DeleteInmuebleDialog";
 
 interface InmueblesTableProps {
@@ -28,6 +31,11 @@ interface SortConfig {
 }
 
 export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps) {
+    const router = useRouter();
+
+    const handleRowClick = (inmueble: any) => {
+        router.push(`/inmuebles/${inmueble.id}`);
+    };
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "nomenclatura", direction: "asc" });
 
     const sortedData = [...data].sort((a, b) => {
@@ -102,7 +110,11 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
             </TableHeader>
             <TableBody>
                 {sortedData.map((inmueble) => (
-                    <TableRow key={inmueble.id} className="group hover:bg-slate-50/50">
+                    <TableRow
+                        key={inmueble.id}
+                        className="group hover:bg-slate-50/50 cursor-pointer transition-colors"
+                        onClick={() => router.push(`/inmuebles/${inmueble.id}`)}
+                    >
                         <TableCell className="py-2 align-top truncate" title={inmueble.partido_id}>
                             <div className="flex items-center gap-2 truncate text-sm font-normal text-slate-700">
                                 <span className="truncate">{inmueble.partido_id || 'N/A'}</span>
@@ -117,8 +129,15 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
                             </div>
                         </TableCell>
                         <TableCell className="text-right align-top py-2">
-                            <div className="flex justify-end items-center gap-1">
-                                <VerInmuebleDialog inmueble={inmueble} />
+                            <div className="flex justify-end items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                                    onClick={() => router.push(`/inmuebles/${inmueble.id}`)}
+                                >
+                                    <Eye size={16} />
+                                </Button>
                                 <DeleteInmuebleDialog
                                     inmuebleId={inmueble.id}
                                     nomenclatura={inmueble.nomenclatura}
