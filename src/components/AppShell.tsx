@@ -9,6 +9,7 @@ import {
     Users,
     Building2,
     Calendar,
+    FileSpreadsheet,
     Settings,
     LogOut,
     Menu,
@@ -27,6 +28,7 @@ const baseMenuItems = [
     { name: "Clientes", href: "/clientes", icon: Users },
     { name: "Inmuebles", href: "/inmuebles", icon: Building2 },
     { name: "Agenda", href: "/agenda", icon: Calendar },
+    { name: "Tabla de Actos", href: "/tabla-actos", icon: FileSpreadsheet },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
