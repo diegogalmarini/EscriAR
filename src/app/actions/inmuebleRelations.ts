@@ -90,7 +90,11 @@ export async function getInmuebleWithRelations(id: string) {
                     persona:personas (*)
                 `)
                 .eq("operacion_id", latestOp.id)
-                .in("rol", ["COMPRADOR", "ADQUIRENTE", "CESIONARIO", "DONATARIO", "TITULAR", "PROPIETARIO"]);
+                .in("rol", [
+                    "COMPRADOR", "ADQUIRENTE", "CESIONARIO", "DONATARIO",
+                    "TITULAR", "PROPIETARIO",
+                    "DEUDOR", "CONSTITUYENTE", "FIDEICOMISARIO", "HEREDERO"
+                ]);
 
             if (participantes && participantes.length > 0) {
                 // Return them as an array or single
