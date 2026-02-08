@@ -86,17 +86,17 @@ export default async function InmuebleDetailPage({ params }: { params: Promise<{
                                             </div>
                                             <div className="overflow-hidden">
                                                 <p className="text-sm font-semibold text-slate-900 truncate">
-                                                    {persona.nombre_completo}
+                                                    {/* For legal entities, check if name is in "Apellido, Nombre" format and fix it */}
+                                                    {(persona.tipo_persona === 'JURIDICA' || persona.tipo_persona === 'FIDEICOMISO') && persona.nombre_completo?.includes(', ')
+                                                        ? persona.nombre_completo.split(', ').reverse().join(' ')
+                                                        : persona.nombre_completo}
                                                 </p>
                                                 <div className="flex items-center gap-2 text-xs text-slate-500">
-                                                    {/* Show CUIT for legal entities, DNI for physical persons */}
+                                                    {/* Show CUIT for legal entities, only DNI for physical persons */}
                                                     {persona.tipo_persona === 'JURIDICA' || persona.tipo_persona === 'FIDEICOMISO' ? (
                                                         persona.cuit && <span>CUIT {persona.cuit}</span>
                                                     ) : (
-                                                        <>
-                                                            {persona.cuit && <span>CUIT {persona.cuit}</span>}
-                                                            {persona.dni && persona.dni !== persona.cuit && <span>DNI {persona.dni}</span>}
-                                                        </>
+                                                        persona.dni && <span>DNI {persona.dni}</span>
                                                     )}
                                                 </div>
                                             </div>
