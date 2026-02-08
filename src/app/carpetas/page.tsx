@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@/lib/supabaseClient"; // Use client-side client
+import { supabase } from "@/lib/supabaseClient"; // Use client-side client
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ export default function CarpetasPage() {
             const offset = (currentPage - 1) * pageSize;
 
             // Call the RPC function
-            const { data, error } = await createClient()
+            const { data, error } = await supabase
                 .rpc('search_carpetas', {
                     search_term: debouncedSearchTerm,
                     p_limit: pageSize,
