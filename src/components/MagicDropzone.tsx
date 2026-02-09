@@ -125,7 +125,7 @@ export function MagicDropzone() {
 
             <div className="flex gap-4 mt-2">
                 <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
-                    <FileText size={14} /> PDF, DOC, DOCX
+                    <FileText size={14} /> PDF, DOCX
                 </div>
                 <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
                     <FolderPlus size={14} /> Auto-creación de carpeta
@@ -135,7 +135,7 @@ export function MagicDropzone() {
             {/* Hidden Input for Click Access */}
             <input
                 type="file"
-                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 className="absolute inset-0 opacity-0 cursor-pointer"
                 onChange={(e) => {
                     const file = e.target.files?.[0];
