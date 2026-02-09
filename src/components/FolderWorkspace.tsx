@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useOptimistic, useTransition, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -471,11 +472,21 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                             </div>
                                             <div>
                                                 <p className="text-[10px] font-semibold uppercase text-slate-400">Nro. Partida</p>
-                                                <div className="text-slate-700 font-mono space-y-0.5">
+                                                <div className="font-mono space-y-0.5">
                                                     {(escritura.inmuebles?.nro_partida || "No especificado")
-                                                        .split(/[;,]/)
+                                                        .split(/[;]/)
                                                         .map((p: string, idx: number) => (
-                                                            <div key={idx}>{p.trim()}</div>
+                                                            escritura.inmuebles?.id ? (
+                                                                <Link
+                                                                    key={idx}
+                                                                    href={`/inmuebles/${escritura.inmuebles.id}`}
+                                                                    className="block text-blue-600 hover:text-blue-800 hover:underline"
+                                                                >
+                                                                    {p.trim()}
+                                                                </Link>
+                                                            ) : (
+                                                                <div key={idx} className="text-slate-700">{p.trim()}</div>
+                                                            )
                                                         ))}
                                                 </div>
                                             </div>

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Building2, ArrowUpDown, Eye } from "lucide-react";
+import Link from "next/link";
 
 import { useRouter } from "next/navigation";
 // import { VerInmuebleDialog } from "@/components/VerInmuebleDialog"; // REMOVED
@@ -120,22 +121,24 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
                                 <span className="truncate">{inmueble.partido_id || 'N/A'}</span>
                             </div>
                         </TableCell>
-                        <TableCell className="py-2 align-top" title={inmueble.nro_partida}>
-                            <div className="font-mono text-xs font-light text-slate-600 space-y-0.5">
+                        <TableCell className="py-2 align-top" title={inmueble.nro_partida} onClick={(e) => e.stopPropagation()}>
+                            <div className="font-mono text-xs font-medium space-y-0.5">
                                 {(inmueble.nro_partida || 'N/A')
-                                    .split(/[;,]/)
+                                    .split(/[;]/)
                                     .map((p: string, idx: number) => (
-                                        <div key={idx} className="whitespace-nowrap">{p.trim()}</div>
+                                        <Link
+                                            key={idx}
+                                            href={`/inmuebles/${inmueble.id}`}
+                                            className="block text-blue-600 hover:text-blue-800 hover:underline whitespace-nowrap"
+                                        >
+                                            {p.trim()}
+                                        </Link>
                                     ))}
                             </div>
                         </TableCell>
                         <TableCell className="align-top py-2">
-                            <div className="text-xs leading-tight font-normal text-slate-700 space-y-0.5">
-                                {(inmueble.nomenclatura || 'Sin nomenclatura')
-                                    .split(/[;]/)
-                                    .map((n: string, idx: number) => (
-                                        <div key={idx} className="whitespace-normal">{n.trim()}</div>
-                                    ))}
+                            <div className="text-xs leading-tight font-normal text-slate-700">
+                                {inmueble.nomenclatura || 'Sin nomenclatura'}
                             </div>
                         </TableCell>
                         <TableCell className="text-right align-top py-2">
