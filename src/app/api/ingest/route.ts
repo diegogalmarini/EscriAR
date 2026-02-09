@@ -144,18 +144,23 @@ function safeParseInt(val: any): number | null {
     const p = parseInt(str);
     if (!isNaN(p)) return p;
 
-    // Spanish text to number mapping (basic)
+    // Spanish text to number mapping (basic units and tens)
     const textNumbers: Record<string, number> = {
         "UNO": 1, "DOS": 2, "TRES": 3, "CUATRO": 4, "CINCO": 5, "SEIS": 6, "SIETE": 7, "OCHO": 8, "NUEVE": 9, "DIEZ": 10,
         "ONCE": 11, "DOCE": 12, "TRECE": 13, "CATORCE": 14, "QUINCE": 15, "DIECISEIS": 16, "DIECISIETE": 17, "DIECIOCHO": 18, "DIECINUEVE": 19, "VEINTE": 20,
         "VEINTIUNO": 21, "VEINTIDOS": 22, "VEINTITRES": 23, "VEINTICUATRO": 24, "VEINTICINCO": 25, "VEINTISEIS": 26, "VEINTISIETE": 27, "VEINTIOCHO": 28, "VEINTINUEVE": 29, "TREINTA": 30,
-        "CUARENTA": 40, "CINCUENTA": 50, "SESENTA": 60, "SETENTA": 70, "OCHENTA": 80, "NOVENTA": 90, "CIEN": 100
+        "CUARENTA": 40, "CINCUENTA": 50, "SESENTA": 60, "SETENTA": 70, "OCHENTA": 80, "NOVENTA": 90, "CIEN": 100,
+        // HUNDREDS - Added to fix "SETECIENTOS SETENTA Y UNO" → 771
+        "CIENTO": 100, "DOSCIENTOS": 200, "TRESCIENTOS": 300, "CUATROCIENTOS": 400, "QUINIENTOS": 500,
+        "SEISCIENTOS": 600, "SETECIENTOS": 700, "OCHOCIENTOS": 800, "NOVECIENTOS": 900,
+        // MIL for thousands
+        "MIL": 1000
     };
 
     if (textNumbers[str]) return textNumbers[str];
 
-    // Simple compound handling (e.g., "VEINTI CUATRO" or "SETENTA Y DOS")
-    const parts = str.split(/[\s-yY]+/).filter(Boolean);
+    // Compound handling: "SETECIENTOS SETENTA Y UNO" → 700 + 70 + 1 = 771
+    const parts = str.split(/[\s-]+/).filter(p => p && p !== 'Y');
     if (parts.length > 1) {
         let total = 0;
         for (const part of parts) {
