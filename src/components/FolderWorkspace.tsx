@@ -471,7 +471,13 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                             </div>
                                             <div>
                                                 <p className="text-[10px] font-semibold uppercase text-slate-400">Nro. Partida</p>
-                                                <p className="text-slate-700">{escritura.inmuebles?.nro_partida || "No especificado"}</p>
+                                                <div className="text-slate-700 font-mono space-y-0.5">
+                                                    {(escritura.inmuebles?.nro_partida || "No especificado")
+                                                        .split(/[;,]/)
+                                                        .map((p: string, idx: number) => (
+                                                            <div key={idx}>{p.trim()}</div>
+                                                        ))}
+                                                </div>
                                             </div>
                                         </div>
 

@@ -53,11 +53,13 @@ export async function InmuebleDetailHeader({ inmueble }: InmuebleDetailHeaderPro
                                 </div>
 
                                 {inmueble.nro_partida && (
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex flex-col gap-1">
                                         <span className="text-[10px] uppercase font-bold text-slate-400">Partida</span>
-                                        <span className="font-mono text-slate-700 font-medium">
-                                            {inmueble.nro_partida}
-                                        </span>
+                                        <div className="font-mono text-slate-700 font-medium space-y-0.5">
+                                            {inmueble.nro_partida.split(/[;,]/).map((p: string, idx: number) => (
+                                                <div key={idx}>{p.trim()}</div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
 

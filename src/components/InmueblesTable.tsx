@@ -120,12 +120,22 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
                                 <span className="truncate">{inmueble.partido_id || 'N/A'}</span>
                             </div>
                         </TableCell>
-                        <TableCell className="font-mono text-xs font-light align-top py-2 text-slate-600">
-                            {inmueble.nro_partida || 'N/A'}
+                        <TableCell className="py-2 align-top" title={inmueble.nro_partida}>
+                            <div className="font-mono text-xs font-light text-slate-600 space-y-0.5">
+                                {(inmueble.nro_partida || 'N/A')
+                                    .split(/[;,]/)
+                                    .map((p: string, idx: number) => (
+                                        <div key={idx} className="whitespace-nowrap">{p.trim()}</div>
+                                    ))}
+                            </div>
                         </TableCell>
                         <TableCell className="align-top py-2">
-                            <div className="text-xs leading-tight font-normal text-slate-700 whitespace-pre-wrap">
-                                {inmueble.nomenclatura || 'Sin nomenclatura'}
+                            <div className="text-xs leading-tight font-normal text-slate-700 space-y-0.5">
+                                {(inmueble.nomenclatura || 'Sin nomenclatura')
+                                    .split(/[;]/)
+                                    .map((n: string, idx: number) => (
+                                        <div key={idx} className="whitespace-normal">{n.trim()}</div>
+                                    ))}
                             </div>
                         </TableCell>
                         <TableCell className="text-right align-top py-2">
