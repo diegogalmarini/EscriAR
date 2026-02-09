@@ -36,6 +36,14 @@ Este documento registra los hitos alcanzados y las funcionalidades que han sido 
 - **Estado:** Estable / No tocar.
 - **Logro:** Conexión del cerebro AI con base de conocimiento legal dinámica. Búsqueda semántica para inyectar expertiz en tiempo real.
 - **Componente:** `SkillExecutor` + `RAG (Supabase Vector)`.
+- **Chunking RAG:** `knowledge.ts` → 1000 chars con 200 overlap para embeddings.
+
+### 8. Mega-Document Chunking (49+ páginas) ✅
+- **Estado:** Estable / En observación.
+- **Logro:** Procesamiento de escrituras muy largas (hipotecas UVA BNA, condominios complejos). División por secciones legales (PARTE I/II/III, CLAUSULAS).
+- **Componente:** `SkillExecutor.chunkMegaDocument()` + `mergeExtractionResults()`.
+- **Chunking Extracción:** 20.000 chars por chunk, merge con deduplicación por DNI/CUIT.
+- **Trigger:** Documentos > 25.000 caracteres (~18 páginas).
 
 ---
 
