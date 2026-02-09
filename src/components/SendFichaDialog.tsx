@@ -10,9 +10,8 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-    DialogFooter
 } from "@/components/ui/dialog";
-import { Share2, MessageCircle, Mail, Copy, Check, Loader2 } from "lucide-react";
+import { Share2, MessageCircle, Mail, Copy, Check, Loader2, Phone, User } from "lucide-react";
 import { toast } from "sonner";
 import { generateFichaLink } from "@/app/actions/fichas";
 import { formatPersonName } from "@/lib/utils/normalization";
@@ -66,11 +65,15 @@ export function SendFichaDialog({ persona }: SendFichaDialogProps) {
     };
 
     const shareEmail = () => {
-        if (!link || !persona.contacto?.email) return;
+        if (!link) return;
+        const email = persona.contacto?.email || '';
         const subject = "Ficha de Datos Personales - NotiAR";
         const body = `Hola ${persona.nombre_completo},\n\nPor favor, completa tus datos personales ingresando al siguiente link seguro:\n${link}\n\nMuchas gracias.`;
-        window.open(`mailto:${persona.contacto.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+        window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
     };
+
+    const hasPhone = Boolean(persona.contacto?.telefono);
+    const hasEmail = Boolean(persona.contacto?.email);
 
     return (
         <Dialog open={open} onOpenChange={(val) => {
@@ -85,9 +88,9 @@ export function SendFichaDialog({ persona }: SendFichaDialogProps) {
                     <Share2 size={14} /> Ficha
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border border-slate-200 shadow-xl rounded-2xl bg-white">
-                {/* Clean Header */}
-                <div className="bg-slate-50 p-8 border-b border-slate-100">
+            <DialogContent className="sm:max-w-[640px] p-0 overflow-hidden border border-slate-200 shadow-xl rounded-2xl bg-white">
+                {/* Header */}
+                <div className="bg-slate-50 p-6 border-b border-slate-100">
                     <DialogHeader className="text-left">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-slate-200 text-slate-600 rounded-lg">
@@ -98,36 +101,74 @@ export function SendFichaDialog({ persona }: SendFichaDialogProps) {
                             </DialogTitle>
                         </div>
                         <DialogDescription className="text-slate-500 text-sm">
-                            Genera un enlace para que <strong className="text-slate-900">{formatPersonName(persona.nombre_completo)}</strong> complete su información personal.
+                            Genera un enlace para que el cliente complete su información personal.
                         </DialogDescription>
                     </DialogHeader>
                 </div>
 
-                <div className="p-8 bg-white space-y-8">
-                    {!link ? (
-                        <div className="py-2">
-                            <Button
-                                onClick={handleGenerate}
-                                disabled={loading}
-                                className="w-full h-12 text-base font-semibold bg-slate-900 hover:bg-slate-800 text-white transition-all rounded-xl shadow-sm"
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                        Generando enlace...
-                                    </>
-                                ) : (
-                                    "Generar Link de Acceso"
-                                )}
-                            </Button>
+                <div className="p-6 bg-white space-y-6">
+                    {/* Contact Info Card */}
+                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                        <div className="flex items-start gap-4">
+                            <div className="p-3 bg-white rounded-full border border-slate-200 shadow-sm">
+                                <User size={24} className="text-slate-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-lg font-bold text-slate-900">
+                                    {formatPersonName(persona.nombre_completo)}
+                                </h3>
+                                <div className="flex flex-wrap gap-4 mt-2">
+                                    {hasPhone ? (
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <Phone size={14} className="text-green-600" />
+                                            <span className="font-medium text-slate-700">{persona.contacto?.telefono}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2 text-sm text-slate-400">
+                                            <Phone size={14} />
+                                            <span>Sin teléfono</span>
+                                        </div>
+                                    )}
+                                    {hasEmail ? (
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <Mail size={14} className="text-blue-600" />
+                                            <span className="font-medium text-slate-700">{persona.contacto?.email}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2 text-sm text-slate-400">
+                                            <Mail size={14} />
+                                            <span>Sin email (opcional)</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
+                    </div>
+
+                    {!link ? (
+                        <Button
+                            onClick={handleGenerate}
+                            disabled={loading}
+                            className="w-full h-12 text-base font-semibold bg-slate-900 hover:bg-slate-800 text-white transition-all rounded-xl shadow-sm"
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                    Generando enlace...
+                                </>
+                            ) : (
+                                "Generar Link de Acceso"
+                            )}
+                        </Button>
                     ) : (
-                        <div className="space-y-6">
-                            {/* Standard Link Box */}
+                        <div className="space-y-5">
+                            {/* Link Box - Full width, no truncation */}
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Link de Acceso</Label>
-                                <div className="flex items-center gap-2 p-1 pl-4 bg-slate-50 border border-slate-200 rounded-xl">
-                                    <code className="text-xs flex-1 truncate font-mono text-slate-600">
+                                <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">
+                                    Link de Acceso
+                                </Label>
+                                <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                                    <code className="text-xs flex-1 font-mono text-slate-600 break-all select-all">
                                         {link}
                                     </code>
                                     <Button
@@ -135,7 +176,7 @@ export function SendFichaDialog({ persona }: SendFichaDialogProps) {
                                         variant="ghost"
                                         onClick={copyToClipboard}
                                         className={cn(
-                                            "h-9 w-9 rounded-lg transition-colors",
+                                            "h-9 w-9 rounded-lg transition-colors shrink-0",
                                             copied ? "text-green-600 bg-green-50" : "text-slate-400 hover:text-slate-900 hover:bg-slate-100"
                                         )}
                                     >
@@ -144,41 +185,49 @@ export function SendFichaDialog({ persona }: SendFichaDialogProps) {
                                 </div>
                             </div>
 
-                            {/* Share Options */}
-                            <div className="grid grid-cols-2 gap-4">
-                                {persona.contacto?.telefono && (
-                                    <Button
-                                        variant="outline"
-                                        className="h-16 flex items-center justify-center gap-3 border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-all rounded-xl shadow-sm"
-                                        onClick={shareWhatsApp}
-                                    >
-                                        <MessageCircle size={20} className="text-green-600" />
-                                        <span className="text-xs font-semibold">WhatsApp</span>
-                                    </Button>
-                                )}
-                                {persona.contacto?.email && (
-                                    <Button
-                                        variant="outline"
-                                        className="h-16 flex items-center justify-center gap-3 border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-all rounded-xl shadow-sm"
-                                        onClick={shareEmail}
-                                    >
-                                        <Mail size={20} className="text-slate-600" />
-                                        <span className="text-xs font-semibold">Email</span>
-                                    </Button>
-                                )}
-                                {!persona.contacto?.telefono && !persona.contacto?.email && (
-                                    <div className="col-span-2 text-center py-4">
-                                        <p className="text-sm text-slate-500 mb-2">No hay datos de contacto para enviar el link</p>
-                                        <p className="text-xs text-slate-400">Copia el enlace y compártelo manualmente</p>
+                            {/* Share Options - Always show WhatsApp */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <Button
+                                    variant="outline"
+                                    className="h-14 flex items-center justify-center gap-3 border-green-200 bg-green-50 hover:bg-green-100 text-green-700 transition-all rounded-xl"
+                                    onClick={shareWhatsApp}
+                                >
+                                    <MessageCircle size={20} />
+                                    <div className="text-left">
+                                        <span className="text-sm font-semibold block">WhatsApp</span>
+                                        {hasPhone && (
+                                            <span className="text-[10px] text-green-600 font-normal">{persona.contacto?.telefono}</span>
+                                        )}
                                     </div>
-                                )}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="h-14 flex items-center justify-center gap-3 border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-all rounded-xl"
+                                    onClick={shareEmail}
+                                >
+                                    <Mail size={20} />
+                                    <div className="text-left">
+                                        <span className="text-sm font-semibold block">Email</span>
+                                        {hasEmail ? (
+                                            <span className="text-[10px] text-slate-500 font-normal truncate max-w-[120px] block">{persona.contacto?.email}</span>
+                                        ) : (
+                                            <span className="text-[10px] text-slate-400 font-normal">Opcional</span>
+                                        )}
+                                    </div>
+                                </Button>
                             </div>
+
+                            {!hasPhone && !hasEmail && (
+                                <p className="text-xs text-center text-amber-600 bg-amber-50 p-2 rounded-lg">
+                                    💡 No hay contacto guardado. Copia el link y compártelo manualmente.
+                                </p>
+                            )}
                         </div>
                     )}
                 </div>
 
-                {/* Minimal Footer */}
-                <div className="px-8 py-4 flex justify-center bg-slate-50/50">
+                {/* Footer */}
+                <div className="px-6 py-3 flex justify-center bg-slate-50/50 border-t border-slate-100">
                     <Button
                         variant="ghost"
                         onClick={() => setOpen(false)}
