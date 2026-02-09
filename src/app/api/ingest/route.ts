@@ -18,6 +18,50 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { normalizeID, toTitleCase, formatCUIT } from '@/lib/utils/normalization';
 import { SkillExecutor } from '@/lib/agent/SkillExecutor';
 import { classifyDocument } from '@/lib/skills/routing/documentClassifier';
+import { taxonomyService, ActIntent } from '@/lib/services/TaxonomyService';
+
+// Helper to get CESBA code from tipo_acto
+function getCESBACode(tipoActo: string): string | null {
+    const normalized = (tipoActo || '').toUpperCase().trim();
+
+    // Map common act types to operation types
+    const operationMap: Record<string, ActIntent['operation_type']> = {
+        'VENTA': 'COMPRAVENTA',
+        'COMPRAVENTA': 'COMPRAVENTA',
+        'COMPRA': 'COMPRAVENTA',
+        'HIPOTECA': 'HIPOTECA',
+        'MUTUO HIPOTECARIO': 'HIPOTECA',
+        'DONACION': 'DONACION',
+        'CESION': 'CESION',
+        'CESION DE DERECHOS': 'CESION',
+        'PODER': 'PODER',
+        'PODER GENERAL': 'PODER',
+        'PODER ESPECIAL': 'PODER',
+        'ACTA': 'ACTA',
+        'DIVISION': 'DIVISION_CONDOMINIO',
+        'DIVISION DE CONDOMINIO': 'DIVISION_CONDOMINIO',
+        'USUFRUCTO': 'USUFRUCTO',
+        'FIDEICOMISO': 'FIDEICOMISO',
+        'AFECTACION BIEN DE FAMILIA': 'AFECTACION_BIEN_FAMILIA',
+        'SOCIEDAD': 'CONSTITUCION_SOCIEDAD',
+    };
+
+    const operationType = operationMap[normalized] || 'OTRO';
+
+    if (operationType === 'OTRO') {
+        // Try partial match
+        for (const [key, value] of Object.entries(operationMap)) {
+            if (normalized.includes(key)) {
+                const act = taxonomyService.findActByIntent({ operation_type: value, is_family_home: false });
+                return act?.code || null;
+            }
+        }
+        return null;
+    }
+
+    const act = taxonomyService.findActByIntent({ operation_type: operationType, is_family_home: false });
+    return act?.code || null;
+}
 
 export const maxDuration = 300;
 
@@ -600,7 +644,7 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
         escritura_id: escritura?.id || null, // Tolerante si escritura falló
         tipo_acto: String(resumen_acto || 'COMPRAVENTA').toUpperCase().substring(0, 100),
         monto_operacion: parseFloat(String(operation_details?.price || 0)) || 0,
-        nro_acto: aiData.numero_escritura ? String(safeParseInt(aiData.numero_escritura) || aiData.numero_escritura) : null,
+        nro_acto: getCESBACode(resumen_acto) || null, // CESBA Code from Taxonomy
         // Dual pricing for fiduciary operations
         precio_construccion: operation_details?.precio_construccion || null,
         precio_cesion: operation_details?.precio_cesion || null,
