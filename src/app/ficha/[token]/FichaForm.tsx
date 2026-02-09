@@ -33,9 +33,14 @@ export function FichaForm({ tokenData }: { tokenData: any }) {
         domicilio: persona.domicilio_real?.literal || "",
         nombres_padres: persona.nombres_padres || "",
         estado_civil: persona.estado_civil_detalle || "",
+        nombre_conyuge: persona.datos_conyuge?.nombre_completo || persona.datos_conyuge?.nombre || "",
         email: persona.contacto?.email || "",
         telefono: persona.contacto?.telefono || ""
     });
+
+    // Check if married for conditional fields
+    const isCasado = formData.estado_civil.toLowerCase().includes("casad");
+    const isSoltero = formData.estado_civil.toLowerCase().includes("solter");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -196,24 +201,41 @@ export function FichaForm({ tokenData }: { tokenData: any }) {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="civil">Estado Civil y Detalles</Label>
+                            <Label htmlFor="civil">Estado Civil</Label>
                             <Input
                                 id="civil"
                                 required
-                                placeholder="Ej: Soltero, Casado en 1ras nupcias con..."
+                                placeholder="Ej: Soltero/a, Casado/a, Divorciado/a, Viudo/a"
                                 value={formData.estado_civil}
                                 onChange={e => setFormData({ ...formData, estado_civil: e.target.value })}
                             />
-                            <p className="text-[10px] text-slate-400">Si es divorciado o viudo, mencione con quién.</p>
                         </div>
+
+                        {/* Cónyuge - shows when married */}
+                        {isCasado && (
+                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <Label htmlFor="conyuge" className="font-medium text-slate-700">
+                                    Nombre del Cónyuge <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                    id="conyuge"
+                                    required={isCasado}
+                                    placeholder="Nombre completo de su cónyuge"
+                                    value={formData.nombre_conyuge}
+                                    onChange={e => setFormData({ ...formData, nombre_conyuge: e.target.value })}
+                                    className="border-amber-200 focus-visible:ring-amber-400"
+                                />
+                                <p className="text-[10px] text-amber-600">Obligatorio para personas casadas.</p>
+                            </div>
+                        )}
 
                         <div className="space-y-2">
                             <Label htmlFor="padres" className="font-medium text-slate-700">
-                                Nombres de los Padres (Filiación) {formData.estado_civil?.toLowerCase().includes("solter") && "*"}
+                                Nombres de los Padres (Filiación) {isSoltero && <span className="text-red-500">*</span>}
                             </Label>
                             <Input
                                 id="padres"
-                                required={formData.estado_civil?.toLowerCase().includes("solter")}
+                                required={isSoltero}
                                 placeholder="Nombres completos de Padre y Madre"
                                 value={formData.nombres_padres}
                                 onChange={e => setFormData({ ...formData, nombres_padres: e.target.value })}

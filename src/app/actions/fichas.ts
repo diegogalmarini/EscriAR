@@ -45,6 +45,7 @@ export async function submitFichaData(tokenId: string, oldDni: string, formData:
                 domicilio_real: { literal: formData.domicilio },
                 nombres_padres: formData.nombres_padres,
                 estado_civil_detalle: formData.estado_civil,
+                datos_conyuge: formData.nombre_conyuge ? { nombre_completo: formData.nombre_conyuge } : null,
                 contacto: {
                     email: formData.email,
                     telefono: formData.telefono
