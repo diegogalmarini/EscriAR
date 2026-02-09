@@ -73,7 +73,7 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
     };
 
     return (
-        <Table className="table-fixed border-collapse">
+        <Table className="w-full">
             <TableHeader>
                 <TableRow className="bg-slate-50/50">
                     <TableHead className="w-[20%]">
@@ -136,8 +136,8 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
                                     ))}
                             </div>
                         </TableCell>
-                        <TableCell className="align-top py-2">
-                            <div className="text-xs leading-tight font-normal text-slate-700">
+                        <TableCell className="align-top py-2 max-w-md">
+                            <div className="text-xs leading-tight font-normal text-slate-700 break-words">
                                 {inmueble.nomenclatura || 'Sin nomenclatura'}
                             </div>
                         </TableCell>

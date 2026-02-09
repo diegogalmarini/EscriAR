@@ -42,7 +42,18 @@ function InmueblesContent() {
             if (error) {
                 console.error("Error fetching inmuebles:", error);
             } else if (data) {
-                const total = data.length > 0 ? (data[0].total_count !== undefined ? Number(data[0].total_count) : data.length) : 0;
+                // Get total from first record's total_count field (set by RPC)
+                // If RPC doesn't provide total_count, do a separate count query
+                let total = 0;
+                if (data.length > 0 && data[0].total_count !== undefined) {
+                    total = Number(data[0].total_count);
+                } else {
+                    // Fallback: count all matching inmuebles
+                    const { count } = await supabase
+                        .from('inmuebles')
+                        .select('*', { count: 'exact', head: true });
+                    total = count || data.length;
+                }
                 setInmuebles(data);
                 setTotalItems(total);
             }
