@@ -50,6 +50,115 @@ export class SkillExecutor {
     }
 
     /**
+     * Smart Document Chunker for Mega-Documents (49+ pages)
+     * Splits by legal sections: PARTE I, PARTE II, CLAUSULA, etc.
+     */
+    private static chunkMegaDocument(text: string): string[] {
+        const MAX_CHUNK_SIZE = 20000; // ~15 pages per chunk
+
+        if (text.length <= MAX_CHUNK_SIZE) {
+            return [text];
+        }
+
+        console.log(`[CHUNKER] 📄 Mega-document detected: ${text.length} chars. Splitting...`);
+
+        // Split by major legal sections
+        const sectionPatterns = [
+            /(?=SEGUNDA PARTE:)/gi,
+            /(?=TERCERA PARTE:)/gi,
+            /(?=II\.\s*-?\s*CONTRATO HIPOTECARIO)/gi,
+            /(?=III\.\s*-?\s*Depósito del Título)/gi,
+            /(?=CONSTANCIAS NOTARIALES)/gi,
+        ];
+
+        let chunks: string[] = [text];
+
+        for (const pattern of sectionPatterns) {
+            const newChunks: string[] = [];
+            for (const chunk of chunks) {
+                if (chunk.length > MAX_CHUNK_SIZE) {
+                    const parts = chunk.split(pattern).filter(p => p.trim().length > 0);
+                    if (parts.length > 1) {
+                        newChunks.push(...parts);
+                    } else {
+                        newChunks.push(chunk);
+                    }
+                } else {
+                    newChunks.push(chunk);
+                }
+            }
+            chunks = newChunks;
+        }
+
+        // If still too large, split by CLAUSULA
+        const finalChunks: string[] = [];
+        for (const chunk of chunks) {
+            if (chunk.length > MAX_CHUNK_SIZE) {
+                // Force split at midpoint on a sentence boundary
+                const mid = Math.floor(chunk.length / 2);
+                const splitPoint = chunk.lastIndexOf('.-', mid + 500);
+                if (splitPoint > mid - 2000) {
+                    finalChunks.push(chunk.substring(0, splitPoint + 2));
+                    finalChunks.push(chunk.substring(splitPoint + 2));
+                } else {
+                    finalChunks.push(chunk);
+                }
+            } else {
+                finalChunks.push(chunk);
+            }
+        }
+
+        console.log(`[CHUNKER] ✅ Split into ${finalChunks.length} chunks: ${finalChunks.map(c => c.length).join(', ')} chars`);
+        return finalChunks;
+    }
+
+    /**
+     * Merges extraction results from multiple chunks
+     */
+    private static mergeExtractionResults(results: any[]): any {
+        const merged: any = {
+            tipo_objeto: "ACTA_EXTRACCION_PARTES",
+            entidades: [],
+            inmuebles: [],
+            operation_details: {},
+            hipoteca: null,
+        };
+
+        const seenDNIs = new Set<string>();
+
+        for (const result of results) {
+            // Merge entities (dedupe by DNI/CUIT)
+            if (result.entidades) {
+                for (const entity of result.entidades) {
+                    const key = entity.dni || entity.cuit || entity.nombre_completo;
+                    if (!seenDNIs.has(key)) {
+                        merged.entidades.push(entity);
+                        seenDNIs.add(key);
+                    }
+                }
+            }
+
+            // Merge inmuebles
+            if (result.inmuebles) {
+                merged.inmuebles.push(...result.inmuebles);
+            }
+
+            // Merge operation details (last one wins for overlaps)
+            if (result.operation_details) {
+                merged.operation_details = { ...merged.operation_details, ...result.operation_details };
+            }
+
+            // Take first non-null hipoteca
+            if (result.hipoteca && !merged.hipoteca) {
+                merged.hipoteca = result.hipoteca;
+            }
+        }
+
+        console.log(`[CHUNKER] 🔗 Merged ${results.length} chunks: ${merged.entidades.length} entities, ${merged.inmuebles?.length || 0} properties`);
+        return merged;
+    }
+
+    /**
      * Executes a skill with deterministic or semantic routing.
      */
     static async execute(skillSlug: string, file?: any, contextData?: any): Promise<any> {
@@ -72,6 +181,51 @@ export class SkillExecutor {
         if (skillSlug === 'notary-entity-extractor') contextData.responseSchema = config.ACTA_EXTRACCION_PARTES_SCHEMA;
         if (skillSlug === 'notary-mortgage-reader') contextData.responseSchema = config.NOTARY_MORTGAGE_READER_SCHEMA;
 
+        // Check for mega-document (text content in contextData)
+        const textContent = contextData.extractedText || contextData.content || "";
+        const MEGA_DOC_THRESHOLD = 25000; // ~18 pages
+
+        if (textContent.length > MEGA_DOC_THRESHOLD && skillSlug === 'notary-entity-extractor') {
+            console.log(`[EXECUTOR] 🐘 MEGA-DOCUMENT MODE: ${textContent.length} chars`);
+
+            const chunks = this.chunkMegaDocument(textContent);
+            const results: any[] = [];
+
+            // Process chunks sequentially (to avoid rate limits)
+            for (let i = 0; i < chunks.length; i++) {
+                console.log(`[EXECUTOR] Processing chunk ${i + 1}/${chunks.length} (${chunks[i].length} chars)...`);
+
+                const chunkContext = {
+                    ...contextData,
+                    extractedText: chunks[i],
+                    content: chunks[i],
+                    _chunkInfo: `Chunk ${i + 1} of ${chunks.length}. Extract ALL entities and properties from this section.`
+                };
+
+                const userContext = `INPUT CONTEXT:\n${JSON.stringify(chunkContext, null, 2)}`;
+
+                for (const modelName of MODEL_HIERARCHY) {
+                    try {
+                        const result = await this.runSkillAttempt(modelName, skillSlug, skillDoc, userContext, undefined, null, null, "");
+                        results.push(result);
+                        break; // Success, move to next chunk
+                    } catch (error: any) {
+                        console.warn(`[EXECUTOR] Chunk ${i + 1} failed with ${modelName}: ${error.message}`);
+                        if (modelName === MODEL_HIERARCHY[MODEL_HIERARCHY.length - 1]) {
+                            console.error(`[EXECUTOR] All models failed for chunk ${i + 1}`);
+                        }
+                    }
+                }
+            }
+
+            if (results.length === 0) {
+                throw new Error("All chunks failed to process");
+            }
+
+            return this.mergeExtractionResults(results);
+        }
+
+        // Standard single-document flow
         const userContext = `INPUT CONTEXT:\n${JSON.stringify(contextData, null, 2)}`;
         let lastError: Error | null = null;
 
