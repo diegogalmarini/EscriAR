@@ -76,7 +76,7 @@ export function PaginationControls({
                         variant="outline"
                         className="h-8 w-8 p-0"
                         onClick={() => onPageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
+                        disabled={currentPage >= totalPages || totalPages <= 1}
                     >
                         <span className="sr-only">Página siguiente</span>
                         <ChevronRight className="h-4 w-4" />
@@ -85,7 +85,7 @@ export function PaginationControls({
                         variant="outline"
                         className="hidden h-8 w-8 p-0 lg:flex"
                         onClick={() => onPageChange(totalPages)}
-                        disabled={currentPage === totalPages}
+                        disabled={currentPage >= totalPages || totalPages <= 1}
                     >
                         <span className="sr-only">Ir a la última página</span>
                         <ChevronsRight className="h-4 w-4" />
