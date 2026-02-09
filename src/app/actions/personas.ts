@@ -55,7 +55,7 @@ export async function createPersona(formData: {
     }
 }
 
-export async function updatePersona(dni: string, formData: {
+export async function updatePersona(identifier: string, formData: {
     nombre_completo: string;
     nacionalidad?: string;
     fecha_nacimiento?: string;
@@ -81,29 +81,44 @@ export async function updatePersona(dni: string, formData: {
             datos_conyuge: formData.nombre_conyuge ? { nombre_completo: formData.nombre_conyuge } : null,
             domicilio_real: formData.domicilio ? { literal: formData.domicilio } : null,
             contacto: {
-                email: formData.email,
-                telefono: formData.telefono
+                email: formData.email || null,
+                telefono: formData.telefono || null
             },
-            dni: formData.dni || dni,
+            dni: formData.dni || null,
             cuit: formData.cuit || null,
             cuit_tipo: formData.cuit_tipo || 'CUIT',
             cuit_is_formal: formData.cuit_is_formal ?? true,
             updated_at: new Date().toISOString()
         };
 
-        const { data, error } = await supabase
-            .from("personas")
-            .update(updateData)
-            .eq("dni", dni)
-            .select()
-            .single();
+        // Try to find persona by ID (UUID) first, then by DNI, then by CUIT
+        let query = supabase.from("personas").update(updateData);
+
+        // Check if identifier looks like a UUID (has dashes)
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+
+        if (isUUID) {
+            query = query.eq("id", identifier);
+        } else if (identifier && !identifier.startsWith('SIN-DNI')) {
+            // Try DNI first
+            query = query.eq("dni", identifier);
+        } else {
+            // Fallback to CUIT if DNI is invalid
+            query = query.eq("cuit", formData.cuit || identifier);
+        }
+
+        const { data, error } = await query.select();
 
         if (error) throw error;
 
-        await logAction('UPDATE', 'PERSONA', { id: dni, dni: dni });
+        if (!data || data.length === 0) {
+            throw new Error("No se encontró la persona para actualizar");
+        }
+
+        await logAction('UPDATE', 'PERSONA', { id: identifier, dni: formData.dni || identifier });
 
         revalidatePath('/clientes');
-        return { success: true, data };
+        return { success: true, data: data[0] };
     } catch (error: any) {
         console.error("Error updating persona:", error);
         return { success: false, error: error.message };
