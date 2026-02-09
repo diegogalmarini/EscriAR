@@ -47,6 +47,34 @@ Este documento registra los hitos alcanzados y las funcionalidades que han sido 
 
 ---
 
+## Hitos Alcanzados (Febrero 2026)
+
+### 9. Fix: Actualización de Contacto de Clientes ✅
+- **Fecha:** 2026-02-09
+- **Problema:** Error "Cannot coerce the result to a single JSON object" al editar clientes sin DNI.
+- **Solución:** `updatePersona` ahora busca por UUID (id), DNI o CUIT según corresponda.
+- **Componente:** `src/app/actions/personas.ts`
+
+### 10. Nuevo Cliente: Modo Dual (Rápido + Completo) ✅
+- **Fecha:** 2026-02-09
+- **Logro:** `NuevoClienteDialog` con dos modos:
+  - **Rápido + Link:** Solo nombre + teléfono/email → genera link automático para que el cliente complete.
+  - **Formulario Completo:** Carga manual de todos los datos.
+- **UX:** Toggle en la UI para cambiar entre modos.
+- **Componente:** `src/components/NuevoClienteDialog.tsx`
+
+### 11. Ficha Pública: Campo Cónyuge Dinámico ✅
+- **Fecha:** 2026-02-09
+- **Logro:** Cuando el cliente escribe "Casado/a" en estado civil, aparece automáticamente el campo "Nombre del Cónyuge" (obligatorio).
+- **Componente:** `src/app/ficha/[token]/FichaForm.tsx`, `src/app/actions/fichas.ts`
+
+### 12. Formatos de Archivo Soportados ✅
+- **Fecha:** 2026-02-09
+- **Cambio:** Removido soporte para `.doc` (formato antiguo). Solo se aceptan **PDF** y **DOCX**.
+- **Componente:** `src/components/MagicDropzone.tsx`
+
+---
+
 ## Próximos Desafíos
 - [ ] Identificación de nuevos modelos de documentos.
 - [ ] Lectura de documentos no identificados.
