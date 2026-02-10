@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Home, MapPin, ArrowLeft, Ruler, Table2 } from "lucide-react";
 import Link from "next/link";
 
+import { DeleteInmuebleDialog } from "@/components/DeleteInmuebleDialog";
+
 interface InmuebleDetailHeaderProps {
     inmueble: any;
 }
@@ -77,6 +79,13 @@ export async function InmuebleDetailHeader({ inmueble }: InmuebleDetailHeaderPro
                             </div>
                         </div>
                     </div>
+
+                    {/* Right: Actions */}
+                    <DeleteInmuebleDialog
+                        inmuebleId={inmueble.id}
+                        nomenclatura={inmueble.nomenclatura}
+                        redirectTo="/inmuebles"
+                    />
                 </div>
             </Card>
         </div>

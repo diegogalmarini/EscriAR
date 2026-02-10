@@ -17,15 +17,19 @@ import { useState } from "react";
 import { deleteInmueble } from "@/app/actions/inmuebles";
 import { toast } from "sonner";
 
+import { useRouter } from "next/navigation";
+
 interface DeleteInmuebleDialogProps {
     inmuebleId: string;
     nomenclatura?: string;
     onInmuebleDeleted?: () => void;
+    redirectTo?: string;
 }
 
-export function DeleteInmuebleDialog({ inmuebleId, nomenclatura, onInmuebleDeleted }: DeleteInmuebleDialogProps) {
+export function DeleteInmuebleDialog({ inmuebleId, nomenclatura, onInmuebleDeleted, redirectTo }: DeleteInmuebleDialogProps) {
     const [open, setOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const router = useRouter();
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -37,6 +41,8 @@ export function DeleteInmuebleDialog({ inmuebleId, nomenclatura, onInmuebleDelet
             setOpen(false);
             if (onInmuebleDeleted) {
                 onInmuebleDeleted();
+            } else if (redirectTo) {
+                router.push(redirectTo);
             } else {
                 window.location.reload();
             }
