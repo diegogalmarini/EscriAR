@@ -11,10 +11,12 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, FolderKanban } from "lucide-react";
+import { ArrowUpDown, FolderKanban, Eye } from "lucide-react";
+import { DeleteCarpetaDialog } from "@/components/DeleteCarpetaDialog";
 
 interface CarpetasTableProps {
     data: any[];
+    onCarpetaDeleted?: () => void;
 }
 
 type SortKey = "numero" | "acto" | "nro_acto" | "partes";
@@ -25,7 +27,7 @@ interface SortConfig {
     direction: SortDirection;
 }
 
-export function CarpetasTable({ data }: CarpetasTableProps) {
+export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
     const router = useRouter();
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "numero", direction: "desc" });
 
@@ -178,6 +180,7 @@ export function CarpetasTable({ data }: CarpetasTableProps) {
                                 <ArrowUpDown className="ml-1 h-3 w-3" />
                             </Button>
                         </TableHead>
+                        <TableHead className="text-right w-[100px] text-xs font-normal text-muted-foreground">Acciones</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -201,11 +204,28 @@ export function CarpetasTable({ data }: CarpetasTableProps) {
                             <TableCell className="text-xs text-slate-600 max-w-[200px] truncate">
                                 {carpeta.displayPartes}
                             </TableCell>
+                            <TableCell className="text-right">
+                                <div className="flex justify-end items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                                        onClick={() => router.push(`/carpeta/${carpeta.id}`)}
+                                    >
+                                        <Eye size={16} />
+                                    </Button>
+                                    <DeleteCarpetaDialog
+                                        carpetaId={carpeta.id}
+                                        caratula={carpeta.caratula}
+                                        onCarpetaDeleted={onCarpetaDeleted}
+                                    />
+                                </div>
+                            </TableCell>
                         </TableRow>
                     ))}
                     {sortedData.length === 0 && (
                         <TableRow>
-                            <TableCell colSpan={4} className="text-center py-20 text-muted-foreground">
+                            <TableCell colSpan={5} className="text-center py-20 text-muted-foreground">
                                 <FolderKanban className="mx-auto h-12 w-12 opacity-20 mb-4" />
                                 No se encontraron carpetas.
                             </TableCell>

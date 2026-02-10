@@ -97,7 +97,7 @@ export default function CarpetasPage() {
                             </div>
                         </div>
                     ) : (
-                        <CarpetasTable data={carpetas || []} />
+                        <CarpetasTable data={carpetas || []} onCarpetaDeleted={fetchCarpetas} />
                     )}
                 </CardContent>
                 <CardFooter className="border-t p-4">
