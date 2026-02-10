@@ -81,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <div className="flex h-screen bg-slate-50 overflow-hidden">
+        <div className="flex min-h-screen bg-slate-50">
             {/* Mobile Header */}
             <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b flex items-center justify-between px-4 z-50">
                 <span className="font-bold text-xl text-primary">NotiAr</span>
@@ -157,7 +157,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             )}
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto h-full pt-16 lg:pt-0">
+            <main className="flex-1 pt-16 lg:pt-0">
                 <div className="mx-auto max-w-7xl min-h-full">
                     {children}
                 </div>
