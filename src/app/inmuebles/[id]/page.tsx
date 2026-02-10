@@ -3,7 +3,6 @@ import { getInmuebleWithRelations } from "@/app/actions/inmuebleRelations";
 import { InmuebleDetailHeader } from "@/components/inmuebles/InmuebleDetailHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Button } from "@/components/ui/button";
 import { Folder, User, Copy, AlertCircle, FileText, BookOpen } from "lucide-react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
