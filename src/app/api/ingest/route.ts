@@ -700,7 +700,7 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
         const extractedPersona = {
             dni: finalID,
             tipo_persona: c.tipo_persona || 'FISICA',  // NEW: Add tipo_persona
-            nombre_completo: c.tipo_persona === 'JURIDICA' || c.tipo_persona === 'FIDEICOMISO' ? c.nombre_completo : toTitleCase(c.nombre_completo),
+            nombre_completo: c.nombre_completo,
             cuit: normalizeID(c.cuit),
             cuit_tipo: c.cuit_tipo || 'CUIT',
             cuit_is_formal: c.cuit_is_formal ?? true,
