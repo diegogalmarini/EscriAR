@@ -67,7 +67,7 @@ const OPERATION_BASE_CODES: Record<string, string> = {
     "DIVISION_CONDOMINIO": "700",
     "AFECTACION_BIEN_FAMILIA": "800",
     "USUFRUCTO": "150",
-    "FIDEICOMISO": "900",
+    "FIDEICOMISO": "121",
 };
 
 // Subcode logic based on exemptions
