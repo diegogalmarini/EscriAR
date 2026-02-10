@@ -62,11 +62,6 @@ export function formatClienteDisplayName(persona: any): string {
         // Fix "ARGENTINA, BANCO DE LA NACION" -> "BANCO DE LA NACION ARGENTINA"
         if (nombre.includes(",")) {
             const parts = nombre.split(",").map((s: string) => s.trim());
-            // Usually "SUFFIX, PREFIX" or "MAIN, TYPE" -> We want "PREFIX SUFFIX"
-            // E.g. "ANONIMA, SOMAJOFA SOCIEDAD" -> "SOMAJOFA SOCIEDAD ANONIMA" if that was the case, 
-            // but often it is "ARGENTINA, BANCO..." -> "BANCO... ARGENTINA"
-            // Let's swap them.
-            // If there are multiple commas, we reverse the whole thing? No, safer to just swap first 2 chunks.
             if (parts.length >= 2) {
                 return `${parts[1]} ${parts[0]}`.toUpperCase();
             }
@@ -74,25 +69,35 @@ export function formatClienteDisplayName(persona: any): string {
         return nombre.toUpperCase();
     } else {
         // Natural Person: "APELLIDO, Nombre"
-        // Input might be "Juan PEREZ", "PEREZ, Juan", "Juan Perez", "PEREZ Juan"
 
-        // Case 1: Already has comma -> "APELLIDO, Nombre" (Assume input is "Surname, Name")
+        // Case 1: Already has comma -> "APELLIDO, Nombre"
         if (nombre.includes(",")) {
             const [surname, ...names] = nombre.split(",").map((s: string) => s.trim());
-            return `${surname.toUpperCase()}, ${names.join(" ")}`; // Ensure Surname is Upper
+            return `${surname.toUpperCase()}, ${names.join(" ")}`;
         }
 
-        // Case 2: No comma. formatting "First Last" -> "LAST, First"
-        // We need to guess which part is surname.
+        // Case 2: No comma. Check for uppercase words (potential surnames)
         const parts = nombre.split(/\s+/);
+
+        // Find if there are words in ALL CAPS (length > 1 to avoid initials)
+        const upperParts = parts.filter(p => p.length > 1 && p === p.toUpperCase() && /^[A-ZÑÁÉÍÓÚ]+$/.test(p));
+
+        if (upperParts.length > 0 && upperParts.length < parts.length) {
+            // "Ramsés Antonio CASTILLO MARACAY"
+            // Surnames are the uppercase ones
+            const surnames = upperParts.join(" ");
+            const names = parts.filter(p => !upperParts.includes(p)).join(" ");
+            return `${surnames.toUpperCase()}, ${names}`;
+        }
+
+        // Case 3: Standard heuristic (Last word is surname)
         if (parts.length > 1) {
-            // Heuristic: Last word is surname
             const last = parts.pop();
             const first = parts.join(" ");
             return `${last?.toUpperCase()}, ${first}`;
         }
 
-        // Case 3: Single word
+        // Case 4: Single word
         return nombre.toUpperCase();
     }
 }

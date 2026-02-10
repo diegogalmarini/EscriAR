@@ -30,7 +30,7 @@ export function PersonForm({ initialData, onSuccess, onCancel }: PersonFormProps
     const [nameParts, setNameParts] = useState(() => {
         const full = initialData?.nombre_completo || "";
 
-        // Handle "SURNAME, Name" format (common in AI output and notary standard)
+        // Handle "SURNAME, Name" format
         if (full.includes(",")) {
             const [last, ...firstParts] = full.split(",").map((s: string) => s.trim());
             return {
@@ -39,15 +39,22 @@ export function PersonForm({ initialData, onSuccess, onCancel }: PersonFormProps
             };
         }
 
-        const parts = full.trim().split(" ");
+        const parts = full.trim().split(/\s+/);
+
+        // Improved Heuristic: Check for uppercase words (surnames)
+        const upperParts = parts.filter(p => p.length > 1 && p === p.toUpperCase() && /^[A-ZÑÁÉÍÓÚ]+$/.test(p));
+
+        if (upperParts.length > 0 && upperParts.length < parts.length) {
+            // "Ramsés Antonio CASTILLO MARACAY"
+            const surnames = upperParts.join(" ");
+            const names = parts.filter(p => !upperParts.includes(p)).join(" ");
+            return {
+                nombre: names,
+                apellido: surnames.toUpperCase()
+            };
+        }
+
         if (parts.length >= 2) {
-            // Heuristic: Last word is usually the primary surname in simple cases,
-            // but for "Carlos Alberto Perez Aguirre" it might fail.
-            // Default: Everything but the last word is Name.
-            // BUT if user said "Nittoli Natalia", then "Nittoli" is surname.
-            // Actually, if there is no comma, but uppercase vs lowercase mix? No.
-            // Let's stick to: if parts.length > 2, last 2 items are likely surname in Argentina (composite).
-            // Actually, let's keep it simple: everything but last word is name, last word is surname.
             const last = parts.pop();
             return { nombre: parts.join(" "), apellido: (last || "").toUpperCase() };
         }
