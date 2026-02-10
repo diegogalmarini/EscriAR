@@ -20,6 +20,7 @@ export interface ActIntent {
     | "USUFRUCTO"
     | "FIDEICOMISO"
     | "CONSTITUCION_SOCIEDAD"
+    | "CANCELACION_HIPOTECA"
     | "OTRO";
 
     property_type?: "VIVIENDA" | "TERRENO" | "COMERCIAL" | "RURAL" | "PH";
@@ -58,6 +59,7 @@ const OPERATION_BASE_CODES: Record<string, string> = {
     "COMPRAVENTA": "100",
     "COMPRAVENTA_NUDA": "103",
     "HIPOTECA": "200",
+    "CANCELACION_HIPOTECA": "311",
     "DONACION": "300",
     "CESION": "400",
     "PODER": "500",
