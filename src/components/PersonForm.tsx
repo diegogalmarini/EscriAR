@@ -42,7 +42,7 @@ export function PersonForm({ initialData, onSuccess, onCancel }: PersonFormProps
         const parts = full.trim().split(/\s+/);
 
         // Improved Heuristic: Check for uppercase words (surnames)
-        const upperParts = parts.filter(p => p.length > 1 && p === p.toUpperCase() && /^[A-ZÑÁÉÍÓÚ]+$/.test(p));
+        const upperParts = parts.filter((p: string) => p.length > 1 && p === p.toUpperCase() && /^[A-ZÑÁÉÍÓÚ]+$/.test(p));
 
         if (upperParts.length > 0 && upperParts.length < parts.length) {
             // "Ramsés Antonio CASTILLO MARACAY"

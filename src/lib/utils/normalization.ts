@@ -80,13 +80,13 @@ export function formatClienteDisplayName(persona: any): string {
         const parts = nombre.split(/\s+/);
 
         // Find if there are words in ALL CAPS (length > 1 to avoid initials)
-        const upperParts = parts.filter(p => p.length > 1 && p === p.toUpperCase() && /^[A-ZÑÁÉÍÓÚ]+$/.test(p));
+        const upperParts = parts.filter((p: string) => p.length > 1 && p === p.toUpperCase() && /^[A-ZÑÁÉÍÓÚ]+$/.test(p));
 
         if (upperParts.length > 0 && upperParts.length < parts.length) {
             // "Ramsés Antonio CASTILLO MARACAY"
             // Surnames are the uppercase ones
             const surnames = upperParts.join(" ");
-            const names = parts.filter(p => !upperParts.includes(p)).join(" ");
+            const names = parts.filter((p: string) => !upperParts.includes(p)).join(" ");
             return `${surnames.toUpperCase()}, ${names}`;
         }
 
