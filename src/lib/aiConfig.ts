@@ -207,7 +207,13 @@ export const ACTA_EXTRACCION_PARTES_SCHEMA: any = {
                     },
                     transcripcion_literal: {
                         type: SchemaType.OBJECT,
-                        description: "Transcripción COMPLETA, NARRATIVA Y LITERAL del Inmueble. Debe comenzar desde la ubicación ('un departamento...', 'una unidad funcional...') copiando antecedentes, medidas, linderos y nomenclatura sin resumir NADA.",
+                        description: "Transcripción COMPLETA Y LITERAL del Inmueble SOLAMENTE. Comienza desde la ubicación ('un departamento...', 'una unidad funcional...') copiando medidas, linderos, nomenclatura catastral, partida y valuación fiscal. NO INCLUIR la sección TITULO ANTECEDENTE (eso va en campo separado).",
+                        properties: { valor: { type: SchemaType.STRING }, evidencia: { type: SchemaType.STRING } },
+                        required: ["valor", "evidencia"]
+                    },
+                    titulo_antecedente: {
+                        type: SchemaType.OBJECT,
+                        description: "Transcripción LITERAL Y COMPLETA de la sección 'TITULO ANTECEDENTE' o 'ANTECEDENTES DE DOMINIO'. Copiar palabra por palabra desde 'Les corresponde...' o 'Le corresponde...' hasta la inscripción registral (Matrícula/Folio). Si no existe esta sección, dejar vacío.",
                         properties: { valor: { type: SchemaType.STRING }, evidencia: { type: SchemaType.STRING } },
                         required: ["valor", "evidencia"]
                     },

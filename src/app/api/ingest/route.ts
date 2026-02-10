@@ -555,6 +555,7 @@ function normalizeAIData(raw: any) {
             partida_inmobiliaria: i.partida_inmobiliaria?.valor || i.partida_inmobiliaria,
             nomenclatura: i.nomenclatura?.valor || i.nomenclatura,
             transcripcion_literal: i.transcripcion_literal?.valor || i.transcripcion_literal,
+            titulo_antecedente: i.titulo_antecedente?.valor || i.titulo_antecedente || null,
             valuacion_fiscal: i.valuacion_fiscal?.valor || i.valuacion_fiscal || 0
         }));
     }
@@ -615,6 +616,7 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
                 nro_partida: primary.partida_inmobiliaria,
                 nomenclatura: primary.nomenclatura,
                 transcripcion_literal: primary.transcripcion_literal,
+                titulo_antecedente: primary.titulo_antecedente,
                 valuacion_fiscal: primary.valuacion_fiscal
             }).select().single();
 

@@ -356,8 +356,9 @@ export class SkillExecutor {
    - **MÁXIMA PRIORIDAD (ROLES):** En una 'Cesión de Beneficiario', el vendedor se llama **CEDENTE** y el comprador se llama **CESIONARIO**. No uses Vendedor/Comprador genérico si existen estos roles específicos.
    - **MÁXIMA PRIORIDAD (SOMAJOFA):** Si aparece 'SOMAJOFA S.A.', su rol es **FIDUCIARIA**. No la llames Vendedor.
    - **MÁXIMA PRIORIDAD (PRECIOS):** Extrae AMBOS: \`precio_construccion\` (ARS, histórico) y \`precio_cesion\` (USD, mercado). Si no extraes el precio en Dólares, fallarás la tarea.
-6. **INMUEBLES (TRANSCRIPCIÓN):** El campo 'transcripcion_literal' debe ser UNA COPIA EXACTA, PALABRA POR PALABRA. Comienza desde la ubicación ("UNIDAD FUNCIONAL... que es parte del edificio...") y DEBE INCLUIR HASTA EL FINAL: Medidas, Linderos, Antecedentes, NOMENCLATURA CATASTRAL, PARTIDA y VALUACIÓN FISCAL. No cortes antes de tiempo.
+6. **INMUEBLES (TRANSCRIPCIÓN):** El campo 'transcripcion_literal' debe ser UNA COPIA EXACTA, PALABRA POR PALABRA del inmueble SOLAMENTE. Comienza desde la ubicación ("UNIDAD FUNCIONAL... que es parte del edificio...") e incluye: Medidas, Linderos, NOMENCLATURA CATASTRAL, PARTIDA y VALUACIÓN FISCAL. **TERMINA AHÍ. NO INCLUIR la sección TITULO ANTECEDENTE en este campo.**
 7. **FALTANTES:** Busca en todo el documento. Si falta un CUIT, no inventes, pero asegúrate de que no esté en la foja de firmas.
+8. **TITULO ANTECEDENTE (CAMPO SEPARADO):** Extrae la sección "TITULO ANTECEDENTE" o "ANTECEDENTES DE DOMINIO" en el campo 'titulo_antecedente' del inmueble. Copia LITERAL desde "Les corresponde..." o "Le corresponde..." hasta la inscripción registral (número de Matrícula/Folio/Registro). Este texto es CRÍTICO para futuras escrituras.
 
 
 ` : '';

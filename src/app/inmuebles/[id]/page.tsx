@@ -4,7 +4,7 @@ import { InmuebleDetailHeader } from "@/components/inmuebles/InmuebleDetailHeade
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Folder, User, Copy, AlertCircle, FileText } from "lucide-react";
+import { Folder, User, Copy, AlertCircle, FileText, BookOpen } from "lucide-react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { InmuebleToolbar } from "@/components/inmuebles/InmuebleToolbar";
@@ -64,6 +64,27 @@ export default async function InmuebleDetailPage({ params }: { params: Promise<{
                             </ScrollArea>
                         </div>
                     </Card>
+
+                    {/* TITULO ANTECEDENTE */}
+                    {inmueble.titulo_antecedente && (
+                        <Card className="border-amber-200 shadow-sm">
+                            <CardHeader className="pb-3 border-b border-amber-100 bg-amber-50/50 rounded-t-lg">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 bg-amber-100 rounded text-amber-700">
+                                        <BookOpen size={18} />
+                                    </div>
+                                    <CardTitle className="text-base font-bold text-amber-900">
+                                        Título Antecedente
+                                    </CardTitle>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="bg-amber-50/30 p-6">
+                                <p className="text-sm leading-7 font-mono text-slate-700 whitespace-pre-wrap select-text selection:bg-amber-100 text-justify">
+                                    {inmueble.titulo_antecedente}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
 
                 {/* RIGHT COLUMN: RELATIONS (1/3 width) */}
