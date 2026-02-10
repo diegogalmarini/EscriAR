@@ -3,7 +3,7 @@ import { getInmuebleWithRelations } from "@/app/actions/inmuebleRelations";
 import { InmuebleDetailHeader } from "@/components/inmuebles/InmuebleDetailHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { Folder, User, Copy, AlertCircle, FileText, BookOpen } from "lucide-react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -58,9 +58,9 @@ export default async function InmuebleDetailPage({ params }: { params: Promise<{
                         </CardHeader>
 
                         <div className="bg-slate-50/50 p-0">
-                            <ScrollArea className="max-h-[600px] w-full p-6 text-justify text-sm leading-7 font-mono text-slate-700 whitespace-pre-wrap select-text selection:bg-blue-100">
+                            <div className="w-full p-6 text-justify text-sm leading-7 font-mono text-slate-700 whitespace-pre-wrap select-text selection:bg-blue-100">
                                 {inmueble.transcripcion_literal || "No hay transcripción cargada."}
-                            </ScrollArea>
+                            </div>
                         </div>
                     </Card>
 
