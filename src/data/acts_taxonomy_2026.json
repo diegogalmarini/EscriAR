@@ -27,6 +27,34 @@
       "$ 25000"
     ]
   },
+  "200-00": {
+    "description": "HIPOTECA",
+    "category": "REGISTRABLE",
+    "tax_variables": {
+      "stamp_duty_rate": 0.015,
+      "min_fee_ars": 0,
+      "fees_extracted": [
+        "$ 891000",
+        "$ 25000"
+      ]
+    },
+    "flags": [],
+    "suspended_rate_2026": false,
+    "raw_row": [
+      "",
+      "200-00",
+      "HIPOTECA",
+      "MONTO HIPOTECA",
+      "1,5%",
+      "2",
+      "MONTO HIPOTECA",
+      "$ 891000",
+      "MONTO HIPOTECA",
+      "",
+      "0,004",
+      "$ 25000"
+    ]
+  },
   "100-01": {
     "description": "SUJETO AL PAGO DE IMP. DE SELLOS / 1 PTE. EXENTA DE APORTES DE TERCEROS",
     "category": "REGISTRABLE",

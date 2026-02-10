@@ -485,7 +485,9 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                                                     {p.trim()}
                                                                 </Link>
                                                             ) : (
-                                                                <div key={idx} className="text-slate-700">{p.trim()}</div>
+                                                                <div key={idx} className="text-slate-700">
+                                                                    {/^\d+$/.test(p.trim()) ? Number(p.trim()).toLocaleString('es-AR') : p.trim()}
+                                                                </div>
                                                             )
                                                         ))}
                                                 </div>
