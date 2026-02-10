@@ -73,7 +73,7 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
     };
 
     return (
-        <Table className="w-full">
+        <Table className="w-full table-fixed">
             <TableHeader>
                 <TableRow className="bg-slate-50/50">
                     <TableHead className="w-[20%]">
@@ -125,19 +125,23 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
                             <div className="font-mono text-xs font-medium space-y-0.5">
                                 {(inmueble.nro_partida || 'N/A')
                                     .split(/[;]/)
-                                    .map((p: string, idx: number) => (
-                                        <Link
-                                            key={idx}
-                                            href={`/inmuebles/${inmueble.id}`}
-                                            className="block text-blue-600 hover:text-blue-800 hover:underline whitespace-nowrap"
-                                        >
-                                            {p.trim()}
-                                        </Link>
-                                    ))}
+                                    .map((p: string, idx: number) => {
+                                        const trimmed = p.trim();
+                                        const formatted = trimmed.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                                        return (
+                                            <Link
+                                                key={idx}
+                                                href={`/inmuebles/${inmueble.id}`}
+                                                className="block text-blue-600 hover:text-blue-800 hover:underline whitespace-nowrap"
+                                            >
+                                                {formatted}
+                                            </Link>
+                                        );
+                                    })}
                             </div>
                         </TableCell>
-                        <TableCell className="align-top py-2 max-w-md">
-                            <div className="text-xs leading-tight font-normal text-slate-700 break-words">
+                        <TableCell className="align-top py-2 overflow-hidden">
+                            <div className="text-xs leading-snug font-normal text-slate-700 break-words whitespace-normal">
                                 {inmueble.nomenclatura || 'Sin nomenclatura'}
                             </div>
                         </TableCell>
