@@ -482,7 +482,7 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                                                     href={`/inmuebles/${escritura.inmuebles.id}`}
                                                                     className="block text-blue-600 hover:text-blue-800 hover:underline"
                                                                 >
-                                                                    {p.trim()}
+                                                                    {/^\d+$/.test(p.trim()) ? Number(p.trim()).toLocaleString('es-AR') : p.trim()}
                                                                 </Link>
                                                             ) : (
                                                                 <div key={idx} className="text-slate-700">

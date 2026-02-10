@@ -192,6 +192,7 @@ export const ACTA_EXTRACCION_PARTES_SCHEMA: any = {
                 properties: {
                     partido: {
                         type: SchemaType.OBJECT,
+                        description: "Nombre del Partido (ej: La Plata, Bahía Blanca). NO EXTRAER CÓDIGOS NUMÉRICOS (ej: 007). Si aparecen ambos, extraer SOLO EL NOMBRE.",
                         properties: { valor: { type: SchemaType.STRING }, evidencia: { type: SchemaType.STRING } },
                         required: ["valor", "evidencia"]
                     },
@@ -268,6 +269,18 @@ export const ACTA_EXTRACCION_PARTES_SCHEMA: any = {
                         evidencia: { type: SchemaType.STRING }
                     },
                     required: ["monto", "moneda", "evidencia"]
+                },
+                partida_inmobiliaria: {
+                    type: SchemaType.OBJECT,
+                    description: "Si el acto es una CANCELACIÓN y el inmueble se menciona referencialmente (ej: 'sobre el inmueble...'), extraer la PARTIDA. Prioridad ALTA.",
+                    properties: { valor: { type: SchemaType.STRING }, evidencia: { type: SchemaType.STRING } },
+                    required: ["valor", "evidencia"]
+                },
+                partido_inmobiliario: {
+                    type: SchemaType.OBJECT,
+                    description: "Si el acto es una CANCELACIÓN y el inmueble se menciona referencialmente, extraer el PARTIDO (NOMBRE, NO CÓDIGO).",
+                    properties: { valor: { type: SchemaType.STRING }, evidencia: { type: SchemaType.STRING } },
+                    required: ["valor", "evidencia"]
                 },
                 precio_cesion: {
                     type: SchemaType.OBJECT,
