@@ -50,6 +50,8 @@ function getCESBACode(tipoActo: string, isFamilyHome: boolean = false): string |
         'FIDEICOMISO': 'FIDEICOMISO',
         'AFECTACION BIEN DE FAMILIA': 'AFECTACION_BIEN_FAMILIA',
         'SOCIEDAD': 'CONSTITUCION_SOCIEDAD',
+        'TRANSFERENCIA DE DOMINIO A BENEFICIARIO': 'FIDEICOMISO',
+        'ADJUDICACION DE FIDEICOMISO': 'FIDEICOMISO',
     };
 
     const operationType = operationMap[normalized] || 'OTRO';
@@ -384,8 +386,8 @@ function normalizeAIData(raw: any) {
         notario: ops.escribano_nombre?.valor || null,
         registro: ops.registro_numero?.valor || null,
         operation_details: {
-            price: ops.precio_cesion?.monto || raw.cesion_beneficiario?.precio_cesion?.monto || ops.precio?.valor || raw.price?.valor || 0,
-            currency: ops.precio_cesion?.moneda || raw.cesion_beneficiario?.precio_cesion?.moneda || ops.precio?.moneda || raw.currency?.valor || 'USD',
+            price: ops.precio_cesion?.equivalente_ars || ops.precio_cesion?.monto || raw.cesion_beneficiario?.precio_cesion?.monto || ops.precio?.valor || raw.price?.valor || 0,
+            currency: (ops.precio_cesion?.equivalente_ars ? 'ARS' : (ops.precio_cesion?.moneda || raw.cesion_beneficiario?.precio_cesion?.moneda || ops.precio?.moneda || raw.currency?.valor || 'USD')),
             date: ops.fecha_escritura?.valor || raw.fecha_escritura?.valor,
             // Dual pricing for fiduciary operations
             precio_construccion: ops.precio_construccion?.monto || raw.precio_construccion?.monto || null,
