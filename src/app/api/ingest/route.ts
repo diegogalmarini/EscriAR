@@ -21,7 +21,7 @@ import { classifyDocument } from '@/lib/skills/routing/documentClassifier';
 import { taxonomyService, ActIntent } from '@/lib/services/TaxonomyService';
 
 // Helper to get CESBA code from tipo_acto
-function getCESBACode(tipoActo: string): string | null {
+function getCESBACode(tipoActo: string, isFamilyHome: boolean = false): string | null {
     const normalized = (tipoActo || '').toUpperCase().trim();
 
     // Map common act types to operation types
@@ -52,14 +52,14 @@ function getCESBACode(tipoActo: string): string | null {
         // Try partial match
         for (const [key, value] of Object.entries(operationMap)) {
             if (normalized.includes(key)) {
-                const act = taxonomyService.findActByIntent({ operation_type: value, is_family_home: false });
+                const act = taxonomyService.findActByIntent({ operation_type: value, is_family_home: isFamilyHome });
                 return act?.code || null;
             }
         }
         return null;
     }
 
-    const act = taxonomyService.findActByIntent({ operation_type: operationType, is_family_home: false });
+    const act = taxonomyService.findActByIntent({ operation_type: operationType, is_family_home: isFamilyHome });
     return act?.code || null;
 }
 
@@ -377,7 +377,8 @@ function normalizeAIData(raw: any) {
             precio_construccion: ops.precio_construccion?.monto || raw.precio_construccion?.monto || null,
             precio_cesion: ops.precio_cesion?.monto || raw.cesion_beneficiario?.precio_cesion?.monto || null,
             tipo_cambio_cesion: ops.precio_cesion?.tipo_cambio || raw.cesion_beneficiario?.precio_cesion?.tipo_cambio || null,
-            equivalente_ars_cesion: ops.precio_cesion?.equivalente_ars || raw.cesion_beneficiario?.precio_cesion?.equivalente_ars || null
+            equivalente_ars_cesion: ops.precio_cesion?.equivalente_ars || raw.cesion_beneficiario?.precio_cesion?.equivalente_ars || null,
+            is_family_home: ops.es_vivienda_unica?.valor || false
         },
         // Beneficiary assignment (fiduciary operations)
         cesion_beneficiario: (raw.cesion_beneficiario || raw.cesion || raw.transferencia) ? (() => {
@@ -651,7 +652,7 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
         escritura_id: escritura?.id || null, // Tolerante si escritura falló
         tipo_acto: String(resumen_acto || 'COMPRAVENTA').toUpperCase().substring(0, 100),
         monto_operacion: parseFloat(String(operation_details?.price || 0)) || 0,
-        nro_acto: getCESBACode(resumen_acto) || null, // CESBA Code from Taxonomy
+        nro_acto: getCESBACode(resumen_acto, !!operation_details?.is_family_home) || null, // CESBA Code from Taxonomy
         // Dual pricing for fiduciary operations
         precio_construccion: operation_details?.precio_construccion || null,
         precio_cesion: operation_details?.precio_cesion || null,

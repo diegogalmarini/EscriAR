@@ -280,6 +280,15 @@ export const ACTA_EXTRACCION_PARTES_SCHEMA: any = {
                         evidencia: { type: SchemaType.STRING }
                     },
                     required: ["monto", "moneda", "evidencia"]
+                },
+                es_vivienda_unica: {
+                    type: SchemaType.OBJECT,
+                    description: "True si el inmueble se destina a 'Vivienda Única, Familiar y de Ocupación Permanente' (permite exención de sellos).",
+                    properties: {
+                        valor: { type: SchemaType.BOOLEAN },
+                        evidencia: { type: SchemaType.STRING }
+                    },
+                    required: ["valor", "evidencia"]
                 }
             },
             required: ["precio", "fecha_escritura", "numero_escritura", "tipo_acto", "escribano_nombre", "registro_numero"]
