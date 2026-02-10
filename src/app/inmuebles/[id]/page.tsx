@@ -42,7 +42,7 @@ export default async function InmuebleDetailPage({ params }: { params: Promise<{
 
                 {/* LEFT COLUMN: TRANSCRIPTION (2/3 width) */}
                 <div className="lg:col-span-2 space-y-6">
-                    <Card className="h-full border-slate-200 shadow-sm flex flex-col">
+                    <Card className="border-slate-200 shadow-sm flex flex-col">
                         <CardHeader className="pb-3 border-b border-slate-100 bg-white rounded-t-lg">
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-2">
@@ -57,9 +57,8 @@ export default async function InmuebleDetailPage({ params }: { params: Promise<{
                             </div>
                         </CardHeader>
 
-                        <div className="flex-1 bg-slate-50/50 p-0">
-                            {/* We use a large min-height to ensure it looks generous */}
-                            <ScrollArea className="h-[600px] w-full p-6 text-justify text-sm leading-7 font-mono text-slate-700 whitespace-pre-wrap select-text selection:bg-blue-100">
+                        <div className="bg-slate-50/50 p-0">
+                            <ScrollArea className="max-h-[600px] w-full p-6 text-justify text-sm leading-7 font-mono text-slate-700 whitespace-pre-wrap select-text selection:bg-blue-100">
                                 {inmueble.transcripcion_literal || "No hay transcripción cargada."}
                             </ScrollArea>
                         </div>

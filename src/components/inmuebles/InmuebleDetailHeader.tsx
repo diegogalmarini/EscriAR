@@ -56,9 +56,12 @@ export async function InmuebleDetailHeader({ inmueble }: InmuebleDetailHeaderPro
                                     <div className="flex flex-col gap-1">
                                         <span className="text-[10px] uppercase font-bold text-slate-400">Partida</span>
                                         <div className="font-mono text-slate-700 font-medium space-y-0.5">
-                                            {inmueble.nro_partida.split(/[;,]/).map((p: string, idx: number) => (
-                                                <div key={idx}>{p.trim()}</div>
-                                            ))}
+                                            {inmueble.nro_partida.split(/[;,]/).map((p: string, idx: number) => {
+                                                // Format with dot separator: 141931 → 141.931
+                                                const trimmed = p.trim();
+                                                const formatted = trimmed.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                                                return <div key={idx}>{formatted}</div>;
+                                            })}
                                         </div>
                                     </div>
                                 )}
