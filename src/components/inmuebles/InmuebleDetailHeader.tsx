@@ -46,30 +46,37 @@ export async function InmuebleDetailHeader({ inmueble }: InmuebleDetailHeaderPro
                                 </h1>
                             </div>
 
-                            <div className="flex flex-wrap gap-6 text-sm pt-2">
-                                <div className="flex items-center gap-2">
+                            <div className="flex flex-row items-baseline text-sm pt-2 gap-4">
+                                {/* PARTIDO */}
+                                <div className="flex gap-2">
                                     <span className="text-[10px] uppercase font-bold text-slate-400">Partido</span>
                                     <span className="font-semibold text-slate-700">
                                         {inmueble.partido_id || 'Desconocido'}
                                     </span>
                                 </div>
 
+                                {/* SEPARATOR */}
+                                {inmueble.nro_partida && <div className="text-slate-300">|</div>}
+
+                                {/* PARTIDA */}
                                 {inmueble.nro_partida && (
-                                    <div className="flex flex-col gap-1">
+                                    <div className="flex gap-2 items-baseline">
                                         <span className="text-[10px] uppercase font-bold text-slate-400">Partida</span>
-                                        <div className="font-mono text-slate-700 font-medium space-y-0.5">
+                                        <div className="flex flex-col font-mono text-slate-700 font-medium space-y-0.5">
                                             {inmueble.nro_partida.split(/[;,]/).map((p: string, idx: number) => {
-                                                // Format with dot separator: 141931 → 141.931
-                                                const trimmed = p.trim();
-                                                const formatted = trimmed.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                                                const formatted = p.trim().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
                                                 return <div key={idx}>{formatted}</div>;
                                             })}
                                         </div>
                                     </div>
                                 )}
 
+                                {/* SEPARATOR */}
+                                {inmueble.valuacion_fiscal && <div className="text-slate-300">|</div>}
+
+                                {/* VALUACION */}
                                 {inmueble.valuacion_fiscal && (
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex gap-2">
                                         <span className="text-[10px] uppercase font-bold text-slate-400">Valuación</span>
                                         <span className="font-mono text-slate-700">
                                             ${inmueble.valuacion_fiscal.toLocaleString('es-AR')}
