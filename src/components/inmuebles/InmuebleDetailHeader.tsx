@@ -48,7 +48,7 @@ export async function InmuebleDetailHeader({ inmueble }: InmuebleDetailHeaderPro
 
                             <div className="flex flex-row items-baseline text-sm pt-2 gap-4">
                                 {/* PARTIDO */}
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 items-baseline">
                                     <span className="text-[10px] uppercase font-bold text-slate-400">Partido</span>
                                     <span className="font-semibold text-slate-700">
                                         {inmueble.partido_id || 'Desconocido'}
@@ -76,7 +76,7 @@ export async function InmuebleDetailHeader({ inmueble }: InmuebleDetailHeaderPro
 
                                 {/* VALUACION */}
                                 {inmueble.valuacion_fiscal && (
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 items-baseline">
                                         <span className="text-[10px] uppercase font-bold text-slate-400">Valuación</span>
                                         <span className="font-mono text-slate-700">
                                             ${inmueble.valuacion_fiscal.toLocaleString('es-AR')}
