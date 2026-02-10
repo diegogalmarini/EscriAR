@@ -47,7 +47,7 @@ export function PersonForm({ initialData, onSuccess, onCancel }: PersonFormProps
         if (upperParts.length > 0 && upperParts.length < parts.length) {
             // "Ramsés Antonio CASTILLO MARACAY"
             const surnames = upperParts.join(" ");
-            const names = parts.filter(p => !upperParts.includes(p)).join(" ");
+            const names = parts.filter((p: string) => !upperParts.includes(p)).join(" ");
             return {
                 nombre: names,
                 apellido: surnames.toUpperCase()
