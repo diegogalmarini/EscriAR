@@ -535,6 +535,51 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                             <p className="text-slate-700">{escritura.registro || "No especificado"}</p>
                                         </div>
 
+                                        {/* Mortgage Specific Details (UVAs, Tasa, Capital) */}
+                                        {escritura.operaciones?.[0]?.tipo_acto?.includes('HIPOTECA') && (
+                                            <div className="mt-3 p-3 bg-blue-50/50 rounded-xl border border-blue-100/50 space-y-2">
+                                                <p className="text-[9px] font-bold uppercase text-blue-500 flex items-center gap-1.5">
+                                                    <Activity className="h-3 w-3" />
+                                                    Condiciones del Crédito
+                                                </p>
+                                                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+                                                    <div className="col-span-2 border-b border-blue-100/30 pb-1 flex justify-between items-center">
+                                                        <span className="text-[9px] text-slate-400 uppercase">Capital Mutuado</span>
+                                                        <span className="font-bold text-slate-700">
+                                                            {escritura.operaciones[0].monto_operacion?.toLocaleString('es-AR', {
+                                                                style: 'currency',
+                                                                currency: escritura.operaciones[0].moneda_cesion || 'ARS',
+                                                                maximumFractionDigits: 0
+                                                            })}
+                                                        </span>
+                                                    </div>
+
+                                                    {escritura.analysis_metadata?.operation_details?.uva_monto && (
+                                                        <div>
+                                                            <p className="text-[9px] text-slate-400 uppercase">Monto en UVAs</p>
+                                                            <p className="font-bold text-blue-600">
+                                                                {Number(escritura.analysis_metadata.operation_details.uva_monto).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                                            </p>
+                                                        </div>
+                                                    )}
+
+                                                    {escritura.analysis_metadata?.operation_details?.tasa_interes && (
+                                                        <div>
+                                                            <p className="text-[9px] text-slate-400 uppercase">Tasa (TNA)</p>
+                                                            <p className="font-bold text-slate-700">{escritura.analysis_metadata.operation_details.tasa_interes}</p>
+                                                        </div>
+                                                    )}
+
+                                                    {escritura.analysis_metadata?.operation_details?.sistema_amortizacion && (
+                                                        <div className="col-span-2 pt-1 border-t border-blue-100/30">
+                                                            <p className="text-[9px] text-slate-400 uppercase">Sistema / Amortización</p>
+                                                            <p className="font-medium text-slate-600 text-[10px]">{escritura.analysis_metadata.operation_details.sistema_amortizacion}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* Action Buttons */}
                                         <div className="grid grid-cols-3 gap-2 pt-2 border-t">
                                             <Button

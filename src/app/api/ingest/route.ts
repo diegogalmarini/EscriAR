@@ -386,15 +386,21 @@ function normalizeAIData(raw: any) {
         notario: ops.escribano_nombre?.valor || null,
         registro: ops.registro_numero?.valor || null,
         operation_details: {
-            price: ops.precio_cesion?.equivalente_ars || ops.precio_cesion?.monto || raw.cesion_beneficiario?.precio_cesion?.monto || ops.precio?.valor || raw.price?.valor || 0,
-            currency: (ops.precio_cesion?.equivalente_ars ? 'ARS' : (ops.precio_cesion?.moneda || raw.cesion_beneficiario?.precio_cesion?.moneda || ops.precio?.moneda || raw.currency?.valor || 'USD')),
+            price: ops.precio_cesion?.equivalente_ars || ops.precio_cesion?.monto || raw.cesion_beneficiario?.precio_cesion?.monto || ops.precio?.valor || raw.price?.valor || raw.financial_terms?.capital?.valor || 0,
+            currency: (ops.precio_cesion?.equivalente_ars ? 'ARS' : (ops.precio_cesion?.moneda || raw.cesion_beneficiario?.precio_cesion?.moneda || ops.precio?.moneda || raw.currency?.valor || raw.financial_terms?.capital?.currency || 'USD')),
             date: ops.fecha_escritura?.valor || raw.fecha_escritura?.valor,
             // Dual pricing for fiduciary operations
             precio_construccion: ops.precio_construccion?.monto || raw.precio_construccion?.monto || null,
             precio_cesion: ops.precio_cesion?.monto || raw.cesion_beneficiario?.precio_cesion?.monto || null,
             tipo_cambio_cesion: ops.precio_cesion?.tipo_cambio || raw.cesion_beneficiario?.precio_cesion?.tipo_cambio || null,
             equivalente_ars_cesion: ops.precio_cesion?.equivalente_ars || raw.cesion_beneficiario?.precio_cesion?.equivalente_ars || null,
-            is_family_home: ops.es_vivienda_unica?.valor || false
+            is_family_home: ops.es_vivienda_unica?.valor || false,
+            // Mortgage specific (113.pdf)
+            capital_original: raw.financial_terms?.capital?.valor || null,
+            uva_monto: raw.financial_terms?.uva_quoted?.valor || null,
+            tasa_interes: raw.financial_terms?.rate?.valor || null,
+            sistema_amortizacion: raw.financial_terms?.system?.valor || null,
+            grado_hipoteca: raw.legal_status?.grado || null
         },
         // Beneficiary assignment (fiduciary operations)
         cesion_beneficiario: (raw.cesion_beneficiario || raw.cesion || raw.transferencia) ? (() => {
