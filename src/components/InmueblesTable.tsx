@@ -116,9 +116,9 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
                         className="group hover:bg-slate-50/50 cursor-pointer transition-colors"
                         onClick={() => router.push(`/inmuebles/${inmueble.id}`)}
                     >
-                        <TableCell className="py-2 align-top truncate" title={inmueble.partido_id}>
-                            <div className="flex items-center gap-2 truncate text-sm font-normal text-slate-700">
-                                <span className="truncate">{inmueble.partido_id || 'N/A'}</span>
+                        <TableCell className="py-2 align-top" title={inmueble.partido_id}>
+                            <div className="text-sm font-normal text-slate-700 break-words">
+                                {inmueble.partido_id || 'N/A'}
                             </div>
                         </TableCell>
                         <TableCell className="py-2 align-top" title={inmueble.nro_partida} onClick={(e) => e.stopPropagation()}>
