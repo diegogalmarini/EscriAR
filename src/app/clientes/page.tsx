@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { NuevoClienteDialog } from "@/components/NuevoClienteDialog";
 import { ClientesTable } from "@/components/ClientesTable";
 
@@ -64,7 +64,7 @@ export default function ClientesPage() {
     const totalPages = Math.ceil(totalItems / pageSize);
 
     return (
-        <div className="h-[calc(100vh-2rem)] flex flex-col p-8 space-y-4 animate-in fade-in duration-500">
+        <div className="p-8 space-y-8 animate-in fade-in duration-500">
             <div className="flex justify-between items-end flex-none">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
@@ -73,8 +73,8 @@ export default function ClientesPage() {
                 <NuevoClienteDialog />
             </div>
 
-            <Card className="flex-1 flex flex-col border-slate-200 shadow-sm overflow-hidden">
-                <CardHeader className="p-4 border-b flex-none">
+            <Card>
+                <CardHeader>
                     <div className="flex items-center gap-4">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -88,23 +88,21 @@ export default function ClientesPage() {
                     </div>
                 </CardHeader>
 
-                <div className="flex-1 overflow-y-auto p-0">
-                    <CardContent className="p-0">
-                        {loading ? (
-                            <div className="p-8">
-                                <div className="animate-pulse space-y-4">
-                                    <div className="h-8 bg-gray-200 rounded w-full"></div>
-                                    <div className="h-8 bg-gray-200 rounded w-full"></div>
-                                    <div className="h-8 bg-gray-200 rounded w-full"></div>
-                                </div>
+                <CardContent>
+                    {loading ? (
+                        <div className="p-8">
+                            <div className="animate-pulse space-y-4">
+                                <div className="h-8 bg-gray-200 rounded w-full"></div>
+                                <div className="h-8 bg-gray-200 rounded w-full"></div>
+                                <div className="h-8 bg-gray-200 rounded w-full"></div>
                             </div>
-                        ) : (
-                            <ClientesTable data={personas} onClienteDeleted={fetchPersonas} />
-                        )}
-                    </CardContent>
-                </div>
+                        </div>
+                    ) : (
+                        <ClientesTable data={personas} onClienteDeleted={fetchPersonas} />
+                    )}
+                </CardContent>
 
-                <div className="border-t p-4 flex-none bg-white">
+                <CardFooter className="border-t p-4">
                     <PaginationControls
                         currentPage={currentPage}
                         totalPages={totalPages}
@@ -113,7 +111,7 @@ export default function ClientesPage() {
                         onPageChange={setCurrentPage}
                         onPageSizeChange={setPageSize}
                     />
-                </div>
+                </CardFooter>
             </Card>
         </div>
     );
