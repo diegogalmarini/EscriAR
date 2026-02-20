@@ -170,9 +170,29 @@ async function workerLoop() {
                 finished_at: new Date().toISOString()
             }).eq('id', job.id);
 
-            // 6. Insertar en tabla `escrituras` y `operaciones` para que la UI lo muestre
+            // 6. Insertar en tabla `escrituras` y tablas relacionadas para que la UI lo muestre
             const extractedData = extractionResult.object;
 
+            // A. Insertar Inmueble
+            let inmuebleId = null;
+            if (extractedData.inmuebles && extractedData.inmuebles.length > 0) {
+                const inmuebleToInsert = extractedData.inmuebles[0];
+                const { data: insertedInmueble, error: inmuebleError } = await supabase.from('inmuebles').insert({
+                    partido_id: '000', // Default requerido por el schema
+                    nro_partida: '000000', // Default requerido por el schema
+                    nomenclatura_catastral: inmuebleToInsert.nomenclatura || 'SIN NOMENCLATURA',
+                    transcripcion_literal: inmuebleToInsert.transcripcion_literal || 'SIN TRANSCRIPCIÓN',
+                    tipo_inmueble: 'SIN CLASIFICAR'
+                }).select().single();
+
+                if (inmuebleError) {
+                    console.error(`[WORKER] Error insertando inmueble:`, inmuebleError);
+                } else if (insertedInmueble) {
+                    inmuebleId = insertedInmueble.id;
+                }
+            }
+
+            // B. Insertar Escritura
             let nro_protocolo = null;
             if (extractedData.numero_escritura) {
                 const parsedInt = parseInt(extractedData.numero_escritura.replace(/\D/g, ''), 10);
@@ -183,6 +203,8 @@ async function workerLoop() {
                 carpeta_id: job.carpeta_id,
                 nro_protocolo: nro_protocolo,
                 fecha_escritura: extractedData.fecha_escritura || null,
+                inmueble_princ_id: inmuebleId,
+                pdf_url: job.file_path, // Referencia al storage original
                 analysis_metadata: {
                     tipo_acto_detectado: extractedData.resumen_acto,
                     datos_extraidos: extractedData
@@ -192,21 +214,44 @@ async function workerLoop() {
             if (insertError) {
                 console.error(`[WORKER] Error insertando escritura para Job ${job.id}:`, insertError);
             } else if (escrituraInsertada) {
-                // Insertar Operación
-                const { error: operacionError } = await supabase.from('operaciones').insert({
+                // C. Insertar Operación
+                const { data: operacionInsertada, error: operacionError } = await supabase.from('operaciones').insert({
                     escritura_id: escrituraInsertada.id,
                     tipo_acto: extractedData.resumen_acto || 'SIN CLASIFICAR',
                     monto_operacion: null
-                });
+                }).select().single();
 
                 if (operacionError) {
                     console.error(`[WORKER] Error insertando operacion para Job ${job.id}:`, operacionError);
-                } else {
-                    console.log(`[WORKER] Job ${job.id} COMPLETADO e insertado en BD (Escritura + Operacion).`);
-                }
-            }
+                } else if (operacionInsertada && extractedData.clientes) {
+                    // D. Insertar Personas y Participantes
+                    for (const cliente of extractedData.clientes) {
+                        // El schema actual de la bd usa DNI como PK
+                        const dniFinal = cliente.dni || `SIN_DNI_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
-            console.log(`[WORKER] Job ${job.id} COMPLETADO e Insertado en BD.`);
+                        const { error: personaError } = await supabase.from('personas').upsert({
+                            dni: dniFinal,
+                            nombre_completo: cliente.nombre_completo || 'SIN NOMBRE',
+                            cuit: cliente.cuit || null,
+                            tipo_persona: 'FISICA'
+                        }, { onConflict: 'dni' });
+
+                        if (personaError) {
+                            console.error(`[WORKER] Error upserting persona ${cliente.nombre_completo}:`, personaError);
+                        } else {
+                            const { error: partError } = await supabase.from('participantes_operacion').insert({
+                                operacion_id: operacionInsertada.id,
+                                persona_id: dniFinal,
+                                rol: cliente.rol || 'PARTE'
+                            });
+                            if (partError) {
+                                console.error(`[WORKER] Error insertando participante ${cliente.nombre_completo}:`, partError);
+                            }
+                        }
+                    }
+                }
+                console.log(`[WORKER] Job ${job.id} COMPLETADO e insertado entidades vinculadas en BD.`);
+            }
 
         } catch (error: any) {
             console.error(`[WORKER] ERROR en Loop principal:`, error);
