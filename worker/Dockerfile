@@ -17,12 +17,12 @@ WORKDIR /app
 # Copiamos el package.json
 COPY package*.json ./
 
-# Instalación de dependencias de Node
-RUN npm i --only=production
-RUN npm install -g typescript tsx
-
-# Copiamos el código fuente
+# Copiamos el código fuente antes de instalar dependencias
+# para asegurarnos que todo esté disponible
 COPY . .
+
+# Instalación de dependencias de Node (incluyendo devDependencies para compilar/correr TS)
+RUN npm install
 
 # Variables de entorno por defecto (serán sobreescritas por Railway)
 ENV NODE_ENV=production
