@@ -185,7 +185,7 @@ export default function TablaActosPage() {
                                     <SelectTrigger className="h-8 w-[70px]">
                                         <SelectValue placeholder={itemsPerPage} />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent position="popper" side="top" sideOffset={4}>
                                         <SelectItem value="10">10</SelectItem>
                                         <SelectItem value="20">20</SelectItem>
                                         <SelectItem value="50">50</SelectItem>
