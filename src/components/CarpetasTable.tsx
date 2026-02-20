@@ -49,8 +49,14 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
 
     // 2. Get Partes from RPC's flat parties array
     // RPC parties shape: { id, full_name, role, tipo_persona, cuit }
-    const isJuridica = (p: any) =>
-        p.tipo_persona === 'JURIDICA' || p.cuit?.startsWith('30') || p.cuit?.startsWith('33');
+    const JURIDICA_KEYWORDS = ['BANCO', 'S.A.', 'S.R.L.', 'S.A.U.', 'SOCIEDAD', 'FIDEICOMISO', 'FUNDACION', 'ASOCIACION', 'COOPERATIVA', 'CONSORCIO', 'S.A.S.', 'S.C.A.'];
+    const isJuridica = (p: any) => {
+        if (p.tipo_persona === 'JURIDICA' || p.tipo_persona === 'FIDEICOMISO') return true;
+        if (p.cuit?.startsWith('30') || p.cuit?.startsWith('33') || p.cuit?.startsWith('34')) return true;
+        // Fallback: detectar por nombre cuando tipo_persona no está seteado correctamente
+        const upper = (p.full_name || '').toUpperCase();
+        return JURIDICA_KEYWORDS.some(kw => upper.includes(kw));
+    };
 
     const getPartes = (carpeta: any) => {
         const parties = carpeta.parties;

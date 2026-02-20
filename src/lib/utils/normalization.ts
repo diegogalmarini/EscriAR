@@ -34,17 +34,21 @@ export function formatCUIT(cuit: string | null | undefined): string | null {
 }
 
 /**
- * Detects if a persona is a legal entity based on tipo_persona or CUIT prefix (30, 33, 34).
+ * Detects if a persona is a legal entity based on tipo_persona, CUIT prefix, or name keywords.
  */
+const JURIDICA_NAME_KEYWORDS = ['BANCO', 'S.A.', 'S.R.L.', 'S.A.U.', 'S.A.S.', 'S.C.A.', 'SOCIEDAD', 'FIDEICOMISO', 'FUNDACION', 'ASOCIACION', 'COOPERATIVA', 'CONSORCIO', 'MUTUAL'];
+
 export function isLegalEntity(persona: any): boolean {
     if (!persona) return false;
-    if (persona.tipo_persona === 'JURIDICA') return true;
+    if (persona.tipo_persona === 'JURIDICA' || persona.tipo_persona === 'FIDEICOMISO') return true;
 
     // Check CUIT/CUIL
     const cuit = (persona.cuit_cuil || persona.cuit)?.toString()?.replace(/\D/g, '') || '';
-    // Argentinian CUIT prefixes for legal entities: 30, 33, 34
-    // Also 30 is the most common for companies.
-    return ['30', '33', '34'].some(prefix => cuit.startsWith(prefix));
+    if (['30', '33', '34'].some(prefix => cuit.startsWith(prefix))) return true;
+
+    // Fallback: detect by name keywords when tipo_persona is not set correctly
+    const nombre = (persona.nombre_completo || persona.full_name || '').toUpperCase();
+    return JURIDICA_NAME_KEYWORDS.some(kw => nombre.includes(kw));
 }
 
 /**
