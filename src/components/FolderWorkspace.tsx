@@ -501,8 +501,8 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                                 <p className="text-slate-700">{escritura.operaciones?.[0]?.tipo_acto || "COMPRAVENTA"}</p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-semibold uppercase text-slate-400">Nº de Acto</p>
-                                                <p className="text-slate-700">{escritura.operaciones?.[0]?.nro_acto || "No especificado"}</p>
+                                                <p className="text-[10px] font-semibold uppercase text-slate-400">Código</p>
+                                                <p className="text-slate-700">{escritura.operaciones?.[0]?.codigo || "No especificado"}</p>
                                             </div>
                                         </div>
 
@@ -942,7 +942,7 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                 if (editingDeed.operacion?.id) {
                                     await updateOperacion(editingDeed.operacion.id, {
                                         tipo_acto: formData.get("tipo_acto") as string,
-                                        nro_acto: formData.get("nro_acto") as string || null,
+                                        codigo: formData.get("codigo") as string || null,
                                     });
                                 }
 
@@ -1003,11 +1003,11 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="nro_acto">Nº de Acto (Código)</Label>
+                                        <Label htmlFor="codigo">Código</Label>
                                         <Input
-                                            id="nro_acto"
-                                            name="nro_acto"
-                                            defaultValue={editingDeed.operacion?.nro_acto || ""}
+                                            id="codigo"
+                                            name="codigo"
+                                            defaultValue={editingDeed.operacion?.codigo || ""}
                                             placeholder="Ej: 100-00"
                                         />
                                     </div>

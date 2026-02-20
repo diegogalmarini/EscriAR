@@ -19,7 +19,7 @@ interface CarpetasTableProps {
     onCarpetaDeleted?: () => void;
 }
 
-type SortKey = "numero" | "acto" | "nro_acto" | "partes";
+type SortKey = "numero" | "acto" | "codigo" | "partes";
 type SortDirection = "asc" | "desc";
 
 interface SortConfig {
@@ -40,10 +40,9 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
         return "SIN ACTO";
     };
 
-    // 1b. Get Nro Acto (CESBA Code)
-    const getNroActo = (carpeta: any) => {
+    const getCodigo = (carpeta: any) => {
         const op = carpeta.escrituras?.[0]?.operaciones?.[0];
-        return op?.nro_acto || "-";
+        return op?.codigo || "-";
     };
 
     // 2. Get Partes (Buyers/Owners)
@@ -95,7 +94,7 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
     const processedData = data.map(item => ({
         ...item,
         displayActo: getActo(item),
-        displayNroActo: getNroActo(item),
+        displayCodigo: getCodigo(item),
         displayPartes: getPartes(item)
     }));
 
@@ -113,8 +112,8 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
             return a.displayActo.localeCompare(b.displayActo) * multiplier;
         }
 
-        if (key === "nro_acto") {
-            return a.displayNroActo.localeCompare(b.displayNroActo) * multiplier;
+        if (key === "codigo") {
+            return a.displayCodigo.localeCompare(b.displayCodigo) * multiplier;
         }
 
         if (key === "partes") {
@@ -153,7 +152,7 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
                         <TableHead className="w-[100px]">
                             <Button
                                 variant="ghost"
-                                onClick={() => handleSort("nro_acto")}
+                                onClick={() => handleSort("codigo")}
                                 className="h-8 text-xs font-semibold hover:bg-slate-100 px-2"
                             >
                                 Código
@@ -195,7 +194,7 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
                             </TableCell>
                             <TableCell>
                                 <code className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-mono text-xs">
-                                    {carpeta.displayNroActo}
+                                    {carpeta.displayCodigo}
                                 </code>
                             </TableCell>
                             <TableCell className="text-xs font-medium text-slate-700 max-w-[300px] truncate">

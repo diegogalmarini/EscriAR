@@ -1,0 +1,171 @@
+{
+  "inmuebles": {
+    "required": [
+      "id",
+      "partido_id",
+      "nro_partida"
+    ],
+    "properties": {
+      "id": {
+        "default": "extensions.uuid_generate_v4()",
+        "description": "Note:\nThis is a Primary Key.<pk/>",
+        "format": "uuid",
+        "type": "string"
+      },
+      "partido_id": {
+        "format": "text",
+        "type": "string"
+      },
+      "nro_partida": {
+        "format": "text",
+        "type": "string"
+      },
+      "nomenclatura_catastral": {
+        "format": "text",
+        "type": "string"
+      },
+      "tipo_inmueble": {
+        "format": "text",
+        "type": "string"
+      },
+      "transcripcion_literal": {
+        "format": "text",
+        "type": "string"
+      },
+      "titularidad_actual": {
+        "format": "jsonb"
+      },
+      "valuacion_fiscal": {
+        "format": "numeric",
+        "type": "number"
+      },
+      "nomenclatura": {
+        "format": "text",
+        "type": "string"
+      },
+      "titulo_antecedente": {
+        "format": "text",
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
+  "personas": {
+    "required": [
+      "nombre_completo",
+      "created_at",
+      "updated_at",
+      "dni"
+    ],
+    "properties": {
+      "nombre_completo": {
+        "format": "text",
+        "type": "string"
+      },
+      "nacionalidad": {
+        "format": "text",
+        "type": "string"
+      },
+      "fecha_nacimiento": {
+        "format": "date",
+        "type": "string"
+      },
+      "estado_civil_detallado": {
+        "format": "jsonb"
+      },
+      "domicilio_real": {
+        "format": "jsonb"
+      },
+      "contacto": {
+        "format": "jsonb"
+      },
+      "origen_dato": {
+        "format": "text",
+        "type": "string"
+      },
+      "created_at": {
+        "default": "timezone('utc'::text, now())",
+        "format": "timestamp with time zone",
+        "type": "string"
+      },
+      "updated_at": {
+        "default": "timezone('utc'::text, now())",
+        "format": "timestamp with time zone",
+        "type": "string"
+      },
+      "nombres_padres": {
+        "format": "text",
+        "type": "string"
+      },
+      "estado_civil_detalle": {
+        "format": "text",
+        "type": "string"
+      },
+      "datos_conyuge": {
+        "format": "jsonb"
+      },
+      "dni": {
+        "description": "Note:\nThis is a Primary Key.<pk/>",
+        "format": "text",
+        "type": "string"
+      },
+      "cuit": {
+        "format": "text",
+        "type": "string"
+      },
+      "cuit_tipo": {
+        "default": "CUIT",
+        "description": "Diferencia entre CUIT y CUIL",
+        "format": "text",
+        "type": "string"
+      },
+      "cuit_is_formal": {
+        "default": true,
+        "description": "Define si se usa el formato puntuado (C.U.I.T.) o literal (CUIT)",
+        "format": "boolean",
+        "type": "boolean"
+      },
+      "tipo_persona": {
+        "default": "FISICA",
+        "description": "Tipo de persona: FISICA, JURIDICA o FIDEICOMISO",
+        "format": "text",
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
+  "participantes_operacion": {
+    "required": [
+      "id",
+      "operacion_id",
+      "rol"
+    ],
+    "properties": {
+      "id": {
+        "default": "extensions.uuid_generate_v4()",
+        "description": "Note:\nThis is a Primary Key.<pk/>",
+        "format": "uuid",
+        "type": "string"
+      },
+      "operacion_id": {
+        "description": "Note:\nThis is a Foreign Key to `operaciones.id`.<fk table='operaciones' column='id'/>",
+        "format": "uuid",
+        "type": "string"
+      },
+      "rol": {
+        "format": "text",
+        "type": "string"
+      },
+      "porcentaje_titularidad": {
+        "format": "numeric",
+        "type": "number"
+      },
+      "persona_id": {
+        "description": "Note:\nThis is a Foreign Key to `personas.dni`.<fk table='personas' column='dni'/>",
+        "format": "text",
+        "type": "string"
+      }
+    },
+    "type": "object"
+  }
+}

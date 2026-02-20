@@ -29,7 +29,7 @@ export async function updateEscritura(escrituraId: string, data: {
 
 export async function updateOperacion(operacionId: string, data: {
     tipo_acto?: string;
-    nro_acto?: string | null;
+    codigo?: string | null;
 }) {
     try {
         const supabase = await createClient();

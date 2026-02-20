@@ -5,10 +5,10 @@
 ALTER TABLE public.escrituras
 ADD COLUMN IF NOT EXISTS registro TEXT;
 
--- Add nro_acto to operaciones table (número del acto registrado)
+-- Add codigo to operaciones table (número del acto registrado)
 ALTER TABLE public.operaciones
-ADD COLUMN IF NOT EXISTS nro_acto TEXT;
+ADD COLUMN IF NOT EXISTS codigo TEXT;
 
 -- Add comments for documentation
 COMMENT ON COLUMN public.escrituras.registro IS 'Número de registro del escribano que autorizó el documento';
-COMMENT ON COLUMN public.operaciones.nro_acto IS 'Número del acto registrado';
+COMMENT ON COLUMN public.operaciones.codigo IS 'Número del acto registrado';

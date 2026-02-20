@@ -673,7 +673,7 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
         escritura_id: escritura?.id || null, // Tolerante si escritura falló
         tipo_acto: String(resumen_acto || 'COMPRAVENTA').toUpperCase().substring(0, 100),
         monto_operacion: parseFloat(String(operation_details?.price || 0)) || 0,
-        nro_acto: getCESBACode(resumen_acto, !!operation_details?.is_family_home) || null, // CESBA Code from Taxonomy
+        codigo: getCESBACode(resumen_acto, !!operation_details?.is_family_home) || null, // CESBA Code from Taxonomy
         // Dual pricing for fiduciary operations
         precio_construccion: operation_details?.precio_construccion || null,
         precio_cesion: operation_details?.precio_cesion || null,

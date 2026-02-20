@@ -1,0 +1,84 @@
+{
+  "required": [
+    "id",
+    "escritura_id",
+    "tipo_acto",
+    "created_at"
+  ],
+  "properties": {
+    "id": {
+      "default": "extensions.uuid_generate_v4()",
+      "description": "Note:\nThis is a Primary Key.<pk/>",
+      "format": "uuid",
+      "type": "string"
+    },
+    "escritura_id": {
+      "description": "Note:\nThis is a Foreign Key to `escrituras.id`.<fk table='escrituras' column='id'/>",
+      "format": "uuid",
+      "type": "string"
+    },
+    "tipo_acto": {
+      "format": "text",
+      "type": "string"
+    },
+    "monto_operacion": {
+      "format": "numeric",
+      "type": "number"
+    },
+    "created_at": {
+      "default": "timezone('utc'::text, now())",
+      "format": "timestamp with time zone",
+      "type": "string"
+    },
+    "codigo": {
+      "description": "Número del acto registrado",
+      "format": "text",
+      "type": "string"
+    },
+    "precio_construccion": {
+      "description": "Costo de construcción en fideicomisos al costo (ya integrado)",
+      "format": "numeric",
+      "type": "number"
+    },
+    "precio_cesion": {
+      "description": "Precio de cesión de beneficiario (valor de mercado)",
+      "format": "numeric",
+      "type": "number"
+    },
+    "moneda_cesion": {
+      "format": "character varying",
+      "maxLength": 10,
+      "type": "string"
+    },
+    "tipo_cambio_cesion": {
+      "description": "Tipo de cambio aplicado para conversión de precio cesión",
+      "format": "numeric",
+      "type": "number"
+    },
+    "equivalente_ars_cesion": {
+      "format": "numeric",
+      "type": "number"
+    },
+    "beneficiario_cedente": {
+      "description": "Nombre del beneficiario original que cede sus derechos",
+      "format": "character varying",
+      "maxLength": 255,
+      "type": "string"
+    },
+    "fecha_incorporacion_cedente": {
+      "format": "date",
+      "type": "string"
+    },
+    "beneficiario_cesionario": {
+      "description": "Nombre del beneficiario final que adquiere los derechos",
+      "format": "character varying",
+      "maxLength": 255,
+      "type": "string"
+    },
+    "fecha_cesion": {
+      "format": "date",
+      "type": "string"
+    }
+  },
+  "type": "object"
+}

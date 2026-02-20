@@ -48,7 +48,7 @@ export interface ActData {
     tax_variables: {
         stamp_duty_rate: number;
         min_fee_ars: number;
-        fees_extracted: string[];
+        fees_extracted: (string | number)[];
     };
     flags: string[];
     suspended_rate_2026: boolean;
@@ -203,9 +203,10 @@ export class TaxonomyService {
         const act = this.getActByCode(code);
         if (!act) return null;
 
-        // Parse fee amounts from strings like "$ 891000"
-        const parseFee = (fee: string): number => {
-            const match = fee.match(/\$?\s*([\d,.]+)/);
+        // Parse fee amounts from strings like "$ 891000" or direct numbers
+        const parseFee = (fee: string | number): number => {
+            if (typeof fee === 'number') return fee;
+            const match = typeof fee === 'string' ? fee.match(/\$?\s*([\d,.]+)/) : null;
             return match ? parseFloat(match[1].replace(/\./g, '').replace(',', '.')) : 0;
         };
 

@@ -1,0 +1,76 @@
+{
+  "required": [
+    "id",
+    "carpeta_id",
+    "created_at"
+  ],
+  "properties": {
+    "id": {
+      "default": "extensions.uuid_generate_v4()",
+      "description": "Note:\nThis is a Primary Key.<pk/>",
+      "format": "uuid",
+      "type": "string"
+    },
+    "carpeta_id": {
+      "description": "Note:\nThis is a Foreign Key to `carpetas.id`.<fk table='carpetas' column='id'/>",
+      "format": "uuid",
+      "type": "string"
+    },
+    "nro_protocolo": {
+      "format": "integer",
+      "type": "integer"
+    },
+    "fecha_escritura": {
+      "format": "date",
+      "type": "string"
+    },
+    "notario_interviniente": {
+      "format": "text",
+      "type": "string"
+    },
+    "inmueble_princ_id": {
+      "description": "Note:\nThis is a Foreign Key to `inmuebles.id`.<fk table='inmuebles' column='id'/>",
+      "format": "uuid",
+      "type": "string"
+    },
+    "pdf_url": {
+      "format": "text",
+      "type": "string"
+    },
+    "created_at": {
+      "default": "timezone('utc'::text, now())",
+      "format": "timestamp with time zone",
+      "type": "string"
+    },
+    "contenido_borrador": {
+      "format": "text",
+      "type": "string"
+    },
+    "fecha_firma_real": {
+      "format": "date",
+      "type": "string"
+    },
+    "fecha_vencimiento_inscripcion": {
+      "format": "date",
+      "type": "string"
+    },
+    "nro_entrada_registro": {
+      "format": "text",
+      "type": "string"
+    },
+    "estado_inscripcion": {
+      "format": "text",
+      "type": "string"
+    },
+    "registro": {
+      "description": "Número de registro del escribano que autorizó el documento",
+      "format": "text",
+      "type": "string"
+    },
+    "analysis_metadata": {
+      "description": "Estores tax calculations, compliance alerts and other AI analysis results.",
+      "format": "jsonb"
+    }
+  },
+  "type": "object"
+}
