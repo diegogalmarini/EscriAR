@@ -14,12 +14,12 @@ RUN apt-get update && apt-get install -y \
 # Configuración del directorio de trabajo
 WORKDIR /app
 
-# Copiamos el package.json
-COPY package*.json ./
+# Copiamos el package.json (asegurando el prefijo de carpeta incrustada en Railway)
+COPY worker/package*.json ./
 
 # Copiamos el código fuente antes de instalar dependencias
-# para asegurarnos que todo esté disponible
-COPY . .
+COPY worker/src ./src
+COPY worker/tsconfig.json ./
 
 # Instalación de dependencias de Node (incluyendo devDependencies para compilar/correr TS)
 RUN npm install
