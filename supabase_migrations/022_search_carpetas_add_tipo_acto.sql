@@ -62,7 +62,9 @@ BEGIN
           DISTINCT jsonb_build_object(
             'id', p2.dni,
             'full_name', p2.nombre_completo,
-            'role', po2.rol
+            'role', po2.rol,
+            'tipo_persona', p2.tipo_persona,
+            'cuit', p2.cuit
           )
         )
         FROM escrituras e2

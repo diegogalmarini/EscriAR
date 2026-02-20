@@ -48,6 +48,10 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
     };
 
     // 2. Get Partes from RPC's flat parties array
+    // RPC parties shape: { id, full_name, role, tipo_persona, cuit }
+    const isJuridica = (p: any) =>
+        p.tipo_persona === 'JURIDICA' || p.cuit?.startsWith('30') || p.cuit?.startsWith('33');
+
     const getPartes = (carpeta: any) => {
         const parties = carpeta.parties;
         if (!Array.isArray(parties) || parties.length === 0) return " - ";
@@ -58,10 +62,15 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
             if (!name) continue;
 
             let formattedName = "";
-            if (name.includes(",")) {
+            if (isJuridica(p)) {
+                // Persona jurídica: mostrar nombre tal cual (no invertir)
+                formattedName = name.toUpperCase();
+            } else if (name.includes(",")) {
+                // Ya está en formato "APELLIDO, Nombre"
                 const [surname, first] = name.split(",").map((s: string) => s.trim());
                 formattedName = `${surname.toUpperCase()} ${first}`;
             } else {
+                // Persona física sin coma: asumir última palabra es apellido
                 const allParts = name.split(" ");
                 if (allParts.length > 1) {
                     const last = allParts.pop();

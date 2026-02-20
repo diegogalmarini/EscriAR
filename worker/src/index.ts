@@ -5,9 +5,93 @@ import { fromBuffer } from 'pdf2pic';
 import * as dotenv from 'dotenv';
 import { z } from 'zod';
 import * as http from 'http';
+import actsData from './acts_taxonomy_2026.json';
 const pdfParse = require('pdf-parse');
 
 dotenv.config();
+
+// --- CESBA Code Assignment ---
+const OPERATION_BASE_CODES: Record<string, string> = {
+    "COMPRAVENTA": "100",
+    "HIPOTECA": "300",
+    "CANCELACION_HIPOTECA": "311",
+    "DONACION": "200",
+    "CESION": "400",
+    "PODER": "500",
+    "ACTA": "600",
+    "DIVISION_CONDOMINIO": "700",
+    "AFECTACION_BIEN_FAMILIA": "800",
+    "USUFRUCTO": "150",
+    "FIDEICOMISO": "121",
+};
+
+const OPERATION_MAP: Record<string, string> = {
+    'VENTA': 'COMPRAVENTA',
+    'COMPRAVENTA': 'COMPRAVENTA',
+    'COMPRA': 'COMPRAVENTA',
+    'PRESTAMO': 'HIPOTECA',
+    'PRESTAMO BANCARIO': 'HIPOTECA',
+    'PRESTAMO HIPOTECARIO': 'HIPOTECA',
+    'HIPOTECA': 'HIPOTECA',
+    'MUTUO HIPOTECARIO': 'HIPOTECA',
+    'MUTUO': 'HIPOTECA',
+    'CONTRATO DE CREDITO': 'HIPOTECA',
+    'CREDITO HIPOTECARIO': 'HIPOTECA',
+    'CANCELACION': 'CANCELACION_HIPOTECA',
+    'CANCELACION DE HIPOTECA': 'CANCELACION_HIPOTECA',
+    'LEVANTAMIENTO DE HIPOTECA': 'CANCELACION_HIPOTECA',
+    'DONACION': 'DONACION',
+    'CESION': 'CESION',
+    'CESION DE DERECHOS': 'CESION',
+    'PODER': 'PODER',
+    'PODER GENERAL': 'PODER',
+    'PODER ESPECIAL': 'PODER',
+    'ACTA': 'ACTA',
+    'DIVISION': 'DIVISION_CONDOMINIO',
+    'DIVISION DE CONDOMINIO': 'DIVISION_CONDOMINIO',
+    'REGLAMENTO DE PROPIEDAD HORIZONTAL': 'DIVISION_CONDOMINIO',
+    'USUFRUCTO': 'USUFRUCTO',
+    'FIDEICOMISO': 'FIDEICOMISO',
+    'AFECTACION BIEN DE FAMILIA': 'AFECTACION_BIEN_FAMILIA',
+    'SOCIEDAD': 'CONSTITUCION_SOCIEDAD',
+    'TRANSFERENCIA DE DOMINIO A BENEFICIARIO': 'FIDEICOMISO',
+    'ADJUDICACION DE FIDEICOMISO': 'FIDEICOMISO',
+};
+
+function getCESBACode(tipoActo: string): string | null {
+    const normalized = (tipoActo || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+    const acts = actsData as Record<string, any>;
+
+    // Try exact match in operation map
+    let opType = OPERATION_MAP[normalized];
+
+    // Try partial match if no exact match
+    if (!opType) {
+        for (const [key, value] of Object.entries(OPERATION_MAP)) {
+            if (normalized.includes(key)) {
+                opType = value;
+                break;
+            }
+        }
+    }
+
+    if (!opType) return null;
+
+    const baseCode = OPERATION_BASE_CODES[opType];
+    if (!baseCode) return null;
+
+    const fullCode = `${baseCode}-00`;
+
+    // Verify code exists in taxonomy
+    if (acts[fullCode]) return fullCode;
+
+    // Try base code with other common subcodes
+    for (const sub of ['-00', '-30', '-51']) {
+        if (acts[`${baseCode}${sub}`]) return `${baseCode}${sub}`;
+    }
+
+    return null;
+}
 
 // Servidor Dummy HTTP para Railway Healthcheck
 const port = process.env.PORT || 8080;
@@ -272,11 +356,14 @@ async function workerLoop() {
                 continue;
             }
 
-            // C. Insertar Operación (con monto)
+            // C. Insertar Operación (con monto y código CESBA)
+            const codigoCESBA = getCESBACode(extractedData.resumen_acto || '');
+            console.log(`[WORKER] Tipo acto: "${extractedData.resumen_acto}" → Código CESBA: ${codigoCESBA || 'null'}`);
             const { data: operacionInsertada, error: operacionError } = await supabase.from('operaciones').insert({
                 escritura_id: escrituraInsertada.id,
                 tipo_acto: extractedData.resumen_acto || 'SIN CLASIFICAR',
-                monto_operacion: extractedData.monto_operacion || null
+                monto_operacion: extractedData.monto_operacion || null,
+                codigo: codigoCESBA
             }).select().single();
 
             if (operacionError) {
