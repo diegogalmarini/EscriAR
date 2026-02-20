@@ -3,21 +3,21 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const jobId = params.id;
+        const jobId = (await params).id;
         if (!jobId) {
             return NextResponse.json({ error: "Falta ID del trabajo" }, { status: 400 });
         }
 
-        const cookieStore = cookies();
+        const asyncCookieStore = await cookies();
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             {
                 cookies: {
                     get(name: string) {
-                        return cookieStore.get(name)?.value;
+                        return asyncCookieStore.get(name)?.value;
                     },
                 },
             }
