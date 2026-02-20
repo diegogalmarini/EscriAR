@@ -4,9 +4,19 @@ import { generateObject } from 'ai';
 import { fromBuffer } from 'pdf2pic';
 import * as dotenv from 'dotenv';
 import { z } from 'zod';
+import * as http from 'http';
 const pdfParse = require('pdf-parse');
 
 dotenv.config();
+
+// Servidor Dummy HTTP para Railway Healthcheck
+const port = process.env.PORT || 8080;
+http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('NotiAR Worker is running\n');
+}).listen(port, () => {
+    console.log(`[WORKER] Healthcheck server listening on port ${port}`);
+});
 
 // Configuración Supabase
 const supabaseUrl = process.env.SUPABASE_URL || '';

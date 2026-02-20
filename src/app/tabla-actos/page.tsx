@@ -16,7 +16,8 @@ interface ActEntry {
     tax_variables: {
         stamp_duty_rate: number;
         min_fee_ars: number;
-        fees_extracted: string[];
+        fees_extracted: (number | string)[] | null;
+        coef?: number | null;
     };
     suspended_rate_2026: boolean;
     raw_row?: string[];
@@ -115,7 +116,7 @@ export default function TablaActosPage() {
             </Card>
 
             {/* Table */}
-            <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <Card className="border-slate-200 shadow-sm relative">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead className="bg-slate-100 border-b">
@@ -150,10 +151,10 @@ export default function TablaActosPage() {
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-right font-mono text-xs text-slate-600">
-                                        {act.tax_variables.fees_extracted?.[0] || '-'}
+                                        {act.tax_variables.fees_extracted?.[0] ? `$ ${new Intl.NumberFormat('es-AR').format(Number(act.tax_variables.fees_extracted[0]))}` : '-'}
                                     </td>
                                     <td className="px-4 py-3 text-right font-mono text-xs text-slate-600">
-                                        {act.tax_variables.fees_extracted?.[1] || '-'}
+                                        {act.tax_variables.fees_extracted?.[1] ? `$ ${new Intl.NumberFormat('es-AR').format(Number(act.tax_variables.fees_extracted[1]))}` : '-'}
                                     </td>
                                 </tr>
                             ))}
