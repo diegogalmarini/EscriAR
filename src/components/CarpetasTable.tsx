@@ -32,6 +32,8 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "numero", direction: "desc" });
 
     // --- Helper Functions ---
+    // Data comes from search_carpetas RPC with shape:
+    // { id, number, internal_id, title, status, parties: [{id, full_name, role}], escrituras: [{id, operaciones: [{id, codigo, tipo_acto}]}] }
 
     // 1. Get Acto (Operation Type)
     const getActo = (carpeta: any) => {
@@ -45,48 +47,37 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
         return op?.codigo || "-";
     };
 
-    // 2. Get Partes (Buyers/Owners)
+    // 2. Get Partes from RPC's flat parties array
     const getPartes = (carpeta: any) => {
-        const buyers: string[] = [];
+        const parties = carpeta.parties;
+        if (!Array.isArray(parties) || parties.length === 0) return " - ";
 
-        carpeta.escrituras?.forEach((escritura: any) => {
-            escritura.operaciones?.forEach((op: any) => {
-                op.participantes_operacion?.forEach((p: any) => {
-                    const role = p.rol?.toUpperCase();
-                    if (['COMPRADOR', 'ADQUIRENTE', 'CESIONARIO', 'FIDUCIARIO', 'ACREEDOR', 'CONDOMIN', 'DONATARIO', 'DEUDOR', 'MUTUARIO'].some(r => role?.includes(r))) {
-                        const personRaw = p.personas || p.persona;
-                        const person = Array.isArray(personRaw) ? personRaw[0] : personRaw;
+        const names: string[] = [];
+        for (const p of parties) {
+            const name = p.full_name;
+            if (!name) continue;
 
-                        if (person) {
-                            let formattedName = "";
-                            if (person.tipo_persona === 'JURIDICA' || person.cuit?.startsWith('30') || person.cuit?.startsWith('33')) {
-                                formattedName = person.nombre_completo;
-                            } else {
-                                if (person.nombre_completo.includes(",")) {
-                                    const [surname, name] = person.nombre_completo.split(",").map((s: string) => s.trim());
-                                    formattedName = `${surname.toUpperCase()} ${name}`;
-                                } else {
-                                    const allParts = person.nombre_completo.split(" ");
-                                    if (allParts.length > 1) {
-                                        const last = allParts.pop();
-                                        formattedName = `${last?.toUpperCase()} ${allParts.join(" ")}`;
-                                    } else {
-                                        formattedName = person.nombre_completo.toUpperCase();
-                                    }
-                                }
-                            }
-                            if (formattedName && !buyers.includes(formattedName)) {
-                                buyers.push(formattedName);
-                            }
-                        }
-                    }
-                });
-            });
-        });
+            let formattedName = "";
+            if (name.includes(",")) {
+                const [surname, first] = name.split(",").map((s: string) => s.trim());
+                formattedName = `${surname.toUpperCase()} ${first}`;
+            } else {
+                const allParts = name.split(" ");
+                if (allParts.length > 1) {
+                    const last = allParts.pop();
+                    formattedName = `${last?.toUpperCase()} ${allParts.join(" ")}`;
+                } else {
+                    formattedName = name.toUpperCase();
+                }
+            }
+            if (formattedName && !names.includes(formattedName)) {
+                names.push(formattedName);
+            }
+        }
 
-        if (buyers.length === 0) return " - ";
-        if (buyers.length === 1) return buyers[0];
-        return `${buyers[0]} y Otros...`;
+        if (names.length === 0) return " - ";
+        if (names.length === 1) return names[0];
+        return `${names[0]} y Otros...`;
     };
 
     // --- Sort Logic ---
@@ -103,8 +94,8 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
         const multiplier = direction === "asc" ? 1 : -1;
 
         if (key === "numero") {
-            const numA = parseInt(a.nro_carpeta_interna) || 0;
-            const numB = parseInt(b.nro_carpeta_interna) || 0;
+            const numA = a.number || 0;
+            const numB = b.number || 0;
             return (numA - numB) * multiplier;
         }
 
@@ -190,7 +181,7 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
                             onClick={() => handleRowClick(carpeta.id)}
                         >
                             <TableCell className="font-mono text-xs font-medium text-slate-600">
-                                #{carpeta.nro_carpeta_interna}
+                                #{carpeta.number || carpeta.internal_id}
                             </TableCell>
                             <TableCell>
                                 <code className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-mono text-xs">
