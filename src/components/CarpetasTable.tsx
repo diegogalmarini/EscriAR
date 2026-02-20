@@ -53,7 +53,7 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
             escritura.operaciones?.forEach((op: any) => {
                 op.participantes_operacion?.forEach((p: any) => {
                     const role = p.rol?.toUpperCase();
-                    if (['COMPRADOR', 'ADQUIRENTE', 'CESIONARIO', 'FIDUCIARIO', 'ACREEDOR'].some(r => role?.includes(r))) {
+                    if (['COMPRADOR', 'ADQUIRENTE', 'CESIONARIO', 'FIDUCIARIO', 'ACREEDOR', 'CONDOMIN', 'DONATARIO', 'DEUDOR', 'MUTUARIO'].some(r => role?.includes(r))) {
                         const personRaw = p.personas || p.persona;
                         const person = Array.isArray(personRaw) ? personRaw[0] : personRaw;
 

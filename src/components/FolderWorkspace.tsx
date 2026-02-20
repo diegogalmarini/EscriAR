@@ -21,7 +21,7 @@ import { InscriptionTracker } from "./InscriptionTracker";
 import { linkPersonToOperation, linkAssetToDeed, addOperationToDeed, deleteCarpeta, unlinkPersonFromOperation } from "@/app/actions/carpeta";
 import { updateEscritura, updateOperacion, updateInmueble } from "@/app/actions/escritura";
 import { ClientOutreach } from "./ClientOutreach";
-import { listStorageFiles, deleteStorageFile } from "@/app/actions/storageSync";
+import { listStorageFiles, deleteStorageFile, getSignedUrl } from "@/app/actions/storageSync";
 import { toast } from "sonner";
 import { ComplianceTrafficLight } from "./smart/ComplianceTrafficLight";
 import { TaxBreakdownCard } from "./smart/TaxBreakdownCard";
@@ -63,29 +63,39 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
     }, [initialData]);
 
     const getRoleBadgeStyle = (rol?: string) => {
-        if (rol?.includes('VENDEDOR')) return "bg-amber-100 text-amber-700 border-amber-200";
-        if (rol?.includes('CEDENTE')) return "bg-orange-100 text-orange-700 border-orange-200";
-        if (rol?.includes('CESIONARIO')) return "bg-emerald-100 text-emerald-700 border-emerald-200";
-        if (rol?.includes('FIDUCIARIA')) return "bg-indigo-100 text-indigo-700 border-indigo-200";
-        if (rol?.includes('ACREEDOR')) return "bg-blue-100 text-blue-700 border-blue-200";
-        if (rol?.includes('DEUDOR')) return "bg-purple-100 text-purple-700 border-purple-200";
-        if (rol?.includes('FIADOR')) return "bg-slate-100 text-slate-700 border-slate-200";
-        if (rol?.includes('CONYUGE')) return "bg-pink-100 text-pink-700 border-pink-200";
-        if (rol?.includes('APODERADO')) return "bg-slate-100 text-slate-600 border-slate-200";
-        return "bg-emerald-100 text-emerald-700 border-emerald-200";
+        const r = rol?.toUpperCase();
+        if (r?.includes('VENDEDOR') || r?.includes('TRANSMITENTE')) return "bg-amber-100 text-amber-700 border-amber-200";
+        if (r?.includes('CEDENTE')) return "bg-orange-100 text-orange-700 border-orange-200";
+        if (r?.includes('CESIONARIO')) return "bg-emerald-100 text-emerald-700 border-emerald-200";
+        if (r?.includes('CONDOMIN')) return "bg-teal-100 text-teal-700 border-teal-200";
+        if (r?.includes('DONANTE')) return "bg-amber-100 text-amber-700 border-amber-200";
+        if (r?.includes('DONATARIO')) return "bg-emerald-100 text-emerald-700 border-emerald-200";
+        if (r?.includes('FIDUCIARIA') || r?.includes('FIDUCIANTE')) return "bg-indigo-100 text-indigo-700 border-indigo-200";
+        if (r?.includes('ACREEDOR')) return "bg-blue-100 text-blue-700 border-blue-200";
+        if (r?.includes('DEUDOR') || r?.includes('MUTUARIO')) return "bg-purple-100 text-purple-700 border-purple-200";
+        if (r?.includes('FIADOR') || r?.includes('GARANTE')) return "bg-slate-100 text-slate-700 border-slate-200";
+        if (r?.includes('CONYUGE') || r?.includes('CÓNYUGE')) return "bg-pink-100 text-pink-700 border-pink-200";
+        if (r?.includes('APODERADO') || r?.includes('REPRESENTANTE')) return "bg-slate-100 text-slate-600 border-slate-200";
+        if (r?.includes('COMPRADOR') || r?.includes('ADQUIRENTE')) return "bg-emerald-100 text-emerald-700 border-emerald-200";
+        return "bg-gray-100 text-gray-700 border-gray-200";
     };
 
     const getRoleLabel = (rol?: string) => {
-        if (rol?.includes('VENDEDOR')) return 'VENDEDOR / TRANSMITENTE';
-        if (rol?.includes('CEDENTE')) return 'CEDENTE';
-        if (rol?.includes('CESIONARIO')) return 'CESIONARIO';
-        if (rol?.includes('FIDUCIARIA')) return 'FIDUCIARIA';
-        if (rol?.includes('ACREEDOR')) return 'ACREEDOR HIPOTECARIO';
-        if (rol?.includes('DEUDOR')) return 'DEUDOR / MUTUARIO';
-        if (rol?.includes('FIADOR')) return 'FIADOR / GARANTE';
-        if (rol?.includes('CONYUGE')) return 'CÓNYUGE ASINTIENTE';
-        if (rol?.includes('APODERADO')) return 'APODERADO';
-        return 'COMPRADOR / ADQUIRENTE';
+        const r = rol?.toUpperCase();
+        if (r?.includes('VENDEDOR') || r?.includes('TRANSMITENTE')) return 'VENDEDOR / TRANSMITENTE';
+        if (r?.includes('CEDENTE')) return 'CEDENTE';
+        if (r?.includes('CESIONARIO')) return 'CESIONARIO';
+        if (r?.includes('CONDOMIN')) return 'CONDÓMINO';
+        if (r?.includes('DONANTE')) return 'DONANTE';
+        if (r?.includes('DONATARIO')) return 'DONATARIO';
+        if (r?.includes('FIDUCIARIA') || r?.includes('FIDUCIANTE')) return 'FIDUCIARIA';
+        if (r?.includes('ACREEDOR')) return 'ACREEDOR HIPOTECARIO';
+        if (r?.includes('DEUDOR') || r?.includes('MUTUARIO')) return 'DEUDOR / MUTUARIO';
+        if (r?.includes('FIADOR') || r?.includes('GARANTE')) return 'FIADOR / GARANTE';
+        if (r?.includes('CONYUGE') || r?.includes('CÓNYUGE')) return 'CÓNYUGE ASINTIENTE';
+        if (r?.includes('APODERADO') || r?.includes('REPRESENTANTE')) return 'APODERADO';
+        if (r?.includes('COMPRADOR') || r?.includes('ADQUIRENTE')) return 'COMPRADOR / ADQUIRENTE';
+        return rol?.toUpperCase() || 'PARTE';
     };
 
     // --- REALTIME SUBSCRIPTION ---
@@ -151,6 +161,20 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
             clearTimeout(refreshTimeout);
         };
     }, [carpeta.id, router]);
+
+    // Helper: resolve pdf_url (can be a full public URL or a raw storage path) to a signed URL
+    const resolveDocumentUrl = async (pdfUrl: string): Promise<string | null> => {
+        // Extract storage path from full Supabase public URL if needed
+        let storagePath = pdfUrl;
+        const publicPrefix = '/storage/v1/object/public/escrituras/';
+        const idx = pdfUrl.indexOf(publicPrefix);
+        if (idx !== -1) {
+            storagePath = pdfUrl.substring(idx + publicPrefix.length);
+        }
+        const result = await getSignedUrl('escrituras', storagePath);
+        if (result.success && result.url) return result.url;
+        return null;
+    };
 
     const [isPersonSearchOpen, setIsPersonSearchOpen] = useState(false);
     const [isAssetSearchOpen, setIsAssetSearchOpen] = useState(false);
@@ -586,10 +610,15 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                                 variant="outline"
                                                 size="sm"
                                                 className="h-7 text-[10px] font-medium text-slate-700 gap-1.5"
-                                                onClick={(e) => {
+                                                onClick={async (e) => {
                                                     e.stopPropagation();
                                                     if (escritura.pdf_url) {
-                                                        setViewingDocument(escritura.pdf_url);
+                                                        const url = await resolveDocumentUrl(escritura.pdf_url);
+                                                        if (url) {
+                                                            setViewingDocument(url);
+                                                        } else {
+                                                            toast.error("Error al obtener URL del documento");
+                                                        }
                                                     } else {
                                                         toast.error("No hay documento disponible");
                                                     }
@@ -602,10 +631,15 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                                 variant="outline"
                                                 size="sm"
                                                 className="h-7 text-[10px] font-medium text-slate-700 gap-1.5"
-                                                onClick={(e) => {
+                                                onClick={async (e) => {
                                                     e.stopPropagation();
                                                     if (escritura.pdf_url) {
-                                                        window.open(escritura.pdf_url, '_blank');
+                                                        const url = await resolveDocumentUrl(escritura.pdf_url);
+                                                        if (url) {
+                                                            window.open(url, '_blank');
+                                                        } else {
+                                                            toast.error("Error al obtener URL de descarga");
+                                                        }
                                                     } else {
                                                         toast.error("No hay documento para descargar");
                                                     }
@@ -679,10 +713,15 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                                     variant="ghost"
                                                     size="icon"
                                                     className="h-7 w-7 text-slate-400 hover:bg-slate-100"
-                                                    onClick={() => {
+                                                    onClick={async () => {
                                                         const doc = carpeta.escrituras.find((e: any) => e.pdf_url?.includes(file.name));
                                                         if (doc?.pdf_url) {
-                                                            setViewingDocument(doc.pdf_url);
+                                                            const url = await resolveDocumentUrl(doc.pdf_url);
+                                                            if (url) {
+                                                                setViewingDocument(url);
+                                                            } else {
+                                                                toast.error("Error al obtener URL del documento");
+                                                            }
                                                         } else {
                                                             toast.info("Este archivo no tiene registro en la base de datos.");
                                                         }
