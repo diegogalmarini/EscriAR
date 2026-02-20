@@ -1,4 +1,4 @@
--- Create or replace the search_carpetas function to reflect nro_acto -> codigo renaming
+-- Create or replace the search_carpetas function to reflect correct schema and joins
 
 CREATE OR REPLACE FUNCTION public.search_carpetas(
   search_term text,
@@ -32,20 +32,19 @@ BEGIN
     -- Otherwise, search across related tables
     SELECT DISTINCT c.id
     FROM carpetas c
-    LEFT JOIN carpetas_personas cp ON c.id = cp.carpeta_id
-    LEFT JOIN personas p ON cp.persona_id = p.id
     LEFT JOIN escrituras e ON c.id = e.carpeta_id
     LEFT JOIN operaciones o ON e.id = o.escritura_id
+    LEFT JOIN participantes_operacion po ON o.id = po.operacion_id
+    LEFT JOIN personas p ON po.persona_id = p.dni
     WHERE 
       (clean_term IS NULL OR clean_term = '')
       OR (
-        c.number::text ILIKE '%' || clean_term || '%'
-        OR c.internal_id ILIKE '%' || clean_term || '%'
-        OR c.title ILIKE '%' || clean_term || '%'
-        OR p.full_name ILIKE '%' || clean_term || '%'
-        OR p.document_number ILIKE '%' || clean_term || '%'
-        OR p.cuit_cuil ILIKE '%' || clean_term || '%'
-        OR o.codigo ILIKE '%' || clean_term || '%' -- Updated from nro_acto
+        c.nro_carpeta_interna::text ILIKE '%' || clean_term || '%'
+        OR c.caratula ILIKE '%' || clean_term || '%'
+        OR p.nombre_completo ILIKE '%' || clean_term || '%'
+        OR p.dni ILIKE '%' || clean_term || '%'
+        OR p.cuit ILIKE '%' || clean_term || '%'
+        OR o.codigo ILIKE '%' || clean_term || '%'
       )
   ),
   counted AS (
@@ -54,26 +53,28 @@ BEGIN
   )
   SELECT 
     c.id,
-    c.number,
-    c.internal_id,
-    c.title,
-    c.status,
-    c.tags,
+    c.nro_carpeta_interna AS "number", -- Mapping to expected output
+    c.nro_carpeta_interna::text AS internal_id, -- internal_id in old query
+    c.caratula AS title,
+    c.estado AS status,
+    ARRAY[]::text[] AS tags, -- doesn't exist in carpetas table
     c.created_at,
     (SELECT total FROM counted) AS total_count,
     -- Aggregate related parties
     COALESCE(
       (
         SELECT jsonb_agg(
-          jsonb_build_object(
-            'id', p2.id,
-            'full_name', p2.full_name,
-            'role', cp2.role
+          DISTINCT jsonb_build_object(
+            'id', p2.dni,
+            'full_name', p2.nombre_completo,
+            'role', po2.rol
           )
         )
-        FROM carpetas_personas cp2
-        JOIN personas p2 ON cp2.persona_id = p2.id
-        WHERE cp2.carpeta_id = c.id
+        FROM escrituras e2
+        JOIN operaciones o2 ON e2.id = o2.escritura_id
+        JOIN participantes_operacion po2 ON o2.id = po2.operacion_id
+        JOIN personas p2 ON po2.persona_id = p2.dni
+        WHERE e2.carpeta_id = c.id
       ),
       '[]'::jsonb
     ) AS parties,
@@ -88,7 +89,7 @@ BEGIN
                 SELECT jsonb_agg(
                   jsonb_build_object(
                     'id', o2.id,
-                    'codigo', o2.codigo -- Updated from nro_acto
+                    'codigo', o2.codigo
                   )
                 )
                 FROM operaciones o2
@@ -105,7 +106,7 @@ BEGIN
     ) AS escrituras
   FROM matching_carpetas mc
   JOIN carpetas c ON c.id = mc.id
-  ORDER BY c.number DESC
+  ORDER BY c.created_at DESC
   LIMIT p_limit
   OFFSET p_offset;
 END;

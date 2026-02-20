@@ -54,7 +54,7 @@ export default function TablaActosPage() {
     const paginatedActs = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         return filteredActs.slice(startIndex, startIndex + itemsPerPage);
-    }, [filteredActs, currentPage]);
+    }, [filteredActs, currentPage, itemsPerPage]);
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(e.target.value);
