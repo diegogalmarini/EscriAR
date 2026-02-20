@@ -133,7 +133,7 @@ async function workerLoop() {
 
                 // Texto Nativo (Word->PDF)
                 extractionResult = await generateObject({
-                    model: google('gemini-1.5-flash'),
+                    model: google('gemini-3-flash-preview'),
                     prompt: `Eres un escribano experto. Extrae las entidades del texto:\n\n${textContent.substring(0, 150000)}`,
                     schema: NotarySchema
                 });
@@ -154,7 +154,7 @@ async function workerLoop() {
                 }
 
                 extractionResult = await generateObject({
-                    model: google('gemini-1.5-flash'),
+                    model: google('gemini-3-flash-preview'),
                     messages: [{ role: 'user', content: contentParts }],
                     schema: NotarySchema
                 });
