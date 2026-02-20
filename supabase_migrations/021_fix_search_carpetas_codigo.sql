@@ -110,3 +110,8 @@ BEGIN
   OFFSET p_offset;
 END;
 $$;
+
+-- Ensure the function is executable by API roles
+GRANT EXECUTE ON FUNCTION public.search_carpetas(text, integer, integer) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.search_carpetas(text, integer, integer) TO anon;
+GRANT EXECUTE ON FUNCTION public.search_carpetas(text, integer, integer) TO service_role;

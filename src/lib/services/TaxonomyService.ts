@@ -58,9 +58,9 @@ export interface ActData {
 const OPERATION_BASE_CODES: Record<string, string> = {
     "COMPRAVENTA": "100",
     "COMPRAVENTA_NUDA": "103",
-    "HIPOTECA": "200",
+    "HIPOTECA": "300",
     "CANCELACION_HIPOTECA": "311",
-    "DONACION": "300",
+    "DONACION": "200",
     "CESION": "400",
     "PODER": "500",
     "ACTA": "600",

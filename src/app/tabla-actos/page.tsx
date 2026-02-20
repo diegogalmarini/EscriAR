@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, FileSpreadsheet, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, FileSpreadsheet, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import actsData from "@/data/acts_taxonomy_2026.json";
 
 // Type for act data
@@ -24,7 +25,7 @@ interface ActEntry {
 export default function TablaActosPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const ITEMS_PER_PAGE = 50;
+    const [itemsPerPage, setItemsPerPage] = useState(50);
 
     // Convert object to array for easier handling
     const actsArray = useMemo(() => {
@@ -47,11 +48,11 @@ export default function TablaActosPage() {
         );
     }, [actsArray, searchTerm]);
 
-    const totalPages = Math.ceil(filteredActs.length / ITEMS_PER_PAGE);
+    const totalPages = Math.ceil(filteredActs.length / itemsPerPage);
 
     const paginatedActs = useMemo(() => {
-        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-        return filteredActs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return filteredActs.slice(startIndex, startIndex + itemsPerPage);
     }, [filteredActs, currentPage]);
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,9 +82,17 @@ export default function TablaActosPage() {
                         </div>
                     </div>
                 </div>
-                <Badge variant="outline" className="text-xs">
-                    {actsArray.length} actos registrados
-                </Badge>
+                <div className="flex items-center gap-3">
+                    <Button variant="outline" size="sm" asChild>
+                        <a href="/Tabla_Actos_Notariales_2026.pdf" target="_blank" rel="noopener noreferrer">
+                            <Download className="mr-2 h-4 w-4" />
+                            Ver PDF Oficial
+                        </a>
+                    </Button>
+                    <Badge variant="outline" className="text-xs">
+                        {actsArray.length} actos registrados
+                    </Badge>
+                </div>
             </div>
 
             {/* Search */}
@@ -162,8 +171,30 @@ export default function TablaActosPage() {
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
                     <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-slate-100 gap-4 bg-slate-50/50">
-                        <div className="text-sm text-slate-500">
-                            Mostrando <span className="font-medium text-slate-700">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> a <span className="font-medium text-slate-700">{Math.min(currentPage * ITEMS_PER_PAGE, filteredActs.length)}</span> de <span className="font-medium text-slate-700">{filteredActs.length}</span> actos
+                        <div className="flex items-center gap-4 text-sm text-slate-500">
+                            <div className="flex items-center gap-2">
+                                <span>Filas por página</span>
+                                <Select
+                                    value={itemsPerPage.toString()}
+                                    onValueChange={(value) => {
+                                        setItemsPerPage(Number(value));
+                                        setCurrentPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger className="h-8 w-[70px]">
+                                        <SelectValue placeholder={itemsPerPage} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="10">10</SelectItem>
+                                        <SelectItem value="20">20</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                        <SelectItem value="100">100</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <span>
+                                Mostrando <span className="font-medium text-slate-700">{(currentPage - 1) * itemsPerPage + 1}</span> a <span className="font-medium text-slate-700">{Math.min(currentPage * itemsPerPage, filteredActs.length)}</span> de <span className="font-medium text-slate-700">{filteredActs.length}</span> actos
+                            </span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Button
