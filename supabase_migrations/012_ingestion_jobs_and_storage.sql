@@ -4,7 +4,7 @@ CREATE TYPE ingest_status AS ENUM ('pending', 'processing', 'completed', 'failed
 CREATE TABLE public.ingestion_jobs (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) NOT NULL,
-    carpeta_id UUID REFERENCES public.carpetas(id), -- Vinculación opcional directa a la carpeta
+    carpeta_id UUID REFERENCES public.carpetas(id) ON DELETE CASCADE, -- Vinculación opcional directa a la carpeta
     
     -- Metadatos del archivo
     file_path TEXT NOT NULL, -- Ruta relativa en Supabase Storage (ej: 'user_123/docs/escritura.pdf')

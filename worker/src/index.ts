@@ -170,19 +170,40 @@ async function workerLoop() {
                 finished_at: new Date().toISOString()
             }).eq('id', job.id);
 
-            // 6. Insertar en tabla `escrituras` para que la UI lo muestre
+            // 6. Insertar en tabla `escrituras` y `operaciones` para que la UI lo muestre
             const extractedData = extractionResult.object;
-            const { error: insertError } = await supabase.from('escrituras').insert({
+
+            let nro_protocolo = null;
+            if (extractedData.numero_escritura) {
+                const parsedInt = parseInt(extractedData.numero_escritura.replace(/\D/g, ''), 10);
+                if (!isNaN(parsedInt)) nro_protocolo = parsedInt;
+            }
+
+            const { data: escrituraInsertada, error: insertError } = await supabase.from('escrituras').insert({
                 carpeta_id: job.carpeta_id,
-                resumen_acto: extractedData.resumen_acto,
-                numero_escritura: extractedData.numero_escritura || 'S/N',
-                fecha_escritura: extractedData.fecha_escritura,
-                datos_fijos: extractedData,
-                estado: 'COMPLETADO'
-            });
+                nro_protocolo: nro_protocolo,
+                fecha_escritura: extractedData.fecha_escritura || null,
+                analysis_metadata: {
+                    tipo_acto_detectado: extractedData.resumen_acto,
+                    datos_extraidos: extractedData
+                }
+            }).select().single();
 
             if (insertError) {
                 console.error(`[WORKER] Error insertando escritura para Job ${job.id}:`, insertError);
+            } else if (escrituraInsertada) {
+                // Insertar Operación
+                const { error: operacionError } = await supabase.from('operaciones').insert({
+                    escritura_id: escrituraInsertada.id,
+                    tipo_acto: extractedData.resumen_acto || 'SIN CLASIFICAR',
+                    monto_operacion: null
+                });
+
+                if (operacionError) {
+                    console.error(`[WORKER] Error insertando operacion para Job ${job.id}:`, operacionError);
+                } else {
+                    console.log(`[WORKER] Job ${job.id} COMPLETADO e insertado en BD (Escritura + Operacion).`);
+                }
             }
 
             console.log(`[WORKER] Job ${job.id} COMPLETADO e Insertado en BD.`);
