@@ -5,6 +5,7 @@ import { FolderPlus, Upload, FileText, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 export function MagicDropzone() {
     const [isDragging, setIsDragging] = useState(false);
@@ -41,50 +42,79 @@ export function MagicDropzone() {
 
     const processFile = async (file: File) => {
         setIsUploading(true);
-        const toastId = toast.loading(`Iniciando 'Magia'... procesando ${file.name}`);
+        const toastId = toast.loading(`Subiendo ${file.name}...`);
 
         try {
-            const formData = new FormData();
-            formData.append('file', file);
+            // 1. Provide a unique path for the file in the bucket
+            // In a real scenario we could put it under the user's ID directory if needed
+            const fileExt = file.name.split('.').pop();
+            const filePath = `user_uploads/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-            const response = await fetch("/api/ingest", {
+            // Note: the RLS policy might require it to be within a specific folder or just the bucket. 
+            // The bucket allows authenticated users to insert.
+            const { error: uploadError } = await supabase.storage
+                .from('escrituras')
+                .upload(filePath, file);
+
+            if (uploadError) {
+                console.error("Storage upload error:", uploadError);
+                throw new Error(`Error al subir archivo: ${uploadError.message}`);
+            }
+
+            toast.loading(`Procesando con IA Magia...`, { id: toastId });
+
+            // 2. Queue the job
+            const queueRes = await fetch("/api/ingest/queue", {
                 method: "POST",
-                body: formData
-                // Note: Don't set Content-Type header when using FormData, 
-                // the browser will set it with the correct boundary
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    filePath,
+                    fileName: file.name,
+                    fileSize: file.size,
+                    mimeType: file.type
+                })
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                const errorMessage = errorData.details
-                    ? `${errorData.error}: ${errorData.details}`
-                    : (errorData.error || "Error en la ingesta");
-                throw new Error(errorMessage);
+            if (!queueRes.ok) {
+                const errorData = await queueRes.json();
+                throw new Error(errorData.error || "Error encolando tarea");
             }
 
-            const result = await response.json();
+            const { jobId, folderId } = await queueRes.json();
 
-            const clientCount = result.debug?.clients || 0;
-            const assetCount = result.debug?.assets || 0;
-
-            if (clientCount === 0 && assetCount === 0) {
-                toast.warning("Alerta: La IA no detectó entidades. Verifique el formato.", { id: toastId, duration: 5000 });
-            } else {
-                toast.success(`¡Éxito! Se detectaron ${clientCount} Clientes y ${assetCount} Inmueble(s).`, { id: toastId, duration: 5000 });
-            }
-
-            if (result.folderId) {
-                router.push(`/carpeta/${result.folderId}`);
-            } else {
-                router.push("/dashboard");
-            }
+            // 3. Poll for status
+            pollJobStatus(jobId, folderId, toastId);
 
         } catch (error: any) {
             console.error(error);
             toast.error(error.message || "Hubo un error al procesar el archivo.", { id: toastId });
-        } finally {
             setIsUploading(false);
         }
+    };
+
+    const pollJobStatus = (jobId: string, folderId: string, toastId: string | number) => {
+        const interval = setInterval(async () => {
+            try {
+                const res = await fetch(`/api/jobs/${jobId}`);
+                if (!res.ok) return; // Keep trying on network blips
+
+                const { job } = await res.json();
+                if (!job) return;
+
+                if (job.status === 'completed') {
+                    clearInterval(interval);
+                    toast.success("¡Análisis completado con éxito!", { id: toastId, duration: 5000 });
+                    router.push(`/carpeta/${folderId}`);
+                } else if (job.status === 'failed') {
+                    clearInterval(interval);
+                    toast.error(`Error procesando: ${job.error_message || "Ocurrió un error inesperado"}`, { id: toastId });
+                    setIsUploading(false);
+                }
+                // If pending or processing, we keep waiting
+            } catch (error) {
+                console.error("Error durando polling", error);
+            }
+        }, 3000); // 3 seconds poll
     };
 
     return (
