@@ -16,22 +16,61 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Configuración Gemini
 const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// TODO: Extraer a un archivo de schemas compartido si es posible
+// Schema completo alineado con el frontend (src/lib/aiConfig.ts)
 const NotarySchema = z.object({
-    resumen_acto: z.string().describe("El tipo de acto notarial (ej. COMPRAVENTA, PODER, DONACION)"),
-    numero_escritura: z.string().nullable(),
-    fecha_escritura: z.string().nullable(),
+    resumen_acto: z.string().describe("Tipo de acto notarial: COMPRAVENTA, PODER, DONACION, HIPOTECA, CESION, REGLAMENTO DE PROPIEDAD HORIZONTAL, etc."),
+    numero_escritura: z.string().nullable().describe("Número de escritura/protocolo"),
+    fecha_escritura: z.string().nullable().describe("Fecha de la escritura en formato YYYY-MM-DD"),
+    escribano: z.string().nullable().describe("Nombre completo del escribano/notario interviniente"),
+    registro: z.string().nullable().describe("Número de registro del escribano"),
+    monto_operacion: z.number().nullable().describe("Monto/precio de la operación en pesos argentinos"),
     clientes: z.array(z.object({
-        rol: z.string(),
-        nombre_completo: z.string(),
-        dni: z.string().nullable(),
-        cuit: z.string().nullable(),
+        rol: z.string().describe("VENDEDOR, COMPRADOR, CEDENTE, CESIONARIO, ACREEDOR, DEUDOR, CONDOMINO, FIADOR, APODERADO, DONANTE, DONATARIO, etc."),
+        tipo_persona: z.string().describe("FISICA, JURIDICA o FIDEICOMISO").default("FISICA"),
+        nombre_completo: z.string().describe("Nombre y apellido completo. Apellido en MAYÚSCULAS"),
+        dni: z.string().nullable().describe("DNI: solo dígitos con puntos (ej. 11.341.571)"),
+        cuit: z.string().nullable().describe("CUIT/CUIL en formato XX-XXXXXXXX-X con guiones"),
+        nacionalidad: z.string().nullable().describe("Nacionalidad (ej. Argentina)"),
+        fecha_nacimiento: z.string().nullable().describe("Fecha de nacimiento YYYY-MM-DD"),
+        estado_civil: z.string().nullable().describe("Estado civil: Soltero/a, Casado/a, Viudo/a, Divorciado/a"),
+        domicilio: z.string().nullable().describe("Domicilio real completo literal"),
+        nombres_padres: z.string().nullable().describe("Filiación: ej. 'hijo de Juan PEREZ y Maria GOMEZ'"),
+        conyuge_nombre: z.string().nullable().describe("Nombre completo del cónyuge si se menciona"),
+        conyuge_dni: z.string().nullable().describe("DNI del cónyuge si se menciona"),
     })),
     inmuebles: z.array(z.object({
-        nomenclatura: z.string().nullable(),
-        transcripcion_literal: z.string().nullable()
+        partido: z.string().nullable().describe("Nombre del partido/departamento (ej. MONTE HERMOSO, BAHIA BLANCA)"),
+        partida_inmobiliaria: z.string().nullable().describe("Número de partida inmobiliaria"),
+        nomenclatura: z.string().nullable().describe("Nomenclatura catastral completa"),
+        transcripcion_literal: z.string().nullable().describe("Copia LITERAL COMPLETA de la descripción del inmueble: ubicación, medidas, linderos, superficie. NO incluir título antecedente."),
+        titulo_antecedente: z.string().nullable().describe("Sección 'TITULO ANTECEDENTE' o 'Les corresponde...' hasta inscripción registral"),
+        valuacion_fiscal: z.number().nullable().describe("Valuación fiscal en pesos"),
     })).optional()
-}).describe("Datos extraídos de una escritura pública.");
+}).describe("Datos extraídos de una escritura pública argentina.");
+
+const EXTRACTION_PROMPT = `Eres un escribano argentino experto. Extrae TODOS los datos de esta escritura pública.
+
+REGLAS CRÍTICAS:
+1. NOMBRES: Detecta nombres compuestos. Apellidos en MAYÚSCULAS (ej. "Raúl Ernesto COLANTONIO").
+2. DNI: Con puntos (ej. "11.341.571"). CUIT/CUIL: Formato XX-XXXXXXXX-X con guiones.
+3. BANCOS Y ENTIDADES: Si dice "en representación de BANCO X", extrae DOS entidades: el banco (JURIDICA, rol ACREEDOR) y el representante (FISICA, rol APODERADO).
+4. CÓNYUGES: Si dice "casado/a con X", extrae nombre y DNI del cónyuge.
+5. INMUEBLES - TRANSCRIPCIÓN LITERAL: Copia EXACTA de la descripción del inmueble desde ubicación, incluyendo medidas, linderos, nomenclatura catastral, superficie y valuación fiscal. NO incluir título antecedente.
+6. TITULO ANTECEDENTE: Campo SEPARADO. Desde "Les corresponde..." o "Le corresponde..." hasta inscripción registral.
+7. PARTIDO: Nombre del partido (ej. "MONTE HERMOSO", "BAHIA BLANCA"), NO código numérico.
+8. ESCRIBANO Y REGISTRO: Extrae el nombre del escribano y su número de registro.
+9. ESTADO CIVIL: Extrae si se menciona (Soltero/a, Casado/a, Viudo/a, Divorciado/a).
+10. FILIACIÓN: Si dice "hijo de X e Y", extrae en nombres_padres.
+11. DOMICILIO: Dirección completa literal.
+12. NACIONALIDAD Y FECHA NACIMIENTO: Extrae si aparecen.
+13. Si un dato NO aparece en el documento, dejarlo como null. NO inventar datos.
+
+TEXTO DE LA ESCRITURA:
+`;
+
+const VISION_PROMPT = `Eres un escribano argentino experto. Analiza estas imágenes de una escritura pública escaneada. Ignora manchas o ruido. Extrae TODOS los datos posibles.
+
+REGLAS: Nombres con apellido en MAYÚSCULAS. DNI con puntos. CUIT con guiones XX-XXXXXXXX-X. Transcripción literal del inmueble COMPLETA. Extraer escribano, registro, estado civil, filiación, domicilio, nacionalidad, cónyuge. Si un dato no aparece, dejarlo null.`;
 
 async function extractTextFromBuffer(buffer: Buffer) {
     try {
@@ -134,7 +173,7 @@ async function workerLoop() {
                 // Texto Nativo (Word->PDF)
                 extractionResult = await generateObject({
                     model: google('gemini-3-flash-preview'),
-                    prompt: `Eres un escribano experto. Extrae las entidades del texto:\n\n${textContent.substring(0, 150000)}`,
+                    prompt: EXTRACTION_PROMPT + textContent.substring(0, 150000),
                     schema: NotarySchema
                 });
 
@@ -146,7 +185,7 @@ async function workerLoop() {
                 console.log(`[WORKER] Vision: Extraídas ${imageBuffers.length} imágenes.`);
 
                 const contentParts: any[] = [
-                    { type: 'text', text: 'Analiza estas imágenes de una escritura pública escaneada. Ignora manchas o ruido. Extrae los datos solicitados.' }
+                    { type: 'text', text: VISION_PROMPT }
                 ];
 
                 for (const buf of imageBuffers) {
@@ -171,15 +210,17 @@ async function workerLoop() {
             // 6. Insertar en tabla `escrituras` y tablas relacionadas para que la UI lo muestre
             const extractedData = extractionResult.object;
 
-            // A. Insertar Inmueble
+            // A. Insertar Inmueble (con todos los campos)
             let inmuebleId = null;
             if (extractedData.inmuebles && extractedData.inmuebles.length > 0) {
-                const inmuebleToInsert = extractedData.inmuebles[0];
+                const inm = extractedData.inmuebles[0];
                 const { data: insertedInmueble, error: inmuebleError } = await supabase.from('inmuebles').insert({
-                    partido_id: '000',
-                    nro_partida: '000000',
-                    nomenclatura: inmuebleToInsert.nomenclatura || null,
-                    transcripcion_literal: inmuebleToInsert.transcripcion_literal || null,
+                    partido_id: inm.partido || 'SIN PARTIDO',
+                    nro_partida: inm.partida_inmobiliaria || '000000',
+                    nomenclatura: inm.nomenclatura || null,
+                    transcripcion_literal: inm.transcripcion_literal || null,
+                    titulo_antecedente: inm.titulo_antecedente || null,
+                    valuacion_fiscal: inm.valuacion_fiscal || null,
                 }).select().single();
 
                 if (inmuebleError) {
@@ -189,7 +230,7 @@ async function workerLoop() {
                 }
             }
 
-            // B. Insertar Escritura
+            // B. Insertar Escritura (con escribano y registro)
             let nro_protocolo = null;
             if (extractedData.numero_escritura) {
                 const parsedInt = parseInt(extractedData.numero_escritura.replace(/\D/g, ''), 10);
@@ -200,6 +241,8 @@ async function workerLoop() {
                 carpeta_id: job.carpeta_id,
                 nro_protocolo: nro_protocolo,
                 fecha_escritura: extractedData.fecha_escritura || null,
+                registro: extractedData.registro ? String(extractedData.registro) : null,
+                notario_interviniente: extractedData.escribano || null,
                 inmueble_princ_id: inmuebleId,
                 pdf_url: job.file_path,
                 analysis_metadata: {
@@ -219,26 +262,46 @@ async function workerLoop() {
                 continue;
             }
 
-            // C. Insertar Operación
+            // C. Insertar Operación (con monto)
             const { data: operacionInsertada, error: operacionError } = await supabase.from('operaciones').insert({
                 escritura_id: escrituraInsertada.id,
                 tipo_acto: extractedData.resumen_acto || 'SIN CLASIFICAR',
-                monto_operacion: null
+                monto_operacion: extractedData.monto_operacion || null
             }).select().single();
 
             if (operacionError) {
                 console.error(`[WORKER] Error insertando operacion para Job ${job.id}:`, operacionError.message);
             } else if (operacionInsertada && extractedData.clientes) {
-                // D. Insertar Personas y Participantes
+                // D. Insertar Personas y Participantes (con todos los campos biográficos)
                 for (const cliente of extractedData.clientes) {
                     const dniFinal = cliente.dni || `SIN_DNI_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
-                    const { error: personaError } = await supabase.from('personas').upsert({
+                    const personaData: any = {
                         dni: dniFinal,
                         nombre_completo: cliente.nombre_completo || 'SIN NOMBRE',
                         cuit: cliente.cuit || null,
-                        tipo_persona: 'FISICA'
-                    }, { onConflict: 'dni' });
+                        tipo_persona: cliente.tipo_persona || 'FISICA',
+                        nacionalidad: cliente.nacionalidad || null,
+                        fecha_nacimiento: cliente.fecha_nacimiento || null,
+                        estado_civil_detalle: cliente.estado_civil || null,
+                        domicilio_real: cliente.domicilio ? { literal: cliente.domicilio } : {},
+                        nombres_padres: cliente.nombres_padres || null,
+                        origen_dato: 'IA_OCR',
+                        updated_at: new Date().toISOString(),
+                    };
+
+                    // Datos del cónyuge si están presentes
+                    if (cliente.conyuge_nombre) {
+                        personaData.datos_conyuge = {
+                            nombre: cliente.conyuge_nombre,
+                            dni: cliente.conyuge_dni || null,
+                        };
+                    }
+
+                    const { error: personaError } = await supabase.from('personas').upsert(
+                        personaData,
+                        { onConflict: 'dni' }
+                    );
 
                     if (personaError) {
                         console.error(`[WORKER] Error upserting persona ${cliente.nombre_completo}:`, personaError.message);
