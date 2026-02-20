@@ -35,3 +35,13 @@ WHERE codigo = '200-00'
 UPDATE operaciones
 SET codigo = NULL
 WHERE codigo = '200-00';
+
+-- Fix: Reglamento de PH y División de Condominio sin código → 512-30
+UPDATE operaciones
+SET codigo = '512-30'
+WHERE codigo IS NULL
+  AND (
+    tipo_acto ILIKE '%REGLAMENTO DE PROPIEDAD HORIZONTAL%'
+    OR tipo_acto ILIKE '%DIVISION DE CONDOMINIO%'
+    OR tipo_acto ILIKE '%AFECTACION%PROPIEDAD HORIZONTAL%'
+  );

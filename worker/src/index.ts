@@ -11,6 +11,15 @@ const pdfParse = require('pdf-parse');
 dotenv.config();
 
 // --- CESBA Code Assignment ---
+// Direct code mappings for acts that don't follow baseCode-subcode pattern
+const DIRECT_CODE_MAP: Record<string, string> = {
+    'REGLAMENTO DE PROPIEDAD HORIZONTAL': '512-30',
+    'REGLAMENTO DE PH': '512-30',
+    'AFECTACION A PROPIEDAD HORIZONTAL': '512-30',
+    'DIVISION DE CONDOMINIO': '512-30',
+    'MODIFICACION DE REGLAMENTO': '513-30',
+};
+
 const OPERATION_BASE_CODES: Record<string, string> = {
     "COMPRAVENTA": "100",
     "HIPOTECA": "300",
@@ -19,7 +28,6 @@ const OPERATION_BASE_CODES: Record<string, string> = {
     "CESION": "400",
     "PODER": "500",
     "ACTA": "600",
-    "DIVISION_CONDOMINIO": "700",
     "AFECTACION_BIEN_FAMILIA": "800",
     "USUFRUCTO": "150",
     "FIDEICOMISO": "121",
@@ -47,9 +55,6 @@ const OPERATION_MAP: Record<string, string> = {
     'PODER GENERAL': 'PODER',
     'PODER ESPECIAL': 'PODER',
     'ACTA': 'ACTA',
-    'DIVISION': 'DIVISION_CONDOMINIO',
-    'DIVISION DE CONDOMINIO': 'DIVISION_CONDOMINIO',
-    'REGLAMENTO DE PROPIEDAD HORIZONTAL': 'DIVISION_CONDOMINIO',
     'USUFRUCTO': 'USUFRUCTO',
     'FIDEICOMISO': 'FIDEICOMISO',
     'AFECTACION BIEN DE FAMILIA': 'AFECTACION_BIEN_FAMILIA',
@@ -62,10 +67,18 @@ function getCESBACode(tipoActo: string): string | null {
     const normalized = (tipoActo || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
     const acts = actsData as Record<string, any>;
 
-    // Try exact match in operation map
+    // 1. Try direct code map (exact match first)
+    if (DIRECT_CODE_MAP[normalized]) return DIRECT_CODE_MAP[normalized];
+
+    // 2. Try direct code map (partial match)
+    for (const [key, code] of Object.entries(DIRECT_CODE_MAP)) {
+        if (normalized.includes(key)) return code;
+    }
+
+    // 3. Try operation map (exact match)
     let opType = OPERATION_MAP[normalized];
 
-    // Try partial match if no exact match
+    // 4. Try operation map (partial match)
     if (!opType) {
         for (const [key, value] of Object.entries(OPERATION_MAP)) {
             if (normalized.includes(key)) {

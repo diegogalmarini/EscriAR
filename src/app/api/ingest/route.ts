@@ -21,19 +21,39 @@ import { classifyDocument } from '@/lib/skills/routing/documentClassifier';
 import { taxonomyService, ActIntent } from '@/lib/services/TaxonomyService';
 
 // Helper to get CESBA code from tipo_acto
+// Direct code mappings for acts that don't follow baseCode-subcode pattern
+const DIRECT_CODE_MAP: Record<string, string> = {
+    'REGLAMENTO DE PROPIEDAD HORIZONTAL': '512-30',
+    'REGLAMENTO DE PH': '512-30',
+    'AFECTACION A PROPIEDAD HORIZONTAL': '512-30',
+    'DIVISION DE CONDOMINIO': '512-30',
+    'MODIFICACION DE REGLAMENTO': '513-30',
+};
+
 function getCESBACode(tipoActo: string, isFamilyHome: boolean = false): string | null {
     const normalized = (tipoActo || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
 
-    // Map common act types to operation types
+    // 1. Try direct code map (exact match)
+    if (DIRECT_CODE_MAP[normalized]) return DIRECT_CODE_MAP[normalized];
+
+    // 2. Try direct code map (partial match)
+    for (const [key, code] of Object.entries(DIRECT_CODE_MAP)) {
+        if (normalized.includes(key)) return code;
+    }
+
+    // 3. Map common act types to operation types
     const operationMap: Record<string, ActIntent['operation_type']> = {
         'VENTA': 'COMPRAVENTA',
         'COMPRAVENTA': 'COMPRAVENTA',
         'COMPRA': 'COMPRAVENTA',
         'PRESTAMO': 'HIPOTECA',
         'PRESTAMO BANCARIO': 'HIPOTECA',
+        'PRESTAMO HIPOTECARIO': 'HIPOTECA',
         'HIPOTECA': 'HIPOTECA',
         'MUTUO HIPOTECARIO': 'HIPOTECA',
         'MUTUO': 'HIPOTECA',
+        'CONTRATO DE CREDITO': 'HIPOTECA',
+        'CREDITO HIPOTECARIO': 'HIPOTECA',
         'CANCELACION': 'CANCELACION_HIPOTECA',
         'CANCELACION DE HIPOTECA': 'CANCELACION_HIPOTECA',
         'LEVANTAMIENTO DE HIPOTECA': 'CANCELACION_HIPOTECA',
@@ -44,8 +64,6 @@ function getCESBACode(tipoActo: string, isFamilyHome: boolean = false): string |
         'PODER GENERAL': 'PODER',
         'PODER ESPECIAL': 'PODER',
         'ACTA': 'ACTA',
-        'DIVISION': 'DIVISION_CONDOMINIO',
-        'DIVISION DE CONDOMINIO': 'DIVISION_CONDOMINIO',
         'USUFRUCTO': 'USUFRUCTO',
         'FIDEICOMISO': 'FIDEICOMISO',
         'AFECTACION BIEN DE FAMILIA': 'AFECTACION_BIEN_FAMILIA',

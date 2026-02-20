@@ -64,7 +64,7 @@ const OPERATION_BASE_CODES: Record<string, string> = {
     "CESION": "400",
     "PODER": "500",
     "ACTA": "600",
-    "DIVISION_CONDOMINIO": "700",
+    "DIVISION_CONDOMINIO": "512",
     "AFECTACION_BIEN_FAMILIA": "800",
     "USUFRUCTO": "150",
     "FIDEICOMISO": "121",
