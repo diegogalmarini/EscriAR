@@ -73,7 +73,7 @@ export async function DELETE() {
         console.error('Error cleaning orphaned storage files:', error);
         return NextResponse.json({
             success: false,
-            error: error.message,
+            error: 'Error limpiando archivos de storage.',
             filesRemoved: 0
         }, { status: 500 });
     }

@@ -162,12 +162,10 @@ async function workerLoop() {
 
             console.log(`[WORKER] Extracción Finalizada con método: ${processingMethod}`);
 
-            // 5. Success
+            // 5. Guardar resultado de extracción (aún no marcamos completed)
             await supabase.from('ingestion_jobs').update({
-                status: 'completed',
                 result_data: extractionResult.object,
                 processing_metadata: { method: processingMethod, timestamp: new Date().toISOString() },
-                finished_at: new Date().toISOString()
             }).eq('id', job.id);
 
             // 6. Insertar en tabla `escrituras` y tablas relacionadas para que la UI lo muestre
@@ -178,15 +176,14 @@ async function workerLoop() {
             if (extractedData.inmuebles && extractedData.inmuebles.length > 0) {
                 const inmuebleToInsert = extractedData.inmuebles[0];
                 const { data: insertedInmueble, error: inmuebleError } = await supabase.from('inmuebles').insert({
-                    partido_id: '000', // Default requerido por el schema
-                    nro_partida: '000000', // Default requerido por el schema
-                    nomenclatura_catastral: inmuebleToInsert.nomenclatura || 'SIN NOMENCLATURA',
-                    transcripcion_literal: inmuebleToInsert.transcripcion_literal || 'SIN TRANSCRIPCIÓN',
-                    tipo_inmueble: 'SIN CLASIFICAR'
+                    partido_id: '000',
+                    nro_partida: '000000',
+                    nomenclatura: inmuebleToInsert.nomenclatura || null,
+                    transcripcion_literal: inmuebleToInsert.transcripcion_literal || null,
                 }).select().single();
 
                 if (inmuebleError) {
-                    console.error(`[WORKER] Error insertando inmueble:`, inmuebleError);
+                    console.warn(`[WORKER] Warning insertando inmueble (continuando sin él):`, inmuebleError.message);
                 } else if (insertedInmueble) {
                     inmuebleId = insertedInmueble.id;
                 }
@@ -204,60 +201,88 @@ async function workerLoop() {
                 nro_protocolo: nro_protocolo,
                 fecha_escritura: extractedData.fecha_escritura || null,
                 inmueble_princ_id: inmuebleId,
-                pdf_url: job.file_path, // Referencia al storage original
+                pdf_url: job.file_path,
                 analysis_metadata: {
                     tipo_acto_detectado: extractedData.resumen_acto,
                     datos_extraidos: extractedData
                 }
             }).select().single();
 
-            if (insertError) {
-                console.error(`[WORKER] Error insertando escritura para Job ${job.id}:`, insertError);
-            } else if (escrituraInsertada) {
-                // C. Insertar Operación
-                const { data: operacionInsertada, error: operacionError } = await supabase.from('operaciones').insert({
-                    escritura_id: escrituraInsertada.id,
-                    tipo_acto: extractedData.resumen_acto || 'SIN CLASIFICAR',
-                    monto_operacion: null
-                }).select().single();
+            if (insertError || !escrituraInsertada) {
+                const msg = `Error insertando escritura: ${insertError?.message || 'No data returned'}`;
+                console.error(`[WORKER] ${msg}`);
+                await supabase.from('ingestion_jobs').update({
+                    status: 'failed',
+                    error_message: msg,
+                    finished_at: new Date().toISOString()
+                }).eq('id', job.id);
+                continue;
+            }
 
-                if (operacionError) {
-                    console.error(`[WORKER] Error insertando operacion para Job ${job.id}:`, operacionError);
-                } else if (operacionInsertada && extractedData.clientes) {
-                    // D. Insertar Personas y Participantes
-                    for (const cliente of extractedData.clientes) {
-                        // El schema actual de la bd usa DNI como PK
-                        const dniFinal = cliente.dni || `SIN_DNI_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+            // C. Insertar Operación
+            const { data: operacionInsertada, error: operacionError } = await supabase.from('operaciones').insert({
+                escritura_id: escrituraInsertada.id,
+                tipo_acto: extractedData.resumen_acto || 'SIN CLASIFICAR',
+                monto_operacion: null
+            }).select().single();
 
-                        const { error: personaError } = await supabase.from('personas').upsert({
-                            dni: dniFinal,
-                            nombre_completo: cliente.nombre_completo || 'SIN NOMBRE',
-                            cuit: cliente.cuit || null,
-                            tipo_persona: 'FISICA'
-                        }, { onConflict: 'dni' });
+            if (operacionError) {
+                console.error(`[WORKER] Error insertando operacion para Job ${job.id}:`, operacionError.message);
+            } else if (operacionInsertada && extractedData.clientes) {
+                // D. Insertar Personas y Participantes
+                for (const cliente of extractedData.clientes) {
+                    const dniFinal = cliente.dni || `SIN_DNI_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
-                        if (personaError) {
-                            console.error(`[WORKER] Error upserting persona ${cliente.nombre_completo}:`, personaError);
-                        } else {
-                            const { error: partError } = await supabase.from('participantes_operacion').insert({
-                                operacion_id: operacionInsertada.id,
-                                persona_id: dniFinal,
-                                rol: cliente.rol || 'PARTE'
-                            });
-                            if (partError) {
-                                console.error(`[WORKER] Error insertando participante ${cliente.nombre_completo}:`, partError);
-                            }
+                    const { error: personaError } = await supabase.from('personas').upsert({
+                        dni: dniFinal,
+                        nombre_completo: cliente.nombre_completo || 'SIN NOMBRE',
+                        cuit: cliente.cuit || null,
+                        tipo_persona: 'FISICA'
+                    }, { onConflict: 'dni' });
+
+                    if (personaError) {
+                        console.error(`[WORKER] Error upserting persona ${cliente.nombre_completo}:`, personaError.message);
+                    } else {
+                        const { error: partError } = await supabase.from('participantes_operacion').insert({
+                            operacion_id: operacionInsertada.id,
+                            persona_id: dniFinal,
+                            rol: cliente.rol || 'PARTE'
+                        });
+                        if (partError) {
+                            console.error(`[WORKER] Error insertando participante ${cliente.nombre_completo}:`, partError.message);
                         }
                     }
                 }
-                console.log(`[WORKER] Job ${job.id} COMPLETADO e insertado entidades vinculadas en BD.`);
             }
+
+            // 7. Todo OK → marcar como completed
+            await supabase.from('ingestion_jobs').update({
+                status: 'completed',
+                finished_at: new Date().toISOString()
+            }).eq('id', job.id);
+            console.log(`[WORKER] Job ${job.id} COMPLETADO e insertado entidades vinculadas en BD.`);
 
         } catch (error: any) {
             console.error(`[WORKER] ERROR en Loop principal:`, error);
-            await new Promise(res => setTimeout(res, 5000)); // Evitar fail-loop rapido
-            // Deberíamos marcar el job como failed si estuviera procesando, 
-            // pero para esta Demo simple el retry está en desarrollo.
+            // Intentar marcar el job actual como failed si tenemos referencia
+            try {
+                const { data: processingJobs } = await supabase
+                    .from('ingestion_jobs')
+                    .select('id')
+                    .eq('status', 'processing')
+                    .limit(1);
+                if (processingJobs && processingJobs.length > 0) {
+                    await supabase.from('ingestion_jobs').update({
+                        status: 'failed',
+                        error_message: error.message || 'Error desconocido en loop principal',
+                        error_stack: error.stack || null,
+                        finished_at: new Date().toISOString()
+                    }).eq('id', processingJobs[0].id);
+                }
+            } catch (innerErr) {
+                console.error(`[WORKER] No se pudo marcar job como failed:`, innerErr);
+            }
+            await new Promise(res => setTimeout(res, 5000));
         }
     }
 }

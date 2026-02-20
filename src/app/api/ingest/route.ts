@@ -300,8 +300,7 @@ export async function POST(req: Request) {
     } catch (error: any) {
         console.error("🔥 FULL INGESTION ERROR:", error);
         return NextResponse.json({
-            error: error.message,
-            stack: error.stack
+            error: 'Error interno en la ingesta. Reintente o contacte soporte.'
         }, { status: 500 });
     }
 }

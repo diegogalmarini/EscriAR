@@ -3,6 +3,10 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 export async function GET() {
+    if (process.env.NODE_ENV !== 'development') {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
     try {
         const cookieStore = await cookies();
         const allCookies = cookieStore.getAll().map(c => ({ name: c.name, value: c.name.includes('token') ? '[REDACTED]' : c.value }));
