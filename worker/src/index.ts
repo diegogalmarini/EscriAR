@@ -170,7 +170,22 @@ async function workerLoop() {
                 finished_at: new Date().toISOString()
             }).eq('id', job.id);
 
-            console.log(`[WORKER] Job ${job.id} COMPLETADO.`);
+            // 6. Insertar en tabla `escrituras` para que la UI lo muestre
+            const extractedData = extractionResult.object;
+            const { error: insertError } = await supabase.from('escrituras').insert({
+                carpeta_id: job.carpeta_id,
+                resumen_acto: extractedData.resumen_acto,
+                numero_escritura: extractedData.numero_escritura || 'S/N',
+                fecha_escritura: extractedData.fecha_escritura,
+                datos_fijos: extractedData,
+                estado: 'COMPLETADO'
+            });
+
+            if (insertError) {
+                console.error(`[WORKER] Error insertando escritura para Job ${job.id}:`, insertError);
+            }
+
+            console.log(`[WORKER] Job ${job.id} COMPLETADO e Insertado en BD.`);
 
         } catch (error: any) {
             console.error(`[WORKER] ERROR en Loop principal:`, error);
