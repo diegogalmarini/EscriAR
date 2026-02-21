@@ -18,7 +18,7 @@ import { StatusStepper } from "./StatusStepper";
 import { MinutaGenerator } from "./MinutaGenerator";
 import { AMLCompliance } from "./AMLCompliance";
 import { InscriptionTracker } from "./InscriptionTracker";
-import { linkPersonToOperation, linkAssetToDeed, addOperationToDeed, deleteCarpeta, unlinkPersonFromOperation } from "@/app/actions/carpeta";
+import { linkPersonToOperation, linkAssetToDeed, addOperationToDeed, deleteCarpeta, unlinkPersonFromOperation, updateRepresentacion } from "@/app/actions/carpeta";
 import { updateEscritura, updateOperacion, updateInmueble } from "@/app/actions/escritura";
 import { ClientOutreach } from "./ClientOutreach";
 import { listStorageFiles, deleteStorageFile, getSignedUrl } from "@/app/actions/storageSync";
@@ -29,6 +29,7 @@ import { SmartDeedEditor } from "./smart/SmartDeedEditor";
 import { CrossCheckService, ValidationState } from "@/lib/agent/CrossCheckService";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { cn, formatDateInstructions } from "@/lib/utils";
 import { formatCUIT, formatPersonName, isLegalEntity } from "@/lib/utils/normalization";
 import {
@@ -189,6 +190,7 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
     const [isPending, startTransition] = useTransition();
     const [isDeleting, setIsDeleting] = useState(false);
     const [editingPerson, setEditingPerson] = useState<any>(null);
+    const [editingRepresentacion, setEditingRepresentacion] = useState<any>(null);
     const [storageFiles, setStorageFiles] = useState<any[]>([]);
     const [isLoadingStorage, setIsLoadingStorage] = useState(false);
     const [showConflictModal, setShowConflictModal] = useState(false);
@@ -851,19 +853,30 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                                     </div>
                                                 </div>
 
-                                                {/* Datos de Representación (solo para Apoderados) */}
-                                                {p.datos_representacion && (
+                                                {/* Datos de Representación (para Apoderados/Representantes) */}
+                                                {(p.datos_representacion || (p.rol && p.rol.toUpperCase().includes('APODERADO'))) && (
                                                     <div className="border-t pt-3 border-slate-100 space-y-2">
-                                                        <div>
-                                                            <p className="text-[10px] font-bold uppercase text-slate-400 tracking-tight">Representando a</p>
-                                                            <p className="text-[12px] text-slate-700 font-semibold">
-                                                                {p.datos_representacion.representa_a || "No informado"}
-                                                            </p>
+                                                        <div className="flex justify-between items-start">
+                                                            <div className="flex-1">
+                                                                <p className="text-[10px] font-bold uppercase text-slate-400 tracking-tight">Representando a</p>
+                                                                <p className="text-[12px] text-slate-700 font-semibold">
+                                                                    {p.datos_representacion?.representa_a || "No informado"}
+                                                                </p>
+                                                            </div>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-6 w-6 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 shrink-0"
+                                                                onClick={() => setEditingRepresentacion({ participanteId: p.id, ...p.datos_representacion })}
+                                                                title="Editar representación"
+                                                            >
+                                                                <Pencil className="h-3 w-3" />
+                                                            </Button>
                                                         </div>
                                                         <div>
                                                             <p className="text-[10px] font-bold uppercase text-slate-400 tracking-tight">Poder Otorgado</p>
                                                             <p className="text-[12px] text-slate-600 italic leading-snug">
-                                                                {p.datos_representacion.poder_detalle || "No consta"}
+                                                                {p.datos_representacion?.poder_detalle || "No consta"}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -943,6 +956,80 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                             }}
                             onCancel={() => setEditingPerson(null)}
                         />
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Editing Representacion Modal */}
+            <Dialog open={!!editingRepresentacion} onOpenChange={() => setEditingRepresentacion(null)}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle>Editar Representación</DialogTitle>
+                        <DialogDescription>
+                            Datos del poder y la persona/entidad representada.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {editingRepresentacion && (
+                        <form
+                            onSubmit={async (e) => {
+                                e.preventDefault();
+                                const form = e.target as HTMLFormElement;
+                                const formData = new FormData(form);
+                                const result = await updateRepresentacion(
+                                    editingRepresentacion.participanteId,
+                                    {
+                                        representa_a: formData.get('representa_a') as string,
+                                        caracter: formData.get('caracter') as string,
+                                        poder_detalle: formData.get('poder_detalle') as string,
+                                    }
+                                );
+                                if (result.success) {
+                                    toast.success('Representación actualizada');
+                                    setEditingRepresentacion(null);
+                                    router.refresh();
+                                } else {
+                                    toast.error(result.error || 'Error al actualizar');
+                                }
+                            }}
+                            className="space-y-4"
+                        >
+                            <div className="space-y-2">
+                                <Label htmlFor="representa_a">Representando a</Label>
+                                <Input
+                                    id="representa_a"
+                                    name="representa_a"
+                                    defaultValue={editingRepresentacion.representa_a || ''}
+                                    placeholder="Ej: BANCO DE LA NACION ARGENTINA"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="caracter">Carácter</Label>
+                                <Input
+                                    id="caracter"
+                                    name="caracter"
+                                    defaultValue={editingRepresentacion.caracter || ''}
+                                    placeholder="Ej: Apoderado, Presidente, Socio Gerente"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="poder_detalle">Poder Otorgado</Label>
+                                <Textarea
+                                    id="poder_detalle"
+                                    name="poder_detalle"
+                                    rows={4}
+                                    defaultValue={editingRepresentacion.poder_detalle || ''}
+                                    placeholder="Ej: poder general amplio conferido por escritura número 100 de fecha 21/03/2018, ante escribano Santiago Alvarez Fourcade, folio 733 del Registro a su cargo"
+                                />
+                            </div>
+                            <div className="flex justify-end gap-2 pt-2">
+                                <Button type="button" variant="outline" onClick={() => setEditingRepresentacion(null)}>
+                                    Cancelar
+                                </Button>
+                                <Button type="submit">
+                                    Guardar
+                                </Button>
+                            </div>
+                        </form>
                     )}
                 </DialogContent>
             </Dialog>

@@ -80,6 +80,34 @@ export async function linkPersonToOperation(operacionId: string, personaId: stri
     }
 }
 
+export async function updateRepresentacion(
+    participanteId: string,
+    datos: { representa_a?: string; caracter?: string; poder_detalle?: string }
+) {
+    try {
+        const supabase = await createClient();
+        const { data, error } = await supabase
+            .from('participantes_operacion')
+            .update({
+                datos_representacion: {
+                    representa_a: datos.representa_a || null,
+                    caracter: datos.caracter || null,
+                    poder_detalle: datos.poder_detalle || null
+                }
+            })
+            .eq('id', participanteId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        revalidatePath('/carpeta/[id]', 'page');
+        return { success: true, data };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
 export async function linkAssetToDeed(escrituraId: string, inmuebleId: string) {
     try {
         const supabase = await createClient();
