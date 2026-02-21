@@ -176,7 +176,8 @@ export const ACTA_EXTRACCION_PARTES_SCHEMA: any = {
                                 }
                             },
                             documento_base: { type: SchemaType.STRING, nullable: true },
-                            folio_evidencia: { type: SchemaType.STRING, nullable: true }
+                            folio_evidencia: { type: SchemaType.STRING, nullable: true },
+                            poder_detalle: { type: SchemaType.STRING, nullable: true, description: "Texto completo del poder: tipo (general/especial), escritura número, fecha, escribano otorgante, folio, registro. Ej: 'poder general amplio conferido por escritura número 100 de fecha 21/03/2018, ante escribano Santiago Alvarez Fourcade, folio 733 del Registro a su cargo'" }
                         },
                         required: ["es_representado"]
                     }

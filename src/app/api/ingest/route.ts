@@ -540,10 +540,17 @@ function normalizeAIData(raw: any) {
                 e.representacion.representantes.forEach((rep: any) => {
                     addOrMergeClient({
                         rol: 'APODERADO/REPRESENTANTE',
-                        caracter: `en representación de ${mainClient.nombre_completo}`,
+                        caracter: rep.caracter || 'Apoderado',
                         nombre_completo: extractString(rep.nombre),
                         dni: extractString(rep.dni),
-                        tipo_persona: 'FISICA'
+                        tipo_persona: 'FISICA',
+                        _representacion: {
+                            representa_a: mainClient.nombre_completo,
+                            caracter: rep.caracter || 'Apoderado',
+                            poder_detalle: e.representacion.poder_detalle
+                                || e.representacion.documento_base
+                                || null
+                        }
                     });
                 });
             }
@@ -783,7 +790,8 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
                     await supabaseAdmin.from('participantes_operacion').insert([{
                         operacion_id: operacion.id,
                         persona_id: finalID,
-                        rol: String(c.caracter ? `${c.rol} (${c.caracter})` : c.rol).toUpperCase().substring(0, 150)
+                        rol: String(c.caracter ? `${c.rol} (${c.caracter})` : c.rol).toUpperCase().substring(0, 150),
+                        datos_representacion: (c as any)._representacion || null
                     }]);
                     processedParticipants.add(participantKey);
                 } else {
