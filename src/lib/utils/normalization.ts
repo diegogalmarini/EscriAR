@@ -14,10 +14,15 @@ export function toTitleCase(str: string | null | undefined): string | null {
 /**
  * Normaliza el nombre de un Partido/Departamento a Title Case canónico.
  * "MONTE HERMOSO" → "Monte Hermoso", "bahia blanca" → "Bahia Blanca"
+ * También canoniza tildes: "Bahía Blanca" → "Bahia Blanca" (sin tilde para consistencia)
  */
+const ACCENT_MAP: Record<string, string> = { 'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ü': 'u', 'ñ': 'ñ' };
+
 export function normalizePartido(partido: string | null | undefined): string {
     if (!partido || !partido.trim()) return 'Sin Partido';
-    return partido.trim().toLowerCase().split(' ')
+    // Strip accents for canonical form (except ñ), then Title Case
+    const stripped = partido.trim().toLowerCase().replace(/[áéíóúü]/g, c => ACCENT_MAP[c] || c);
+    return stripped.split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 }

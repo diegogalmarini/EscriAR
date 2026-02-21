@@ -319,7 +319,11 @@ async function workerLoop() {
 
             // A. Insertar Inmueble (DEDUP: check by partido_id + nro_partida)
             // Normalize helpers (inline since worker is a separate project)
-            const normPartido = (p: string) => (p || 'Sin Partido').trim().toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            const normPartido = (p: string) => {
+                const accentMap: Record<string, string> = { 'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ü': 'u' };
+                const stripped = (p || 'Sin Partido').trim().toLowerCase().replace(/[áéíóúü]/g, c => accentMap[c] || c);
+                return stripped.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            };
             const normPartida = (p: string) => (p || '000000').trim().replace(/\./g, '');
 
             let inmuebleId = null;
@@ -444,16 +448,28 @@ async function workerLoop() {
 
             if (operacionInsertada && extractedData.clientes) {
                 // D. Insertar Personas y Participantes (con todos los campos biográficos)
+                // First pass: collect client metadata for representación inference
+                const clientMeta: { dniFinal: string; nombre: string; rol: string; tipo: string }[] = [];
+
                 for (const cliente of extractedData.clientes) {
                     const rawDni = cliente.dni?.replace(/[^a-zA-Z0-9]/g, '') || '';
                     const rawCuit = cliente.cuit?.replace(/[^a-zA-Z0-9]/g, '') || '';
                     const dniFinal = rawDni || rawCuit || `SIN_DNI_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
+                    // Detect tipo_persona from CUIT prefix or name
+                    let tipoPersona = cliente.tipo_persona || 'FISICA';
+                    const cuitPrefix = (rawCuit || rawDni).substring(0, 2);
+                    if (['30', '33', '34'].includes(cuitPrefix)) tipoPersona = 'JURIDICA';
+                    const upperName = (cliente.nombre_completo || '').toUpperCase();
+                    if (upperName.includes('BANCO') || upperName.includes('S.A.') || upperName.includes('S.R.L.') || upperName.includes('FIDEICOMISO')) tipoPersona = 'JURIDICA';
+
+                    clientMeta.push({ dniFinal, nombre: cliente.nombre_completo || 'SIN NOMBRE', rol: (cliente.rol || 'PARTE').toUpperCase(), tipo: tipoPersona });
+
                     const personaData: any = {
                         dni: dniFinal,
                         nombre_completo: cliente.nombre_completo || 'SIN NOMBRE',
                         cuit: rawCuit || null,
-                        tipo_persona: cliente.tipo_persona || 'FISICA',
+                        tipo_persona: tipoPersona,
                         nacionalidad: cliente.nacionalidad || null,
                         fecha_nacimiento: cliente.fecha_nacimiento || null,
                         estado_civil_detalle: cliente.estado_civil || null,
@@ -488,6 +504,28 @@ async function workerLoop() {
                         if (partError) {
                             console.error(`[WORKER] Error insertando participante ${cliente.nombre_completo}:`, partError.message);
                         }
+                    }
+                }
+
+                // E. REPRESENTACIÓN INFERENCE: Link APODERADO participants to JURIDICA entities
+                const juridicas = clientMeta.filter(c => c.tipo === 'JURIDICA' || c.tipo === 'FIDEICOMISO');
+                const apoderados = clientMeta.filter(c => c.rol.includes('APODERADO') || c.rol.includes('REPRESENTANTE') || c.rol.includes('MANDATARIO'));
+
+                if (apoderados.length > 0 && juridicas.length > 0) {
+                    const target = juridicas.length === 1
+                        ? juridicas[0]
+                        : juridicas.find(j => j.rol.includes('ACREEDOR')) || juridicas[0];
+
+                    for (const apod of apoderados) {
+                        const repData = {
+                            representa_a: target.nombre,
+                            caracter: 'Apoderado',
+                            poder_detalle: null
+                        };
+                        console.log(`[WORKER] Representación: ${apod.nombre} → represents ${target.nombre}`);
+                        await supabase.from('participantes_operacion').update({
+                            datos_representacion: repData
+                        }).eq('operacion_id', operacionInsertada.id).eq('persona_id', apod.dniFinal);
                     }
                 }
             }
