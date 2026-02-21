@@ -384,12 +384,14 @@ async function workerLoop() {
             } else if (operacionInsertada && extractedData.clientes) {
                 // D. Insertar Personas y Participantes (con todos los campos biográficos)
                 for (const cliente of extractedData.clientes) {
-                    const dniFinal = cliente.dni || `SIN_DNI_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                    const rawDni = cliente.dni?.replace(/[^a-zA-Z0-9]/g, '') || '';
+                    const rawCuit = cliente.cuit?.replace(/[^a-zA-Z0-9]/g, '') || '';
+                    const dniFinal = rawDni || rawCuit || `SIN_DNI_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
                     const personaData: any = {
                         dni: dniFinal,
                         nombre_completo: cliente.nombre_completo || 'SIN NOMBRE',
-                        cuit: cliente.cuit || null,
+                        cuit: rawCuit || null,
                         tipo_persona: cliente.tipo_persona || 'FISICA',
                         nacionalidad: cliente.nacionalidad || null,
                         fecha_nacimiento: cliente.fecha_nacimiento || null,

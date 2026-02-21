@@ -453,9 +453,13 @@ function normalizeAIData(raw: any) {
         const existingIdx = allClients.findIndex(cl => {
             const nameMatch = looseNameMatch(cl.nombre_completo, newCl.nombre_completo);
             if (!nameMatch) return false;
-            // DNI/CUIT Conflict check
-            if (cl.dni && newCl.dni && cl.dni !== newCl.dni) return false;
-            if (cl.cuit && newCl.cuit && cl.cuit !== newCl.cuit) return false;
+            // DNI/CUIT Conflict check (normalize to strip dots/dashes)
+            const clDni = normalizeID(cl.dni);
+            const newDni = normalizeID(newCl.dni);
+            if (clDni && newDni && clDni !== newDni) return false;
+            const clCuit = normalizeID(cl.cuit);
+            const newCuit = normalizeID(newCl.cuit);
+            if (clCuit && newCuit && clCuit !== newCuit) return false;
             return true;
         });
 
@@ -515,7 +519,7 @@ function normalizeAIData(raw: any) {
                 rol: extractString(e.rol) || 'VENDEDOR',
                 tipo_persona: forcedTipoPersona,
                 nombre_completo: rawNombre,
-                dni: extractString(d.dni) || null,
+                dni: normalizeID(extractString(d.dni)),
                 cuit: formatCUIT(extractString(d.cuit_cuil)),
                 cuit_tipo: e.cuit_tipo?.toUpperCase() || 'CUIT',
                 estado_civil: extractString(d.estado_civil) || null,
@@ -543,7 +547,7 @@ function normalizeAIData(raw: any) {
                         rol: 'APODERADO/REPRESENTANTE',
                         caracter: rep.caracter || 'Apoderado',
                         nombre_completo: extractString(rep.nombre),
-                        dni: extractString(rep.dni),
+                        dni: normalizeID(extractString(rep.dni)),
                         tipo_persona: 'FISICA',
                         _representacion: {
                             representa_a: mainClient.nombre_completo,
