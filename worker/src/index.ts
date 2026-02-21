@@ -144,6 +144,7 @@ const NotarySchema = z.object({
         nombres_padres: z.string().nullable().describe("Filiación: ej. 'hijo de Juan PEREZ y Maria GOMEZ'"),
         conyuge_nombre: z.string().nullable().describe("Nombre completo del cónyuge si se menciona"),
         conyuge_dni: z.string().nullable().describe("DNI del cónyuge si se menciona"),
+        poder_detalle: z.string().nullable().describe("Solo para APODERADOS: texto completo del poder que lo habilita. Ej: 'poder general amplio conferido por escritura número 100 de fecha 21/03/2018, ante escribano Santiago Alvarez Fourcade, folio 733'").optional(),
     })),
     inmuebles: z.array(z.object({
         partido: z.string().nullable().describe("Nombre del partido/departamento (ej. MONTE HERMOSO, BAHIA BLANCA)"),
@@ -160,7 +161,7 @@ const EXTRACTION_PROMPT = `Eres un escribano argentino experto. Extrae TODOS los
 REGLAS CRÍTICAS:
 1. NOMBRES: Detecta nombres compuestos. Apellidos en MAYÚSCULAS (ej. "Raúl Ernesto COLANTONIO").
 2. DNI: Con puntos (ej. "11.341.571"). CUIT/CUIL: Formato XX-XXXXXXXX-X con guiones.
-3. BANCOS Y ENTIDADES: Si dice "en representación de BANCO X", extrae DOS entidades: el banco (JURIDICA, rol ACREEDOR) y el representante (FISICA, rol APODERADO).
+3. BANCOS Y ENTIDADES: Si dice "en representación de BANCO X", extrae DOS entidades: el banco (JURIDICA, rol ACREEDOR) y el representante (FISICA, rol APODERADO). Para el APODERADO, extrae en poder_detalle el texto completo del poder: tipo (general/especial), escritura número, fecha, escribano otorgante, folio, registro.
 4. CÓNYUGES: Si dice "casado/a con X", extrae nombre y DNI del cónyuge.
 5. INMUEBLES - TRANSCRIPCIÓN LITERAL: Copia EXACTA de la descripción del inmueble desde ubicación, incluyendo medidas, linderos, nomenclatura catastral, superficie y valuación fiscal. NO incluir título antecedente.
 6. TITULO ANTECEDENTE: Campo SEPARADO. Desde "Les corresponde..." o "Le corresponde..." hasta inscripción registral.
@@ -449,7 +450,7 @@ async function workerLoop() {
             if (operacionInsertada && extractedData.clientes) {
                 // D. Insertar Personas y Participantes (con todos los campos biográficos)
                 // First pass: collect client metadata for representación inference
-                const clientMeta: { dniFinal: string; nombre: string; rol: string; tipo: string }[] = [];
+                const clientMeta: { dniFinal: string; nombre: string; rol: string; tipo: string; poderDetalle: string | null }[] = [];
 
                 for (const cliente of extractedData.clientes) {
                     const rawDni = cliente.dni?.replace(/[^a-zA-Z0-9]/g, '') || '';
@@ -463,7 +464,7 @@ async function workerLoop() {
                     const upperName = (cliente.nombre_completo || '').toUpperCase();
                     if (upperName.includes('BANCO') || upperName.includes('S.A.') || upperName.includes('S.R.L.') || upperName.includes('FIDEICOMISO')) tipoPersona = 'JURIDICA';
 
-                    clientMeta.push({ dniFinal, nombre: cliente.nombre_completo || 'SIN NOMBRE', rol: (cliente.rol || 'PARTE').toUpperCase(), tipo: tipoPersona });
+                    clientMeta.push({ dniFinal, nombre: cliente.nombre_completo || 'SIN NOMBRE', rol: (cliente.rol || 'PARTE').toUpperCase(), tipo: tipoPersona, poderDetalle: cliente.poder_detalle || null });
 
                     const personaData: any = {
                         dni: dniFinal,
@@ -520,7 +521,7 @@ async function workerLoop() {
                         const repData = {
                             representa_a: target.nombre,
                             caracter: 'Apoderado',
-                            poder_detalle: null
+                            poder_detalle: apod.poderDetalle || null
                         };
                         console.log(`[WORKER] Representación: ${apod.nombre} → represents ${target.nombre}`);
                         await supabase.from('participantes_operacion').update({
