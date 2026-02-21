@@ -2,105 +2,86 @@ import { createClient } from '@supabase/supabase-js';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateObject } from 'ai';
 import { fromBuffer } from 'pdf2pic';
+import { GoogleAIFileManager } from '@google/generative-ai/server';
 import * as dotenv from 'dotenv';
 import { z } from 'zod';
 import * as http from 'http';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 import actsData from './acts_taxonomy_2026.json';
 const pdfParse = require('pdf-parse');
 
 dotenv.config();
 
-// --- CESBA Code Assignment ---
-// Direct code mappings for acts that don't follow baseCode-subcode pattern
-const DIRECT_CODE_MAP: Record<string, string> = {
+// --- Gemini File API Manager (for full PDF upload) ---
+const fileManager = new GoogleAIFileManager(process.env.GEMINI_API_KEY!);
+
+// --- CESBA Code Assignment (deterministic, using official taxonomy JSON) ---
+// Mapeo verificado de texto libre de Gemini → código CESBA oficial
+// Cada código fue validado contra acts_taxonomy_2026.json
+const ACT_TYPE_MAP: Record<string, string> = {
+    'COMPRAVENTA': '100-00',
+    'VENTA': '100-00',
+    'COMPRA': '100-00',
+    'DACION EN PAGO': '100-00',
+    'COMPRAVENTA DE NUDA PROPIEDAD': '103-00',
+    'HIPOTECA': '300-00',
+    'PRESTAMO HIPOTECARIO': '300-00',
+    'MUTUO HIPOTECARIO': '300-00',
+    'MUTUO': '300-00',
+    'CREDITO HIPOTECARIO': '300-00',
+    'PRESTAMO': '300-00',
+    'PRESTAMO BANCARIO': '300-00',
+    'CONTRATO DE CREDITO': '300-00',
+    'CANCELACION DE HIPOTECA': '311-00',
+    'CANCELACION': '311-00',
+    'LEVANTAMIENTO DE HIPOTECA': '311-00',
+    'DONACION': '200-30',
+    'CESION': '834-00',
+    'CESION DE DERECHOS': '834-00',
+    'CESION DE DERECHOS Y ACCIONES': '834-00',
+    'FIDEICOMISO': '121-00',
+    'TRANSFERENCIA DE DOMINIO A BENEFICIARIO': '121-00',
+    'ADJUDICACION DE FIDEICOMISO': '121-00',
+    'USUFRUCTO': '400-00',
+    'CONSTITUCION DE USUFRUCTO': '400-00',
     'REGLAMENTO DE PROPIEDAD HORIZONTAL': '512-30',
     'REGLAMENTO DE PH': '512-30',
     'AFECTACION A PROPIEDAD HORIZONTAL': '512-30',
     'DIVISION DE CONDOMINIO': '512-30',
     'MODIFICACION DE REGLAMENTO': '513-30',
-};
-
-const OPERATION_BASE_CODES: Record<string, string> = {
-    "COMPRAVENTA": "100",
-    "HIPOTECA": "300",
-    "CANCELACION_HIPOTECA": "311",
-    "DONACION": "200",
-    "CESION": "400",
-    "PODER": "500",
-    "ACTA": "600",
-    "AFECTACION_BIEN_FAMILIA": "800",
-    "USUFRUCTO": "150",
-    "FIDEICOMISO": "121",
-};
-
-const OPERATION_MAP: Record<string, string> = {
-    'VENTA': 'COMPRAVENTA',
-    'COMPRAVENTA': 'COMPRAVENTA',
-    'COMPRA': 'COMPRAVENTA',
-    'PRESTAMO': 'HIPOTECA',
-    'PRESTAMO BANCARIO': 'HIPOTECA',
-    'PRESTAMO HIPOTECARIO': 'HIPOTECA',
-    'HIPOTECA': 'HIPOTECA',
-    'MUTUO HIPOTECARIO': 'HIPOTECA',
-    'MUTUO': 'HIPOTECA',
-    'CONTRATO DE CREDITO': 'HIPOTECA',
-    'CREDITO HIPOTECARIO': 'HIPOTECA',
-    'CANCELACION': 'CANCELACION_HIPOTECA',
-    'CANCELACION DE HIPOTECA': 'CANCELACION_HIPOTECA',
-    'LEVANTAMIENTO DE HIPOTECA': 'CANCELACION_HIPOTECA',
-    'DONACION': 'DONACION',
-    'CESION': 'CESION',
-    'CESION DE DERECHOS': 'CESION',
-    'PODER': 'PODER',
-    'PODER GENERAL': 'PODER',
-    'PODER ESPECIAL': 'PODER',
-    'ACTA': 'ACTA',
-    'USUFRUCTO': 'USUFRUCTO',
-    'FIDEICOMISO': 'FIDEICOMISO',
-    'AFECTACION BIEN DE FAMILIA': 'AFECTACION_BIEN_FAMILIA',
-    'SOCIEDAD': 'CONSTITUCION_SOCIEDAD',
-    'TRANSFERENCIA DE DOMINIO A BENEFICIARIO': 'FIDEICOMISO',
-    'ADJUDICACION DE FIDEICOMISO': 'FIDEICOMISO',
+    'AFECTACION BIEN DE FAMILIA': '500-32',
+    'AFECTACION A VIVIENDA': '500-32',
 };
 
 function getCESBACode(tipoActo: string): string | null {
-    const normalized = (tipoActo || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+    if (!tipoActo) return null;
+    const normalized = (tipoActo || '')
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase().trim();
+
     const acts = actsData as Record<string, any>;
 
-    // 1. Try direct code map (exact match first)
-    if (DIRECT_CODE_MAP[normalized]) return DIRECT_CODE_MAP[normalized];
-
-    // 2. Try direct code map (partial match)
-    for (const [key, code] of Object.entries(DIRECT_CODE_MAP)) {
-        if (normalized.includes(key)) return code;
+    // 1. Exact match en mapeo verificado
+    if (ACT_TYPE_MAP[normalized] && acts[ACT_TYPE_MAP[normalized]]) {
+        return ACT_TYPE_MAP[normalized];
     }
 
-    // 3. Try operation map (exact match)
-    let opType = OPERATION_MAP[normalized];
-
-    // 4. Try operation map (partial match)
-    if (!opType) {
-        for (const [key, value] of Object.entries(OPERATION_MAP)) {
-            if (normalized.includes(key)) {
-                opType = value;
-                break;
-            }
-        }
+    // 2. Partial match en mapeo (Gemini puede devolver variantes)
+    for (const [key, code] of Object.entries(ACT_TYPE_MAP)) {
+        if (normalized.includes(key) && acts[code]) return code;
     }
 
-    if (!opType) return null;
+    // 3. Búsqueda exacta en descriptions del JSON de taxonomía
+    for (const [code, act] of Object.entries(acts)) {
+        const desc = ((act as any).description || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+        if (desc === normalized) return code;
+    }
 
-    const baseCode = OPERATION_BASE_CODES[opType];
-    if (!baseCode) return null;
-
-    const fullCode = `${baseCode}-00`;
-
-    // Verify code exists in taxonomy
-    if (acts[fullCode]) return fullCode;
-
-    // Try base code with other common subcodes
-    for (const sub of ['-00', '-30', '-51']) {
-        if (acts[`${baseCode}${sub}`]) return `${baseCode}${sub}`;
+    // 4. Partial match en descriptions del JSON
+    for (const [code, act] of Object.entries(acts)) {
+        const desc = ((act as any).description || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+        if (normalized.length > 4 && (desc.includes(normalized) || normalized.includes(desc))) return code;
     }
 
     return null;
@@ -286,25 +267,54 @@ async function workerLoop() {
                 });
 
             } else {
-                console.log(`[WORKER] PDF Escaneado detectado. Iniciando VISION OCR.`);
-                processingMethod = 'vision-ocr';
+                console.log(`[WORKER] PDF Escaneado detectado. Usando Gemini File API para documento completo.`);
+                processingMethod = 'file-api-vision';
 
-                const imageBuffers = await convertPdfToImages(fileBuffer, 6); // Primeras 6 pág.
-                console.log(`[WORKER] Vision: Extraídas ${imageBuffers.length} imágenes.`);
+                // Escribir buffer a archivo temporal para subir via File API
+                const tempDir = process.env.TEMP || '/tmp';
+                const tempPath = path.join(tempDir, `worker_${job.id}.pdf`);
+                await fs.writeFile(tempPath, fileBuffer);
 
-                const contentParts: any[] = [
-                    { type: 'text', text: VISION_PROMPT }
-                ];
+                try {
+                    // Subir PDF completo a Gemini File API
+                    const uploadResponse = await fileManager.uploadFile(tempPath, {
+                        mimeType: 'application/pdf',
+                        displayName: job.original_filename || `job_${job.id}.pdf`,
+                    });
 
-                for (const buf of imageBuffers) {
-                    contentParts.push({ type: 'image', image: buf });
+                    // Esperar a que Gemini termine de procesar el archivo
+                    let uploadedFile = uploadResponse.file;
+                    while (uploadedFile.state === 'PROCESSING') {
+                        await new Promise(r => setTimeout(r, 2000));
+                        const fileStatus = await fileManager.getFile(uploadedFile.name);
+                        uploadedFile = fileStatus;
+                    }
+
+                    if (uploadedFile.state === 'FAILED') {
+                        throw new Error('Gemini File API: el archivo falló al procesarse');
+                    }
+
+                    console.log(`[WORKER] File API: archivo listo (${uploadedFile.uri}). Extrayendo con Gemini...`);
+
+                    // Enviar como FilePart con URL — @ai-sdk/google lo convierte a fileData internamente
+                    extractionResult = await generateObject({
+                        model: google('gemini-3-flash-preview'),
+                        messages: [{
+                            role: 'user',
+                            content: [
+                                { type: 'text', text: VISION_PROMPT },
+                                { type: 'file', data: new URL(uploadedFile.uri), mediaType: 'application/pdf' }
+                            ]
+                        }],
+                        schema: NotarySchema
+                    });
+
+                    // Limpiar archivo de Gemini
+                    await fileManager.deleteFile(uploadedFile.name).catch(() => {});
+                } finally {
+                    // Limpiar archivo temporal del disco
+                    await fs.unlink(tempPath).catch(() => {});
                 }
-
-                extractionResult = await generateObject({
-                    model: google('gemini-3-flash-preview'),
-                    messages: [{ role: 'user', content: contentParts }],
-                    schema: NotarySchema
-                });
             }
 
             console.log(`[WORKER] Extracción Finalizada con método: ${processingMethod}`);

@@ -116,8 +116,8 @@ NotiAR tiene **dos pipelines** para procesar PDFs, ambos hacen lo mismo (extraer
 | **Trigger** | Upload directo del usuario | Cola `ingestion_jobs` |
 | **Schema AI** | `aiConfig.ts` (Google SDK, más completo) | Zod `NotarySchema` (simplificado) |
 | **Capacidades extra** | SkillExecutor, mega-document chunking, model upgrade dinámico, RAG context injection | Inferencia de representación post-inserción |
-| **Limitación** | Timeout de Vercel (~60s) | Solo 6 páginas para escaneados (Vision OCR) |
-| **CESBA codes** | `TaxonomyService` (más preciso) | `getCESBACode()` (mapeo simple) |
+| **PDFs escaneados** | Timeout de Vercel (~60s) | Gemini File API: PDF completo sin límite de páginas |
+| **CESBA codes** | `TaxonomyService` (más preciso) | `getCESBACode()` con taxonomía oficial (mismo JSON) |
 
 **Regla importante**: Cualquier mejora en la lógica de extracción o persistencia debe aplicarse en **AMBOS** pipelines.
 
@@ -760,12 +760,38 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 16. **Representación (Apoderados)** — JSONB con `representa_a`, `caracter`, `poder_detalle`
 17. **Perfil de escribano completo** — Teléfono, email, carácter A_CARGO, datos oficiales Galmarini
 18. **Reestructura de tabs** — Nuevo tab "Antecedente" con contenido previo de "Mesa de trabajo"
+19. **Worker: PDF completo via File API** — Eliminado límite de 6 páginas, ahora procesa documentos escaneados completos
+20. **Taxonomía CESBA unificada** — Worker usa el mismo JSON oficial de 822 códigos; corregidos bugs (CESION=834, USUFRUCTO=400, DONACION=200-30)
+21. **Limpieza de logs diagnósticos** — Eliminados 15 console.log de debug en pipeline de ingesta
 
 ---
 
 ## 17. Changelog
 
-### 2026-02-21 (Claude) — Sesión larga, cambios mayores
+### 2026-02-21 (Claude) — Sesión 2: Deuda técnica crítica
+
+#### Worker: Eliminado límite de 6 páginas (File API)
+Problema: `convertPdfToImages(fileBuffer, 6)` solo procesaba las primeras 6 páginas de PDFs escaneados. Escrituras bancarias de 30-40 páginas perdían cónyuges, clausulas UIF y firmas.
+
+- Reemplazado: conversión a imágenes PNG → **Gemini File API** (`GoogleAIFileManager`)
+- El PDF completo se sube a Google, Gemini lo procesa nativamente sin límite de páginas
+- Limpieza automática: archivo temporal local + archivo en Gemini File API
+- Agregada dependencia `@google/generative-ai` al worker
+
+#### Taxonomía CESBA unificada
+Problema: el worker tenía un mapeo manual con bugs graves — CESION→400 (es USUFRUCTO), PODER→500 (es AFECTACION A VIVIENDA), USUFRUCTO→150 (no existe), DONACION buscaba -00 (no existe, es -30).
+
+- Reemplazadas 3 constantes y función `getCESBACode()` con mapeo verificado contra JSON oficial
+- Todos los códigos validados contra `acts_taxonomy_2026.json` (822 códigos)
+- Fallback: búsqueda por description en el JSON de taxonomía
+- Corregido: CESION=834-00, USUFRUCTO=400-00, DONACION=200-30, AFECTACION BIEN FAMILIA=500-32
+
+#### Limpieza de logs diagnósticos
+- Eliminados 15 console.log de debug en `src/app/api/ingest/route.ts` (data dumps, traces por entidad, safety-net diagnósticos)
+- Mantenidos 12 logs operacionales (inicio pipeline, routing, errores, dedup significativo)
+- Eliminada variable `oldRol` sin uso
+
+### 2026-02-21 (Claude) — Sesión 1: Cambios mayores
 
 #### Integridad de Datos — Sistema anti-duplicados completo
 Problema: al re-subir un PDF se duplicaban personas, inmuebles, escrituras y participantes.
@@ -842,12 +868,10 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 
 ### Urgentes (hacer antes de seguir con ROADMAP)
 - [ ] **Ejecutar migración 029** en Supabase SQL Editor (dedup personas jurídicas por CUIT)
-- [ ] **Verificar `poder_detalle`** funciona tras redeploy Railway
-- [ ] **Remover logs diagnósticos** de `src/app/api/ingest/route.ts`
+- [ ] **Verificar `poder_detalle`** funciona tras redeploy Railway (subir un PDF con apoderado)
+- [ ] **Redeploy Worker** en Railway para activar: File API (sin límite páginas) + taxonomía CESBA unificada
 
 ### Deuda técnica
-- [ ] Worker solo procesa 6 páginas de PDFs escaneados — cónyuges en páginas posteriores se pierden
-- [ ] CESBA code assignment: worker usa mapeo simple, frontend usa TaxonomyService más completo
 - [ ] Integración con Resend para emails transaccionales
 
 ### Roadmap
@@ -864,4 +888,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-02-21 — Claude
+> **Última actualización**: 2026-02-21 (sesión 2) — Claude

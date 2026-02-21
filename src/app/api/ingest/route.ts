@@ -571,10 +571,8 @@ function normalizeAIData(raw: any) {
     }
 
     // SEMANTIC ROLE SANITIZER: Ultimo recurso para asegurar roles en 103.pdf y similares
-    console.log(`[NORMALIZE] Final Sanitizer pass on ${allClients.length} clients...`);
     allClients.forEach(c => {
         const uName = c.nombre_completo.toUpperCase();
-        const oldRol = c.rol;
 
         // 1. Hardcore Anchors (Company specific or pattern based)
         if (uName.includes('SOMAJOFA')) c.rol = 'FIDUCIARIA';
@@ -588,20 +586,15 @@ function normalizeAIData(raw: any) {
 
         // 3. Metadata matching (Cedente/Cesionario)
         if (cedenteName && looseNameMatch(c.nombre_completo, cedenteName)) {
-            console.log(`[NORMALIZE] Forcing CEDENTE rol for ${c.nombre_completo}`);
             c.rol = 'CEDENTE';
         }
         if (cesionarioName && looseNameMatch(c.nombre_completo, cesionarioName)) {
-            console.log(`[NORMALIZE] Forcing CESIONARIO rol for ${c.nombre_completo}`);
             c.rol = 'CESIONARIO';
         }
-
-        if (oldRol !== c.rol) console.log(`[NORMALIZE] Role changed: ${c.nombre_completo} (${oldRol} -> ${c.rol})`);
     });
 
     // REPRESENTACION INFERENCE: For APODERADO clients without _representacion,
     // infer who they represent from entities with es_representado=true
-    console.log(`[NORMALIZE] Representacion inference pass. Clients: ${allClients.map(c => `${c.nombre_completo}(rol=${c.rol}, tipo=${c.tipo_persona}, hasRep=${!!c._representacion})`).join(', ')}`);
     const representedEntities = (raw.entidades || []).filter((e: any) => e.representacion?.es_representado);
     allClients.forEach(c => {
         if (c._representacion) return; // already has it
@@ -624,7 +617,6 @@ function normalizeAIData(raw: any) {
                         || entity.representacion.documento_base
                         || null
                 };
-                console.log(`[NORMALIZE] Inferred representacion for ${c.nombre_completo} → represents ${entityName}`);
                 break;
             }
         }
@@ -638,7 +630,6 @@ function normalizeAIData(raw: any) {
                     caracter: 'Apoderado',
                     poder_detalle: null
                 };
-                console.log(`[NORMALIZE] Fallback representacion for ${c.nombre_completo} → represents ${juridicas[0].nombre_completo}`);
             }
         }
     });
@@ -658,9 +649,6 @@ function normalizeAIData(raw: any) {
 
             // Split multiple partidas (e.g. "126-017.871-3 / 126-022.080")
             const partidas = splitMultiplePartidas(rawPartida);
-            if (partidas.length > 1) {
-                console.log(`[NORMALIZE] Split partidas múltiples: "${rawPartida}" → [${partidas.join(', ')}]`);
-            }
             for (const p of partidas) {
                 expandedInmuebles.push({
                     partido, partida_inmobiliaria: p, nomenclatura,
@@ -732,7 +720,6 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
                 });
             }
             if (idx === 0) assetId = existingAsset.id;
-            console.log(`[PERSIST] ♻️ Inmueble ${partidoNorm}/${partidaNorm} ya existe (${existingAsset.id})`);
         } else {
             const { data: asset, error: assetError } = await supabaseAdmin.from('inmuebles').insert({
                 partido_id: partidoNorm,
@@ -831,9 +818,7 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
     const processedParticipants = new Set<string>();
 
     // SAFETY NET: Ensure APODERADO clients have _representacion before persisting
-    console.log(`[PERSIST] Safety-net check. Clients: ${clientes.map((c: any) => `${c.nombre_completo}(rol=${c.rol}, rep=${JSON.stringify(c._representacion || null)})`).join(' | ')}`);
     const juridicaClients = clientes.filter((cl: any) => cl.tipo_persona === 'JURIDICA' || cl.tipo_persona === 'FIDEICOMISO');
-    console.log(`[PERSIST] Juridica clients for safety-net: ${juridicaClients.map((j: any) => `${j.nombre_completo}(rol=${j.rol})`).join(', ')}`);
     for (const c of clientes) {
         if (c._representacion) continue;
         const rolUpper = (c.rol || '').toUpperCase();
@@ -845,7 +830,6 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
                 caracter: 'Apoderado',
                 poder_detalle: null
             };
-            console.log(`[PERSIST] Safety-net representacion: ${c.nombre_completo} → ${juridicaClients[0].nombre_completo}`);
         } else if (juridicaClients.length > 1) {
             // Multiple juridicas: pick the one with ACREEDOR role (common in hipotecas)
             const acreedor = juridicaClients.find((j: any) => j.rol?.toUpperCase()?.includes('ACREEDOR'));
@@ -855,7 +839,6 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
                     caracter: 'Apoderado',
                     poder_detalle: null
                 };
-                console.log(`[PERSIST] Safety-net representacion: ${c.nombre_completo} → ${acreedor.nombre_completo}`);
             }
         }
     }
@@ -934,7 +917,6 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
                 if (!processedParticipants.has(participantKey)) {
                     // Use upsert with ON CONFLICT DO NOTHING to prevent duplicates
                     const repData = (c as any)._representacion || null;
-                    console.log(`[PERSIST] Inserting participant ${c.nombre_completo} (${finalID}) rol=${c.rol} datos_representacion=${JSON.stringify(repData)}`);
                     const { error: partErr } = await supabaseAdmin.from('participantes_operacion').upsert({
                         operacion_id: operacion.id,
                         persona_id: finalID,
@@ -943,8 +925,6 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
                     }, { onConflict: 'operacion_id,persona_id', ignoreDuplicates: true });
                     if (partErr) db_logs.push(`Participant Error (${finalID}): ${partErr.message}`);
                     processedParticipants.add(participantKey);
-                } else {
-                    console.log(`[PERSIST] Skipping duplicate participant link for ${finalID} in op ${operacion.id}`);
                 }
             }
         }
