@@ -14,9 +14,8 @@ BEGIN
     FOR dup IN
         SELECT dni, nombre_completo
         FROM personas
-        WHERE dni ~ '[^a-zA-Z0-9]'  -- DNI con caracteres no alfanuméricos
-          AND dni NOT LIKE 'SIN-DNI-%'  -- Excluir temporales (no son duplicados)
-          AND dni NOT LIKE 'TEMP-%'     -- Excluir fallbacks del ingest
+        WHERE dni ~ '[.]'  -- Solo DNIs con puntos (ej: 31.670.469)
+          AND dni ~ '^[0-9.]+$'  -- Solo dígitos y puntos (excluye SIN-DNI, TEMP, etc.)
     LOOP
         clean_dni := regexp_replace(dup.dni, '[^a-zA-Z0-9]', '', 'g');
 
