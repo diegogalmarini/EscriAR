@@ -116,7 +116,7 @@ NotiAR tiene **dos pipelines** para procesar PDFs, ambos hacen lo mismo (extraer
 | **Trigger** | Upload directo del usuario | Cola `ingestion_jobs` |
 | **Schema AI** | `aiConfig.ts` (Google SDK, más completo) | Zod `NotarySchema` (simplificado) |
 | **Capacidades extra** | SkillExecutor, mega-document chunking, model upgrade dinámico, RAG context injection | Inferencia de representación post-inserción |
-| **PDFs escaneados** | Timeout de Vercel (~60s) | Gemini File API: PDF completo sin límite de páginas |
+| **PDFs escaneados** | Timeout de Vercel (~60s) | Gemini File API: PDF completo sin límite de páginas (cleanup en `finally`) |
 | **CESBA codes** | `TaxonomyService` (más preciso) | `getCESBACode()` con taxonomía oficial (mismo JSON) |
 
 **Regla importante**: Cualquier mejora en la lógica de extracción o persistencia debe aplicarse en **AMBOS** pipelines.
@@ -768,6 +768,13 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 
 ## 17. Changelog
 
+### 2026-02-21 (Claude) — Sesión 3: Fix seguridad File API
+
+#### Seguridad: Gemini File API cleanup en `finally`
+- `fileManager.deleteFile()` movido de `try` a `finally` en `worker/src/index.ts`
+- Variable `geminiFileName` trackeada fuera del `try` para garantizar purga
+- PDFs ya no quedan cacheados 48h en servidores Google si `generateObject()` falla
+
 ### 2026-02-21 (Claude) — Sesión 2: Deuda técnica crítica
 
 #### Worker: Eliminado límite de 6 páginas (File API)
@@ -775,6 +782,7 @@ Problema: `convertPdfToImages(fileBuffer, 6)` solo procesaba las primeras 6 pág
 
 - Reemplazado: conversión a imágenes PNG → **Gemini File API** (`GoogleAIFileManager`)
 - El PDF completo se sube a Google, Gemini lo procesa nativamente sin límite de páginas
+- **Seguridad**: limpieza garantizada en bloque `finally` — el PDF se purga de servidores Google incluso si la llamada al LLM falla (evita caché de 48h en Google)
 - Limpieza automática: archivo temporal local + archivo en Gemini File API
 - Agregada dependencia `@google/generative-ai` al worker
 

@@ -275,6 +275,7 @@ async function workerLoop() {
                 const tempPath = path.join(tempDir, `worker_${job.id}.pdf`);
                 await fs.writeFile(tempPath, fileBuffer);
 
+                let geminiFileName: string | null = null;
                 try {
                     // Subir PDF completo a Gemini File API
                     const uploadResponse = await fileManager.uploadFile(tempPath, {
@@ -284,6 +285,7 @@ async function workerLoop() {
 
                     // Esperar a que Gemini termine de procesar el archivo
                     let uploadedFile = uploadResponse.file;
+                    geminiFileName = uploadedFile.name;
                     while (uploadedFile.state === 'PROCESSING') {
                         await new Promise(r => setTimeout(r, 2000));
                         const fileStatus = await fileManager.getFile(uploadedFile.name);
@@ -308,10 +310,11 @@ async function workerLoop() {
                         }],
                         schema: NotarySchema
                     });
-
-                    // Limpiar archivo de Gemini
-                    await fileManager.deleteFile(uploadedFile.name).catch(() => {});
                 } finally {
+                    // SEGURIDAD: Purgar PDF de servidores Google (incluso si generateObject falla)
+                    if (geminiFileName) {
+                        await fileManager.deleteFile(geminiFileName).catch(() => {});
+                    }
                     // Limpiar archivo temporal del disco
                     await fs.unlink(tempPath).catch(() => {});
                 }
