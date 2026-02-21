@@ -68,7 +68,10 @@ SaaS argentino para escribanos (notarios). Gestión de carpetas notariales con e
 - `pdf_url` en BD: pipeline frontend guarda URL pública completa, worker guarda path crudo → `resolveDocumentUrl()` maneja ambos
 - `personas` PK = `dni` (string), no UUID
 - `participantes_operacion` vincula personas ↔ operaciones con campo `rol`
-- Migraciones SQL en `supabase_migrations/` (numeradas 001-022+), se ejecutan **manual** en Supabase SQL Editor
+- Migraciones SQL en `supabase_migrations/` (numeradas 001-029), se ejecutan **manual** en Supabase SQL Editor
+- **Normalización**: `normalizePartido()`, `normalizePartida()`, `splitMultiplePartidas()` en `src/lib/utils/normalization.ts`
+- **Personas JURIDICAS**: usan CUIT como PK (no DNI). Lookup por CUIT antes de generar SIN_DNI
+- **Representación**: columna `datos_representacion JSONB` en `participantes_operacion` con `{representa_a, caracter, poder_detalle}`
 
 ### Códigos CESBA (campo `codigo` en `operaciones`)
 - COMPRAVENTA → `100-xx`
@@ -130,6 +133,50 @@ SaaS argentino para escribanos (notarios). Gestión de carpetas notariales con e
 - `CarpetasTable`: alineada con RPC `search_carpetas` (estructura plana `parties[]`, `number`)
 - Persona Jurídica: `isJuridica()` checa `tipo_persona`/`cuit` para no invertir nombre
 
+### 2026-02-21 (Claude) — Sesión larga, cambios mayores
+
+#### Integridad de Datos — Sistema anti-duplicados completo
+Problema: al re-subir un PDF se duplicaban personas, inmuebles, escrituras y participantes.
+Solución implementada en AMBOS pipelines (frontend `/api/ingest` Y worker Railway):
+
+- **Dedup participantes**: upsert con `ON CONFLICT DO NOTHING` (UNIQUE constraint en operacion_id+persona_id)
+- **Dedup inmuebles**: UNIQUE index parcial en (partido_id, nro_partida). Lookup antes de INSERT; si existe, reutiliza
+- **Dedup escrituras**: UNIQUE index parcial en (nro_protocolo, registro). Lookup antes de INSERT; si existe, actualiza metadata y reutiliza
+- **Dedup operaciones**: si la escritura ya tiene operación, la reutiliza en vez de crear otra
+- **Migración 026**: `supabase_migrations/026_unique_constraints_anti_duplicates.sql` — CONSTRAINTS en BD ✅ EJECUTADA
+
+#### Normalización de datos
+Problema: "Monte Hermoso" vs "MONTE HERMOSO" y "Bahía Blanca" vs "Bahia Blanca" generaban inmuebles duplicados. Partidas con puntos decorativos ("126.559") no matcheaban.
+
+- **`normalizePartido()`**: Title Case + strip accents ("BAHÍA BLANCA" → "Bahia Blanca") — en `src/lib/utils/normalization.ts`
+- **`normalizePartida()`**: quita puntos ("126.559" → "126559")
+- **`splitMultiplePartidas()`**: separa "126-017.871-3 / 126-022.080" en 2 inmuebles independientes
+- Aplicado en ambos pipelines (frontend + worker)
+- **Migración 027**: normaliza partido a Title Case y partida sin puntos en data existente ✅ EJECUTADA
+- **Migración 028**: normaliza tildes en partido_id + merge de duplicados con FK remap ✅ EJECUTADA
+
+#### Personas Jurídicas — CUIT como ID canónico
+Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces porque Gemini a veces devuelve DNI, a veces CUIT, a veces nada → se generaban SIN_DNI_xxx.
+
+- **Fix en ambos pipelines**: para tipo_persona JURIDICA/FIDEICOMISO, usar CUIT como PK (no DNI)
+- **Lookup por CUIT**: antes de generar SIN_DNI, buscar si ya existe una persona con ese CUIT
+- **Migración 029**: fusiona duplicados existentes por CUIT en una sola persona canónica ⚠️ PENDIENTE DE EJECUTAR
+
+#### Representación (Apoderados)
+Problema: tarjeta de APODERADO mostraba "Representando a: No informado" y "Poder Otorgado: No consta".
+Root cause: PDFs >500KB van al worker Railway, que NO tenía lógica de representación.
+
+- **Migración 024**: columna `datos_representacion JSONB` en `participantes_operacion` ✅ EJECUTADA
+- **Frontend ingest**: captura representación desde schema AI (`aiConfig.ts` tiene campo `representacion`)
+- **Worker Railway**: ahora infiere representación post-inserción (detecta APODERADO → lo vincula a JURIDICA del mismo acto)
+- **Worker Zod schema**: agregado campo `poder_detalle` para que Gemini extraiga texto completo del poder
+- **UI**: tarjeta de APODERADO muestra "Representando a" y "Poder Otorgado" debajo del domicilio
+- ⚠️ PENDIENTE: verificar que `poder_detalle` se extrae correctamente tras redeploy Railway
+
+#### Roadmap
+- Creado `ROADMAP.md` — documento maestro con 3 etapas, 14 hitos, criterios de aceptación, dependencias y orden de ejecución
+- Auditoría completa del codebase: 18 páginas, 8 APIs, 53 componentes, 17 skills notariales, inventario EXISTS vs MISSING
+
 ### 2026-02-20 (Gemini)
 - `search_carpetas` RPC reescrito: estructura aplanada con `parties[]` JSONB y `escrituras[]` JSONB
 - Renaming `nro_acto` → `codigo` en toda la BD y UI
@@ -138,15 +185,33 @@ SaaS argentino para escribanos (notarios). Gestión de carpetas notariales con e
 
 ---
 
-## 8. Pendientes Conocidos
+## 8. Estado de Migraciones
 
-- [ ] **Migración 022** pendiente de ejecutar en Supabase SQL Editor (agrega `tipo_persona`, `cuit`, `tipo_acto` al RPC)
-- [ ] Códigos `200-00` existentes en BD son incorrectos (deberían ser `300-00` para hipotecas) — corregir con UPDATE SQL
+| Migración | Descripción | Estado |
+|-----------|-------------|--------|
+| 001–023 | Setup inicial, auth, storage, schemas, RPC | ✅ Ejecutadas |
+| 024 | `datos_representacion JSONB` en participantes_operacion | ✅ Ejecutada |
+| 025 | Dedup personas, normalizar DNI | ✅ Ejecutada |
+| 026 | UNIQUE constraints anti-duplicados (participantes, inmuebles, escrituras) | ✅ Ejecutada |
+| 027 | Normalizar partido (Title Case) y partida (sin puntos) | ✅ Ejecutada |
+| 028 | Normalizar tildes en partido + merge duplicados con FK remap | ✅ Ejecutada |
+| 029 | Dedup personas jurídicas por CUIT (merge canónico) | ⚠️ **PENDIENTE** |
+
+## 9. Pendientes Conocidos
+
+### Urgentes (hacer antes de seguir con ROADMAP)
+- [ ] **Ejecutar migración 029** en Supabase SQL Editor (dedup personas jurídicas por CUIT)
+- [ ] **Verificar `poder_detalle`** funciona tras redeploy Railway (re-subir un PDF con apoderado)
+- [ ] **Remover logs diagnósticos** de `src/app/api/ingest/route.ts` (agregados para debug representación)
+
+### Deuda técnica
 - [ ] Worker solo procesa 6 páginas de PDFs escaneados — cónyuges en páginas posteriores se pierden
 - [ ] CESBA code assignment: worker usa mapeo simple, frontend usa TaxonomyService más completo
-- [ ] Validaciones legales automáticas (Art. 470 CCyC)
-- [ ] Identificación de nuevos modelos de documentos
 - [ ] Integración con Resend para emails transaccionales
+
+### Roadmap
+- **Ver `ROADMAP.md`** para el plan completo de desarrollo en 3 etapas (Estudio de Título → Redacción → Post-Firma)
+- Próximos hitos: 1.1 Certificados, 1.3 Ficha Comprador, 1.4 Determinación Acto (pueden ir en paralelo)
 
 ---
 

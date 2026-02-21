@@ -58,10 +58,11 @@ export async function generateDeedDraft(escrituraId: string, escribanoId?: strin
             })),
             escribano: escribanoDetails ? {
                 nombre: escribanoDetails.nombre_completo,
-                caracter: escribanoDetails.caracter,
+                caracter: escribanoDetails.caracter === 'A_CARGO' ? 'a cargo del' : escribanoDetails.caracter?.toLowerCase(),
                 registro: escribanoDetails.numero_registro,
                 distrito: escribanoDetails.distrito_notarial,
-                titulo: escribanoDetails.genero_titulo
+                titulo: escribanoDetails.genero_titulo,
+                domicilio_legal: escribanoDetails.domicilio_legal
             } : null
         };
 
@@ -79,7 +80,7 @@ export async function generateDeedDraft(escrituraId: string, escribanoId?: strin
       3. ESTRUCTURA:
          - ENCABEZADO: Lugar (Ciudad de Buenos Aires) y fecha actual.
          - COMPARECENCIA ANTE NOTARIO: ${promptData.escribano ?
-                `Debe iniciar con: "ANTE MÍ, ${promptData.escribano.nombre}, ${promptData.escribano.titulo} ${promptData.escribano.caracter} del Registro número ${promptData.escribano.registro} de este Distrito Notarial ${promptData.escribano.distrito}..."` :
+                `Debe iniciar con: "ANTE MÍ, ${promptData.escribano.nombre}, ${promptData.escribano.titulo} ${promptData.escribano.caracter} Registro número ${promptData.escribano.registro} de este Distrito Notarial de ${promptData.escribano.distrito}..."` :
                 `Inicia con la comparecencia ante el escribano autorizante (usa datos genéricos si no hay).`}
          - COMPARECIENTES: Individualización completa según los datos provistos.
          - INTERVENCIÓN: Indicar por quién actúan.

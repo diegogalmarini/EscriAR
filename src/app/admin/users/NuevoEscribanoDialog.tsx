@@ -34,13 +34,15 @@ import { toast } from "sonner";
 
 const escribanoSchema = z.object({
     nombre_completo: z.string().min(3, "El nombre es obligatorio"),
-    caracter: z.enum(["TITULAR", "ADSCRIPTO", "INTERINO"]),
+    caracter: z.enum(["TITULAR", "ADSCRIPTO", "INTERINO", "A_CARGO"]),
     genero_titulo: z.enum(["ESCRIBANO", "ESCRIBANA", "NOTARIO", "NOTARIA"]),
     numero_registro: z.string().optional(),
     distrito_notarial: z.string().optional(),
     matricula: z.string().optional(),
     cuit: z.string().optional(),
     domicilio_legal: z.string().optional(),
+    telefono: z.string().optional(),
+    email: z.string().email("Email inválido").optional().or(z.literal("")),
 });
 
 type EscribanoFormValues = z.infer<typeof escribanoSchema>;
@@ -73,6 +75,8 @@ export function NuevoEscribanoDialog({
             matricula: "",
             cuit: "",
             domicilio_legal: "",
+            telefono: "",
+            email: "",
         },
     });
 
@@ -87,6 +91,8 @@ export function NuevoEscribanoDialog({
                 matricula: escribano.matricula || "",
                 cuit: escribano.cuit || "",
                 domicilio_legal: escribano.domicilio_legal || "",
+                telefono: escribano.telefono || "",
+                email: escribano.email || "",
             });
         } else if (mode === 'create') {
             form.reset({
@@ -98,6 +104,8 @@ export function NuevoEscribanoDialog({
                 matricula: "",
                 cuit: "",
                 domicilio_legal: "",
+                telefono: "",
+                email: "",
             });
         }
     }, [escribano, mode, form, open]);
@@ -190,6 +198,7 @@ export function NuevoEscribanoDialog({
                                             </FormControl>
                                             <SelectContent>
                                                 <SelectItem value="TITULAR">Titular</SelectItem>
+                                                <SelectItem value="A_CARGO">A Cargo</SelectItem>
                                                 <SelectItem value="ADSCRIPTO">Adscripto</SelectItem>
                                                 <SelectItem value="INTERINO">Interino</SelectItem>
                                             </SelectContent>
@@ -263,6 +272,34 @@ export function NuevoEscribanoDialog({
                                         <FormLabel>Domicilio Legal</FormLabel>
                                         <FormControl>
                                             <Input placeholder="Dirección completa de la escribanía" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="telefono"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Teléfono</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Ej: (0291) 453-3094" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Email</FormLabel>
+                                        <FormControl>
+                                            <Input type="email" placeholder="Ej: escribania@ejemplo.com" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

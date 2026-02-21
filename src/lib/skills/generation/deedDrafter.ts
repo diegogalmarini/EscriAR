@@ -6,6 +6,8 @@ export interface DraftingContext {
     fecha: string; // YYYY-MM-DD
     escribano: string;
     registro: string;
+    caracter_escribano?: string; // TITULAR, A_CARGO, ADSCRIPTO, INTERINO
+    distrito_notarial?: string;
     clientes: any[];
     inmuebles: any[];
     tax_calculation: any;
@@ -42,7 +44,12 @@ export class DeedDrafter {
 
         let text = `ESCRITURA NUMERO ${(numero_escritura || "___").toUpperCase()}.- ${(acto_titulo || "ACTO").toUpperCase()}.- `;
         text += `En la ciudad de Bahía Blanca, provincia de Buenos Aires, a los ${dateTxt}, `;
-        text += `ante mí, ${(escribano || "ESCRIBANO").toUpperCase()}, Notario Titular del Registro ${(registro || "___").toUpperCase()}, COMPARECEN: `;
+        const caracterLabel = context.caracter_escribano === 'A_CARGO' ? 'a cargo del'
+            : context.caracter_escribano === 'ADSCRIPTO' ? 'Adscripto al'
+            : context.caracter_escribano === 'INTERINO' ? 'Interino del'
+            : 'Titular del';
+        const distrito = context.distrito_notarial || 'Bahía Blanca';
+        text += `ante mí, ${(escribano || "ESCRIBANO").toUpperCase()}, Escribano ${caracterLabel} Registro número ${(registro || "___")}, del Distrito Notarial de ${distrito}, COMPARECEN: `;
 
         // Comparecencia
         safeClientes.forEach((c, i) => {

@@ -7,12 +7,14 @@ import { revalidatePath } from "next/cache";
 export type Escribano = {
     id: string;
     nombre_completo: string;
-    caracter: 'TITULAR' | 'ADSCRIPTO' | 'INTERINO';
+    caracter: 'TITULAR' | 'ADSCRIPTO' | 'INTERINO' | 'A_CARGO';
     numero_registro?: string;
     distrito_notarial?: string;
     matricula?: string;
     cuit?: string;
     domicilio_legal?: string;
+    telefono?: string;
+    email?: string;
     genero_titulo: 'ESCRIBANO' | 'ESCRIBANA' | 'NOTARIO' | 'NOTARIA';
     is_default: boolean;
     created_at?: string;

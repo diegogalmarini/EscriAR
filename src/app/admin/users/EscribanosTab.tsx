@@ -19,7 +19,10 @@ import {
     UserPlus,
     MapPin,
     FileText,
-    Award
+    Award,
+    Phone,
+    Mail,
+    Building
 } from "lucide-react";
 import { Escribano, deleteEscribano, setDefaultEscribano } from "@/app/actions/escribanos";
 import { NuevoEscribanoDialog } from "./NuevoEscribanoDialog";
@@ -108,7 +111,7 @@ export function EscribanosTab({ escribanos, loading, onRefresh }: EscribanosTabP
                                         <div className="flex items-center gap-3 mb-2">
                                             <h3 className="text-xl font-bold text-slate-900">{esc.nombre_completo}</h3>
                                             <Badge variant="secondary" className="bg-slate-100 text-slate-700">
-                                                {esc.caracter}
+                                                {esc.caracter === 'A_CARGO' ? 'A CARGO' : esc.caracter}
                                             </Badge>
                                             {esc.is_default && (
                                                 <Badge className="bg-blue-600">
@@ -119,21 +122,33 @@ export function EscribanosTab({ escribanos, loading, onRefresh }: EscribanosTabP
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-8 text-sm text-slate-600">
                                             <div className="flex items-center gap-2">
-                                                <Award size={14} className="text-slate-400" />
+                                                <Award size={14} className="text-slate-400 shrink-0" />
                                                 <span>Registro N° {esc.numero_registro || 'N/A'} - {esc.distrito_notarial || 'N/A'}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <FileText size={14} className="text-slate-400" />
+                                                <FileText size={14} className="text-slate-400 shrink-0" />
                                                 <span>Matrícula: {esc.matricula || 'N/A'}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <MapPin size={14} className="text-slate-400" />
+                                                <MapPin size={14} className="text-slate-400 shrink-0" />
                                                 <span>{esc.domicilio_legal || 'Sin domicilio legal'}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className="font-semibold text-xs text-slate-400">CUIT:</span>
-                                                <span>{esc.cuit || 'N/A'}</span>
+                                                <Building size={14} className="text-slate-400 shrink-0" />
+                                                <span>CUIT: {esc.cuit || 'N/A'}</span>
                                             </div>
+                                            {esc.telefono && (
+                                                <div className="flex items-center gap-2">
+                                                    <Phone size={14} className="text-slate-400 shrink-0" />
+                                                    <span>{esc.telefono}</span>
+                                                </div>
+                                            )}
+                                            {esc.email && (
+                                                <div className="flex items-center gap-2">
+                                                    <Mail size={14} className="text-slate-400 shrink-0" />
+                                                    <span>{esc.email}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
