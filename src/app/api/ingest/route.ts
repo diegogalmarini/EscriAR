@@ -472,6 +472,7 @@ function normalizeAIData(raw: any) {
             existing.domicilio_real = existing.domicilio_real || newCl.domicilio_real;
             existing.estado_civil = existing.estado_civil || newCl.estado_civil;
             existing.conyuge = existing.conyuge || newCl.conyuge;
+            existing._representacion = existing._representacion || newCl._representacion;
         } else {
             allClients.push(newCl);
         }
@@ -592,6 +593,48 @@ function normalizeAIData(raw: any) {
         }
 
         if (oldRol !== c.rol) console.log(`[NORMALIZE] Role changed: ${c.nombre_completo} (${oldRol} -> ${c.rol})`);
+    });
+
+    // REPRESENTACION INFERENCE: For APODERADO clients without _representacion,
+    // infer who they represent from entities with es_representado=true
+    const representedEntities = (raw.entidades || []).filter((e: any) => e.representacion?.es_representado);
+    allClients.forEach(c => {
+        if (c._representacion) return; // already has it
+        const isApoderado = c.rol?.toUpperCase().includes('APODERADO') || c.rol?.toUpperCase().includes('REPRESENTANTE');
+        if (!isApoderado) return;
+
+        // Find the entity this person represents
+        for (const entity of representedEntities) {
+            const reps = entity.representacion?.representantes || [];
+            const match = reps.find((r: any) => looseNameMatch(extractString(r.nombre) || '', c.nombre_completo));
+            if (match) {
+                const entityName = extractString(entity.datos?.nombre_completo?.apellidos)
+                    ? `${extractString(entity.datos?.nombre_completo?.apellidos)} ${extractString(entity.datos?.nombre_completo?.nombres)}`.trim()
+                    : extractString(entity.datos?.razon_social) || extractString(entity.datos?.nombre_completo?.nombres) || '';
+                c._representacion = {
+                    representa_a: entityName,
+                    caracter: match.caracter || 'Apoderado',
+                    poder_detalle: entity.representacion.poder_detalle
+                        || entity.representacion.documento_base
+                        || null
+                };
+                console.log(`[NORMALIZE] Inferred representacion for ${c.nombre_completo} → represents ${entityName}`);
+                break;
+            }
+        }
+
+        // Fallback: if still no match, try to find any JURIDICA entity this person might represent
+        if (!c._representacion) {
+            const juridicas = allClients.filter(cl => cl.tipo_persona === 'JURIDICA' || cl.tipo_persona === 'FIDEICOMISO');
+            if (juridicas.length === 1) {
+                c._representacion = {
+                    representa_a: juridicas[0].nombre_completo,
+                    caracter: 'Apoderado',
+                    poder_detalle: null
+                };
+                console.log(`[NORMALIZE] Fallback representacion for ${c.nombre_completo} → represents ${juridicas[0].nombre_completo}`);
+            }
+        }
     });
 
     normalized.clientes = allClients;
