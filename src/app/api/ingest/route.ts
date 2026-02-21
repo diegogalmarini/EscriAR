@@ -15,7 +15,7 @@ if (typeof globalThis !== 'undefined') {
 import { NextResponse, after } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { normalizeID, toTitleCase, formatCUIT } from '@/lib/utils/normalization';
+import { normalizeID, toTitleCase, formatCUIT, normalizePartido, normalizePartida, splitMultiplePartidas } from '@/lib/utils/normalization';
 import { SkillExecutor } from '@/lib/agent/SkillExecutor';
 import { classifyDocument } from '@/lib/skills/routing/documentClassifier';
 import { taxonomyService, ActIntent } from '@/lib/services/TaxonomyService';
@@ -644,14 +644,38 @@ function normalizeAIData(raw: any) {
     normalized.clientes = allClients;
 
     if (raw.inmuebles && Array.isArray(raw.inmuebles)) {
-        normalized.inmuebles = raw.inmuebles.map((i: any) => ({
-            partido: i.partido?.valor || i.partido || 'BAHIA BLANCA',
-            partida_inmobiliaria: i.partida_inmobiliaria?.valor || i.partida_inmobiliaria,
-            nomenclatura: i.nomenclatura?.valor || i.nomenclatura,
-            transcripcion_literal: i.transcripcion_literal?.valor || i.transcripcion_literal,
-            titulo_antecedente: i.titulo_antecedente?.valor || i.titulo_antecedente || null,
-            valuacion_fiscal: i.valuacion_fiscal?.valor || i.valuacion_fiscal || 0
-        }));
+        const expandedInmuebles: any[] = [];
+        for (const i of raw.inmuebles) {
+            const rawPartido = i.partido?.valor || i.partido || 'Bahia Blanca';
+            const rawPartida = i.partida_inmobiliaria?.valor || i.partida_inmobiliaria || '';
+            const partido = normalizePartido(rawPartido);
+            const nomenclatura = i.nomenclatura?.valor || i.nomenclatura;
+            const transcripcion = i.transcripcion_literal?.valor || i.transcripcion_literal;
+            const titulo = i.titulo_antecedente?.valor || i.titulo_antecedente || null;
+            const valuacion = i.valuacion_fiscal?.valor || i.valuacion_fiscal || 0;
+
+            // Split multiple partidas (e.g. "126-017.871-3 / 126-022.080")
+            const partidas = splitMultiplePartidas(rawPartida);
+            if (partidas.length > 1) {
+                console.log(`[NORMALIZE] Split partidas múltiples: "${rawPartida}" → [${partidas.join(', ')}]`);
+            }
+            for (const p of partidas) {
+                expandedInmuebles.push({
+                    partido, partida_inmobiliaria: p, nomenclatura,
+                    transcripcion_literal: transcripcion, titulo_antecedente: titulo,
+                    valuacion_fiscal: valuacion
+                });
+            }
+            // If no partidas found, still add with normalized empty
+            if (partidas.length === 0) {
+                expandedInmuebles.push({
+                    partido, partida_inmobiliaria: normalizePartida(rawPartida), nomenclatura,
+                    transcripcion_literal: transcripcion, titulo_antecedente: titulo,
+                    valuacion_fiscal: valuacion
+                });
+            }
+        }
+        normalized.inmuebles = expandedInmuebles;
     }
     return normalized;
 }
@@ -679,44 +703,47 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
     const folderId = existingFolderId;
     let assetId = null;
 
-    if (inmuebles.length > 0) {
-        const primary = inmuebles[0];
+    // Persist ALL inmuebles (first one = primary for escritura link)
+    for (let idx = 0; idx < inmuebles.length; idx++) {
+        const inm = inmuebles[idx];
+        const partidoNorm = normalizePartido(inm.partido);
+        const partidaNorm = normalizePartida(inm.partida_inmobiliaria);
+
         // --- SMART CHECK: Inmueble ---
         const { data: existingAsset } = await supabaseAdmin
             .from('inmuebles')
             .select('*')
-            .eq('partido_id', primary.partido)
-            .eq('nro_partida', primary.partida_inmobiliaria)
+            .eq('partido_id', partidoNorm)
+            .eq('nro_partida', partidaNorm)
             .maybeSingle();
 
         if (existingAsset) {
-            // Compare critical fields
             const hasChanges =
-                existingAsset.nomenclatura !== primary.nomenclatura ||
-                existingAsset.transcripcion_literal !== primary.transcripcion_literal;
-
+                existingAsset.nomenclatura !== inm.nomenclatura ||
+                existingAsset.transcripcion_literal !== inm.transcripcion_literal;
             if (hasChanges) {
                 conflicts.push({
                     type: 'INMUEBLE',
-                    id: `${primary.partido}-${primary.partida_inmobiliaria}`,
+                    id: `${partidoNorm}-${partidaNorm}`,
                     existing: existingAsset,
-                    extracted: primary
+                    extracted: inm
                 });
             }
-            assetId = existingAsset.id;
+            if (idx === 0) assetId = existingAsset.id;
+            console.log(`[PERSIST] ♻️ Inmueble ${partidoNorm}/${partidaNorm} ya existe (${existingAsset.id})`);
         } else {
             const { data: asset, error: assetError } = await supabaseAdmin.from('inmuebles').insert({
-                partido_id: primary.partido,
-                nro_partida: primary.partida_inmobiliaria,
-                nomenclatura: primary.nomenclatura,
-                transcripcion_literal: primary.transcripcion_literal,
-                titulo_antecedente: primary.titulo_antecedente,
-                valuacion_fiscal: primary.valuacion_fiscal
+                partido_id: partidoNorm,
+                nro_partida: partidaNorm,
+                nomenclatura: inm.nomenclatura,
+                transcripcion_literal: inm.transcripcion_literal,
+                titulo_antecedente: inm.titulo_antecedente,
+                valuacion_fiscal: inm.valuacion_fiscal
             }).select().single();
 
             if (assetError) {
-                console.error('[PERSIST] Error creating inmueble:', assetError);
-            } else {
+                console.error(`[PERSIST] Error creating inmueble ${partidoNorm}/${partidaNorm}:`, assetError);
+            } else if (idx === 0) {
                 assetId = asset?.id;
             }
         }

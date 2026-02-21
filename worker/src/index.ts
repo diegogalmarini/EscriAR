@@ -318,11 +318,15 @@ async function workerLoop() {
             const extractedData = extractionResult.object;
 
             // A. Insertar Inmueble (DEDUP: check by partido_id + nro_partida)
+            // Normalize helpers (inline since worker is a separate project)
+            const normPartido = (p: string) => (p || 'Sin Partido').trim().toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            const normPartida = (p: string) => (p || '000000').trim().replace(/\./g, '');
+
             let inmuebleId = null;
             if (extractedData.inmuebles && extractedData.inmuebles.length > 0) {
                 const inm = extractedData.inmuebles[0];
-                const partidoId = inm.partido || 'SIN PARTIDO';
-                const nroPartida = inm.partida_inmobiliaria || '000000';
+                const partidoId = normPartido(inm.partido || 'Sin Partido');
+                const nroPartida = normPartida(inm.partida_inmobiliaria || '000000');
 
                 // Check if inmueble already exists
                 if (nroPartida && nroPartida !== '000000') {

@@ -12,6 +12,39 @@ export function toTitleCase(str: string | null | undefined): string | null {
 }
 
 /**
+ * Normaliza el nombre de un Partido/Departamento a Title Case canónico.
+ * "MONTE HERMOSO" → "Monte Hermoso", "bahia blanca" → "Bahia Blanca"
+ */
+export function normalizePartido(partido: string | null | undefined): string {
+    if (!partido || !partido.trim()) return 'Sin Partido';
+    return partido.trim().toLowerCase().split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+/**
+ * Normaliza un número de partida inmobiliaria: quita puntos decorativos.
+ * "126.559" → "126559", "7.205.976" → "7205976", "2.780" → "2780"
+ * Conserva guiones y barras que son parte de la estructura (ej: "126-017.871-3" → "126-017871-3")
+ */
+export function normalizePartida(partida: string | null | undefined): string {
+    if (!partida || !partida.trim()) return '000000';
+    // Remove dots used as thousand separators in partida numbers
+    return partida.trim().replace(/\./g, '');
+}
+
+/**
+ * Separa partidas múltiples: "126-017.871-3 / 126-022.080" → ["126-017871-3", "126-022080"]
+ * Detecta separadores: " / ", " y ", " - " (con espacios), " e "
+ */
+export function splitMultiplePartidas(partida: string | null | undefined): string[] {
+    if (!partida || !partida.trim()) return [];
+    // Split by " / " or " y " or " e " (with spaces to avoid splitting within partida numbers)
+    const parts = partida.split(/\s+[\/yYeE]\s+/).map(p => normalizePartida(p)).filter(p => p && p !== '000000');
+    return parts.length > 0 ? parts : [normalizePartida(partida)];
+}
+
+/**
  * Formatea un CUIT/CUIL al formato argentino estándar: XX-XXXXXXXX-X
  * Si el CUIT no tiene exactamente 11 dígitos, lo devuelve sin cambios.
  */
