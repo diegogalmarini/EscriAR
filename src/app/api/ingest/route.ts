@@ -862,12 +862,12 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
 
     // Participants are now fully normalized in allClients
     for (const c of clientes) {
-        let finalID = normalizeID(c.dni);
+        const cleanDni = normalizeID(c.dni);
         const cleanCuit = normalizeID(c.cuit);
+        const isJuridica = c.tipo_persona === 'JURIDICA' || c.tipo_persona === 'FIDEICOMISO';
 
-        if (!finalID && cleanCuit) {
-            finalID = cleanCuit;
-        }
+        // JURIDICA: CUIT is the canonical ID (no DNI). FISICA: DNI first, CUIT fallback.
+        let finalID = isJuridica ? (cleanCuit || cleanDni) : (cleanDni || cleanCuit);
 
         if (!finalID) {
             // FALLBACK for CEDENTES, FIDEICOMISOS or other critical actors without ID in the text

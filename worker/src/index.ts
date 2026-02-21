@@ -455,7 +455,6 @@ async function workerLoop() {
                 for (const cliente of extractedData.clientes) {
                     const rawDni = cliente.dni?.replace(/[^a-zA-Z0-9]/g, '') || '';
                     const rawCuit = cliente.cuit?.replace(/[^a-zA-Z0-9]/g, '') || '';
-                    const dniFinal = rawDni || rawCuit || `SIN_DNI_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
                     // Detect tipo_persona from CUIT prefix or name
                     let tipoPersona = cliente.tipo_persona || 'FISICA';
@@ -463,6 +462,24 @@ async function workerLoop() {
                     if (['30', '33', '34'].includes(cuitPrefix)) tipoPersona = 'JURIDICA';
                     const upperName = (cliente.nombre_completo || '').toUpperCase();
                     if (upperName.includes('BANCO') || upperName.includes('S.A.') || upperName.includes('S.R.L.') || upperName.includes('FIDEICOMISO')) tipoPersona = 'JURIDICA';
+
+                    // For JURIDICA: CUIT IS the ID (they don't have DNI)
+                    // For FISICA: DNI first, CUIT as fallback
+                    let dniFinal = '';
+                    if (tipoPersona === 'JURIDICA' || tipoPersona === 'FIDEICOMISO') {
+                        dniFinal = rawCuit || rawDni || '';
+                    } else {
+                        dniFinal = rawDni || rawCuit || '';
+                    }
+
+                    // If still no ID, check if persona already exists by CUIT before generating SIN_DNI
+                    if (!dniFinal && rawCuit) {
+                        const { data: existingByCuit } = await supabase.from('personas').select('dni').eq('cuit', rawCuit).maybeSingle();
+                        if (existingByCuit) dniFinal = existingByCuit.dni;
+                    }
+                    if (!dniFinal) {
+                        dniFinal = `SIN_DNI_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                    }
 
                     clientMeta.push({ dniFinal, nombre: cliente.nombre_completo || 'SIN NOMBRE', rol: (cliente.rol || 'PARTE').toUpperCase(), tipo: tipoPersona, poderDetalle: cliente.poder_detalle || null });
 
