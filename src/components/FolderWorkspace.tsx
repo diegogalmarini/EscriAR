@@ -747,8 +747,19 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                     {/* Main Content: Participant Cards */}
                     <div className="lg:col-span-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {optimisticOps.flatMap((op: any) =>
-                                op.participantes_operacion?.map((p: any) => {
+                            {optimisticOps.flatMap((op: any) => {
+                                const participantOrder = (rol: string = '') => {
+                                    const r = rol.toUpperCase();
+                                    if (r.includes('COMPRADOR') || r.includes('DEUDOR') || r.includes('MUTUARIO') || r.includes('CESIONARIO') || r.includes('DONATARIO')) return 1;
+                                    if (r.includes('VENDEDOR') || r.includes('ACREEDOR') || r.includes('CEDENTE') || r.includes('DONANTE') || r.includes('FIDUCIARIA') || r.includes('HIPOTECARIO')) return 2;
+                                    if (r.includes('CONDOMINO') || r.includes('FIADOR') || r.includes('GARANTE')) return 3;
+                                    if (r.includes('APODERADO') || r.includes('REPRESENTANTE')) return 4;
+                                    return 3; // default: middle
+                                };
+                                const sorted = [...(op.participantes_operacion || [])].sort(
+                                    (a: any, b: any) => participantOrder(a.rol) - participantOrder(b.rol)
+                                );
+                                return sorted.map((p: any) => {
                                     const person = p.persona || p.personas;
                                     if (!person) return null;
 
@@ -884,8 +895,8 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                             </div>
                                         </Card>
                                     );
-                                })
-                            )}
+                                });
+                            })}
                         </div>
                     </div>
                 </div>
