@@ -734,31 +734,70 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
         analysis_metadata: JSON.parse(JSON.stringify(aiData)) // SANITIZACIÓN FORZADA
     };
 
-    const { data: escritura, error: escrituraError } = await supabaseAdmin.from('escrituras').insert(escrituraData).select().single();
+    // DEDUP: Check if escritura with same protocolo+registro already exists
+    let escritura: any = null;
+    const nroProtocolo = safeParseInt(aiData.numero_escritura);
+    const registro = aiData.registro ? String(aiData.registro) : null;
 
-    if (escrituraError || !escritura) {
-        console.error('[PERSIST] ❌ Error creating escritura:', escrituraError);
-        return { success: false, error: `Error creando escritura: ${escrituraError?.message || 'Unknown'}` };
+    if (nroProtocolo && registro) {
+        const { data: existing } = await supabaseAdmin
+            .from('escrituras')
+            .select('*, operaciones(id)')
+            .eq('nro_protocolo', nroProtocolo)
+            .eq('registro', registro)
+            .maybeSingle();
+
+        if (existing) {
+            console.log(`[PERSIST] ♻️ Escritura ${nroProtocolo}/${registro} already exists (${existing.id}), updating metadata`);
+            // Update metadata but don't duplicate
+            await supabaseAdmin.from('escrituras').update({
+                analysis_metadata: JSON.parse(JSON.stringify(aiData)),
+                pdf_url: publicUrl || existing.pdf_url,
+                inmueble_princ_id: assetId || existing.inmueble_princ_id
+            }).eq('id', existing.id);
+            escritura = existing;
+        }
     }
 
-    const { data: operacion, error: opError } = await supabaseAdmin.from('operaciones').insert([{
-        escritura_id: escritura?.id || null, // Tolerante si escritura falló
-        tipo_acto: String(resumen_acto || 'COMPRAVENTA').toUpperCase().substring(0, 100),
-        monto_operacion: parseFloat(String(operation_details?.price || 0)) || 0,
-        codigo: getCESBACode(resumen_acto, !!operation_details?.is_family_home) || null, // CESBA Code from Taxonomy
-        // Dual pricing for fiduciary operations
-        precio_construccion: operation_details?.precio_construccion || null,
-        precio_cesion: operation_details?.precio_cesion || null,
-        moneda_cesion: operation_details?.currency?.includes('USD') ? 'USD' : 'ARS',
-        tipo_cambio_cesion: operation_details?.tipo_cambio_cesion || null,
-        equivalente_ars_cesion: operation_details?.equivalente_ars_cesion || null,
-        // Beneficiary assignment
-        beneficiario_cedente: aiData.cesion_beneficiario?.cedente_nombre || null,
-        beneficiario_cesionario: aiData.cesion_beneficiario?.cesionario_nombre || null,
-        fecha_cesion: safeParseDate(aiData.cesion_beneficiario?.fecha_cesion) || null
-    }]).select().single();
+    if (!escritura) {
+        const { data: newEscritura, error: escrituraError } = await supabaseAdmin.from('escrituras').insert(escrituraData).select().single();
+        if (escrituraError || !newEscritura) {
+            console.error('[PERSIST] ❌ Error creating escritura:', escrituraError);
+            return { success: false, error: `Error creando escritura: ${escrituraError?.message || 'Unknown'}` };
+        }
+        escritura = newEscritura;
+    }
 
-    if (opError) db_logs.push(`Op Error: ${opError.message}`);
+    // DEDUP: Check if operacion already exists for this escritura
+    let operacion: any = null;
+    const existingOps = escritura.operaciones || [];
+    if (existingOps.length > 0) {
+        operacion = existingOps[0]; // Reuse existing
+        console.log(`[PERSIST] ♻️ Operación already exists (${operacion.id}), reusing`);
+        // Update with latest data
+        await supabaseAdmin.from('operaciones').update({
+            tipo_acto: String(resumen_acto || 'COMPRAVENTA').toUpperCase().substring(0, 100),
+            monto_operacion: parseFloat(String(operation_details?.price || 0)) || 0,
+            codigo: getCESBACode(resumen_acto, !!operation_details?.is_family_home) || null
+        }).eq('id', operacion.id);
+    } else {
+        const { data: newOp, error: opError } = await supabaseAdmin.from('operaciones').insert([{
+            escritura_id: escritura.id,
+            tipo_acto: String(resumen_acto || 'COMPRAVENTA').toUpperCase().substring(0, 100),
+            monto_operacion: parseFloat(String(operation_details?.price || 0)) || 0,
+            codigo: getCESBACode(resumen_acto, !!operation_details?.is_family_home) || null,
+            precio_construccion: operation_details?.precio_construccion || null,
+            precio_cesion: operation_details?.precio_cesion || null,
+            moneda_cesion: operation_details?.currency?.includes('USD') ? 'USD' : 'ARS',
+            tipo_cambio_cesion: operation_details?.tipo_cambio_cesion || null,
+            equivalente_ars_cesion: operation_details?.equivalente_ars_cesion || null,
+            beneficiario_cedente: aiData.cesion_beneficiario?.cedente_nombre || null,
+            beneficiario_cesionario: aiData.cesion_beneficiario?.cesionario_nombre || null,
+            fecha_cesion: safeParseDate(aiData.cesion_beneficiario?.fecha_cesion) || null
+        }]).select().single();
+        if (opError) db_logs.push(`Op Error: ${opError.message}`);
+        operacion = newOp;
+    }
 
     const processedParticipants = new Set<string>();
 
@@ -861,12 +900,14 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
             if (operacion) {
                 const participantKey = `${operacion.id}-${finalID}`;
                 if (!processedParticipants.has(participantKey)) {
-                    await supabaseAdmin.from('participantes_operacion').insert([{
+                    // Use upsert with ON CONFLICT DO NOTHING to prevent duplicates
+                    const { error: partErr } = await supabaseAdmin.from('participantes_operacion').upsert({
                         operacion_id: operacion.id,
                         persona_id: finalID,
                         rol: String(c.caracter ? `${c.rol} (${c.caracter})` : c.rol).toUpperCase().substring(0, 150),
                         datos_representacion: (c as any)._representacion || null
-                    }]);
+                    }, { onConflict: 'operacion_id,persona_id', ignoreDuplicates: true });
+                    if (partErr) db_logs.push(`Participant Error (${finalID}): ${partErr.message}`);
                     processedParticipants.add(participantKey);
                 } else {
                     console.log(`[PERSIST] Skipping duplicate participant link for ${finalID} in op ${operacion.id}`);

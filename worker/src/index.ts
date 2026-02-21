@@ -317,23 +317,41 @@ async function workerLoop() {
             // 6. Insertar en tabla `escrituras` y tablas relacionadas para que la UI lo muestre
             const extractedData = extractionResult.object;
 
-            // A. Insertar Inmueble (con todos los campos)
+            // A. Insertar Inmueble (DEDUP: check by partido_id + nro_partida)
             let inmuebleId = null;
             if (extractedData.inmuebles && extractedData.inmuebles.length > 0) {
                 const inm = extractedData.inmuebles[0];
-                const { data: insertedInmueble, error: inmuebleError } = await supabase.from('inmuebles').insert({
-                    partido_id: inm.partido || 'SIN PARTIDO',
-                    nro_partida: inm.partida_inmobiliaria || '000000',
-                    nomenclatura: inm.nomenclatura || null,
-                    transcripcion_literal: inm.transcripcion_literal || null,
-                    titulo_antecedente: inm.titulo_antecedente || null,
-                    valuacion_fiscal: inm.valuacion_fiscal || null,
-                }).select().single();
+                const partidoId = inm.partido || 'SIN PARTIDO';
+                const nroPartida = inm.partida_inmobiliaria || '000000';
 
-                if (inmuebleError) {
-                    console.warn(`[WORKER] Warning insertando inmueble (continuando sin él):`, inmuebleError.message);
-                } else if (insertedInmueble) {
-                    inmuebleId = insertedInmueble.id;
+                // Check if inmueble already exists
+                if (nroPartida && nroPartida !== '000000') {
+                    const { data: existingInm } = await supabase.from('inmuebles')
+                        .select('id')
+                        .eq('partido_id', partidoId)
+                        .eq('nro_partida', nroPartida)
+                        .maybeSingle();
+                    if (existingInm) {
+                        inmuebleId = existingInm.id;
+                        console.log(`[WORKER] ♻️ Inmueble ${partidoId}/${nroPartida} ya existe (${inmuebleId}), reutilizando`);
+                    }
+                }
+
+                if (!inmuebleId) {
+                    const { data: insertedInmueble, error: inmuebleError } = await supabase.from('inmuebles').insert({
+                        partido_id: partidoId,
+                        nro_partida: nroPartida,
+                        nomenclatura: inm.nomenclatura || null,
+                        transcripcion_literal: inm.transcripcion_literal || null,
+                        titulo_antecedente: inm.titulo_antecedente || null,
+                        valuacion_fiscal: inm.valuacion_fiscal || null,
+                    }).select().single();
+
+                    if (inmuebleError) {
+                        console.warn(`[WORKER] Warning insertando inmueble (continuando sin él):`, inmuebleError.message);
+                    } else if (insertedInmueble) {
+                        inmuebleId = insertedInmueble.id;
+                    }
                 }
             }
 
@@ -344,44 +362,83 @@ async function workerLoop() {
                 if (!isNaN(parsedInt)) nro_protocolo = parsedInt;
             }
 
-            const { data: escrituraInsertada, error: insertError } = await supabase.from('escrituras').insert({
-                carpeta_id: job.carpeta_id,
-                nro_protocolo: nro_protocolo,
-                fecha_escritura: extractedData.fecha_escritura || null,
-                registro: extractedData.registro ? String(extractedData.registro) : null,
-                notario_interviniente: extractedData.escribano || null,
-                inmueble_princ_id: inmuebleId,
-                pdf_url: job.file_path,
-                analysis_metadata: {
-                    tipo_acto_detectado: extractedData.resumen_acto,
-                    datos_extraidos: extractedData
-                }
-            }).select().single();
+            // DEDUP: Check if escritura with same protocolo+registro already exists
+            let escrituraInsertada: any = null;
+            const registro = extractedData.registro ? String(extractedData.registro) : null;
 
-            if (insertError || !escrituraInsertada) {
-                const msg = `Error insertando escritura: ${insertError?.message || 'No data returned'}`;
-                console.error(`[WORKER] ${msg}`);
-                await supabase.from('ingestion_jobs').update({
-                    status: 'failed',
-                    error_message: msg,
-                    finished_at: new Date().toISOString()
-                }).eq('id', job.id);
-                continue;
+            if (nro_protocolo && registro) {
+                const { data: existingEsc } = await supabase.from('escrituras')
+                    .select('*, operaciones(id)')
+                    .eq('nro_protocolo', nro_protocolo)
+                    .eq('registro', registro)
+                    .maybeSingle();
+                if (existingEsc) {
+                    console.log(`[WORKER] ♻️ Escritura ${nro_protocolo}/${registro} ya existe (${existingEsc.id}), actualizando metadata`);
+                    await supabase.from('escrituras').update({
+                        analysis_metadata: { tipo_acto_detectado: extractedData.resumen_acto, datos_extraidos: extractedData },
+                        pdf_url: job.file_path,
+                        inmueble_princ_id: inmuebleId || existingEsc.inmueble_princ_id
+                    }).eq('id', existingEsc.id);
+                    escrituraInsertada = existingEsc;
+                }
             }
 
-            // C. Insertar Operación (con monto y código CESBA)
+            if (!escrituraInsertada) {
+                const { data: newEsc, error: insertError } = await supabase.from('escrituras').insert({
+                    carpeta_id: job.carpeta_id,
+                    nro_protocolo: nro_protocolo,
+                    fecha_escritura: extractedData.fecha_escritura || null,
+                    registro: registro,
+                    notario_interviniente: extractedData.escribano || null,
+                    inmueble_princ_id: inmuebleId,
+                    pdf_url: job.file_path,
+                    analysis_metadata: {
+                        tipo_acto_detectado: extractedData.resumen_acto,
+                        datos_extraidos: extractedData
+                    }
+                }).select().single();
+
+                if (insertError || !newEsc) {
+                    const msg = `Error insertando escritura: ${insertError?.message || 'No data returned'}`;
+                    console.error(`[WORKER] ${msg}`);
+                    await supabase.from('ingestion_jobs').update({
+                        status: 'failed',
+                        error_message: msg,
+                        finished_at: new Date().toISOString()
+                    }).eq('id', job.id);
+                    continue;
+                }
+                escrituraInsertada = newEsc;
+            }
+
+            // C. Insertar Operación (DEDUP: reuse if escritura already has one)
             const codigoCESBA = getCESBACode(extractedData.resumen_acto || '');
             console.log(`[WORKER] Tipo acto: "${extractedData.resumen_acto}" → Código CESBA: ${codigoCESBA || 'null'}`);
-            const { data: operacionInsertada, error: operacionError } = await supabase.from('operaciones').insert({
-                escritura_id: escrituraInsertada.id,
-                tipo_acto: extractedData.resumen_acto || 'SIN CLASIFICAR',
-                monto_operacion: extractedData.monto_operacion || null,
-                codigo: codigoCESBA
-            }).select().single();
 
-            if (operacionError) {
-                console.error(`[WORKER] Error insertando operacion para Job ${job.id}:`, operacionError.message);
-            } else if (operacionInsertada && extractedData.clientes) {
+            let operacionInsertada: any = null;
+            const existingOps = escrituraInsertada.operaciones || [];
+            if (existingOps.length > 0) {
+                operacionInsertada = existingOps[0];
+                console.log(`[WORKER] ♻️ Operación ya existe (${operacionInsertada.id}), actualizando`);
+                await supabase.from('operaciones').update({
+                    tipo_acto: extractedData.resumen_acto || 'SIN CLASIFICAR',
+                    monto_operacion: extractedData.monto_operacion || null,
+                    codigo: codigoCESBA
+                }).eq('id', operacionInsertada.id);
+            } else {
+                const { data: newOp, error: operacionError } = await supabase.from('operaciones').insert({
+                    escritura_id: escrituraInsertada.id,
+                    tipo_acto: extractedData.resumen_acto || 'SIN CLASIFICAR',
+                    monto_operacion: extractedData.monto_operacion || null,
+                    codigo: codigoCESBA
+                }).select().single();
+                if (operacionError) {
+                    console.error(`[WORKER] Error insertando operacion para Job ${job.id}:`, operacionError.message);
+                }
+                operacionInsertada = newOp;
+            }
+
+            if (operacionInsertada && extractedData.clientes) {
                 // D. Insertar Personas y Participantes (con todos los campos biográficos)
                 for (const cliente of extractedData.clientes) {
                     const rawDni = cliente.dni?.replace(/[^a-zA-Z0-9]/g, '') || '';
@@ -418,11 +475,12 @@ async function workerLoop() {
                     if (personaError) {
                         console.error(`[WORKER] Error upserting persona ${cliente.nombre_completo}:`, personaError.message);
                     } else {
-                        const { error: partError } = await supabase.from('participantes_operacion').insert({
+                        // DEDUP: upsert with ON CONFLICT DO NOTHING for unique constraint
+                        const { error: partError } = await supabase.from('participantes_operacion').upsert({
                             operacion_id: operacionInsertada.id,
                             persona_id: dniFinal,
                             rol: cliente.rol || 'PARTE'
-                        });
+                        }, { onConflict: 'operacion_id,persona_id', ignoreDuplicates: true });
                         if (partError) {
                             console.error(`[WORKER] Error insertando participante ${cliente.nombre_completo}:`, partError.message);
                         }
