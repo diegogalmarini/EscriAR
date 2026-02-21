@@ -238,10 +238,16 @@ export async function unlinkPersonFromOperation(participanteId: string) {
 export async function upsertPerson(data: any) {
     try {
         const supabase = await createClient();
+        // Generate temporary DNI if not provided (same as createPersona)
+        const finalDni = data.dni?.toString().trim()
+            ? data.dni.toString().trim()
+            : `SIN-DNI-${Date.now()}`;
+
         const { data: persona, error } = await supabase
             .from('personas')
             .upsert({
                 ...data,
+                dni: finalDni,
                 updated_at: new Date().toISOString()
             }, { onConflict: 'dni' })
             .select()
