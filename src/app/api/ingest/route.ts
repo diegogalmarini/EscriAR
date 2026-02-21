@@ -762,6 +762,33 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
 
     const processedParticipants = new Set<string>();
 
+    // SAFETY NET: Ensure APODERADO clients have _representacion before persisting
+    const juridicaClients = clientes.filter((cl: any) => cl.tipo_persona === 'JURIDICA' || cl.tipo_persona === 'FIDEICOMISO');
+    for (const c of clientes) {
+        if (c._representacion) continue;
+        const isApoderado = c.rol?.toUpperCase()?.includes('APODERADO') || c.rol?.toUpperCase()?.includes('REPRESENTANTE');
+        if (!isApoderado) continue;
+        if (juridicaClients.length === 1) {
+            c._representacion = {
+                representa_a: juridicaClients[0].nombre_completo,
+                caracter: 'Apoderado',
+                poder_detalle: null
+            };
+            console.log(`[PERSIST] Safety-net representacion: ${c.nombre_completo} → ${juridicaClients[0].nombre_completo}`);
+        } else if (juridicaClients.length > 1) {
+            // Multiple juridicas: pick the one with ACREEDOR role (common in hipotecas)
+            const acreedor = juridicaClients.find((j: any) => j.rol?.toUpperCase()?.includes('ACREEDOR'));
+            if (acreedor) {
+                c._representacion = {
+                    representa_a: acreedor.nombre_completo,
+                    caracter: 'Apoderado',
+                    poder_detalle: null
+                };
+                console.log(`[PERSIST] Safety-net representacion: ${c.nombre_completo} → ${acreedor.nombre_completo}`);
+            }
+        }
+    }
+
     // Participants are now fully normalized in allClients
     for (const c of clientes) {
         let finalID = normalizeID(c.dni);
