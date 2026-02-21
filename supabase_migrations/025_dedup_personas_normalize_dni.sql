@@ -15,6 +15,8 @@ BEGIN
         SELECT dni, nombre_completo
         FROM personas
         WHERE dni ~ '[^a-zA-Z0-9]'  -- DNI con caracteres no alfanuméricos
+          AND dni NOT LIKE 'SIN-DNI-%'  -- Excluir temporales (no son duplicados)
+          AND dni NOT LIKE 'TEMP-%'     -- Excluir fallbacks del ingest
     LOOP
         clean_dni := regexp_replace(dup.dni, '[^a-zA-Z0-9]', '', 'g');
 
