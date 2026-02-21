@@ -69,10 +69,15 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
 
             let formattedName = "";
             if (isJuridica(p)) {
-                // Persona jurídica: mostrar nombre tal cual (no invertir)
-                formattedName = name.toUpperCase();
+                // Persona jurídica: des-invertir si tiene coma (ej: "ARGENTINA, BANCO..." → "BANCO... ARGENTINA")
+                if (name.includes(",")) {
+                    const parts = name.split(",").map((s: string) => s.trim());
+                    formattedName = `${parts.slice(1).join(" ")} ${parts[0]}`.toUpperCase();
+                } else {
+                    formattedName = name.toUpperCase();
+                }
             } else if (name.includes(",")) {
-                // Ya está en formato "APELLIDO, Nombre"
+                // Persona física en formato "APELLIDO, Nombre"
                 const [surname, first] = name.split(",").map((s: string) => s.trim());
                 formattedName = `${surname.toUpperCase()} ${first}`;
             } else {

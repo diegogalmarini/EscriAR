@@ -1,83 +1,153 @@
-# Diario de Proyecto - NotiAR
+# NotiAR - Diario del Proyecto
 
-Este documento registra los hitos alcanzados y las funcionalidades que han sido validadas y se consideran **ESTABLES**. El objetivo es preservar esta lógica mientras se avanza en nuevas capacidades.
-
-## Hitos Alcanzados (Enero 2026)
-
-### 1. Extracción de Inmuebles (Literal) ✅
-- **Estado:** Estable / No tocar.
-- **Logro:** El sistema extrae la transcripción técnica completa de los inmuebles sin recortes (medidas, linderos y superficies íntegros).
-- **Componente:** `notary-property-extractor`.
-
-### 2. Gestión Integral de Clientes ✅
-- **Estado:** Estable / No tocar.
-- **Logro:** Extracción completa de datos personales y biográficos. Fuente única de verdad (la edición en carpeta actualiza la ficha global).
-- **Control:** Prevención de duplicados por DNI/Upsert.
-
-### 3. Diferenciación de Personas Jurídicas ✅
-- **Estado:** Estable / No tocar.
-- **Logro:** Identificación automática de bancos/empresas por CUIT. UI adaptada (etiquetas "Const:", ocultamiento de DNI).
-
-### 4. Estandarización de Apellidos ✅
-- **Estado:** Estable / No tocar.
-- **Logro:** Apellidos siempre en MAYÚSCULAS (incluyendo cónyuges). Soporte para apellidos compuestos.
-
-### 5. Especialización en Fideicomisos y Cesiones ✅
-- **Estado:** Estable / No tocar.
-- **Logro:** Extracción de roles complejos (Cedente, Cesionario, Fiduciaria) y doble precio (ARS histórico / USD mercado).
-- **Componente:** `normalizeAIData` + Sanitizador Semántico.
-
-### 6. Hipotecas UVA y Créditos Bancarios ✅
-- **Estado:** Estable / No tocar.
-- **Logro:** Extracción de condiciones financieras BNA (TNA, UVA, Plazo). Priorización de roles Acreedor/Deudor.
-- **Componente:** `notary-mortgage-reader`.
-
-### 7. Motor de Inteligencia RAG (La Biblia) ✅
-- **Estado:** Estable / No tocar.
-- **Logro:** Conexión del cerebro AI con base de conocimiento legal dinámica. Búsqueda semántica para inyectar expertiz en tiempo real.
-- **Componente:** `SkillExecutor` + `RAG (Supabase Vector)`.
-- **Chunking RAG:** `knowledge.ts` → 1000 chars con 200 overlap para embeddings.
-
-### 8. Mega-Document Chunking (49+ páginas) ✅
-- **Estado:** Estable / En observación.
-- **Logro:** Procesamiento de escrituras muy largas (hipotecas UVA BNA, condominios complejos). División por secciones legales (PARTE I/II/III, CLAUSULAS).
-- **Componente:** `SkillExecutor.chunkMegaDocument()` + `mergeExtractionResults()`.
-- **Chunking Extracción:** 20.000 chars por chunk, merge con deduplicación por DNI/CUIT.
-- **Trigger:** Documentos > 25.000 caracteres (~18 páginas).
+> **ARCHIVO COMPARTIDO ENTRE TODOS LOS AGENTES (Claude, Gemini, etc.)**
+> Cada agente que trabaje en el proyecto debe leer este archivo al inicio y actualizarlo al finalizar su sesión.
+> NO crear diarios separados. Este es el único archivo de estado del proyecto.
 
 ---
 
-## Hitos Alcanzados (Febrero 2026)
+## 1. Qué es NotiAR
 
-### 9. Fix: Actualización de Contacto de Clientes ✅
-- **Fecha:** 2026-02-09
-- **Problema:** Error "Cannot coerce the result to a single JSON object" al editar clientes sin DNI.
-- **Solución:** `updatePersona` ahora busca por UUID (id), DNI o CUIT según corresponda.
-- **Componente:** `src/app/actions/personas.ts`
+SaaS argentino para escribanos (notarios). Gestión de carpetas notariales con extracción AI de escrituras PDF escaneadas y digitales.
 
-### 10. Nuevo Cliente: Modo Dual (Rápido + Completo) ✅
-- **Fecha:** 2026-02-09
-- **Logro:** `NuevoClienteDialog` con dos modos:
-  - **Rápido + Link:** Solo nombre + teléfono/email → genera link automático para que el cliente complete.
-  - **Formulario Completo:** Carga manual de todos los datos.
-- **UX:** Toggle en la UI para cambiar entre modos.
-- **Componente:** `src/components/NuevoClienteDialog.tsx`
+## 2. Stack Tecnológico
 
-### 11. Ficha Pública: Campo Cónyuge Dinámico ✅
-- **Fecha:** 2026-02-09
-- **Logro:** Cuando el cliente escribe "Casado/a" en estado civil, aparece automáticamente el campo "Nombre del Cónyuge" (obligatorio).
-- **Componente:** `src/app/ficha/[token]/FichaForm.tsx`, `src/app/actions/fichas.ts`
+| Componente | Tecnología |
+|---|---|
+| **Frontend** | Next.js 16.1.3, React 19, TypeScript 5, Tailwind CSS 4, Shadcn/Radix UI |
+| **Backend** | Vercel (serverless) + Railway (Docker worker async) |
+| **DB/Auth/Storage** | Supabase (PostgreSQL + Auth + Storage + pgvector) |
+| **AI Extracción** | Google Gemini `gemini-3-flash-preview` (text + vision OCR) |
+| **Monitoring** | Sentry |
+| **Pendiente** | Resend (email, mencionado pero no integrado aún) |
 
-### 12. Formatos de Archivo Soportados ✅
-- **Fecha:** 2026-02-09
-- **Cambio:** Removido soporte para `.doc` (formato antiguo). Solo se aceptan **PDF** y **DOCX**.
-- **Componente:** `src/components/MagicDropzone.tsx`
+## 3. Arquitectura
+
+```
+                    ┌──────────────┐
+   PDF Upload ──►   │  Vercel App  │ ──► Supabase DB
+   (< 500KB sync)   │  /api/ingest │     (carpetas, escrituras,
+                    └──────────────┘      operaciones, personas,
+                                          inmuebles, participantes)
+                    ┌──────────────┐
+   PDF Upload ──►   │   Railway    │ ──► Supabase DB
+   (async queue)    │   Worker     │     (mismas tablas)
+                    └──────────────┘
+```
+
+- **Dual pipeline**: sync (`/api/ingest`, archivos <500KB) + async (Railway worker, cola `ingestion_jobs`)
+- **Worker**: Polling cada 3s, descarga PDF de Storage bucket `escrituras`, extrae con Gemini, inserta en BD
+- **Tablas principales**: `carpetas` → `escrituras` → `operaciones` → `participantes_operacion` → `personas`; `inmuebles`
+- **RPC**: `search_carpetas` — función PL/pgSQL que devuelve carpetas con `parties[]` y `escrituras[]` como JSONB
+- **Taxonomía CESBA**: `acts_taxonomy_2026.json` con 100+ códigos de actos notariales para cálculo de tasas
+- **RAG**: Base de conocimiento legal con embeddings en Supabase pgvector, chunking de 1000 chars con 200 overlap
+
+## 4. Archivos Críticos (NO modificar sin entender contexto)
+
+| Archivo | Qué hace |
+|---|---|
+| `worker/src/index.ts` | Worker Railway: esquema Zod `NotarySchema`, extracción Gemini + inserciones BD |
+| `src/app/api/ingest/route.ts` | Pipeline sync (822+ líneas), más completo que el worker |
+| `src/components/FolderWorkspace.tsx` | Vista de carpeta: roles, visor documentos, datos escritura |
+| `src/components/CarpetasTable.tsx` | Tabla de carpetas, consume RPC `search_carpetas` (estructura plana) |
+| `src/lib/services/TaxonomyService.ts` | Asignación de códigos CESBA |
+| `src/data/acts_taxonomy_2026.json` | Taxonomía de actos ARBA (verificada al 100%) |
+| `worker/src/acts_taxonomy_2026.json` | Copia de taxonomía para el worker standalone |
+| `src/app/actions/storageSync.ts` | Server actions: listStorageFiles, deleteStorageFile, getSignedUrl |
+| `src/lib/aiConfig.ts` | Schema de extracción AI del frontend (más completo que el worker) |
+
+## 5. Convenciones y Reglas
+
+### Naming
+- "Nº de Acto" se renombró a **"Código"** (campo `codigo` en tabla `operaciones`, antes `nro_acto`) — pedido del Notario
+- Personas Físicas: formato `APELLIDO, Nombre` — apellidos SIEMPRE en MAYÚSCULAS
+- Personas Jurídicas: nombre tal cual, NO invertir (ej: `BANCO DE LA NACION ARGENTINA`, NO `ARGENTINA BANCO...`)
+
+### Base de Datos
+- Storage bucket se llama **`escrituras`** (NO `documents`)
+- `pdf_url` en BD: pipeline frontend guarda URL pública completa, worker guarda path crudo → `resolveDocumentUrl()` maneja ambos
+- `personas` PK = `dni` (string), no UUID
+- `participantes_operacion` vincula personas ↔ operaciones con campo `rol`
+- Migraciones SQL en `supabase_migrations/` (numeradas 001-022+), se ejecutan **manual** en Supabase SQL Editor
+
+### Códigos CESBA (campo `codigo` en `operaciones`)
+- COMPRAVENTA → `100-xx`
+- DONACION → `200-xx` (empieza en `200-30`, NO existe `200-00`)
+- HIPOTECA/PRÉSTAMO → `300-xx`
+- CANCELACION HIPOTECA → `311-xx`
+- CESION → `400-xx`
+- PODER → `500-xx`
+- FIDEICOMISO → `121-xx`
+- Subcódigos: `-00` normal, `-51` vivienda única exenta sellos, `-24` plan social
+
+### UI / Frontend
+- `CarpetasTable` consume datos del RPC `search_carpetas` (estructura PLANA: `parties[]`, `number`, NO queries anidadas)
+- `FolderWorkspace` maneja roles con `getRoleLabel()` y `getRoleBadgeStyle()` — incluye CONDOMINO, DONANTE, DONATARIO, etc.
+- Documentos se visualizan con signed URLs via `getSignedUrl('escrituras', path)`
 
 ---
 
-## Próximos Desafíos
-- [ ] Identificación de nuevos modelos de documentos.
-- [ ] Lectura de documentos no identificados.
-- [ ] Validaciones legales automáticas (Art. 470 CCyC).
+## 6. Hitos Estables (NO tocar sin revisión previa)
 
-> **Aviso:** No modificar la lógica de normalización ni extracción de inmuebles sin revisión previa, dado el alto nivel de satisfacción actual.
+### Enero 2026
+1. **Extracción de Inmuebles (Literal)** - Transcripción técnica completa sin recortes
+2. **Gestión Integral de Clientes** - Fuente única de verdad, dedup por DNI/Upsert
+3. **Diferenciación Persona Jurídica** - ID automática por CUIT, UI adaptada
+4. **Estandarización de Apellidos** - MAYÚSCULAS, soporte compuestos
+5. **Fideicomisos y Cesiones** - Roles complejos, doble precio ARS/USD
+6. **Hipotecas UVA y Créditos BNA** - TNA, UVA, Plazo, roles Acreedor/Deudor
+7. **Motor RAG (La Biblia)** - Búsqueda semántica legal con pgvector
+8. **Mega-Document Chunking (49+ págs)** - División por secciones, merge con dedup
+
+### Febrero 2026
+9. **Fix updatePersona** - Busca por UUID/DNI/CUIT según corresponda
+10. **Nuevo Cliente Dual** - Modo rápido (link) + completo (formulario)
+11. **Ficha Pública Cónyuge** - Campo dinámico al seleccionar "Casado/a"
+12. **Formatos: solo PDF y DOCX** - Removido soporte `.doc`
+
+---
+
+## 7. Changelog Reciente
+
+### 2026-02-20 (Claude)
+
+#### Worker Railway — fixes críticos
+- **`tipo_inmueble: 'SIN CLASIFICAR'`** violaba CHECK constraint → eliminado (BD acepta NULL)
+- **`nomenclatura_catastral`** → `nomenclatura` (nombre correcto de columna)
+- **Job status**: se marcaba `completed` ANTES de insertar en BD → movido al final; si falla → `failed`
+- **Esquema expandido**: de ~5 a 12 campos/persona, 6/inmueble (estado_civil, nacionalidad, domicilio, filiación, cónyuge, etc.)
+- **Código CESBA**: worker ahora asigna `codigo` en operaciones via `getCESBACode()` con taxonomía bundleada
+
+#### Seguridad
+- Eliminado `error.stack` de respuestas API
+- `SUPER_ADMIN_EMAILS` a env var con fallback
+- Logs verbosos de middleware eliminados en producción
+- `/api/auth-diag` protegido solo en development
+
+#### UI
+- `getRoleLabel()`/`getRoleBadgeStyle()`: agregados CONDOMINO, DONANTE, DONATARIO, FIDUCIANTE, MUTUARIO, GARANTE, REPRESENTANTE, TRANSMITENTE
+- "Ver Documento" / "Descargar": signed URLs via `getSignedUrl('escrituras', path)` en vez de path crudo (fix 404)
+- `CarpetasTable`: alineada con RPC `search_carpetas` (estructura plana `parties[]`, `number`)
+- Persona Jurídica: `isJuridica()` checa `tipo_persona`/`cuit` para no invertir nombre
+
+### 2026-02-20 (Gemini)
+- `search_carpetas` RPC reescrito: estructura aplanada con `parties[]` JSONB y `escrituras[]` JSONB
+- Renaming `nro_acto` → `codigo` en toda la BD y UI
+- Taxonomía CESBA sincronizada con códigos ARBA verificados al 100%
+- Tabla de Actos: paginación, dropdown fix, búsqueda
+
+---
+
+## 8. Pendientes Conocidos
+
+- [ ] **Migración 022** pendiente de ejecutar en Supabase SQL Editor (agrega `tipo_persona`, `cuit`, `tipo_acto` al RPC)
+- [ ] Códigos `200-00` existentes en BD son incorrectos (deberían ser `300-00` para hipotecas) — corregir con UPDATE SQL
+- [ ] Worker solo procesa 6 páginas de PDFs escaneados — cónyuges en páginas posteriores se pierden
+- [ ] CESBA code assignment: worker usa mapeo simple, frontend usa TaxonomyService más completo
+- [ ] Validaciones legales automáticas (Art. 470 CCyC)
+- [ ] Identificación de nuevos modelos de documentos
+- [ ] Integración con Resend para emails transaccionales
+
+---
+
+> **IMPORTANTE**: Al terminar tu sesión de trabajo, agrega tus cambios en la sección 7 (Changelog) y actualiza la sección 8 (Pendientes). Firma con tu nombre de agente y fecha.
