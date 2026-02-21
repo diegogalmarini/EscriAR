@@ -33,11 +33,7 @@ BEGIN
 
             RAISE NOTICE 'Deduped: % (%) -> %', dup.nombre_completo, dup.dni, clean_dni;
         ELSE
-            -- No clean version exists, just rename the dirty one
-            UPDATE participantes_operacion
-            SET persona_id = clean_dni
-            WHERE persona_id = dup.dni;
-
+            -- No clean version exists: rename persona FIRST, then participantes cascade via ON UPDATE CASCADE
             UPDATE personas SET dni = clean_dni WHERE dni = dup.dni;
 
             RAISE NOTICE 'Normalized: % (%) -> %', dup.nombre_completo, dup.dni, clean_dni;
