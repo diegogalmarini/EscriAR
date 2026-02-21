@@ -601,10 +601,12 @@ function normalizeAIData(raw: any) {
 
     // REPRESENTACION INFERENCE: For APODERADO clients without _representacion,
     // infer who they represent from entities with es_representado=true
+    console.log(`[NORMALIZE] Representacion inference pass. Clients: ${allClients.map(c => `${c.nombre_completo}(rol=${c.rol}, tipo=${c.tipo_persona}, hasRep=${!!c._representacion})`).join(', ')}`);
     const representedEntities = (raw.entidades || []).filter((e: any) => e.representacion?.es_representado);
     allClients.forEach(c => {
         if (c._representacion) return; // already has it
-        const isApoderado = c.rol?.toUpperCase().includes('APODERADO') || c.rol?.toUpperCase().includes('REPRESENTANTE');
+        const rolUpper = (c.rol || '').toUpperCase();
+        const isApoderado = rolUpper.includes('APODERADO') || rolUpper.includes('REPRESENTANTE') || rolUpper.includes('MANDATARIO') || rolUpper.includes('LETRADO');
         if (!isApoderado) return;
 
         // Find the entity this person represents
@@ -829,10 +831,13 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
     const processedParticipants = new Set<string>();
 
     // SAFETY NET: Ensure APODERADO clients have _representacion before persisting
+    console.log(`[PERSIST] Safety-net check. Clients: ${clientes.map((c: any) => `${c.nombre_completo}(rol=${c.rol}, rep=${JSON.stringify(c._representacion || null)})`).join(' | ')}`);
     const juridicaClients = clientes.filter((cl: any) => cl.tipo_persona === 'JURIDICA' || cl.tipo_persona === 'FIDEICOMISO');
+    console.log(`[PERSIST] Juridica clients for safety-net: ${juridicaClients.map((j: any) => `${j.nombre_completo}(rol=${j.rol})`).join(', ')}`);
     for (const c of clientes) {
         if (c._representacion) continue;
-        const isApoderado = c.rol?.toUpperCase()?.includes('APODERADO') || c.rol?.toUpperCase()?.includes('REPRESENTANTE');
+        const rolUpper = (c.rol || '').toUpperCase();
+        const isApoderado = rolUpper.includes('APODERADO') || rolUpper.includes('REPRESENTANTE') || rolUpper.includes('MANDATARIO') || rolUpper.includes('LETRADO');
         if (!isApoderado) continue;
         if (juridicaClients.length === 1) {
             c._representacion = {
@@ -928,11 +933,13 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
                 const participantKey = `${operacion.id}-${finalID}`;
                 if (!processedParticipants.has(participantKey)) {
                     // Use upsert with ON CONFLICT DO NOTHING to prevent duplicates
+                    const repData = (c as any)._representacion || null;
+                    console.log(`[PERSIST] Inserting participant ${c.nombre_completo} (${finalID}) rol=${c.rol} datos_representacion=${JSON.stringify(repData)}`);
                     const { error: partErr } = await supabaseAdmin.from('participantes_operacion').upsert({
                         operacion_id: operacion.id,
                         persona_id: finalID,
                         rol: String(c.caracter ? `${c.rol} (${c.caracter})` : c.rol).toUpperCase().substring(0, 150),
-                        datos_representacion: (c as any)._representacion || null
+                        datos_representacion: repData
                     }, { onConflict: 'operacion_id,persona_id', ignoreDuplicates: true });
                     if (partErr) db_logs.push(`Participant Error (${finalID}): ${partErr.message}`);
                     processedParticipants.add(participantKey);
