@@ -566,6 +566,15 @@ async function workerLoop() {
                 status: 'completed',
                 finished_at: new Date().toISOString()
             }).eq('id', job.id);
+
+            // 8. Actualizar carpeta → COMPLETADO (dispara realtime refresh en frontend)
+            if (job.carpeta_id) {
+                await supabase.from('carpetas').update({
+                    ingesta_estado: 'COMPLETADO',
+                    ingesta_paso: `Worker: extracción completada`,
+                }).eq('id', job.carpeta_id);
+            }
+
             console.log(`[WORKER] Job ${job.id} COMPLETADO e insertado entidades vinculadas en BD.`);
 
         } catch (error: any) {
@@ -574,7 +583,7 @@ async function workerLoop() {
             try {
                 const { data: processingJobs } = await supabase
                     .from('ingestion_jobs')
-                    .select('id')
+                    .select('id, carpeta_id')
                     .eq('status', 'processing')
                     .limit(1);
                 if (processingJobs && processingJobs.length > 0) {
@@ -584,6 +593,14 @@ async function workerLoop() {
                         error_stack: error.stack || null,
                         finished_at: new Date().toISOString()
                     }).eq('id', processingJobs[0].id);
+
+                    // Actualizar carpeta → ERROR
+                    if (processingJobs[0].carpeta_id) {
+                        await supabase.from('carpetas').update({
+                            ingesta_estado: 'ERROR',
+                            ingesta_paso: `Worker error: ${error.message || 'desconocido'}`,
+                        }).eq('id', processingJobs[0].carpeta_id);
+                    }
                 }
             } catch (innerErr) {
                 console.error(`[WORKER] No se pudo marcar job como failed:`, innerErr);

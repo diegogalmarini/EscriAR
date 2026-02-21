@@ -763,17 +763,32 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 19. **Worker: PDF completo via File API** — Eliminado límite de 6 páginas, ahora procesa documentos escaneados completos
 20. **Taxonomía CESBA unificada** — Worker usa el mismo JSON oficial de 822 códigos; corregidos bugs (CESION=834, USUFRUCTO=400, DONACION=200-30)
 21. **Limpieza de logs diagnósticos** — Eliminados 15 console.log de debug en pipeline de ingesta
+22. **Seguridad File API** — Cleanup de PDFs en Gemini en bloque `finally` (purga garantizada)
+23. **Worker actualiza `carpeta.ingesta_estado`** — Fix crítico: las carpetas procesadas por worker async ahora pasan a COMPLETADO/ERROR correctamente
+
+### ✅ Etapa 1 CERRADA: Ingesta y Estudio de Títulos
+Pipeline dual (frontend sync + worker async Railway) 100% funcional y estabilizado. Gemini File API sin límite de páginas, taxonomía CESBA unificada, seguridad de archivos, estado de carpeta sincronizado. Testeado con PDFs complejos (escrituras multipartitas, documentos escaneados 30+ páginas).
 
 ---
 
 ## 17. Changelog
 
-### 2026-02-21 (Claude) — Sesión 3: Fix seguridad File API
+### 2026-02-21 (Claude) — Sesión 3: Estabilización final Etapa 1
+
+#### Bug crítico: Worker no actualizaba `carpeta.ingesta_estado`
+- El worker marcaba `ingestion_jobs.status = 'completed'` pero **nunca tocaba** `carpetas.ingesta_estado`
+- Las carpetas procesadas por el worker async quedaban eternamente en `PROCESANDO`
+- Fix: el worker ahora actualiza `carpetas.ingesta_estado` → `'COMPLETADO'` (éxito) o `'ERROR'` (fallo)
+- Esto dispara el realtime listener del frontend, que refresca la UI automáticamente
+- También se incluye `ingesta_paso` con mensaje descriptivo en ambos casos
 
 #### Seguridad: Gemini File API cleanup en `finally`
 - `fileManager.deleteFile()` movido de `try` a `finally` en `worker/src/index.ts`
 - Variable `geminiFileName` trackeada fuera del `try` para garantizar purga
 - PDFs ya no quedan cacheados 48h en servidores Google si `generateObject()` falla
+
+#### Cierre de Etapa 1: Ingesta y Estudio de Títulos — 100% funcional
+Pipeline de ingesta asíncrona con Gemini File API testeado con PDFs complejos (escrituras multipartitas, documentos escaneados de 30+ páginas). Ambos pipelines (frontend sync + worker async) producen resultados equivalentes y actualizan el estado de la carpeta correctamente.
 
 ### 2026-02-21 (Claude) — Sesión 2: Deuda técnica crítica
 
@@ -877,7 +892,7 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 ### Urgentes (hacer antes de seguir con ROADMAP)
 - [ ] **Ejecutar migración 029** en Supabase SQL Editor (dedup personas jurídicas por CUIT)
 - [ ] **Verificar `poder_detalle`** funciona tras redeploy Railway (subir un PDF con apoderado)
-- [ ] **Redeploy Worker** en Railway para activar: File API (sin límite páginas) + taxonomía CESBA unificada
+- [ ] **Redeploy Worker** en Railway para activar: File API + taxonomía CESBA + ingesta_estado fix
 
 ### Deuda técnica
 - [ ] Integración con Resend para emails transaccionales
@@ -896,4 +911,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-02-21 (sesión 2) — Claude
+> **Última actualización**: 2026-02-21 (sesión 3) — Claude — Etapa 1 cerrada
