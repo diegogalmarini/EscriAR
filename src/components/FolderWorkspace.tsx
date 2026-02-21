@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Activity, Users, Home, UserPlus, Link as LinkIcon, Plus, FileSignature, ClipboardCheck, Trash2, Pencil, UserMinus, Download, Eye, Wallet } from "lucide-react";
+import { FileText, Activity, Users, Home, UserPlus, Link as LinkIcon, Plus, FileSignature, ClipboardCheck, Trash2, Pencil, UserMinus, Download, Eye, Wallet, BookOpen } from "lucide-react";
 import { PersonSearch } from "./PersonSearch";
 import { PersonForm } from "./PersonForm";
 import { AssetSearch } from "./AssetSearch";
@@ -386,6 +386,10 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                         <Activity className="h-4 w-4" />
                         Mesa de Trabajo
                     </TabsTrigger>
+                    <TabsTrigger value="antecedente" className="flex items-center gap-2">
+                        <BookOpen className="h-4 w-4" />
+                        Antecedente
+                    </TabsTrigger>
                     <TabsTrigger value="budget" className="flex items-center gap-2">
                         <Wallet className="h-4 w-4" />
                         Presupuesto
@@ -442,6 +446,16 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
             </div>
 
             <TabsContent value="mesa">
+                <div className="flex items-center justify-center h-[500px] border-2 border-dashed rounded-xl">
+                    <div className="text-center space-y-2">
+                        <Activity className="h-12 w-12 text-slate-300 mx-auto" />
+                        <p className="text-muted-foreground text-lg font-medium">Mesa de Trabajo</p>
+                        <p className="text-sm text-slate-400">Espacio de trabajo del Escribano — próximamente</p>
+                    </div>
+                </div>
+            </TabsContent>
+
+            <TabsContent value="antecedente">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <PersonSearch
                         open={isPersonSearchOpen}
@@ -899,8 +913,31 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                             })}
                         </div>
                     </div>
+
+                    {/* Título Antecedente Card - full width below */}
+                    {currentEscritura?.inmuebles?.titulo_antecedente && (
+                        <div className="lg:col-span-12">
+                            <Card className="border-amber-200 shadow-sm">
+                                <CardHeader className="pb-3 border-b border-amber-100 bg-amber-50/50 rounded-t-lg">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-1.5 bg-amber-100 rounded text-amber-700">
+                                            <BookOpen size={18} />
+                                        </div>
+                                        <CardTitle className="text-base font-bold text-amber-900">
+                                            Título Antecedente
+                                        </CardTitle>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="bg-amber-50/30 p-6">
+                                    <p className="text-sm leading-7 font-mono text-slate-700 whitespace-pre-wrap select-text selection:bg-amber-100 text-justify">
+                                        {currentEscritura.inmuebles.titulo_antecedente}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
                 </div>
-            </TabsContent >
+            </TabsContent>
 
             <TabsContent value="budget">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
