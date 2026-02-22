@@ -22,7 +22,6 @@ import { AMLCompliance } from "./AMLCompliance";
 import { InscriptionTracker } from "./InscriptionTracker";
 import { TaxBreakdownCard } from "./smart/TaxBreakdownCard";
 import { PersonSearch } from "./PersonSearch";
-import { SendFichaDialog } from "./SendFichaDialog";
 
 /* ── Shared types ── */
 
@@ -239,7 +238,6 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-1 shrink-0">
-                                        <SendFichaDialog persona={a} />
                                         {a.tipo_persona === "JURIDICA" && (
                                             <Button
                                                 variant="ghost"
@@ -247,7 +245,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                                 className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
                                             >
                                                 <Briefcase className="h-3 w-3" />
-                                                + Apoderado
+                                                + Apoderado / Representante Legal
                                             </Button>
                                         )}
                                         <Button
@@ -261,15 +259,6 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                     </div>
                                 </div>
                             ))}
-                            {/* Botón apoderado para personas físicas ya agregadas */}
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="w-full h-8 text-xs text-muted-foreground hover:text-foreground gap-1.5"
-                            >
-                                <Briefcase className="h-3 w-3" />
-                                + Agregar Apoderado / Representante Legal
-                            </Button>
                         </div>
                     )}
 
