@@ -126,23 +126,24 @@ export function PersonSearch({ onSelect, open, setOpen }: PersonSearchProps) {
 
                 {/* Nested Dialog for Creation */}
                 <Dialog open={isCreating} onOpenChange={setIsCreating}>
-                    <DialogContent className="sm:max-w-[600px]">
-                        <DialogHeader>
+                    <DialogContent className="sm:max-w-[600px] overflow-hidden flex flex-col max-h-[90vh]">
+                        <DialogHeader className="shrink-0">
                             <DialogTitle>Nueva Persona</DialogTitle>
                             <DialogDescription>
                                 Completa los datos para dar de alta en el sistema y vincular a la escritura.
                             </DialogDescription>
                         </DialogHeader>
-                        <PersonForm
-                            initialData={{ nombre_completo: query }}
-                            onSuccess={(person) => {
-                                onSelect(person);
-                                setIsCreating(false);
-                                setOpen(false);
-                            }}
-                            onCancel={() => setIsCreating(false)}
-                        />
-
+                        <div className="overflow-y-auto pr-2 -mr-2">
+                            <PersonForm
+                                initialData={{ nombre_completo: query }}
+                                onSuccess={(person) => {
+                                    onSelect(person);
+                                    setIsCreating(false);
+                                    setOpen(false);
+                                }}
+                                onCancel={() => setIsCreating(false)}
+                            />
+                        </div>
                     </DialogContent>
                 </Dialog>
             </DialogContent>
