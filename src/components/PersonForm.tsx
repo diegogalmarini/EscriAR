@@ -111,6 +111,7 @@ export function PersonForm({ initialData, onSuccess, onCancel }: PersonFormProps
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        const draftKey = `notiAr_personFormDraft_${initialData?.dni || initialData?.cuit || 'new'}`;
         try {
             let finalData = { ...formData };
             // Sanitization
@@ -153,6 +154,7 @@ export function PersonForm({ initialData, onSuccess, onCancel }: PersonFormProps
 
                 const res = await updatePersona(targetId, updatePayload);
                 if (res.success) {
+                    localStorage.removeItem(draftKey);
                     toast.success("Persona actualizada");
                     onSuccess(res.data);
                 } else {
@@ -172,6 +174,7 @@ export function PersonForm({ initialData, onSuccess, onCancel }: PersonFormProps
                 };
                 const res = await upsertPerson(createPayload);
                 if (res.success) {
+                    localStorage.removeItem(draftKey);
                     toast.success("Persona creada");
                     onSuccess(res.data);
                 } else {
