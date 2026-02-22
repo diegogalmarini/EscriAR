@@ -125,7 +125,14 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                 },
                 (payload) => {
                     console.log('[REALTIME] Folder change detected:', payload);
-                    setCarpeta((prev: any) => ({ ...prev, ...payload.new }));
+                    const newData = payload.new as any;
+                    setCarpeta((prev: any) => ({ ...prev, ...newData }));
+
+                    // Cuando ingesta pasa a COMPLETADO, refetch completo para traer escrituras/operaciones/participantes
+                    if (newData.ingesta_estado === 'COMPLETADO' || newData.ingesta_estado === 'ERROR') {
+                        console.log('[REALTIME] Ingesta finalizada, refetching full carpeta data...');
+                        debouncedRefresh();
+                    }
                 }
             )
             .on(
