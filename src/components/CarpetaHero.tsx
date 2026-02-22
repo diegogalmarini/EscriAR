@@ -2,6 +2,18 @@
 
 import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
     Loader2,
     MapPin,
@@ -11,11 +23,14 @@ import {
     ShieldCheck,
     Clock,
     Hourglass,
+    Trash2,
 } from "lucide-react";
 
 // --- Types ---
 interface CarpetaHeroProps {
     carpeta: any;
+    onDelete?: () => void;
+    isDeleting?: boolean;
 }
 
 // --- Estado Operativo → dot color + label ---
@@ -97,7 +112,7 @@ function formatDate(dateStr: string): string {
 }
 
 // --- Component ---
-export default function CarpetaHero({ carpeta }: CarpetaHeroProps) {
+export default function CarpetaHero({ carpeta, onDelete, isDeleting }: CarpetaHeroProps) {
     const { titulo, subtipo } = useMemo(() => generarCaratula(carpeta), [carpeta]);
 
     const estadoKey = useMemo(() => {
@@ -160,15 +175,44 @@ export default function CarpetaHero({ carpeta }: CarpetaHeroProps) {
                     </div>
                 </div>
 
-                {/* Badge: outline + dot */}
-                <Badge variant="outline" className="text-sm px-3 py-1.5 gap-2 shrink-0 text-muted-foreground">
-                    {isProcessing ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                        <span className={`h-2 w-2 rounded-full ${estadoCfg.dot}`} />
+                {/* Badge + Delete */}
+                <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant="outline" className="text-sm px-3 py-1.5 gap-2 text-muted-foreground">
+                        {isProcessing ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                            <span className={`h-2 w-2 rounded-full ${estadoCfg.dot}`} />
+                        )}
+                        {estadoCfg.label}
+                    </Badge>
+                    {onDelete && (
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Eliminar esta carpeta</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Se borrarán todos los documentos, operaciones y participantes vinculados a este trámite. Esta acción no se puede deshacer.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={onDelete}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        disabled={isDeleting}
+                                    >
+                                        {isDeleting ? "Eliminando..." : "Eliminar"}
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     )}
-                    {estadoCfg.label}
-                </Badge>
+                </div>
             </div>
 
             {/* === Vencimientos === */}

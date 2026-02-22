@@ -8,7 +8,6 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Activity, Users, Home, UserPlus, Link as LinkIcon, Plus, FileSignature, ClipboardCheck, Trash2, Pencil, UserMinus, Download, Eye, Wallet, BookOpen } from "lucide-react";
 import { PersonSearch } from "./PersonSearch";
 import { PersonForm } from "./PersonForm";
@@ -388,613 +387,394 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
 
     return (
         <div className="space-y-6">
-        <CarpetaHero carpeta={carpeta} />
-        <Tabs defaultValue="antecedente" className="w-full">
-            <div className="flex justify-between items-center mb-6">
-                <TabsList className="inline-flex h-auto flex-wrap justify-start gap-1 bg-slate-100/50 p-1 mb-2">
-                    <TabsTrigger value="mesa" className="flex items-center gap-2">
-                        <Activity className="h-4 w-4" />
-                        Mesa de Trabajo
-                    </TabsTrigger>
-                    <TabsTrigger value="antecedente" className="flex items-center gap-2">
-                        <BookOpen className="h-4 w-4" />
-                        Antecedente
-                    </TabsTrigger>
-                    <TabsTrigger value="budget" className="flex items-center gap-2">
-                        <Wallet className="h-4 w-4" />
-                        Presupuesto
-                    </TabsTrigger>
-                    <TabsTrigger value="smart-draft" className="flex items-center gap-2">
-                        <FileSignature className="h-4 w-4" />
-                        Borrador Inteligente
-                    </TabsTrigger>
-                    <TabsTrigger value="draft" className="flex items-center gap-2">
-                        <Pencil className="h-4 w-4" />
-                        Redacción (Manual)
-                    </TabsTrigger>
-                    <TabsTrigger value="compliance" className="flex items-center gap-2">
-                        <ClipboardCheck className="h-4 w-4" />
-                        Minutas
-                    </TabsTrigger>
-                    {(carpeta.estado === 'FIRMADA' || carpeta.estado === 'INSCRIPTA') && (
-                        <TabsTrigger value="inscription" className="flex items-center gap-2">
-                            <FileText className="h-4 w-4" />
-                            Inscripción
-                        </TabsTrigger>
-                    )}
-                </TabsList>
-                <div className="flex items-center gap-3">
-                    {/* Cleaned up UI - specific request */}
+        <CarpetaHero carpeta={carpeta} onDelete={handleDeleteFolder} isDeleting={isDeleting} />
 
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                                <Trash2 className="h-4 w-4" />
+        {/* Search Overlays */}
+        <PersonSearch open={isPersonSearchOpen} setOpen={setIsPersonSearchOpen} onSelect={handleLinkPerson} />
+        <AssetSearch open={isAssetSearchOpen} setOpen={setIsAssetSearchOpen} onSelect={handleLinkAsset} />
+
+        {/* === 2-COLUMN LAYOUT === */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            {/* ══════════════════════════════════════════════════ */}
+            {/* COLUMNA IZQUIERDA — "La Radiografía" (read-only) */}
+            {/* ══════════════════════════════════════════════════ */}
+            <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-6 lg:self-start">
+
+                {/* Card: Documento Original */}
+                {currentEscritura && (
+                    <div className="border border-border rounded-lg bg-background p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Documento</h3>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                onClick={() => setEditingDeed({ ...currentEscritura, operacion: currentEscritura.operaciones?.[0] })}>
+                                <Pencil className="h-3 w-3" />
                             </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>¿Estás seguro de eliminar esta carpeta?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Esta acción no se puede deshacer. Se borrarán todos los documentos,
-                                    operaciones y participantes vinculados a este trámite ({carpeta.caratula || "Sin título"}).
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                    onClick={handleDeleteFolder}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    disabled={isDeleting}
-                                >
-                                    {isDeleting ? "Eliminando..." : "Eliminar Definitivamente"}
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Escritura Nº</p>
+                                    <p className="text-foreground font-medium">{currentEscritura.nro_protocolo || "—"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Fecha</p>
+                                    <p className="text-foreground">{currentEscritura.fecha_escritura ? new Date(currentEscritura.fecha_escritura + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' }) : "—"}</p>
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-medium uppercase text-muted-foreground">Escribano</p>
+                                <p className="text-foreground">{currentEscritura.notario_interviniente || "—"}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Registro</p>
+                                    <p className="text-foreground">{currentEscritura.registro || "—"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Código</p>
+                                    <p className="text-foreground font-mono">{currentEscritura.operaciones?.[0]?.codigo || "—"}</p>
+                                </div>
+                            </div>
+                            {/* Action Buttons */}
+                            <div className="flex gap-2 pt-2 border-t border-border">
+                                <Button variant="outline" size="sm" className="h-7 text-xs flex-1"
+                                    onClick={async () => {
+                                        if (currentEscritura.pdf_url) {
+                                            const url = await resolveDocumentUrl(currentEscritura.pdf_url);
+                                            if (url) setViewingDocument(url);
+                                            else toast.error("Error al obtener URL");
+                                        }
+                                    }}>
+                                    <Eye className="h-3 w-3 mr-1" /> Ver
+                                </Button>
+                                <Button variant="outline" size="sm" className="h-7 text-xs flex-1"
+                                    onClick={async () => {
+                                        if (currentEscritura.pdf_url) {
+                                            const url = await resolveDocumentUrl(currentEscritura.pdf_url);
+                                            if (url) window.open(url, '_blank');
+                                        }
+                                    }}>
+                                    <Download className="h-3 w-3 mr-1" /> Descargar
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Card: Inmueble */}
+                {currentEscritura?.inmuebles && (
+                    <div className="border border-border rounded-lg bg-background p-4 space-y-3">
+                        <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                            <Home className="h-3.5 w-3.5" /> Inmueble
+                        </h3>
+                        <div className="space-y-2 text-sm">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Partido</p>
+                                    <p className="text-foreground">{currentEscritura.inmuebles.partido_id || "—"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Partida</p>
+                                    <p className="text-foreground font-mono">
+                                        {currentEscritura.inmuebles.id ? (
+                                            <Link href={`/inmuebles/${currentEscritura.inmuebles.id}`} className="text-blue-600 hover:underline">
+                                                {currentEscritura.inmuebles.nro_partida || "—"}
+                                            </Link>
+                                        ) : (currentEscritura.inmuebles.nro_partida || "—")}
+                                    </p>
+                                </div>
+                            </div>
+                            {currentEscritura.inmuebles.nomenclatura && (
+                                <div>
+                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Nomenclatura</p>
+                                    <p className="text-xs text-muted-foreground leading-snug">{currentEscritura.inmuebles.nomenclatura}</p>
+                                </div>
+                            )}
+                        </div>
+                        {/* Collapsible: Título Antecedente */}
+                        {currentEscritura.inmuebles.titulo_antecedente && (
+                            <details className="group">
+                                <summary className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1">
+                                    <BookOpen className="h-3 w-3" /> Título Antecedente
+                                </summary>
+                                <p className="mt-2 text-xs leading-relaxed text-muted-foreground font-mono whitespace-pre-wrap select-text border-l-2 border-border pl-3">
+                                    {currentEscritura.inmuebles.titulo_antecedente}
+                                </p>
+                            </details>
+                        )}
+                        {/* Collapsible: Transcripción Literal */}
+                        {currentEscritura.inmuebles.transcripcion_literal && (
+                            <details className="group">
+                                <summary className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1">
+                                    <FileText className="h-3 w-3" /> Transcripción Literal
+                                </summary>
+                                <p className="mt-2 text-xs leading-relaxed text-muted-foreground font-mono whitespace-pre-wrap select-text border-l-2 border-border pl-3">
+                                    {currentEscritura.inmuebles.transcripcion_literal}
+                                </p>
+                            </details>
+                        )}
+                    </div>
+                )}
+
+                {/* Card: Partes Intervinientes */}
+                <div className="border border-border rounded-lg bg-background p-4 space-y-2">
+                    <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5" /> Partes
+                    </h3>
+                    <div className="space-y-1.5">
+                        {optimisticOps.flatMap((op: any) => {
+                            const participantOrder = (rol: string = '') => {
+                                const r = rol.toUpperCase();
+                                if (r.includes('COMPRADOR') || r.includes('DEUDOR') || r.includes('MUTUARIO') || r.includes('CESIONARIO') || r.includes('DONATARIO')) return 1;
+                                if (r.includes('VENDEDOR') || r.includes('ACREEDOR') || r.includes('CEDENTE') || r.includes('DONANTE') || r.includes('FIDUCIARIA') || r.includes('HIPOTECARIO')) return 2;
+                                if (r.includes('CONDOMINO') || r.includes('FIADOR') || r.includes('GARANTE')) return 3;
+                                if (r.includes('APODERADO') || r.includes('REPRESENTANTE')) return 4;
+                                return 3;
+                            };
+                            const sorted = [...(op.participantes_operacion || [])].sort(
+                                (a: any, b: any) => participantOrder(a.rol) - participantOrder(b.rol)
+                            );
+                            return sorted.map((p: any) => {
+                                const person = p.persona || p.personas;
+                                if (!person) return null;
+                                const getSpouseName = (per: any) => {
+                                    if (per.datos_conyuge?.nombre || per.datos_conyuge?.nombre_completo) return per.datos_conyuge.nombre || per.datos_conyuge.nombre_completo;
+                                    const match = per.estado_civil_detalle?.match(/con\s+([A-ZÁÉÍÓÚÑa-záéíóúñ\s]+)/i);
+                                    return match?.[1]?.trim() || null;
+                                };
+                                const spouseName = getSpouseName(person);
+                                return (
+                                    <details key={p.id} className="group border border-border rounded-md">
+                                        <summary className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted/50">
+                                            <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 h-4 font-semibold shrink-0", getRoleBadgeStyle(p.rol))}>
+                                                {getRoleLabel(p.rol)}
+                                            </Badge>
+                                            <span className="text-sm font-medium text-foreground truncate flex-1">
+                                                {isLegalEntity(person) ? person.nombre_completo?.toUpperCase() : formatPersonName(person.nombre_completo)}
+                                            </span>
+                                            <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground shrink-0"
+                                                onClick={(e) => { e.preventDefault(); setEditingPerson(person); }}>
+                                                <Pencil className="h-3 w-3" />
+                                            </Button>
+                                        </summary>
+                                        <div className="px-3 pb-3 pt-1 space-y-2 text-xs border-t border-border">
+                                            <p className="text-muted-foreground">
+                                                {isLegalEntity(person)
+                                                    ? `Persona Jurídica • Const: ${formatDateInstructions(person.fecha_nacimiento)}`
+                                                    : `${person.nacionalidad || "—"} • Nac: ${formatDateInstructions(person.fecha_nacimiento)}`}
+                                            </p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {!isLegalEntity(person) && (
+                                                    <div>
+                                                        <p className="text-[10px] font-medium uppercase text-muted-foreground">DNI</p>
+                                                        <p className="font-medium text-foreground">{person.dni || "—"}</p>
+                                                    </div>
+                                                )}
+                                                <div className={isLegalEntity(person) ? "col-span-2" : ""}>
+                                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">CUIT/CUIL</p>
+                                                    <p className="font-medium text-foreground">{formatCUIT(person.cuit) || "—"}</p>
+                                                </div>
+                                            </div>
+                                            {!isLegalEntity(person) && (
+                                                <>
+                                                    {person.nombres_padres && (
+                                                        <div>
+                                                            <p className="text-[10px] font-medium uppercase text-muted-foreground">Filiación</p>
+                                                            <p className="text-muted-foreground">{person.nombres_padres}</p>
+                                                        </div>
+                                                    )}
+                                                    {spouseName && (
+                                                        <div>
+                                                            <p className="text-[10px] font-medium uppercase text-muted-foreground">Cónyuge</p>
+                                                            <p className="text-foreground font-medium">{formatPersonName(spouseName)}</p>
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className="text-[10px] font-medium uppercase text-muted-foreground">Estado Civil</p>
+                                                        <p className="text-muted-foreground">{person.estado_civil_detalle || "—"}</p>
+                                                    </div>
+                                                </>
+                                            )}
+                                            {person.domicilio_real?.literal && (
+                                                <div>
+                                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Domicilio</p>
+                                                    <p className="text-muted-foreground italic">{person.domicilio_real.literal}</p>
+                                                </div>
+                                            )}
+                                            {(p.datos_representacion || p.rol?.toUpperCase().includes('APODERADO')) && (
+                                                <div className="border-t border-border pt-2 space-y-1">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <p className="text-[10px] font-medium uppercase text-muted-foreground">Representando a</p>
+                                                            <p className="text-foreground font-medium">{p.datos_representacion?.representa_a || "—"}</p>
+                                                        </div>
+                                                        <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground shrink-0"
+                                                            onClick={() => setEditingRepresentacion({ participanteId: p.id, ...p.datos_representacion })}>
+                                                            <Pencil className="h-3 w-3" />
+                                                        </Button>
+                                                    </div>
+                                                    {p.datos_representacion?.poder_detalle && (
+                                                        <div>
+                                                            <p className="text-[10px] font-medium uppercase text-muted-foreground">Poder</p>
+                                                            <p className="text-muted-foreground italic">{p.datos_representacion.poder_detalle}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </details>
+                                );
+                            });
+                        })}
+                        {carpeta.escrituras?.length === 0 && (
+                            <p className="text-xs text-muted-foreground text-center py-4">Sin partes extraídas</p>
+                        )}
+                    </div>
+                </div>
+
+                {/* Card: Archivos */}
+                <div className="border border-border rounded-lg bg-background p-4 space-y-2">
+                    <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5" /> Archivos
+                    </h3>
+                    <div className="space-y-1.5">
+                        {storageFiles.map((file) => {
+                            const isLinked = carpeta.escrituras?.some((e: any) => e.pdf_url?.includes(file.name));
+                            return (
+                                <div key={file.id} className="flex items-center justify-between py-1.5 group">
+                                    <div className="flex items-center gap-2 overflow-hidden">
+                                        <FileText className={cn("h-3.5 w-3.5 shrink-0", isLinked ? "text-muted-foreground" : "text-amber-500")} />
+                                        <p className="text-xs truncate text-foreground">{file.name.replace(/^\d{13}_/, "")}</p>
+                                    </div>
+                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                                        {!isLinked && (
+                                            <Button variant="ghost" size="icon" className="h-5 w-5 text-red-500"
+                                                onClick={() => handleDeleteStorageFile(file.name)}>
+                                                <Trash2 className="h-3 w-3" />
+                                            </Button>
+                                        )}
+                                        <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground"
+                                            onClick={async () => {
+                                                const doc = carpeta.escrituras?.find((e: any) => e.pdf_url?.includes(file.name));
+                                                if (doc?.pdf_url) {
+                                                    const url = await resolveDocumentUrl(doc.pdf_url);
+                                                    if (url) setViewingDocument(url);
+                                                }
+                                            }}>
+                                            <Eye className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {storageFiles.length === 0 && !isLoadingStorage && (
+                            <p className="text-xs text-muted-foreground text-center py-2 italic">Sin archivos</p>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            <TabsContent value="mesa">
-                <div className="flex items-center justify-center h-[500px] border-2 border-dashed rounded-xl">
-                    <div className="text-center space-y-2">
-                        <Activity className="h-12 w-12 text-slate-300 mx-auto" />
-                        <p className="text-muted-foreground text-lg font-medium">Mesa de Trabajo</p>
-                        <p className="text-sm text-slate-400">Espacio de trabajo del Escribano — próximamente</p>
+            {/* ══════════════════════════════════════════════════ */}
+            {/* COLUMNA DERECHA — "Pipeline Notarial"             */}
+            {/* ══════════════════════════════════════════════════ */}
+            <div className="lg:col-span-8 space-y-6">
+
+                {/* ─── FASE 1: Pre-Escriturario ─── */}
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fase 1</span>
+                        <Separator className="flex-1" />
+                        <span className="text-xs text-muted-foreground">Pre-Escriturario</span>
                     </div>
+
+                    {/* Certificados */}
+                    <div className="border border-border rounded-lg bg-background p-4 space-y-3">
+                        <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                            <ClipboardCheck className="h-3.5 w-3.5" /> Certificados
+                        </h3>
+                        <div className="space-y-2">
+                            {[
+                                { name: "Dominio e Inhibición", key: "dominio" },
+                                { name: "Catastral", key: "catastral" },
+                                { name: "Anotaciones Personales", key: "anotaciones" },
+                                { name: "Libre Deuda Municipal", key: "municipal" },
+                            ].map((cert) => (
+                                <div key={cert.key} className="flex items-center gap-3 py-1.5 border-b border-border last:border-0">
+                                    <span className="text-sm text-foreground flex-1">{cert.name}</span>
+                                    <Input type="date" className="h-7 w-36 text-xs" />
+                                    <Badge variant="outline" className="text-[10px] px-2 py-0.5 text-muted-foreground gap-1">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                                        Pendiente
+                                    </Badge>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Presupuesto */}
+                    <TaxBreakdownCard taxData={currentEscritura?.analysis_metadata?.tax_calculation} />
                 </div>
-            </TabsContent>
 
-            <TabsContent value="antecedente">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <PersonSearch
-                        open={isPersonSearchOpen}
-                        setOpen={setIsPersonSearchOpen}
-                        onSelect={handleLinkPerson}
-                    />
-                    <AssetSearch
-                        open={isAssetSearchOpen}
-                        setOpen={setIsAssetSearchOpen}
-                        onSelect={handleLinkAsset}
-                    />
+                {/* ─── FASE 2: Redacción ─── */}
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fase 2</span>
+                        <Separator className="flex-1" />
+                        <span className="text-xs text-muted-foreground">Redacción</span>
+                    </div>
 
-                    {/* Sidebar: Deeds List */}
-                    <div className="lg:col-span-4 space-y-6">
-                        <h2 className="text-lg font-semibold flex items-center gap-2">
-                            <FileText className="h-5 w-5 text-muted-foreground" />
-                            Escrituras
-                        </h2>
-                        {carpeta.escrituras.map((escritura: any) => (
-                            <Card
-                                key={escritura.id}
-                                className={cn(
-                                    "cursor-pointer transition-all hover:shadow-md",
-                                    activeDeedId === escritura.id ? "shadow-lg border-slate-300" : "opacity-80"
-                                )}
-                                onClick={() => setActiveDeedId(escritura.id)}
-                            >
-                                <CardHeader className="p-4 pb-0">
-                                    <div className="flex items-center justify-between">
-                                        <CardTitle className="text-sm font-semibold text-slate-700">Datos actuales de Documento Original</CardTitle>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 w-6 p-0"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setEditingDeed({
-                                                    ...escritura,
-                                                    operacion: escritura.operaciones?.[0]
-                                                });
-                                            }}
-                                        >
-                                            <Pencil className="h-3 w-3 text-slate-500" />
-                                        </Button>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="p-4 pt-2">
-                                    <div className="space-y-2.5 text-xs">
-                                        {/* Partido y Partida */}
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <p className="text-[10px] font-semibold uppercase text-slate-400">Partido / Dpto</p>
-                                                <p className="text-slate-700">{escritura.inmuebles?.partido_id || "No especificado"}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-semibold uppercase text-slate-400">Nro. Partida</p>
-                                                <div className="font-mono space-y-0.5">
-                                                    {(escritura.inmuebles?.nro_partida || "No especificado")
-                                                        .split(/[;]/)
-                                                        .map((p: string, idx: number) => (
-                                                            escritura.inmuebles?.id ? (
-                                                                <Link
-                                                                    key={idx}
-                                                                    href={`/inmuebles/${escritura.inmuebles.id}`}
-                                                                    className="block text-blue-600 hover:text-blue-800 hover:underline"
-                                                                >
-                                                                    {/^\d+$/.test(p.trim()) ? Number(p.trim()).toLocaleString('es-AR') : p.trim()}
-                                                                </Link>
-                                                            ) : (
-                                                                <div key={idx} className="text-slate-700">
-                                                                    {/^\d+$/.test(p.trim()) ? Number(p.trim()).toLocaleString('es-AR') : p.trim()}
-                                                                </div>
-                                                            )
-                                                        ))}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Tipo de Acto y Número */}
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <p className="text-[10px] font-semibold uppercase text-slate-400">Tipo de Acto</p>
-                                                <p className="text-slate-700">{escritura.operaciones?.[0]?.tipo_acto || "COMPRAVENTA"}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-semibold uppercase text-slate-400">Código</p>
-                                                <p className="text-slate-700">{escritura.operaciones?.[0]?.codigo || "No especificado"}</p>
-                                            </div>
-                                        </div>
-
-                                        {/* Escritura Nº y Fecha */}
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <p className="text-[10px] font-semibold uppercase text-slate-400">Escritura Nº</p>
-                                                <p className="text-slate-700">{escritura.nro_protocolo || "Draft"}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-semibold uppercase text-slate-400">Fecha</p>
-                                                <p className="text-slate-700">
-                                                    {escritura.fecha_escritura ?
-                                                        new Date(escritura.fecha_escritura + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
-                                                        : "Fecha pendiente"}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Escribano */}
-                                        <div>
-                                            <p className="text-[10px] font-semibold uppercase text-slate-400">Escribano</p>
-                                            <p className="text-slate-700">{escritura.notario_interviniente || "No especificado"}</p>
-                                        </div>
-
-
-                                        {/* Registro */}
-                                        <div>
-                                            <p className="text-[10px] font-semibold uppercase text-slate-400">Registro número</p>
-                                            <p className="text-slate-700">{escritura.registro || "No especificado"}</p>
-                                        </div>
-
-                                        {/* Mortgage Specific Details (UVAs, Tasa, Capital) */}
-                                        {escritura.operaciones?.[0]?.tipo_acto?.includes('HIPOTECA') && (
-                                            <div className="mt-3 p-3 bg-blue-50/50 rounded-xl border border-blue-100/50 space-y-2">
-                                                <p className="text-[9px] font-bold uppercase text-blue-500 flex items-center gap-1.5">
-                                                    <Activity className="h-3 w-3" />
-                                                    Condiciones del Crédito
-                                                </p>
-                                                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
-                                                    <div className="col-span-2 border-b border-blue-100/30 pb-1 flex justify-between items-center">
-                                                        <span className="text-[9px] text-slate-400 uppercase">Capital Mutuado</span>
-                                                        <span className="font-bold text-slate-700">
-                                                            {escritura.operaciones[0].monto_operacion?.toLocaleString('es-AR', {
-                                                                style: 'currency',
-                                                                currency: escritura.operaciones[0].moneda_cesion || 'ARS',
-                                                                maximumFractionDigits: 0
-                                                            })}
-                                                        </span>
-                                                    </div>
-
-                                                    {escritura.analysis_metadata?.operation_details?.uva_monto && (
-                                                        <div>
-                                                            <p className="text-[9px] text-slate-400 uppercase">Monto en UVAs</p>
-                                                            <p className="font-bold text-blue-600">
-                                                                {Number(escritura.analysis_metadata.operation_details.uva_monto).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                                                            </p>
-                                                        </div>
-                                                    )}
-
-                                                    {escritura.analysis_metadata?.operation_details?.tasa_interes && (
-                                                        <div>
-                                                            <p className="text-[9px] text-slate-400 uppercase">Tasa (TNA)</p>
-                                                            <p className="font-bold text-slate-700">{escritura.analysis_metadata.operation_details.tasa_interes}</p>
-                                                        </div>
-                                                    )}
-
-                                                    {escritura.analysis_metadata?.operation_details?.sistema_amortizacion && (
-                                                        <div className="col-span-2 pt-1 border-t border-blue-100/30">
-                                                            <p className="text-[9px] text-slate-400 uppercase">Sistema / Amortización</p>
-                                                            <p className="font-medium text-slate-600 text-[10px]">{escritura.analysis_metadata.operation_details.sistema_amortizacion}</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Action Buttons */}
-                                        <div className="grid grid-cols-3 gap-2 pt-2 border-t">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-7 text-[10px] font-medium text-slate-700 gap-1.5"
-                                                onClick={async (e) => {
-                                                    e.stopPropagation();
-                                                    if (escritura.pdf_url) {
-                                                        const url = await resolveDocumentUrl(escritura.pdf_url);
-                                                        if (url) {
-                                                            setViewingDocument(url);
-                                                        } else {
-                                                            toast.error("Error al obtener URL del documento");
-                                                        }
-                                                    } else {
-                                                        toast.error("No hay documento disponible");
-                                                    }
-                                                }}
-                                            >
-                                                <Eye className="h-3 w-3" />
-                                                Ver Documento
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-7 text-[10px] font-medium text-slate-700 gap-1.5"
-                                                onClick={async (e) => {
-                                                    e.stopPropagation();
-                                                    if (escritura.pdf_url) {
-                                                        const url = await resolveDocumentUrl(escritura.pdf_url);
-                                                        if (url) {
-                                                            window.open(url, '_blank');
-                                                        } else {
-                                                            toast.error("Error al obtener URL de descarga");
-                                                        }
-                                                    } else {
-                                                        toast.error("No hay documento para descargar");
-                                                    }
-                                                }}
-                                            >
-                                                <Download className="h-3 w-3" />
-                                                Descargar
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-7 text-[10px] font-medium text-slate-700 gap-1.5"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setShowTranscriptionDialog(true);
-                                                }}
-                                            >
-                                                <FileText className="h-3 w-3" />
-                                                Transcripción
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                        {carpeta.escrituras.length === 0 && (
-                            <div className="p-8 text-center bg-slate-50 border-2 border-dashed rounded-xl">
-                                <FileText className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                                <p className="text-sm text-slate-500 font-medium">No hay escrituras</p>
+                    {/* Borrador Inteligente */}
+                    <div className="border border-border rounded-lg bg-background p-6">
+                        <div className="text-center space-y-3">
+                            <FileSignature className="h-8 w-8 text-muted-foreground mx-auto" />
+                            <div>
+                                <h3 className="text-sm font-medium text-foreground">Borrador Inteligente</h3>
+                                <p className="text-xs text-muted-foreground mt-1">Genera un borrador de escritura basado en los datos extraídos</p>
                             </div>
-                        )}
-
-                        <Separator className="my-4" />
-
-                        {/* Storage Management Section */}
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-bold flex items-center gap-2 text-slate-600">
-                                <Activity className="h-4 w-4" />
-                                Archivos en Servidor (Storage)
-                            </h3>
-                            <div className="space-y-2">
-                                {storageFiles.map((file) => {
-                                    const isLinked = carpeta.escrituras.some((e: any) => e.pdf_url?.includes(file.name));
-                                    return (
-                                        <div key={file.id} className="flex items-center justify-between p-3 bg-white border rounded-xl hover:shadow-sm transition-all group">
-                                            <div className="flex items-center gap-3 overflow-hidden">
-                                                <div className={cn("p-2 rounded-lg", isLinked ? "bg-green-50 text-green-600" : "bg-amber-50 text-amber-600")}>
-                                                    <FileText size={16} />
-                                                </div>
-                                                <div className="overflow-hidden">
-                                                    <p className="text-[11px] font-bold truncate text-slate-700">
-                                                        {file.name.replace(/^\d{13}_/, "")}
-                                                    </p>
-                                                    <p className="text-[9px] text-slate-400">
-                                                        {(file.metadata?.size / 1024).toFixed(1)} KB • {isLinked ? "Vinculado" : "Huérfano"}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                {!isLinked && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-7 w-7 text-red-500 hover:bg-red-50"
-                                                        onClick={() => handleDeleteStorageFile(file.name)}
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </Button>
-                                                )}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-7 w-7 text-slate-400 hover:bg-slate-100"
-                                                    onClick={async () => {
-                                                        const doc = carpeta.escrituras.find((e: any) => e.pdf_url?.includes(file.name));
-                                                        if (doc?.pdf_url) {
-                                                            const url = await resolveDocumentUrl(doc.pdf_url);
-                                                            if (url) {
-                                                                setViewingDocument(url);
-                                                            } else {
-                                                                toast.error("Error al obtener URL del documento");
-                                                            }
-                                                        } else {
-                                                            toast.info("Este archivo no tiene registro en la base de datos.");
-                                                        }
-                                                    }}
-                                                >
-                                                    <Eye size={14} />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                                {storageFiles.length === 0 && !isLoadingStorage && (
-                                    <p className="text-[10px] text-center text-slate-400 py-4 italic">No se encontraron archivos adicionales.</p>
-                                )}
-                            </div>
+                            <Button className="mt-2" disabled={!activeDeedId}>
+                                <FileSignature className="h-4 w-4 mr-2" />
+                                Generar Borrador con IA
+                            </Button>
                         </div>
                     </div>
 
-
-
-                    {/* Main Content: Participant Cards */}
-                    <div className="lg:col-span-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {optimisticOps.flatMap((op: any) => {
-                                const participantOrder = (rol: string = '') => {
-                                    const r = rol.toUpperCase();
-                                    if (r.includes('COMPRADOR') || r.includes('DEUDOR') || r.includes('MUTUARIO') || r.includes('CESIONARIO') || r.includes('DONATARIO')) return 1;
-                                    if (r.includes('VENDEDOR') || r.includes('ACREEDOR') || r.includes('CEDENTE') || r.includes('DONANTE') || r.includes('FIDUCIARIA') || r.includes('HIPOTECARIO')) return 2;
-                                    if (r.includes('CONDOMINO') || r.includes('FIADOR') || r.includes('GARANTE')) return 3;
-                                    if (r.includes('APODERADO') || r.includes('REPRESENTANTE')) return 4;
-                                    return 3; // default: middle
-                                };
-                                const sorted = [...(op.participantes_operacion || [])].sort(
-                                    (a: any, b: any) => participantOrder(a.rol) - participantOrder(b.rol)
-                                );
-                                return sorted.map((p: any) => {
-                                    const person = p.persona || p.personas;
-                                    if (!person) return null;
-
-
-                                    const getSpouseName = (p: any) => {
-                                        if (p.datos_conyuge?.nombre || p.datos_conyuge?.nombre_completo) return p.datos_conyuge.nombre || p.datos_conyuge.nombre_completo;
-                                        // Fallback: Try to regex from civil status detail
-                                        const match = p.estado_civil_detalle?.match(/con\s+([A-ZÁÉÍÓÚÑa-zxzñ\s]+)/i);
-                                        if (match && match[1]) {
-                                            // Filter out common stopped words if needed, or just return first few words
-                                            return match[1].trim();
-                                        }
-                                        return null;
-                                    };
-
-                                    const spouseName = getSpouseName(person);
-
-                                    return (
-                                        <Card key={p.id} className="overflow-hidden border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                                            {/* Header: Role + Actions */}
-                                            <div className="px-4 py-2 border-b flex justify-between items-center bg-slate-50">
-                                                <Badge variant="secondary" className={cn(
-                                                    "text-[9px] px-2 py-0 h-5 font-bold tracking-wider",
-                                                    // ... (Role Badge Styles - kept simple for brevity in replacement, assuming existing logic or concise match) ...
-                                                    getRoleBadgeStyle(p.rol)
-                                                )}>
-                                                    {getRoleLabel(p.rol)}
-                                                </Badge>
-                                                <div className="flex items-center gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-7 w-7 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
-                                                        onClick={() => setEditingPerson(person)}
-                                                        title="Editar datos"
-                                                    >
-                                                        <Pencil className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-
-                                            <div className="p-4 pt-3 space-y-3">
-                                                {/* Core Identity */}
-                                                <div>
-                                                    <h3 className="text-base font-bold text-slate-800 leading-tight">
-                                                        {isLegalEntity(person)
-                                                            ? person.nombre_completo.toUpperCase()
-                                                            : formatPersonName(person.nombre_completo)}
-                                                    </h3>
-                                                    <p className="text-[11px] font-medium text-slate-500 mt-0.5">
-                                                        {isLegalEntity(person)
-                                                            ? `Persona Jurídica • Const: ${formatDateInstructions(person.fecha_nacimiento)}`
-                                                            : `${person.nacionalidad || "No informada"} • Nac: ${formatDateInstructions(person.fecha_nacimiento)}`}
-                                                    </p>
-                                                </div>
-
-                                                {/* ID Grid */}
-                                                <div className="grid grid-cols-2 gap-3 pb-1">
-                                                    {!isLegalEntity(person) && (
-                                                        <div>
-                                                            <p className="text-[10px] font-bold uppercase text-slate-400 tracking-tight">DNI</p>
-                                                            <p className="text-[13px] text-slate-700 font-bold">{person.dni || "No informado"}</p>
-                                                        </div>
-                                                    )}
-                                                    <div className={isLegalEntity(person) ? "col-span-2" : ""}>
-                                                        <p className="text-[10px] font-bold uppercase text-slate-400 tracking-tight">CUIT / CUIL</p>
-                                                        <p className="text-[13px] text-slate-700 font-bold">{formatCUIT(person.cuit) || "No informado"}</p>
-                                                    </div>
-                                                </div>
-
-                                                {/* Details Grid (Only for Natural Persons) */}
-                                                {!isLegalEntity(person) && (
-                                                    <div className="grid grid-cols-2 gap-y-3 gap-x-4 border-y py-3 border-slate-100">
-                                                        <div>
-                                                            <p className="text-[10px] font-bold uppercase text-slate-400 tracking-tight">Filiación</p>
-                                                            <p className="text-[12px] text-slate-700 font-medium leading-tight">
-                                                                {person.nombres_padres || "No informada"}
-                                                            </p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-[10px] font-bold uppercase text-slate-400 tracking-tight">Cónyuge</p>
-                                                            <p className="text-[12px] text-slate-700 font-medium leading-tight">
-                                                                {spouseName ? <span className="font-semibold text-slate-800">{formatPersonName(spouseName)}</span> : "No informado"}
-                                                            </p>
-                                                        </div>
-                                                        <div className="col-span-2">
-                                                            <p className="text-[10px] font-bold uppercase text-slate-400 tracking-tight">Estado Civil</p>
-                                                            <p className="text-[12px] text-slate-700 leading-snug">
-                                                                {person.estado_civil_detalle || "No detallado"}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Address & Contact */}
-                                                <div className="space-y-2">
-                                                    <div>
-                                                        <p className="text-[10px] font-bold uppercase text-slate-400 tracking-tight">Domicilio Real</p>
-                                                        <p className="text-[12px] text-slate-600 italic leading-snug">
-                                                            {person.domicilio_real?.literal || "No consta"}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                {/* Datos de Representación (para Apoderados/Representantes) */}
-                                                {(p.datos_representacion || (p.rol && p.rol.toUpperCase().includes('APODERADO'))) && (
-                                                    <div className="border-t pt-3 border-slate-100 space-y-2">
-                                                        <div className="flex justify-between items-start">
-                                                            <div className="flex-1">
-                                                                <p className="text-[10px] font-bold uppercase text-slate-400 tracking-tight">Representando a</p>
-                                                                <p className="text-[12px] text-slate-700 font-semibold">
-                                                                    {p.datos_representacion?.representa_a || "No informado"}
-                                                                </p>
-                                                            </div>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-6 w-6 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 shrink-0"
-                                                                onClick={() => setEditingRepresentacion({ participanteId: p.id, ...p.datos_representacion })}
-                                                                title="Editar representación"
-                                                            >
-                                                                <Pencil className="h-3 w-3" />
-                                                            </Button>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-[10px] font-bold uppercase text-slate-400 tracking-tight">Poder Otorgado</p>
-                                                            <p className="text-[12px] text-slate-600 italic leading-snug">
-                                                                {p.datos_representacion?.poder_detalle || "No consta"}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </Card>
-                                    );
-                                });
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Título Antecedente Card - full width below */}
-                    {currentEscritura?.inmuebles?.titulo_antecedente && (
-                        <div className="lg:col-span-12">
-                            <Card className="border-amber-200 shadow-sm">
-                                <CardHeader className="pb-3 border-b border-amber-100 bg-amber-50/50 rounded-t-lg">
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-1.5 bg-amber-100 rounded text-amber-700">
-                                            <BookOpen size={18} />
-                                        </div>
-                                        <CardTitle className="text-base font-bold text-amber-900">
-                                            Título Antecedente
-                                        </CardTitle>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="bg-amber-50/30 p-6">
-                                    <p className="text-sm leading-7 font-mono text-slate-700 whitespace-pre-wrap select-text selection:bg-amber-100 text-justify">
-                                        {currentEscritura.inmuebles.titulo_antecedente}
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        </div>
+                    {/* Redacción Manual (colapsable) */}
+                    {activeDeedId && (
+                        <details>
+                            <summary className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1">
+                                <Pencil className="h-3 w-3" /> Redacción Manual
+                            </summary>
+                            <div className="mt-3 h-[500px] overflow-hidden rounded-lg border border-border">
+                                <DeedEditor
+                                    escrituraId={activeDeedId}
+                                    initialContent={currentEscritura?.contenido_borrador}
+                                    dataSummary={currentEscritura}
+                                />
+                            </div>
+                        </details>
                     )}
                 </div>
-            </TabsContent>
 
-            <TabsContent value="budget">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <div className="lg:col-span-12">
-                        <TaxBreakdownCard taxData={currentEscritura?.analysis_metadata?.tax_calculation} />
+                {/* ─── FASE 3: Post-Escriturario ─── */}
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fase 3</span>
+                        <Separator className="flex-1" />
+                        <span className="text-xs text-muted-foreground">Post-Escriturario</span>
                     </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <MinutaGenerator data={currentEscritura} isBlocked={isBlockedBySecurity} />
+                        <AMLCompliance escrituraId={activeDeedId!} />
+                    </div>
+
+                    {(carpeta.estado === 'FIRMADA' || carpeta.estado === 'INSCRIPTA') && (
+                        <InscriptionTracker data={currentEscritura} />
+                    )}
                 </div>
-            </TabsContent>
-
-            <TabsContent value="smart-draft">
-                {activeDeedId ? (
-                    <SmartDeedEditor
-                        escrituraId={activeDeedId}
-                        initialContent={currentEscritura?.contenido_borrador}
-                    />
-                ) : (
-                    <div className="flex items-center justify-center h-[500px] border-2 border-dashed rounded-xl">
-                        <p className="text-muted-foreground">Seleccione una escritura para ver el borrador inteligente</p>
-                    </div>
-                )}
-            </TabsContent>
-
-            <TabsContent value="draft" className="h-[calc(100vh-180px)] overflow-hidden">
-                {activeDeedId ? (
-                    <DeedEditor
-                        escrituraId={activeDeedId}
-                        initialContent={currentEscritura?.contenido_borrador}
-                        dataSummary={currentEscritura}
-                    />
-                ) : (
-                    <div className="flex items-center justify-center h-full border-2 border-dashed rounded-xl">
-                        <p className="text-muted-foreground">Seleccione una escritura para redactar</p>
-                    </div>
-                )}
-            </TabsContent>
-            <TabsContent value="compliance">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <MinutaGenerator
-                        data={currentEscritura}
-                        isBlocked={isBlockedBySecurity}
-                    />
-                    <AMLCompliance escrituraId={activeDeedId!} />
-                </div>
-            </TabsContent>
-            <TabsContent value="inscription">
-                <InscriptionTracker data={currentEscritura} />
-            </TabsContent>
+            </div>
+        </div>
 
             {/* Editing Person Modal */}
             < Dialog open={!!editingPerson} onOpenChange={() => setEditingPerson(null)}>
@@ -1508,7 +1288,6 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                     </div>
                 </DialogContent>
             </Dialog>
-        </Tabs >
         </div>
     );
 }
