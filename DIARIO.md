@@ -562,17 +562,18 @@ Cuando el escribano sube un PDF de una hipoteca UVA:
 | `/tabla-actos` | Tabla de Actos | Taxonomía CESBA 2026 completa con búsqueda |
 | `/admin/users` | Admin | Gestión de usuarios, escribanos, base de conocimiento RAG |
 
-### Tabs de FolderWorkspace (dentro de `/carpeta/[id]`)
+### Layout de FolderWorkspace (dentro de `/carpeta/[id]`)
 
-| Tab | Valor | Contenido |
-|---|---|---|
-| **Mesa de Trabajo** | `mesa` | Vacía por ahora (futuro: espacio de trabajo del escribano) |
-| **Antecedente** | `antecedente` | Sidebar con escrituras + archivos Storage. Main con tarjetas de participantes. Card de Título Antecedente al final. |
-| **Presupuesto** | `budget` | `TaxBreakdownCard` con desglose impositivo |
-| **Borrador Inteligente** | `smart-draft` | `SmartDeedEditor` con sugerencias AI |
-| **Redacción (Manual)** | `draft` | `DeedEditor` WYSIWYG |
-| **Minutas** | `compliance` | `MinutaGenerator` + `AMLCompliance` |
-| **Inscripción** | `inscription` | `InscriptionTracker` (solo si carpeta está FIRMADA/INSCRIPTA) |
+**Usa Tabs (Shadcn) con 4 pestañas.** Header `CarpetaHero` fijo arriba.
+
+| Pestaña | value | Componente | Contenido |
+|---|---|---|---|
+| **Mesa de Trabajo** (default) | `mesa-trabajo` | `FaseRedaccion` | Borrador Inteligente (IA) + DeedEditor manual |
+| **Antecedentes** | `antecedentes` | `WorkspaceRadiography` | Documento Original, Inmueble, Partes Intervinientes, Archivos (full width) |
+| **Pre-Escriturario** | `pre-escritura` | `FasePreEscritura` | Certificados + TaxBreakdown + Liquidación y Honorarios |
+| **Post-Firma** | `post-escritura` | `FasePostEscritura` | Minuta + AMLCompliance + InscriptionTracker |
+
+`WorkspacePipeline.tsx` exporta 3 componentes: `FasePreEscritura`, `FaseRedaccion`, `FasePostEscritura`.
 
 ---
 
@@ -620,7 +621,10 @@ Todas las acciones del servidor están en `src/app/actions/`. Son funciones `"us
 
 | Componente | Qué hace |
 |---|---|
-| `FolderWorkspace.tsx` | **El más grande e importante.** Vista completa de una carpeta con tabs, tarjetas de participantes, sidebar de escrituras, modales de edición. |
+| `FolderWorkspace.tsx` | **Orquestador.** State, handlers, realtime subscriptions, dialogs. Renderiza CarpetaHero + Tabs (4 pestañas: Mesa de Trabajo, Antecedentes, Pre-Escriturario, Post-Firma). |
+| `WorkspaceRadiography.tsx` | **Pestaña Antecedentes** (full width). Datos extraídos read-only: Documento, Inmueble, Partes, Archivos. Sin `<details>`, DNI/CUIT siempre visible, line-clamp-4 con "Ver más". |
+| `WorkspacePipeline.tsx` | Exporta 3 componentes: `FasePreEscritura` (Certificados + Tax + Liquidación), `FaseRedaccion` (Borrador IA + Editor), `FasePostEscritura` (Minuta + Compliance + Inscripción). |
+| `CarpetaHero.tsx` | Header de carpeta: carátula, badge estado, botón eliminar con AlertDialog. Props: `onDelete`, `isDeleting`. |
 | `CarpetasTable.tsx` | Tabla de carpetas con búsqueda. Consume RPC `search_carpetas` (estructura plana con `parties[]` y `escrituras[]`). |
 | `MagicDropzone.tsx` | Upload de PDFs con drag & drop. Detecta tamaño y enruta a sync o async. |
 | `PersonForm.tsx` | Formulario completo de persona: nombre, DNI, CUIT, estado civil, cónyuge, domicilio, filiación. |
@@ -709,7 +713,9 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 |---|---|---|
 | `src/app/api/ingest/route.ts` | Pipeline sync de ingesta — el archivo más complejo | ~822 |
 | `worker/src/index.ts` | Pipeline async (Railway worker) | ~600 |
-| `src/components/FolderWorkspace.tsx` | Vista de carpeta — el componente más grande | ~1400 |
+| `src/components/FolderWorkspace.tsx` | Orquestador de carpeta (state + dialogs) | ~800 |
+| `src/components/WorkspaceRadiography.tsx` | Columna izquierda — datos extraídos | ~450 |
+| `src/components/WorkspacePipeline.tsx` | Columna derecha — pipeline notarial | ~130 |
 | `src/lib/agent/SkillExecutor.ts` | Orquestador de skills AI | ~500 |
 | `src/lib/aiConfig.ts` | Schemas de extracción + model routing + pricing | ~300 |
 | `src/lib/knowledge.ts` | Motor RAG (embed, chunk, query) | ~200 |
@@ -766,12 +772,63 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 22. **Seguridad File API** — Cleanup de PDFs en Gemini en bloque `finally` (purga garantizada)
 23. **Worker actualiza `carpeta.ingesta_estado`** — Fix crítico: las carpetas procesadas por worker async ahora pasan a COMPLETADO/ERROR correctamente
 
+24. **Refactor visual "Centro de Comando"** — Tabs eliminados, layout 2 columnas permanente (Radiografía + Pipeline)
+25. **Modularización FolderWorkspace** — Extraído WorkspaceRadiography.tsx y WorkspacePipeline.tsx
+26. **UX notarial mejorada** — DNI/CUIT siempre visible, line-clamp-4, p-6, text-sm, fases numeradas
+
+27. **Rollback a Tabs** — 4 pestañas (Mesa de Trabajo, Antecedentes, Pre-Escriturario, Post-Firma) por decisión PO
+28. **Card Liquidación y Honorarios** — inputs Precio Real + Honorarios en pestaña Pre-Escriturario
+
 ### ✅ Etapa 1 CERRADA: Ingesta y Estudio de Títulos
 Pipeline dual (frontend sync + worker async Railway) 100% funcional y estabilizado. Gemini File API sin límite de páginas, taxonomía CESBA unificada, seguridad de archivos, estado de carpeta sincronizado. Testeado con PDFs complejos (escrituras multipartitas, documentos escaneados 30+ páginas).
 
 ---
 
 ## 17. Changelog
+
+### 2026-02-22 (Claude) — Sesión 5: Rollback a Tabs — Separación por roles
+
+#### Rollback de 2 columnas → 4 pestañas (Tabs Shadcn)
+- Eliminado layout `grid grid-cols-1 lg:grid-cols-12` de 2 columnas permanentes
+- Restaurado sistema `<Tabs>` con 4 pestañas por decisión del Product Owner (carga cognitiva)
+- Pestañas: **Mesa de Trabajo** (default, redacción), **Antecedentes** (radiografía full width), **Pre-Escriturario** (certificados + impuestos), **Post-Firma** (minuta + compliance + inscripción)
+
+#### Modularización de WorkspacePipeline.tsx en 3 exports
+- `FasePreEscritura`: Certificados, TaxBreakdownCard, nuevo Card "Liquidación y Honorarios" (inputs Precio Real + Honorarios)
+- `FaseRedaccion`: Borrador Inteligente (IA) + DeedEditor manual
+- `FasePostEscritura`: MinutaGenerator + AMLCompliance + InscriptionTracker
+- Eliminados números gigantes (PhaseHeader con círculos 1/2/3) — las pestañas organizan el flujo
+- WorkspaceRadiography ahora ocupa full width (eliminado `lg:col-span-4 lg:sticky`)
+
+### 2026-02-22 (Claude) — Sesión 4: Refactor visual "Centro de Comando"
+
+#### Eliminación de Tabs → Layout 2 columnas permanente
+- Eliminado sistema de `<Tabs>` con 7 pestañas (mesa, antecedente, budget, smart-draft, draft, compliance, inscription)
+- Reemplazado por grid `lg:grid-cols-12` con 2 columnas permanentes: Radiografía (4) + Pipeline (8)
+- Eliminada fricción de navegación entre pestañas — todo visible en una sola vista
+
+#### Modularización de FolderWorkspace.tsx (~1400 → ~800 líneas)
+- **Nuevo: `WorkspaceRadiography.tsx`** (~450 líneas) — Columna izquierda read-only
+  - Cards: Documento Original, Inmueble, Partes Intervinientes, Archivos
+  - Sin `<details>` para datos clave — DNI/CUIT/Rol siempre visibles
+  - `line-clamp-4` con botón "Ver más" para transcripción literal y título antecedente
+  - Padding `p-6`, font `text-sm` mínimo para datos legales
+  - Participantes en lista vertical compacta (1 columna)
+- **Nuevo: `WorkspacePipeline.tsx`** (~130 líneas) — Columna derecha workflow
+  - 3 fases con `PhaseHeader` numerado (círculo + text-xl + Separator)
+  - Fase 1: Certificados (inputs fecha + badge Pendiente) + TaxBreakdownCard
+  - Fase 2: Borrador IA (botón prominente) + DeedEditor manual en `<details>`
+  - Fase 3: MinutaGenerator + AMLCompliance + InscriptionTracker (condicional)
+  - `space-y-16` entre fases para separación radical
+- **FolderWorkspace.tsx** simplificado a orquestador: state, handlers, realtime, dialogs
+
+#### CarpetaHero con botón eliminar
+- Movido AlertDialog de eliminación de carpeta al componente CarpetaHero
+- Props `onDelete` + `isDeleting` — Trash2 icon junto al badge de estado
+
+#### Limpieza de imports
+- Eliminados ~18 imports no utilizados (Tabs, Card, ScrollArea, StatusStepper, AlertDialog, etc.)
+- Funciones `getRoleBadgeStyle`/`getRoleLabel` movidas a WorkspaceRadiography
 
 ### 2026-02-21 (Claude) — Sesión 3: Estabilización final Etapa 1
 
@@ -911,4 +968,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-02-21 (sesión 3) — Claude — Etapa 1 cerrada
+> **Última actualización**: 2026-02-22 (sesión 5) — Claude — Rollback a Tabs, separación por roles

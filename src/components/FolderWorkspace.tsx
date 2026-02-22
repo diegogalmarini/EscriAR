@@ -26,9 +26,10 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CarpetaHero from "./CarpetaHero";
 import { WorkspaceRadiography } from "./WorkspaceRadiography";
-import { WorkspacePipeline } from "./WorkspacePipeline";
+import { FasePreEscritura, FaseRedaccion, FasePostEscritura } from "./WorkspacePipeline";
 
 export default function FolderWorkspace({ initialData }: { initialData: any }) {
     const [carpeta, setCarpeta] = useState(initialData);
@@ -334,27 +335,50 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
             <PersonSearch open={isPersonSearchOpen} setOpen={setIsPersonSearchOpen} onSelect={handleLinkPerson} />
             <AssetSearch open={isAssetSearchOpen} setOpen={setIsAssetSearchOpen} onSelect={handleLinkAsset} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <WorkspaceRadiography
-                    currentEscritura={currentEscritura}
-                    optimisticOps={optimisticOps}
-                    storageFiles={storageFiles}
-                    isLoadingStorage={isLoadingStorage}
-                    carpetaEscrituras={carpeta.escrituras || []}
-                    onEditDeed={(deed) => setEditingDeed({ ...deed, operacion: deed.operaciones?.[0] })}
-                    onEditPerson={setEditingPerson}
-                    onEditRepresentacion={(data) => setEditingRepresentacion(data)}
-                    onViewDocument={setViewingDocument}
-                    onDeleteStorageFile={handleDeleteStorageFile}
-                    resolveDocumentUrl={resolveDocumentUrl}
-                />
-                <WorkspacePipeline
-                    currentEscritura={currentEscritura}
-                    activeDeedId={activeDeedId}
-                    carpetaEstado={carpeta.estado}
-                    isBlockedBySecurity={isBlockedBySecurity}
-                />
-            </div>
+            <Tabs defaultValue="mesa-trabajo" className="w-full">
+                <TabsList>
+                    <TabsTrigger value="mesa-trabajo">Mesa de Trabajo</TabsTrigger>
+                    <TabsTrigger value="antecedentes">Antecedentes</TabsTrigger>
+                    <TabsTrigger value="pre-escritura">Pre-Escriturario</TabsTrigger>
+                    <TabsTrigger value="post-escritura">Post-Firma</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="mesa-trabajo" className="mt-6">
+                    <FaseRedaccion
+                        currentEscritura={currentEscritura}
+                        activeDeedId={activeDeedId}
+                    />
+                </TabsContent>
+
+                <TabsContent value="antecedentes" className="mt-6">
+                    <WorkspaceRadiography
+                        currentEscritura={currentEscritura}
+                        optimisticOps={optimisticOps}
+                        storageFiles={storageFiles}
+                        isLoadingStorage={isLoadingStorage}
+                        carpetaEscrituras={carpeta.escrituras || []}
+                        onEditDeed={(deed) => setEditingDeed({ ...deed, operacion: deed.operaciones?.[0] })}
+                        onEditPerson={setEditingPerson}
+                        onEditRepresentacion={(data) => setEditingRepresentacion(data)}
+                        onViewDocument={setViewingDocument}
+                        onDeleteStorageFile={handleDeleteStorageFile}
+                        resolveDocumentUrl={resolveDocumentUrl}
+                    />
+                </TabsContent>
+
+                <TabsContent value="pre-escritura" className="mt-6">
+                    <FasePreEscritura currentEscritura={currentEscritura} />
+                </TabsContent>
+
+                <TabsContent value="post-escritura" className="mt-6">
+                    <FasePostEscritura
+                        currentEscritura={currentEscritura}
+                        activeDeedId={activeDeedId}
+                        carpetaEstado={carpeta.estado}
+                        isBlockedBySecurity={isBlockedBySecurity}
+                    />
+                </TabsContent>
+            </Tabs>
 
 
             <Dialog open={!!editingPerson} onOpenChange={() => setEditingPerson(null)}>

@@ -84,7 +84,7 @@ export function WorkspaceRadiography({
     const [expandedTranscripcion, setExpandedTranscripcion] = useState(false);
 
     return (
-        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-6 lg:self-start">
+        <div className="space-y-6">
 
             {/* ── Documento Original ── */}
             {currentEscritura && (
