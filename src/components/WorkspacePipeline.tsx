@@ -126,6 +126,12 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
     const [adquirentes, setAdquirentes] = useState<any[]>([]);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+    // Estado para gestionar los apoderados mapeados por DNI del adquirente (persona jurídica)
+    const [apoderados, setApoderados] = useState<Record<string, any>>({});
+    // Estado para saber a qué adquirente le estamos buscando un apoderado
+    const [isApoderadoSearchOpen, setIsApoderadoSearchOpen] = useState(false);
+    const [selectedJuridicaForApoderado, setSelectedJuridicaForApoderado] = useState<string | null>(null);
+
     // Extraer inmueble principal y titulares/transmitentes del antecedente
     const inmueble = currentEscritura?.inmuebles;
     const participantes = currentEscritura?.operaciones?.flatMap(
@@ -144,6 +150,20 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
 
     const removeAdquirente = (dni: string) => {
         setAdquirentes((prev) => prev.filter((a) => a.dni !== dni));
+        // Si borramos un adquirente, también limpiamos su apoderado
+        setApoderados((prev) => {
+            const newApoderados = { ...prev };
+            delete newApoderados[dni];
+            return newApoderados;
+        });
+    };
+
+    const removeApoderado = (adquirenteDni: string) => {
+        setApoderados((prev) => {
+            const newApoderados = { ...prev };
+            delete newApoderados[adquirenteDni];
+            return newApoderados;
+        });
     };
 
     const canGenerate = !!tipoActo && !!activeDeedId && adquirentes.length > 0;
@@ -235,17 +255,33 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                         <p className="text-xs text-muted-foreground">
                                             {a.dni ? `DNI ${a.dni}` : "Sin documento"}
                                             {a.tipo_persona === "JURIDICA" && " · Persona Jurídica"}
+                                            {apoderados[a.dni] && ` · Rep. por: ${apoderados[a.dni].nombre_completo}`}
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-1 shrink-0">
-                                        {a.tipo_persona === "JURIDICA" && (
+                                        {a.tipo_persona === "JURIDICA" && !apoderados[a.dni] && (
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
                                                 className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
+                                                onClick={() => {
+                                                    setSelectedJuridicaForApoderado(a.dni);
+                                                    setIsApoderadoSearchOpen(true);
+                                                }}
                                             >
                                                 <Briefcase className="h-3 w-3" />
-                                                + Apoderado / Representante Legal
+                                                + Apoderado / Representante
+                                            </Button>
+                                        )}
+                                        {a.tipo_persona === "JURIDICA" && apoderados[a.dni] && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 text-xs text-muted-foreground hover:text-destructive gap-1"
+                                                onClick={() => removeApoderado(a.dni)}
+                                            >
+                                                <Briefcase className="h-3 w-3" />
+                                                Quitar Representante
                                             </Button>
                                         )}
                                         <Button
@@ -290,6 +326,19 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                         onSelect={(person) => {
                             if (!adquirentes.find(a => a.dni === person.dni)) {
                                 setAdquirentes(prev => [...prev, person]);
+                            }
+                        }}
+                    />
+
+                    <PersonSearch
+                        open={isApoderadoSearchOpen}
+                        setOpen={setIsApoderadoSearchOpen}
+                        onSelect={(person) => {
+                            if (selectedJuridicaForApoderado) {
+                                setApoderados(prev => ({
+                                    ...prev,
+                                    [selectedJuridicaForApoderado]: person
+                                }));
                             }
                         }}
                     />
