@@ -31,7 +31,7 @@ interface Person {
 }
 
 interface PersonSearchProps {
-    onSelect: (personId: string) => void;
+    onSelect: (person: any) => void;
     open: boolean;
     setOpen: (open: boolean) => void;
 }
@@ -97,7 +97,7 @@ export function PersonSearch({ onSelect, open, setOpen }: PersonSearchProps) {
                                     key={person.dni}
                                     value={person.nombre_completo}
                                     onSelect={() => {
-                                        onSelect(person.dni);
+                                        onSelect(person);
                                         setOpen(false);
                                     }}
                                 >
@@ -136,12 +136,13 @@ export function PersonSearch({ onSelect, open, setOpen }: PersonSearchProps) {
                         <PersonForm
                             initialData={{ nombre_completo: query }}
                             onSuccess={(person) => {
-                                onSelect(person.dni);
+                                onSelect(person);
                                 setIsCreating(false);
                                 setOpen(false);
                             }}
                             onCancel={() => setIsCreating(false)}
                         />
+
                     </DialogContent>
                 </Dialog>
             </DialogContent>

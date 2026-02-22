@@ -21,6 +21,8 @@ import { MinutaGenerator } from "./MinutaGenerator";
 import { AMLCompliance } from "./AMLCompliance";
 import { InscriptionTracker } from "./InscriptionTracker";
 import { TaxBreakdownCard } from "./smart/TaxBreakdownCard";
+import { PersonSearch } from "./PersonSearch";
+import { SendFichaDialog } from "./SendFichaDialog";
 
 /* ── Shared types ── */
 
@@ -120,16 +122,10 @@ const MODELOS_ESCRITURA = [
     { value: "poder-general", label: "Poder General" },
 ];
 
-interface AdquirenteMock {
-    id: string;
-    nombre_completo: string;
-    dni?: string;
-    tipo_persona?: string;
-}
-
 export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseRedaccionProps) {
     const [tipoActo, setTipoActo] = useState<string>("");
-    const [adquirentes, setAdquirentes] = useState<AdquirenteMock[]>([]);
+    const [adquirentes, setAdquirentes] = useState<any[]>([]);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
 
     // Extraer inmueble principal y titulares/transmitentes del antecedente
     const inmueble = currentEscritura?.inmuebles;
@@ -138,16 +134,17 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
     ) || [];
     const titulares = participantes.filter((p: any) => {
         const rol = p.rol?.toUpperCase() || "";
-        return rol.includes("VENDEDOR") || rol.includes("TRANSMITENTE") ||
-               rol.includes("CEDENTE") || rol.includes("DONANTE") || rol.includes("PODERDANTE");
+        return rol.includes("COMPRADOR") || rol.includes("ADQUIRENTE") ||
+            rol.includes("CESIONARIO") || rol.includes("DONATARIO") ||
+            rol.includes("TITULAR");
     });
 
     const inmuebleLabel = inmueble
         ? [inmueble.partido_id, inmueble.nro_partida ? `Partida ${inmueble.nro_partida}` : null].filter(Boolean).join(" · ")
         : null;
 
-    const removeAdquirente = (id: string) => {
-        setAdquirentes((prev) => prev.filter((a) => a.id !== id));
+    const removeAdquirente = (dni: string) => {
+        setAdquirentes((prev) => prev.filter((a) => a.dni !== dni));
     };
 
     const canGenerate = !!tipoActo && !!activeDeedId && adquirentes.length > 0;
@@ -165,11 +162,11 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
             {/* Selector de tipo de acto */}
             <div className="border border-border rounded-lg bg-background p-5 space-y-3">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                    Tipo de Escritura
+                    Tipo de Acto
                 </h3>
                 <Select value={tipoActo} onValueChange={setTipoActo}>
                     <SelectTrigger className="w-full max-w-md">
-                        <SelectValue placeholder="Seleccione el tipo de escritura a redactar..." />
+                        <SelectValue placeholder="Seleccione el tipo de acto a redactar..." />
                     </SelectTrigger>
                     <SelectContent>
                         {MODELOS_ESCRITURA.map((m) => (
@@ -232,7 +229,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                     {adquirentes.length > 0 && (
                         <div className="space-y-2">
                             {adquirentes.map((a) => (
-                                <div key={a.id} className="flex items-center gap-3 rounded-md border border-border bg-muted/20 px-3 py-2.5">
+                                <div key={a.dni || Math.random().toString()} className="flex items-center gap-3 rounded-md border border-border bg-muted/20 px-3 py-2.5">
                                     <Users className="h-4 w-4 text-muted-foreground shrink-0" />
                                     <div className="min-w-0 flex-1">
                                         <p className="text-sm font-medium text-foreground truncate">{a.nombre_completo}</p>
@@ -242,6 +239,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-1 shrink-0">
+                                        <SendFichaDialog persona={a} />
                                         {a.tipo_persona === "JURIDICA" && (
                                             <Button
                                                 variant="ghost"
@@ -256,7 +254,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                             variant="ghost"
                                             size="icon"
                                             className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                                            onClick={() => removeAdquirente(a.id)}
+                                            onClick={() => removeAdquirente(a.dni)}
                                         >
                                             <X className="h-3.5 w-3.5" />
                                         </Button>
@@ -290,44 +288,22 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                             variant="outline"
                             size="sm"
                             className="flex-1 gap-1.5"
-                            onClick={() => {
-                                // TODO: abrir PersonSearch real
-                                setAdquirentes((prev) => [...prev, {
-                                    id: `mock_${Date.now()}`,
-                                    nombre_completo: "Nuevo Comprador (pendiente)",
-                                    tipo_persona: "FISICA",
-                                }]);
-                            }}
-                        >
-                            <Search className="h-3.5 w-3.5" />
-                            Buscar Cliente
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 gap-1.5"
-                            onClick={() => {
-                                // TODO: abrir PersonForm modal
-                                setAdquirentes((prev) => [...prev, {
-                                    id: `new_${Date.now()}`,
-                                    nombre_completo: "Nuevo Cliente (por cargar)",
-                                    tipo_persona: "FISICA",
-                                }]);
-                            }}
+                            onClick={() => setIsSearchOpen(true)}
                         >
                             <UserPlus className="h-3.5 w-3.5" />
-                            Nuevo Cliente
+                            Buscar o Seleccionar Cliente
                         </Button>
                     </div>
 
-                    {/* Outreach: solicitar datos al cliente */}
-                    <Button
-                        variant="outline"
-                        className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
-                    >
-                        <Send className="h-4 w-4" />
-                        Solicitar carga de datos al cliente
-                    </Button>
+                    <PersonSearch
+                        open={isSearchOpen}
+                        setOpen={setIsSearchOpen}
+                        onSelect={(person) => {
+                            if (!adquirentes.find(a => a.dni === person.dni)) {
+                                setAdquirentes(prev => [...prev, person]);
+                            }
+                        }}
+                    />
                 </div>
             </div>
 
