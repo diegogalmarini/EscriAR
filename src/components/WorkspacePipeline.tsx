@@ -16,6 +16,7 @@ import {
     FileSignature, ClipboardCheck, Pencil, DollarSign, Home, Users,
     Search, UserPlus, Send, Briefcase, ArrowRight, X,
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";  // ADDED
 import { DeedEditor } from "./DeedEditor";
 import { MinutaGenerator } from "./MinutaGenerator";
 import { AMLCompliance } from "./AMLCompliance";
@@ -127,7 +128,8 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
     const [isSearchOpen, setIsSearchOpen] = useState(false);
 
     // Estado para gestionar los apoderados mapeados por DNI del adquirente (persona jurídica)
-    const [apoderados, setApoderados] = useState<Record<string, any>>({});
+    // Guardamos la persona y un texto justificativo (los datos del poder)
+    const [apoderados, setApoderados] = useState<Record<string, { persona: any, justificativo: string }>>({});
     // Estado para saber a qué adquirente le estamos buscando un apoderado
     const [isApoderadoSearchOpen, setIsApoderadoSearchOpen] = useState(false);
     const [selectedJuridicaForApoderado, setSelectedJuridicaForApoderado] = useState<string | null>(null);
@@ -246,53 +248,76 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
 
                     {/* Adquirentes agregados */}
                     {adquirentes.length > 0 && (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {adquirentes.map((a) => (
-                                <div key={a.dni || Math.random().toString()} className="flex items-center gap-3 rounded-md border border-border bg-muted/20 px-3 py-2.5">
-                                    <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-medium text-foreground truncate">{a.nombre_completo}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {a.dni ? `DNI ${a.dni}` : "Sin documento"}
-                                            {a.tipo_persona === "JURIDICA" && " · Persona Jurídica"}
-                                            {apoderados[a.dni] && ` · Rep. por: ${apoderados[a.dni].nombre_completo}`}
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-1 shrink-0">
-                                        {a.tipo_persona === "JURIDICA" && !apoderados[a.dni] && (
+                                <div key={a.dni || Math.random().toString()} className="flex flex-col rounded-md border border-border bg-muted/20 px-3 py-2.5">
+                                    <div className="flex items-center gap-3 w-full">
+                                        <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-medium text-foreground truncate">{a.nombre_completo}</p>
+                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                {a.dni ? `DNI ${a.dni}` : "Sin documento"}
+                                                {a.tipo_persona === "JURIDICA" && " · Persona Jurídica"}
+                                                {apoderados[a.dni] && ` · Rep. por: ${apoderados[a.dni].persona.nombre_completo}`}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            {a.tipo_persona === "JURIDICA" && !apoderados[a.dni] && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
+                                                    onClick={() => {
+                                                        setSelectedJuridicaForApoderado(a.dni);
+                                                        setIsApoderadoSearchOpen(true);
+                                                    }}
+                                                >
+                                                    <Briefcase className="h-3 w-3" />
+                                                    + Apoderado / Representante
+                                                </Button>
+                                            )}
+                                            {a.tipo_persona === "JURIDICA" && apoderados[a.dni] && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-7 text-xs text-muted-foreground hover:text-destructive gap-1"
+                                                    onClick={() => removeApoderado(a.dni)}
+                                                >
+                                                    <Briefcase className="h-3 w-3" />
+                                                    Quitar Representante
+                                                </Button>
+                                            )}
                                             <Button
                                                 variant="ghost"
-                                                size="sm"
-                                                className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
-                                                onClick={() => {
-                                                    setSelectedJuridicaForApoderado(a.dni);
-                                                    setIsApoderadoSearchOpen(true);
+                                                size="icon"
+                                                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                                onClick={() => removeAdquirente(a.dni)}
+                                            >
+                                                <X className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    {apoderados[a.dni] && (
+                                        <div className="mt-2 pl-7">
+                                            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 block">
+                                                Justificación de Personería (Datos del Poder)
+                                            </Label>
+                                            <Textarea
+                                                className="min-h-[60px] text-xs resize-none"
+                                                placeholder="Ej: Escritura de Poder General Nro 123, pasada ante el escribano Juan Perez el 10/10/2023..."
+                                                value={apoderados[a.dni].justificativo}
+                                                onChange={(e) => {
+                                                    setApoderados(prev => ({
+                                                        ...prev,
+                                                        [a.dni]: {
+                                                            ...prev[a.dni],
+                                                            justificativo: e.target.value
+                                                        }
+                                                    }))
                                                 }}
-                                            >
-                                                <Briefcase className="h-3 w-3" />
-                                                + Apoderado / Representante
-                                            </Button>
-                                        )}
-                                        {a.tipo_persona === "JURIDICA" && apoderados[a.dni] && (
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-7 text-xs text-muted-foreground hover:text-destructive gap-1"
-                                                onClick={() => removeApoderado(a.dni)}
-                                            >
-                                                <Briefcase className="h-3 w-3" />
-                                                Quitar Representante
-                                            </Button>
-                                        )}
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                                            onClick={() => removeAdquirente(a.dni)}
-                                        >
-                                            <X className="h-3.5 w-3.5" />
-                                        </Button>
-                                    </div>
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -337,7 +362,10 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                             if (selectedJuridicaForApoderado) {
                                 setApoderados(prev => ({
                                     ...prev,
-                                    [selectedJuridicaForApoderado]: person
+                                    [selectedJuridicaForApoderado]: {
+                                        persona: person,
+                                        justificativo: ""
+                                    }
                                 }));
                             }
                         }}
