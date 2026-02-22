@@ -52,6 +52,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
+import CarpetaHero from "./CarpetaHero";
 
 export default function FolderWorkspace({ initialData }: { initialData: any }) {
     const [carpeta, setCarpeta] = useState(initialData);
@@ -379,7 +380,9 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
     const isBlockedBySecurity = crossCheckResult?.state === ValidationState.CRITICAL_DISCREPANCY;
 
     return (
-        <Tabs defaultValue="mesa" className="w-full">
+        <div className="space-y-6">
+        <CarpetaHero carpeta={carpeta} />
+        <Tabs defaultValue="antecedente" className="w-full">
             <div className="flex justify-between items-center mb-6">
                 <TabsList className="inline-flex h-auto flex-wrap justify-start gap-1 bg-slate-100/50 p-1 mb-2">
                     <TabsTrigger value="mesa" className="flex items-center gap-2">
@@ -1499,5 +1502,6 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                 </DialogContent>
             </Dialog>
         </Tabs >
+        </div>
     );
 }
