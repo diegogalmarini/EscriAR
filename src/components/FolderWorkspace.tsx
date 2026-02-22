@@ -3,28 +3,22 @@
 import { useState, useOptimistic, useTransition, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, Activity, Users, Home, UserPlus, Link as LinkIcon, Plus, FileSignature, ClipboardCheck, Trash2, Pencil, UserMinus, Download, Eye, Wallet, BookOpen } from "lucide-react";
+import { FileText, Activity, Users, Home, FileSignature, ClipboardCheck, Trash2, Pencil, Download, Eye, BookOpen } from "lucide-react";
 import { PersonSearch } from "./PersonSearch";
 import { PersonForm } from "./PersonForm";
 import { AssetSearch } from "./AssetSearch";
 import { DeedEditor } from "./DeedEditor";
-import { StatusStepper } from "./StatusStepper";
 import { MinutaGenerator } from "./MinutaGenerator";
 import { AMLCompliance } from "./AMLCompliance";
 import { InscriptionTracker } from "./InscriptionTracker";
-import { linkPersonToOperation, linkAssetToDeed, addOperationToDeed, deleteCarpeta, unlinkPersonFromOperation, updateRepresentacion } from "@/app/actions/carpeta";
+import { linkPersonToOperation, linkAssetToDeed, deleteCarpeta, unlinkPersonFromOperation, updateRepresentacion } from "@/app/actions/carpeta";
 import { updateEscritura, updateOperacion, updateInmueble } from "@/app/actions/escritura";
-import { ClientOutreach } from "./ClientOutreach";
 import { listStorageFiles, deleteStorageFile, getSignedUrl } from "@/app/actions/storageSync";
 import { toast } from "sonner";
-import { ComplianceTrafficLight } from "./smart/ComplianceTrafficLight";
 import { TaxBreakdownCard } from "./smart/TaxBreakdownCard";
-import { SmartDeedEditor } from "./smart/SmartDeedEditor";
 import { CrossCheckService, ValidationState } from "@/lib/agent/CrossCheckService";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -32,23 +26,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn, formatDateInstructions } from "@/lib/utils";
 import { formatCUIT, formatPersonName, isLegalEntity } from "@/lib/utils/normalization";
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import CarpetaHero from "./CarpetaHero";
@@ -777,7 +759,7 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
         </div>
 
             {/* Editing Person Modal */}
-            < Dialog open={!!editingPerson} onOpenChange={() => setEditingPerson(null)}>
+            <Dialog open={!!editingPerson} onOpenChange={() => setEditingPerson(null)}>
                 <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Editar Persona</DialogTitle>
