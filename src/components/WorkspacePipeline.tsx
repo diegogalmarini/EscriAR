@@ -1,11 +1,18 @@
 "use client";
 
-import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileSignature, ClipboardCheck, Pencil, DollarSign } from "lucide-react";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { FileSignature, ClipboardCheck, Pencil, DollarSign, Home, Users } from "lucide-react";
 import { DeedEditor } from "./DeedEditor";
 import { MinutaGenerator } from "./MinutaGenerator";
 import { AMLCompliance } from "./AMLCompliance";
@@ -21,6 +28,7 @@ interface FasePreEscrituraProps {
 interface FaseRedaccionProps {
     currentEscritura: any;
     activeDeedId: string | null;
+    carpeta: any;
 }
 
 interface FasePostEscrituraProps {
@@ -100,18 +108,82 @@ export function FasePreEscritura({ currentEscritura }: FasePreEscrituraProps) {
    Borrador Inteligente (IA) + DeedEditor manual
    ══════════════════════════════════════════════════════════ */
 
-export function FaseRedaccion({ currentEscritura, activeDeedId }: FaseRedaccionProps) {
+const MODELOS_ESCRITURA = [
+    { value: "compraventa", label: "Compraventa Completa" },
+    { value: "compraventa-hipoteca", label: "Compraventa con Hipoteca" },
+    { value: "donacion", label: "Donación" },
+    { value: "donacion-usufructo", label: "Donación con Usufructo" },
+    { value: "poder-especial", label: "Poder Especial" },
+    { value: "poder-general", label: "Poder General" },
+];
+
+export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseRedaccionProps) {
+    const [tipoActo, setTipoActo] = useState<string>("");
+
+    // Extraer inmueble principal y titulares/transmitentes
+    const inmueble = currentEscritura?.inmuebles;
+    const participantes = currentEscritura?.operaciones?.flatMap(
+        (op: any) => op.participantes_operacion || []
+    ) || [];
+    const titulares = participantes.filter((p: any) => {
+        const rol = p.rol?.toUpperCase() || "";
+        return rol.includes("VENDEDOR") || rol.includes("TRANSMITENTE") ||
+               rol.includes("CEDENTE") || rol.includes("DONANTE") || rol.includes("PODERDANTE");
+    });
+
+    const inmuebleLabel = inmueble
+        ? [inmueble.partido_id, inmueble.nro_partida ? `Partida ${inmueble.nro_partida}` : null].filter(Boolean).join(" · ")
+        : null;
+
+    const titularesLabel = titulares.length > 0
+        ? titulares.map((t: any) => t.persona?.nombre_completo || "—").join(", ")
+        : null;
+
     return (
         <div className="space-y-6">
+            {/* Mini-Contexto */}
+            <div className="rounded-lg bg-muted/30 border border-border px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+                <div className="flex items-center gap-2 min-w-0">
+                    <Home className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm text-foreground truncate">
+                        {inmuebleLabel || <span className="text-muted-foreground">Sin inmueble vinculado</span>}
+                    </span>
+                </div>
+                <div className="hidden sm:block h-4 w-px bg-border shrink-0" />
+                <div className="flex items-center gap-2 min-w-0">
+                    <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm text-foreground truncate">
+                        {titularesLabel || <span className="text-muted-foreground">Sin partes vinculadas</span>}
+                    </span>
+                </div>
+            </div>
+
             {/* Borrador Inteligente */}
             <div className="border border-border rounded-lg bg-background p-8">
-                <div className="text-center space-y-4">
+                <div className="text-center space-y-5">
                     <FileSignature className="h-10 w-10 text-muted-foreground mx-auto" />
                     <div>
                         <h3 className="text-base font-semibold text-foreground">Borrador Inteligente</h3>
                         <p className="text-sm text-muted-foreground mt-1">Genera un borrador de escritura basado en los datos extraídos</p>
                     </div>
-                    <Button size="lg" className="mt-2" disabled={!activeDeedId}>
+
+                    {/* Selector de tipo de acto */}
+                    <div className="max-w-sm mx-auto">
+                        <Select value={tipoActo} onValueChange={setTipoActo}>
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Seleccione el tipo de escritura a redactar..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {MODELOS_ESCRITURA.map((m) => (
+                                    <SelectItem key={m.value} value={m.value}>
+                                        {m.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <Button size="lg" className="mt-2" disabled={!activeDeedId || !tipoActo}>
                         <FileSignature className="h-4 w-4 mr-2" />
                         Generar Borrador con IA
                     </Button>

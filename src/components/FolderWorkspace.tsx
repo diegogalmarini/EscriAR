@@ -347,6 +347,7 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                     <FaseRedaccion
                         currentEscritura={currentEscritura}
                         activeDeedId={activeDeedId}
+                        carpeta={carpeta}
                     />
                 </TabsContent>
 

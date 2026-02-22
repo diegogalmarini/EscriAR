@@ -19,9 +19,6 @@ import {
     MapPin,
     Calendar,
     Hash,
-    ShieldAlert,
-    ShieldCheck,
-    Clock,
     Hourglass,
     Trash2,
 } from "lucide-react";
@@ -40,19 +37,6 @@ const ESTADO_CONFIG: Record<string, { label: string; dot: string }> = {
     LISTA_PARA_FIRMAR: { label: "Lista para firmar", dot: "bg-blue-500" },
     FIRMADA: { label: "En Registro", dot: "bg-violet-500" },
     INSCRIPTA: { label: "Finalizada", dot: "bg-emerald-500" },
-};
-
-// --- Mock vencimientos ---
-const MOCK_VENCIMIENTOS = [
-    { label: "Cert. de Dominio", status: "warning" as const, text: "Vence en 5 días" },
-    { label: "Cert. Catastral", status: "ok" as const, text: "Vigente" },
-    { label: "Cert. de Inhibición", status: "danger" as const, text: "Vencido" },
-];
-
-const VENCIMIENTO_ICON = {
-    ok: { icon: ShieldCheck, color: "text-muted-foreground" },
-    warning: { icon: Clock, color: "text-amber-600" },
-    danger: { icon: ShieldAlert, color: "text-red-500" },
 };
 
 // --- Helper: Generar carátula dinámica ---
@@ -223,26 +207,9 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting }: CarpetaHe
                         Vencimientos
                     </span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    {MOCK_VENCIMIENTOS.map((v) => {
-                        const cfg = VENCIMIENTO_ICON[v.status];
-                        const VIcon = cfg.icon;
-                        return (
-                            <div
-                                key={v.label}
-                                className="flex items-center gap-2.5 rounded-md border border-border bg-background px-3 py-2"
-                            >
-                                <VIcon className={`h-4 w-4 shrink-0 ${cfg.color}`} />
-                                <div className="min-w-0">
-                                    <p className="text-xs text-muted-foreground truncate">{v.label}</p>
-                                    <p className={`text-xs font-medium ${v.status === "ok" ? "text-foreground" : cfg.color}`}>
-                                        {v.text}
-                                    </p>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
+                <p className="text-xs text-muted-foreground px-1 py-2">
+                    Sin certificados cargados en Pre-Escriturario
+                </p>
             </div>
         </div>
     );
