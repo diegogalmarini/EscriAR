@@ -1,30 +1,23 @@
 "use client";
 
 import { useState, useOptimistic, useTransition, useEffect, useMemo } from "react";
-import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Activity, Users, Home, FileSignature, ClipboardCheck, Trash2, Pencil, Download, Eye, BookOpen } from "lucide-react";
+import { FileText, Activity, Download } from "lucide-react";
 import { PersonSearch } from "./PersonSearch";
 import { PersonForm } from "./PersonForm";
 import { AssetSearch } from "./AssetSearch";
-import { DeedEditor } from "./DeedEditor";
-import { MinutaGenerator } from "./MinutaGenerator";
-import { AMLCompliance } from "./AMLCompliance";
-import { InscriptionTracker } from "./InscriptionTracker";
 import { linkPersonToOperation, linkAssetToDeed, deleteCarpeta, unlinkPersonFromOperation, updateRepresentacion } from "@/app/actions/carpeta";
 import { updateEscritura, updateOperacion, updateInmueble } from "@/app/actions/escritura";
 import { listStorageFiles, deleteStorageFile, getSignedUrl } from "@/app/actions/storageSync";
 import { toast } from "sonner";
-import { TaxBreakdownCard } from "./smart/TaxBreakdownCard";
 import { CrossCheckService, ValidationState } from "@/lib/agent/CrossCheckService";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { cn, formatDateInstructions } from "@/lib/utils";
-import { formatCUIT, formatPersonName, isLegalEntity } from "@/lib/utils/normalization";
+import { cn } from "@/lib/utils";
+import { formatCUIT, formatPersonName } from "@/lib/utils/normalization";
 import {
     Dialog,
     DialogContent,
@@ -34,6 +27,8 @@ import {
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import CarpetaHero from "./CarpetaHero";
+import { WorkspaceRadiography } from "./WorkspaceRadiography";
+import { WorkspacePipeline } from "./WorkspacePipeline";
 
 export default function FolderWorkspace({ initialData }: { initialData: any }) {
     const [carpeta, setCarpeta] = useState(initialData);
@@ -44,42 +39,6 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
         console.log("🔄 FolderWorkspace: Syncing state with new initialData");
         setCarpeta(initialData);
     }, [initialData]);
-
-    const getRoleBadgeStyle = (rol?: string) => {
-        const r = rol?.toUpperCase();
-        if (r?.includes('VENDEDOR') || r?.includes('TRANSMITENTE')) return "bg-amber-100 text-amber-700 border-amber-200";
-        if (r?.includes('CEDENTE')) return "bg-orange-100 text-orange-700 border-orange-200";
-        if (r?.includes('CESIONARIO')) return "bg-emerald-100 text-emerald-700 border-emerald-200";
-        if (r?.includes('CONDOMIN')) return "bg-teal-100 text-teal-700 border-teal-200";
-        if (r?.includes('DONANTE')) return "bg-amber-100 text-amber-700 border-amber-200";
-        if (r?.includes('DONATARIO')) return "bg-emerald-100 text-emerald-700 border-emerald-200";
-        if (r?.includes('FIDUCIARIA') || r?.includes('FIDUCIANTE')) return "bg-indigo-100 text-indigo-700 border-indigo-200";
-        if (r?.includes('ACREEDOR')) return "bg-blue-100 text-blue-700 border-blue-200";
-        if (r?.includes('DEUDOR') || r?.includes('MUTUARIO')) return "bg-purple-100 text-purple-700 border-purple-200";
-        if (r?.includes('FIADOR') || r?.includes('GARANTE')) return "bg-slate-100 text-slate-700 border-slate-200";
-        if (r?.includes('CONYUGE') || r?.includes('CÓNYUGE')) return "bg-pink-100 text-pink-700 border-pink-200";
-        if (r?.includes('APODERADO') || r?.includes('REPRESENTANTE')) return "bg-slate-100 text-slate-600 border-slate-200";
-        if (r?.includes('COMPRADOR') || r?.includes('ADQUIRENTE')) return "bg-emerald-100 text-emerald-700 border-emerald-200";
-        return "bg-gray-100 text-gray-700 border-gray-200";
-    };
-
-    const getRoleLabel = (rol?: string) => {
-        const r = rol?.toUpperCase();
-        if (r?.includes('VENDEDOR') || r?.includes('TRANSMITENTE')) return 'VENDEDOR / TRANSMITENTE';
-        if (r?.includes('CEDENTE')) return 'CEDENTE';
-        if (r?.includes('CESIONARIO')) return 'CESIONARIO';
-        if (r?.includes('CONDOMIN')) return 'CONDÓMINO';
-        if (r?.includes('DONANTE')) return 'DONANTE';
-        if (r?.includes('DONATARIO')) return 'DONATARIO';
-        if (r?.includes('FIDUCIARIA') || r?.includes('FIDUCIANTE')) return 'FIDUCIARIA';
-        if (r?.includes('ACREEDOR')) return 'ACREEDOR HIPOTECARIO';
-        if (r?.includes('DEUDOR') || r?.includes('MUTUARIO')) return 'DEUDOR / MUTUARIO';
-        if (r?.includes('FIADOR') || r?.includes('GARANTE')) return 'FIADOR / GARANTE';
-        if (r?.includes('CONYUGE') || r?.includes('CÓNYUGE')) return 'CÓNYUGE ASINTIENTE';
-        if (r?.includes('APODERADO') || r?.includes('REPRESENTANTE')) return 'APODERADO';
-        if (r?.includes('COMPRADOR') || r?.includes('ADQUIRENTE')) return 'COMPRADOR / ADQUIRENTE';
-        return rol?.toUpperCase() || 'PARTE';
-    };
 
     // --- REALTIME SUBSCRIPTION ---
     useEffect(() => {
@@ -367,398 +326,37 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
 
     const isBlockedBySecurity = crossCheckResult?.state === ValidationState.CRITICAL_DISCREPANCY;
 
+
     return (
-        <div className="space-y-6">
-        <CarpetaHero carpeta={carpeta} onDelete={handleDeleteFolder} isDeleting={isDeleting} />
+        <div className="space-y-8">
+            <CarpetaHero carpeta={carpeta} onDelete={handleDeleteFolder} isDeleting={isDeleting} />
 
-        {/* Search Overlays */}
-        <PersonSearch open={isPersonSearchOpen} setOpen={setIsPersonSearchOpen} onSelect={handleLinkPerson} />
-        <AssetSearch open={isAssetSearchOpen} setOpen={setIsAssetSearchOpen} onSelect={handleLinkAsset} />
+            <PersonSearch open={isPersonSearchOpen} setOpen={setIsPersonSearchOpen} onSelect={handleLinkPerson} />
+            <AssetSearch open={isAssetSearchOpen} setOpen={setIsAssetSearchOpen} onSelect={handleLinkAsset} />
 
-        {/* === 2-COLUMN LAYOUT === */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-            {/* ══════════════════════════════════════════════════ */}
-            {/* COLUMNA IZQUIERDA — "La Radiografía" (read-only) */}
-            {/* ══════════════════════════════════════════════════ */}
-            <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-6 lg:self-start">
-
-                {/* Card: Documento Original */}
-                {currentEscritura && (
-                    <div className="border border-border rounded-lg bg-background p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Documento</h3>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                                onClick={() => setEditingDeed({ ...currentEscritura, operacion: currentEscritura.operaciones?.[0] })}>
-                                <Pencil className="h-3 w-3" />
-                            </Button>
-                        </div>
-                        <div className="space-y-2 text-sm">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Escritura Nº</p>
-                                    <p className="text-foreground font-medium">{currentEscritura.nro_protocolo || "—"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Fecha</p>
-                                    <p className="text-foreground">{currentEscritura.fecha_escritura ? new Date(currentEscritura.fecha_escritura + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' }) : "—"}</p>
-                                </div>
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-medium uppercase text-muted-foreground">Escribano</p>
-                                <p className="text-foreground">{currentEscritura.notario_interviniente || "—"}</p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Registro</p>
-                                    <p className="text-foreground">{currentEscritura.registro || "—"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Código</p>
-                                    <p className="text-foreground font-mono">{currentEscritura.operaciones?.[0]?.codigo || "—"}</p>
-                                </div>
-                            </div>
-                            {/* Action Buttons */}
-                            <div className="flex gap-2 pt-2 border-t border-border">
-                                <Button variant="outline" size="sm" className="h-7 text-xs flex-1"
-                                    onClick={async () => {
-                                        if (currentEscritura.pdf_url) {
-                                            const url = await resolveDocumentUrl(currentEscritura.pdf_url);
-                                            if (url) setViewingDocument(url);
-                                            else toast.error("Error al obtener URL");
-                                        }
-                                    }}>
-                                    <Eye className="h-3 w-3 mr-1" /> Ver
-                                </Button>
-                                <Button variant="outline" size="sm" className="h-7 text-xs flex-1"
-                                    onClick={async () => {
-                                        if (currentEscritura.pdf_url) {
-                                            const url = await resolveDocumentUrl(currentEscritura.pdf_url);
-                                            if (url) window.open(url, '_blank');
-                                        }
-                                    }}>
-                                    <Download className="h-3 w-3 mr-1" /> Descargar
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Card: Inmueble */}
-                {currentEscritura?.inmuebles && (
-                    <div className="border border-border rounded-lg bg-background p-4 space-y-3">
-                        <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                            <Home className="h-3.5 w-3.5" /> Inmueble
-                        </h3>
-                        <div className="space-y-2 text-sm">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Partido</p>
-                                    <p className="text-foreground">{currentEscritura.inmuebles.partido_id || "—"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Partida</p>
-                                    <p className="text-foreground font-mono">
-                                        {currentEscritura.inmuebles.id ? (
-                                            <Link href={`/inmuebles/${currentEscritura.inmuebles.id}`} className="text-blue-600 hover:underline">
-                                                {currentEscritura.inmuebles.nro_partida || "—"}
-                                            </Link>
-                                        ) : (currentEscritura.inmuebles.nro_partida || "—")}
-                                    </p>
-                                </div>
-                            </div>
-                            {currentEscritura.inmuebles.nomenclatura && (
-                                <div>
-                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Nomenclatura</p>
-                                    <p className="text-xs text-muted-foreground leading-snug">{currentEscritura.inmuebles.nomenclatura}</p>
-                                </div>
-                            )}
-                        </div>
-                        {/* Collapsible: Título Antecedente */}
-                        {currentEscritura.inmuebles.titulo_antecedente && (
-                            <details className="group">
-                                <summary className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1">
-                                    <BookOpen className="h-3 w-3" /> Título Antecedente
-                                </summary>
-                                <p className="mt-2 text-xs leading-relaxed text-muted-foreground font-mono whitespace-pre-wrap select-text border-l-2 border-border pl-3">
-                                    {currentEscritura.inmuebles.titulo_antecedente}
-                                </p>
-                            </details>
-                        )}
-                        {/* Collapsible: Transcripción Literal */}
-                        {currentEscritura.inmuebles.transcripcion_literal && (
-                            <details className="group">
-                                <summary className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1">
-                                    <FileText className="h-3 w-3" /> Transcripción Literal
-                                </summary>
-                                <p className="mt-2 text-xs leading-relaxed text-muted-foreground font-mono whitespace-pre-wrap select-text border-l-2 border-border pl-3">
-                                    {currentEscritura.inmuebles.transcripcion_literal}
-                                </p>
-                            </details>
-                        )}
-                    </div>
-                )}
-
-                {/* Card: Partes Intervinientes */}
-                <div className="border border-border rounded-lg bg-background p-4 space-y-2">
-                    <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                        <Users className="h-3.5 w-3.5" /> Partes
-                    </h3>
-                    <div className="space-y-1.5">
-                        {optimisticOps.flatMap((op: any) => {
-                            const participantOrder = (rol: string = '') => {
-                                const r = rol.toUpperCase();
-                                if (r.includes('COMPRADOR') || r.includes('DEUDOR') || r.includes('MUTUARIO') || r.includes('CESIONARIO') || r.includes('DONATARIO')) return 1;
-                                if (r.includes('VENDEDOR') || r.includes('ACREEDOR') || r.includes('CEDENTE') || r.includes('DONANTE') || r.includes('FIDUCIARIA') || r.includes('HIPOTECARIO')) return 2;
-                                if (r.includes('CONDOMINO') || r.includes('FIADOR') || r.includes('GARANTE')) return 3;
-                                if (r.includes('APODERADO') || r.includes('REPRESENTANTE')) return 4;
-                                return 3;
-                            };
-                            const sorted = [...(op.participantes_operacion || [])].sort(
-                                (a: any, b: any) => participantOrder(a.rol) - participantOrder(b.rol)
-                            );
-                            return sorted.map((p: any) => {
-                                const person = p.persona || p.personas;
-                                if (!person) return null;
-                                const getSpouseName = (per: any) => {
-                                    if (per.datos_conyuge?.nombre || per.datos_conyuge?.nombre_completo) return per.datos_conyuge.nombre || per.datos_conyuge.nombre_completo;
-                                    const match = per.estado_civil_detalle?.match(/con\s+([A-ZÁÉÍÓÚÑa-záéíóúñ\s]+)/i);
-                                    return match?.[1]?.trim() || null;
-                                };
-                                const spouseName = getSpouseName(person);
-                                return (
-                                    <details key={p.id} className="group border border-border rounded-md">
-                                        <summary className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted/50">
-                                            <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 h-4 font-semibold shrink-0", getRoleBadgeStyle(p.rol))}>
-                                                {getRoleLabel(p.rol)}
-                                            </Badge>
-                                            <span className="text-sm font-medium text-foreground truncate flex-1">
-                                                {isLegalEntity(person) ? person.nombre_completo?.toUpperCase() : formatPersonName(person.nombre_completo)}
-                                            </span>
-                                            <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground shrink-0"
-                                                onClick={(e) => { e.preventDefault(); setEditingPerson(person); }}>
-                                                <Pencil className="h-3 w-3" />
-                                            </Button>
-                                        </summary>
-                                        <div className="px-3 pb-3 pt-1 space-y-2 text-xs border-t border-border">
-                                            <p className="text-muted-foreground">
-                                                {isLegalEntity(person)
-                                                    ? `Persona Jurídica • Const: ${formatDateInstructions(person.fecha_nacimiento)}`
-                                                    : `${person.nacionalidad || "—"} • Nac: ${formatDateInstructions(person.fecha_nacimiento)}`}
-                                            </p>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                {!isLegalEntity(person) && (
-                                                    <div>
-                                                        <p className="text-[10px] font-medium uppercase text-muted-foreground">DNI</p>
-                                                        <p className="font-medium text-foreground">{person.dni || "—"}</p>
-                                                    </div>
-                                                )}
-                                                <div className={isLegalEntity(person) ? "col-span-2" : ""}>
-                                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">CUIT/CUIL</p>
-                                                    <p className="font-medium text-foreground">{formatCUIT(person.cuit) || "—"}</p>
-                                                </div>
-                                            </div>
-                                            {!isLegalEntity(person) && (
-                                                <>
-                                                    {person.nombres_padres && (
-                                                        <div>
-                                                            <p className="text-[10px] font-medium uppercase text-muted-foreground">Filiación</p>
-                                                            <p className="text-muted-foreground">{person.nombres_padres}</p>
-                                                        </div>
-                                                    )}
-                                                    {spouseName && (
-                                                        <div>
-                                                            <p className="text-[10px] font-medium uppercase text-muted-foreground">Cónyuge</p>
-                                                            <p className="text-foreground font-medium">{formatPersonName(spouseName)}</p>
-                                                        </div>
-                                                    )}
-                                                    <div>
-                                                        <p className="text-[10px] font-medium uppercase text-muted-foreground">Estado Civil</p>
-                                                        <p className="text-muted-foreground">{person.estado_civil_detalle || "—"}</p>
-                                                    </div>
-                                                </>
-                                            )}
-                                            {person.domicilio_real?.literal && (
-                                                <div>
-                                                    <p className="text-[10px] font-medium uppercase text-muted-foreground">Domicilio</p>
-                                                    <p className="text-muted-foreground italic">{person.domicilio_real.literal}</p>
-                                                </div>
-                                            )}
-                                            {(p.datos_representacion || p.rol?.toUpperCase().includes('APODERADO')) && (
-                                                <div className="border-t border-border pt-2 space-y-1">
-                                                    <div className="flex justify-between items-start">
-                                                        <div>
-                                                            <p className="text-[10px] font-medium uppercase text-muted-foreground">Representando a</p>
-                                                            <p className="text-foreground font-medium">{p.datos_representacion?.representa_a || "—"}</p>
-                                                        </div>
-                                                        <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground shrink-0"
-                                                            onClick={() => setEditingRepresentacion({ participanteId: p.id, ...p.datos_representacion })}>
-                                                            <Pencil className="h-3 w-3" />
-                                                        </Button>
-                                                    </div>
-                                                    {p.datos_representacion?.poder_detalle && (
-                                                        <div>
-                                                            <p className="text-[10px] font-medium uppercase text-muted-foreground">Poder</p>
-                                                            <p className="text-muted-foreground italic">{p.datos_representacion.poder_detalle}</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </details>
-                                );
-                            });
-                        })}
-                        {carpeta.escrituras?.length === 0 && (
-                            <p className="text-xs text-muted-foreground text-center py-4">Sin partes extraídas</p>
-                        )}
-                    </div>
-                </div>
-
-                {/* Card: Archivos */}
-                <div className="border border-border rounded-lg bg-background p-4 space-y-2">
-                    <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                        <FileText className="h-3.5 w-3.5" /> Archivos
-                    </h3>
-                    <div className="space-y-1.5">
-                        {storageFiles.map((file) => {
-                            const isLinked = carpeta.escrituras?.some((e: any) => e.pdf_url?.includes(file.name));
-                            return (
-                                <div key={file.id} className="flex items-center justify-between py-1.5 group">
-                                    <div className="flex items-center gap-2 overflow-hidden">
-                                        <FileText className={cn("h-3.5 w-3.5 shrink-0", isLinked ? "text-muted-foreground" : "text-amber-500")} />
-                                        <p className="text-xs truncate text-foreground">{file.name.replace(/^\d{13}_/, "")}</p>
-                                    </div>
-                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
-                                        {!isLinked && (
-                                            <Button variant="ghost" size="icon" className="h-5 w-5 text-red-500"
-                                                onClick={() => handleDeleteStorageFile(file.name)}>
-                                                <Trash2 className="h-3 w-3" />
-                                            </Button>
-                                        )}
-                                        <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground"
-                                            onClick={async () => {
-                                                const doc = carpeta.escrituras?.find((e: any) => e.pdf_url?.includes(file.name));
-                                                if (doc?.pdf_url) {
-                                                    const url = await resolveDocumentUrl(doc.pdf_url);
-                                                    if (url) setViewingDocument(url);
-                                                }
-                                            }}>
-                                            <Eye className="h-3 w-3" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        {storageFiles.length === 0 && !isLoadingStorage && (
-                            <p className="text-xs text-muted-foreground text-center py-2 italic">Sin archivos</p>
-                        )}
-                    </div>
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <WorkspaceRadiography
+                    currentEscritura={currentEscritura}
+                    optimisticOps={optimisticOps}
+                    storageFiles={storageFiles}
+                    isLoadingStorage={isLoadingStorage}
+                    carpetaEscrituras={carpeta.escrituras || []}
+                    onEditDeed={(deed) => setEditingDeed({ ...deed, operacion: deed.operaciones?.[0] })}
+                    onEditPerson={setEditingPerson}
+                    onEditRepresentacion={(data) => setEditingRepresentacion(data)}
+                    onViewDocument={setViewingDocument}
+                    onDeleteStorageFile={handleDeleteStorageFile}
+                    resolveDocumentUrl={resolveDocumentUrl}
+                />
+                <WorkspacePipeline
+                    currentEscritura={currentEscritura}
+                    activeDeedId={activeDeedId}
+                    carpetaEstado={carpeta.estado}
+                    isBlockedBySecurity={isBlockedBySecurity}
+                />
             </div>
 
-            {/* ══════════════════════════════════════════════════ */}
-            {/* COLUMNA DERECHA — "Pipeline Notarial"             */}
-            {/* ══════════════════════════════════════════════════ */}
-            <div className="lg:col-span-8 space-y-6">
 
-                {/* ─── FASE 1: Pre-Escriturario ─── */}
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fase 1</span>
-                        <Separator className="flex-1" />
-                        <span className="text-xs text-muted-foreground">Pre-Escriturario</span>
-                    </div>
-
-                    {/* Certificados */}
-                    <div className="border border-border rounded-lg bg-background p-4 space-y-3">
-                        <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                            <ClipboardCheck className="h-3.5 w-3.5" /> Certificados
-                        </h3>
-                        <div className="space-y-2">
-                            {[
-                                { name: "Dominio e Inhibición", key: "dominio" },
-                                { name: "Catastral", key: "catastral" },
-                                { name: "Anotaciones Personales", key: "anotaciones" },
-                                { name: "Libre Deuda Municipal", key: "municipal" },
-                            ].map((cert) => (
-                                <div key={cert.key} className="flex items-center gap-3 py-1.5 border-b border-border last:border-0">
-                                    <span className="text-sm text-foreground flex-1">{cert.name}</span>
-                                    <Input type="date" className="h-7 w-36 text-xs" />
-                                    <Badge variant="outline" className="text-[10px] px-2 py-0.5 text-muted-foreground gap-1">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-                                        Pendiente
-                                    </Badge>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Presupuesto */}
-                    <TaxBreakdownCard taxData={currentEscritura?.analysis_metadata?.tax_calculation} />
-                </div>
-
-                {/* ─── FASE 2: Redacción ─── */}
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fase 2</span>
-                        <Separator className="flex-1" />
-                        <span className="text-xs text-muted-foreground">Redacción</span>
-                    </div>
-
-                    {/* Borrador Inteligente */}
-                    <div className="border border-border rounded-lg bg-background p-6">
-                        <div className="text-center space-y-3">
-                            <FileSignature className="h-8 w-8 text-muted-foreground mx-auto" />
-                            <div>
-                                <h3 className="text-sm font-medium text-foreground">Borrador Inteligente</h3>
-                                <p className="text-xs text-muted-foreground mt-1">Genera un borrador de escritura basado en los datos extraídos</p>
-                            </div>
-                            <Button className="mt-2" disabled={!activeDeedId}>
-                                <FileSignature className="h-4 w-4 mr-2" />
-                                Generar Borrador con IA
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Redacción Manual (colapsable) */}
-                    {activeDeedId && (
-                        <details>
-                            <summary className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1">
-                                <Pencil className="h-3 w-3" /> Redacción Manual
-                            </summary>
-                            <div className="mt-3 h-[500px] overflow-hidden rounded-lg border border-border">
-                                <DeedEditor
-                                    escrituraId={activeDeedId}
-                                    initialContent={currentEscritura?.contenido_borrador}
-                                    dataSummary={currentEscritura}
-                                />
-                            </div>
-                        </details>
-                    )}
-                </div>
-
-                {/* ─── FASE 3: Post-Escriturario ─── */}
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fase 3</span>
-                        <Separator className="flex-1" />
-                        <span className="text-xs text-muted-foreground">Post-Escriturario</span>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <MinutaGenerator data={currentEscritura} isBlocked={isBlockedBySecurity} />
-                        <AMLCompliance escrituraId={activeDeedId!} />
-                    </div>
-
-                    {(carpeta.estado === 'FIRMADA' || carpeta.estado === 'INSCRIPTA') && (
-                        <InscriptionTracker data={currentEscritura} />
-                    )}
-                </div>
-            </div>
-        </div>
-
-            {/* Editing Person Modal */}
             <Dialog open={!!editingPerson} onOpenChange={() => setEditingPerson(null)}>
                 <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
