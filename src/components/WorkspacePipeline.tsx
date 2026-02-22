@@ -12,7 +12,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { FileSignature, ClipboardCheck, Pencil, DollarSign, Home, Users } from "lucide-react";
+import {
+    FileSignature, ClipboardCheck, Pencil, DollarSign, Home, Users,
+    Search, UserPlus, Send, Briefcase, ArrowRight, X,
+} from "lucide-react";
 import { DeedEditor } from "./DeedEditor";
 import { MinutaGenerator } from "./MinutaGenerator";
 import { AMLCompliance } from "./AMLCompliance";
@@ -105,7 +108,7 @@ export function FasePreEscritura({ currentEscritura }: FasePreEscrituraProps) {
 
 /* ══════════════════════════════════════════════════════════
    FASE 2 — Redacción
-   Borrador Inteligente (IA) + DeedEditor manual
+   Selector de acto + Constructor de Partes + Borrador IA
    ══════════════════════════════════════════════════════════ */
 
 const MODELOS_ESCRITURA = [
@@ -117,10 +120,18 @@ const MODELOS_ESCRITURA = [
     { value: "poder-general", label: "Poder General" },
 ];
 
+interface AdquirenteMock {
+    id: string;
+    nombre_completo: string;
+    dni?: string;
+    tipo_persona?: string;
+}
+
 export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseRedaccionProps) {
     const [tipoActo, setTipoActo] = useState<string>("");
+    const [adquirentes, setAdquirentes] = useState<AdquirenteMock[]>([]);
 
-    // Extraer inmueble principal y titulares/transmitentes
+    // Extraer inmueble principal y titulares/transmitentes del antecedente
     const inmueble = currentEscritura?.inmuebles;
     const participantes = currentEscritura?.operaciones?.flatMap(
         (op: any) => op.participantes_operacion || []
@@ -135,57 +146,209 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
         ? [inmueble.partido_id, inmueble.nro_partida ? `Partida ${inmueble.nro_partida}` : null].filter(Boolean).join(" · ")
         : null;
 
-    const titularesLabel = titulares.length > 0
-        ? titulares.map((t: any) => t.persona?.nombre_completo || "—").join(", ")
-        : null;
+    const removeAdquirente = (id: string) => {
+        setAdquirentes((prev) => prev.filter((a) => a.id !== id));
+    };
+
+    const canGenerate = !!tipoActo && !!activeDeedId && adquirentes.length > 0;
 
     return (
         <div className="space-y-6">
-            {/* Mini-Contexto */}
-            <div className="rounded-lg bg-muted/30 border border-border px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-                <div className="flex items-center gap-2 min-w-0">
-                    <Home className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <span className="text-sm text-foreground truncate">
-                        {inmuebleLabel || <span className="text-muted-foreground">Sin inmueble vinculado</span>}
-                    </span>
+            {/* Mini-Contexto: Inmueble */}
+            <div className="rounded-lg bg-muted/30 border border-border px-5 py-3 flex items-center gap-2">
+                <Home className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-sm text-foreground truncate">
+                    {inmuebleLabel || <span className="text-muted-foreground">Sin inmueble vinculado</span>}
+                </span>
+            </div>
+
+            {/* Selector de tipo de acto */}
+            <div className="border border-border rounded-lg bg-background p-5 space-y-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                    Tipo de Escritura
+                </h3>
+                <Select value={tipoActo} onValueChange={setTipoActo}>
+                    <SelectTrigger className="w-full max-w-md">
+                        <SelectValue placeholder="Seleccione el tipo de escritura a redactar..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {MODELOS_ESCRITURA.map((m) => (
+                            <SelectItem key={m.value} value={m.value}>
+                                {m.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+
+            {/* ── Configuración de Partes ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Tarjeta Izquierda — Parte Transmitente */}
+                <div className="border border-border rounded-lg bg-background p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                            Parte Transmitente
+                        </h3>
+                        <Badge variant="outline" className="text-[10px] px-2 py-0.5 text-muted-foreground">
+                            Origen: Antecedente
+                        </Badge>
+                    </div>
+
+                    {titulares.length > 0 ? (
+                        <div className="space-y-2">
+                            {titulares.map((t: any, idx: number) => {
+                                const persona = t.persona || t.personas;
+                                return (
+                                    <div key={persona?.id || idx} className="flex items-center gap-3 rounded-md border border-border bg-muted/20 px-3 py-2.5">
+                                        <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-medium text-foreground truncate">
+                                                {persona?.nombre_completo || "—"}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {persona?.dni ? `DNI ${persona.dni}` : persona?.cuit ? `CUIT ${persona.cuit}` : "Sin documento"}
+                                                {" · "}
+                                                <span className="font-medium">{t.rol}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-muted-foreground py-4 text-center">
+                            Sin titulares en el antecedente
+                        </p>
+                    )}
                 </div>
-                <div className="hidden sm:block h-4 w-px bg-border shrink-0" />
-                <div className="flex items-center gap-2 min-w-0">
-                    <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <span className="text-sm text-foreground truncate">
-                        {titularesLabel || <span className="text-muted-foreground">Sin partes vinculadas</span>}
-                    </span>
+
+                {/* Tarjeta Derecha — Parte Adquirente */}
+                <div className="border border-border rounded-lg bg-background p-5 space-y-4">
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                        Parte Adquirente
+                    </h3>
+
+                    {/* Adquirentes agregados */}
+                    {adquirentes.length > 0 && (
+                        <div className="space-y-2">
+                            {adquirentes.map((a) => (
+                                <div key={a.id} className="flex items-center gap-3 rounded-md border border-border bg-muted/20 px-3 py-2.5">
+                                    <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-medium text-foreground truncate">{a.nombre_completo}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {a.dni ? `DNI ${a.dni}` : "Sin documento"}
+                                            {a.tipo_persona === "JURIDICA" && " · Persona Jurídica"}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                        {a.tipo_persona === "JURIDICA" && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
+                                            >
+                                                <Briefcase className="h-3 w-3" />
+                                                + Apoderado
+                                            </Button>
+                                        )}
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                            onClick={() => removeAdquirente(a.id)}
+                                        >
+                                            <X className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                            {/* Botón apoderado para personas físicas ya agregadas */}
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-full h-8 text-xs text-muted-foreground hover:text-foreground gap-1.5"
+                            >
+                                <Briefcase className="h-3 w-3" />
+                                + Agregar Apoderado / Representante Legal
+                            </Button>
+                        </div>
+                    )}
+
+                    {/* Zona vacía / Botones de acción */}
+                    {adquirentes.length === 0 && (
+                        <div className="border-2 border-dashed border-border rounded-lg py-6 px-4 text-center space-y-3">
+                            <Users className="h-8 w-8 text-muted-foreground/50 mx-auto" />
+                            <p className="text-sm text-muted-foreground">
+                                Agregue al comprador o adquirente
+                            </p>
+                        </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 gap-1.5"
+                            onClick={() => {
+                                // TODO: abrir PersonSearch real
+                                setAdquirentes((prev) => [...prev, {
+                                    id: `mock_${Date.now()}`,
+                                    nombre_completo: "Nuevo Comprador (pendiente)",
+                                    tipo_persona: "FISICA",
+                                }]);
+                            }}
+                        >
+                            <Search className="h-3.5 w-3.5" />
+                            Buscar Cliente
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 gap-1.5"
+                            onClick={() => {
+                                // TODO: abrir PersonForm modal
+                                setAdquirentes((prev) => [...prev, {
+                                    id: `new_${Date.now()}`,
+                                    nombre_completo: "Nuevo Cliente (por cargar)",
+                                    tipo_persona: "FISICA",
+                                }]);
+                            }}
+                        >
+                            <UserPlus className="h-3.5 w-3.5" />
+                            Nuevo Cliente
+                        </Button>
+                    </div>
+
+                    {/* Outreach: solicitar datos al cliente */}
+                    <Button
+                        variant="outline"
+                        className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
+                    >
+                        <Send className="h-4 w-4" />
+                        Solicitar carga de datos al cliente
+                    </Button>
                 </div>
             </div>
 
-            {/* Borrador Inteligente */}
-            <div className="border border-border rounded-lg bg-background p-8">
-                <div className="text-center space-y-5">
-                    <FileSignature className="h-10 w-10 text-muted-foreground mx-auto" />
-                    <div>
-                        <h3 className="text-base font-semibold text-foreground">Borrador Inteligente</h3>
-                        <p className="text-sm text-muted-foreground mt-1">Genera un borrador de escritura basado en los datos extraídos</p>
+            {/* ── Generación IA ── */}
+            <div className="border border-border rounded-lg bg-background p-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <FileSignature className="h-8 w-8 text-muted-foreground shrink-0" />
+                        <div>
+                            <h3 className="text-base font-semibold text-foreground">Borrador Inteligente</h3>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                {!tipoActo && "Seleccione un tipo de escritura"}
+                                {tipoActo && adquirentes.length === 0 && "Agregue al menos un adquirente"}
+                                {tipoActo && adquirentes.length > 0 && "Listo para generar"}
+                            </p>
+                        </div>
                     </div>
-
-                    {/* Selector de tipo de acto */}
-                    <div className="max-w-sm mx-auto">
-                        <Select value={tipoActo} onValueChange={setTipoActo}>
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Seleccione el tipo de escritura a redactar..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {MODELOS_ESCRITURA.map((m) => (
-                                    <SelectItem key={m.value} value={m.value}>
-                                        {m.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <Button size="lg" className="mt-2" disabled={!activeDeedId || !tipoActo}>
+                    <Button size="lg" disabled={!canGenerate}>
                         <FileSignature className="h-4 w-4 mr-2" />
                         Generar Borrador con IA
+                        <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                 </div>
             </div>

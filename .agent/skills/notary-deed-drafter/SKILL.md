@@ -14,12 +14,22 @@ Utiliza esta habilidad cuando el usuario solicite "Redactar", "Generar Borrador"
 
 ## Workflow Logic
 
-### 1. Selección de Plantilla Maestra
-Basado en el input `acto_codigo` (del Catálogo de Actos), cargar la estructura base.
-* *Ejemplo:* Si es 'VENTA', carga: `Encabezado -> Comparecencia -> Intervención -> Objeto -> Precio -> Posesión -> Constancias -> Cierre`.
+### 1. Lectura del Modelo de Acto (Plantilla)
+Antes de redactar la escritura, DEBES siempre buscar el archivo base correspondiente al tipo de acto en el directorio `.agent/resources/modelos_actos/`. 
+Las plantillas pueden estar en formato Markdown (`.md`) o estructuradas en Word (`.docx`).
 
-### 2. Lógica Condicional (Conditional Clauses)
-El redactor debe inyectar cláusulas específicas si se cumplen ciertas condiciones en los datos:
+**Si el modelo es `.docx` (Mantenimiento de Formato Estricto):**
+No intentes convertir el `.docx` a `.md` para procesarlo, ya que esto destruiría el formato original (interlineado, tabulaciones, negritas) exigido por el escribano.
+En su lugar, la asamblea del documento debe realizarse mediante **Motor de Plantillas DOCX**.
+Los archivos DOCX deben contener etiquetas reconocibles (ej. `{{vendedor_nombre}}`, `{{precio_letras}}`).
+Tú (el agente) te encargarás de:
+1. Extraer o generar los datos completos (JSON).
+2. Generar el script o llamada a librería (ej. `docxtemplater` en Node.js o `docxtpl` en Python) que tomará la plantilla `.docx` original y le inyectará el JSON de datos generando un `.docx` final perfecto.
+
+### 2. Inyección de Variables y Lógica Condicional
+Dependiendo del motor utilizado, la lógica condicional se debe estructurar:
+- En `.md`: Resolución condicional en base a reglas de ensamblaje (texto dinámico).
+- En `.docx`: Las etiquetas del documento soportan condicionales (ej. `{% if moneda == 'USD' %} ... {% endif %}` en Jinja2/docxtpl) o tú construirás el bloque de texto completo y lo inyectarás en una sola variable `{{clausula_precio}}`.
 * **Condición:** `precio_moneda == 'USD'`
     * **Acción:** Inyectar cláusula de "Tipo de Cambio / Operación de Cambio" y "Renuncia a invocar imprevisión".
 * **Condición:** `vendedor.estado_civil == 'CASADO'` AND `inmueble.ganancial == true`
