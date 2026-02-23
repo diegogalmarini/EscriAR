@@ -80,6 +80,23 @@ export async function linkPersonToOperation(operacionId: string, personaId: stri
     }
 }
 
+export async function removePersonFromOperation(operacionId: string, personaId: string) {
+    try {
+        const supabase = await createClient();
+        const { error } = await supabase
+            .from('participantes_operacion')
+            .delete()
+            .eq('operacion_id', operacionId)
+            .eq('persona_id', personaId);
+
+        if (error) throw error;
+        revalidatePath('/carpeta');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
 export async function updateRepresentacion(
     participanteId: string,
     datos: { representa_a?: string; caracter?: string; poder_detalle?: string }

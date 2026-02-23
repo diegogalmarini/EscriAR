@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,7 @@ import { TaxBreakdownCard } from "./smart/TaxBreakdownCard";
 import { PersonSearch } from "./PersonSearch";
 import { CertificadosPanel } from "./CertificadosPanel";
 import { supabase } from "@/lib/supabaseClient";
+import { linkPersonToOperation, removePersonFromOperation } from "@/app/actions/carpeta";
 import { toast } from "sonner";
 
 import { EstudioDominioPanel } from "./EstudioDominioPanel";
@@ -151,7 +152,6 @@ const MODELOS_ESCRITURA = [
 
 export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseRedaccionProps) {
     const [tipoActo, setTipoActo] = useState<string>("");
-    const [adquirentes, setAdquirentes] = useState<any[]>([]);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
 
     // Estado para gestionar los apoderados mapeados por DNI del adquirente (persona jurídica)
@@ -173,30 +173,67 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
     const [isFichaPoderOpen, setIsFichaPoderOpen] = useState(false);
     const [selectedForFichaPoder, setSelectedForFichaPoder] = useState<string | null>(null);
 
-    // Extraer inmueble principal y titulares/transmitentes del antecedente
+    /* ── Extraer inmueble principal ── */
     const inmueble = currentEscritura?.inmuebles;
-    const participantes = currentEscritura?.operaciones?.flatMap(
+
+    /* ── Extraer operacionId principal ── */
+    const operacionId = currentEscritura?.operaciones?.[0]?.id;
+
+    /* ── Adquirentes: derivar de BD (persistidos) + estado local para carga ── */
+    const allParticipants = currentEscritura?.operaciones?.flatMap(
         (op: any) => op.participantes_operacion || []
     ) || [];
-    const titulares = participantes.filter((p: any) => {
+
+    // Transmitentes: roles del antecedente (COMPRADOR, DONATARIO, TITULAR, etc.)
+    const titulares = allParticipants.filter((p: any) => {
         const rol = p.rol?.toUpperCase() || "";
-        return rol.includes("COMPRADOR") || rol.includes("ADQUIRENTE") ||
-            rol.includes("CESIONARIO") || rol.includes("DONATARIO") ||
-            rol.includes("TITULAR");
+        return rol.includes("COMPRADOR") || rol.includes("CESIONARIO") ||
+            rol.includes("DONATARIO") || rol.includes("TITULAR");
     });
+
+    // Adquirentes: rol "ADQUIRENTE" (agregados manualmente desde Mesa de Trabajo)
+    const adquirentesFromDB = allParticipants
+        .filter((p: any) => p.rol?.toUpperCase() === 'ADQUIRENTE')
+        .map((p: any) => {
+            const persona = p.persona || p.personas;
+            return persona ? { ...persona, _participanteId: p.id } : null;
+        })
+        .filter(Boolean);
+
+    // Estado local optimista: muestra cambios antes de recargar
+    const [optimisticAdds, setOptimisticAdds] = useState<any[]>([]);
+    const [optimisticRemoves, setOptimisticRemoves] = useState<string[]>([]);
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Combinar: DB data + optimistic adds - optimistic removes
+    const adquirentes = [
+        ...adquirentesFromDB.filter((a: any) => !optimisticRemoves.includes(a.dni)),
+        ...optimisticAdds.filter((a: any) => !adquirentesFromDB.some((d: any) => d.dni === a.dni))
+    ];
 
     const inmuebleLabel = inmueble
         ? [inmueble.partido_id, inmueble.nro_partida ? `Partida ${inmueble.nro_partida}` : null].filter(Boolean).join(" · ")
         : null;
 
-    const removeAdquirente = (dni: string) => {
-        setAdquirentes((prev) => prev.filter((a) => a.dni !== dni));
-        // Si borramos un adquirente, también limpiamos su apoderado
-        setApoderados((prev) => {
+    const removeAdquirente = async (dni: string) => {
+        // Optimistic remove
+        setOptimisticRemoves(prev => [...prev, dni]);
+        setApoderados(prev => {
             const newApoderados = { ...prev };
             delete newApoderados[dni];
             return newApoderados;
         });
+
+        // Persist to DB
+        if (operacionId) {
+            const result = await removePersonFromOperation(operacionId, dni);
+            if (!result.success) {
+                toast.error('Error al quitar participante');
+                setOptimisticRemoves(prev => prev.filter(d => d !== dni));
+            } else {
+                window.location.reload();
+            }
+        }
     };
 
     const removeApoderado = (adquirenteDni: string) => {
@@ -478,9 +515,24 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                         <PersonSearch
                             open={isSearchOpen}
                             setOpen={setIsSearchOpen}
-                            onSelect={(person) => {
-                                if (!adquirentes.find(a => a.dni === person.dni)) {
-                                    setAdquirentes(prev => [...prev, person]);
+                            onSelect={async (person: any) => {
+                                if (adquirentes.find((a: any) => a.dni === person.dni)) return;
+                                // Optimistic add
+                                setOptimisticAdds(prev => [...prev, person]);
+                                // Persist to DB
+                                if (operacionId) {
+                                    setIsSaving(true);
+                                    const result = await linkPersonToOperation(operacionId, person.dni, 'ADQUIRENTE');
+                                    setIsSaving(false);
+                                    if (!result.success) {
+                                        toast.error('Error al agregar participante: ' + result.error);
+                                        setOptimisticAdds(prev => prev.filter((a: any) => a.dni !== person.dni));
+                                    } else {
+                                        toast.success(`${person.nombre_completo} agregado como adquirente`);
+                                        window.location.reload();
+                                    }
+                                } else {
+                                    toast.error('No hay operación disponible para vincular');
                                 }
                             }}
                         />
