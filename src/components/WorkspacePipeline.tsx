@@ -151,7 +151,13 @@ const MODELOS_ESCRITURA = [
 ];
 
 export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseRedaccionProps) {
-    const [tipoActo, setTipoActo] = useState<string>("");
+    // Inicializar tipoActo desde BD si existe
+    const existingTipoActo = currentEscritura?.operaciones?.[0]?.tipo_acto || "";
+    const matchedValue = MODELOS_ESCRITURA.find(m =>
+        existingTipoActo.toUpperCase().includes(m.label.toUpperCase().replace('Ó', 'O')) ||
+        m.value === existingTipoActo
+    )?.value || existingTipoActo;
+    const [tipoActo, setTipoActo] = useState<string>(matchedValue);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
 
     // Estado para gestionar los apoderados mapeados por DNI del adquirente (persona jurídica)
@@ -332,7 +338,15 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                     <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                         Tipo de Acto
                     </h3>
-                    <Select value={tipoActo} onValueChange={setTipoActo}>
+                    <Select value={tipoActo} onValueChange={async (val) => {
+                        setTipoActo(val);
+                        // Persistir en BD
+                        const opId = currentEscritura?.operaciones?.[0]?.id;
+                        if (opId) {
+                            const label = MODELOS_ESCRITURA.find(m => m.value === val)?.label || val;
+                            await supabase.from('operaciones').update({ tipo_acto: label }).eq('id', opId);
+                        }
+                    }}>
                         <SelectTrigger className="w-full max-w-md">
                             <SelectValue placeholder="Seleccione el tipo de acto a redactar..." />
                         </SelectTrigger>
