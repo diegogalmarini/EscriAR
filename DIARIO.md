@@ -786,8 +786,27 @@ Pipeline dual (frontend sync + worker async Railway) 100% funcional y estabiliza
 
 ## 17. Changelog
 
-### 2026-02-22 (Claude) — Sesión 5: Rollback a Tabs — Separación por roles
+### 2026-02-23 (Antigravity) — Sesión 1: Ficha de Poderes y Estabilización Visual
 
+#### Módulo de Poderes (Retrocompatibilidad e UI)
+- Migración ejecutada para crear la tabla `poderes` y almacenar relaciones estructuradas entre Otorgante y Apoderado.
+- Creación de modal `FichaPoderDialog` para ingesta de datos de poderes (Nro Escritura, Registro, Archivo adjunto).
+- Unificación: `getClientWithRelations` ahora fusiona poderes de la nueva tabla con los poderes *históricos* (extraídos del JSONB `datos_representacion` en `participantes_operacion`).
+- Vista en Ficha del Cliente (`ClientPoderesList`) incluye un badge de "Histórico" para los heredados de operaciones previas.
+
+#### Parser RegEx para Poderes Históricos
+- Problema: Los poderes extraídos de operaciones previas tenían los metadatos (fecha, escribano, registro, número) agrupados como un gran párrafo en prosa.
+- Solución: Se agregó `extractPoderData` (regex parser) en `clientRelations.ts` para extraer estas variables limpiamente sin requerir llamadas costosas a IA, rellenando los campos "N/A" automáticamente en la interfaz.
+
+#### Corrección del Bucle Infinito en Ingesta
+- Problema: El cartel "Procesando operación..." de `CarpetaHero` colapsaba el frontend eternamente si el webhook fallaba en actualizar `ingesta_estado` a completado, bloqueando el acceso a los datos.
+- Solución: La UI ahora ignora agresivamente el `"PROCESANDO"` si detecta que la base de datos ya contiene un `tipo_acto` válido para esa operación, lo que indica que la extracción fue sustancialmente exitosa. Esta lógica también se aplicó a `CarpetasTable`.
+
+#### Arquitectura de IA de Negocio (Decisión: Oráculo vs Agente)
+- Se acordó mantener los manuales legales (leyes, códigos, tablas RPI/ARBA) guardados en una instancia externa de NotebookLM.
+- Esta instancia actuará como "Oráculo Legal" manejado por el usuario Escribano, cuyas directivas destiladas se pasarán luego al Agente de Código para crear las directivas de extracción o *Skills*, para evitar saturar el contexto semántico del Agente Programador.
+
+### 2026-02-22 (Claude) — Sesión 5: Rollback a Tabs — Separación por roles
 #### Rollback de 2 columnas → 4 pestañas (Tabs Shadcn)
 - Eliminado layout `grid grid-cols-1 lg:grid-cols-12` de 2 columnas permanentes
 - Restaurado sistema `<Tabs>` con 4 pestañas por decisión del Product Owner (carga cognitiva)
@@ -968,4 +987,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-02-22 (sesión 5) — Claude — Rollback a Tabs, separación por roles
+> **Última actualización**: 2026-02-23 (Sesión 1) — Antigravity — Ficha de Poderes, Estabilización Frontend y Estrategia de IA
