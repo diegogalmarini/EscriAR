@@ -56,7 +56,21 @@ export async function getClientWithRelations(dni: string) {
 
         console.log("[DEBUG] Carpetas:", carpetasData);
 
-        // 6. Build the relationships
+        // 6. Get Poderes
+        const { data: poderesOtorgadosData } = await supabase
+            .from("poderes")
+            .select("*, apoderado:personas!poderes_apoderado_dni_fkey(*)")
+            .eq("otorgante_dni", dni);
+
+        const { data: poderesActivosData } = await supabase
+            .from("poderes")
+            .select("*, otorgante:personas!poderes_otorgante_dni_fkey(*)")
+            .eq("apoderado_dni", dni);
+
+        console.log("[DEBUG] Poderes Otorgados:", poderesOtorgadosData);
+        console.log("[DEBUG] Poderes Activos:", poderesActivosData);
+
+        // 7. Build the relationships
         const operaciones = participaciones?.map(part => {
             const op = operacionesData?.find(o => o.id === part.operacion_id);
             const esc = escriturasData?.find(e => e.id === op?.escritura_id);
@@ -90,13 +104,18 @@ export async function getClientWithRelations(dni: string) {
             tipo: e.tipo // This might still be null, but let's keep it for now
         })) || [];
 
+        const poderesOtorgados = poderesOtorgadosData || [];
+        const poderesActivos = poderesActivosData || [];
+
         return {
             success: true,
             data: {
                 persona,
                 operaciones,
                 escrituras,
-                carpetas
+                carpetas,
+                poderesOtorgados,
+                poderesActivos
             }
         };
     } catch (error: any) {
