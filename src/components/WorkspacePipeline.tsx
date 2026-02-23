@@ -29,6 +29,7 @@ import { MinutaGenerator } from "./MinutaGenerator";
 import { AMLCompliance } from "./AMLCompliance";
 import { InscriptionTracker } from "./InscriptionTracker";
 import { TaxBreakdownCard } from "./smart/TaxBreakdownCard";
+import { LiquidacionPanel } from "./LiquidacionPanel";
 import { PersonSearch } from "./PersonSearch";
 import { CertificadosPanel } from "./CertificadosPanel";
 import { supabase } from "@/lib/supabaseClient";
@@ -91,6 +92,10 @@ export function FasePreEscritura({ currentEscritura, carpetaId, carpeta }: FaseP
 
     const uniqueDnis: string[] = Array.from(new Set(personasDni));
 
+    // Extraer datos para liquidación
+    const tipoActo = currentEscritura?.operaciones?.[0]?.tipo_acto || "";
+    const valuacionFiscal = currentEscritura?.inmuebles?.valuacion_fiscal;
+
     return (
         <div className="space-y-6">
             {/* Certificados y Estudio de Dominio (Hitos 1.1 y 1.2) */}
@@ -103,34 +108,12 @@ export function FasePreEscritura({ currentEscritura, carpetaId, carpeta }: FaseP
                 </div>
             </div>
 
-            {/* Presupuesto Impositivo */}
-            <TaxBreakdownCard taxData={currentEscritura?.analysis_metadata?.tax_calculation} />
-
-            {/* Liquidación y Honorarios */}
-            <div className="border border-border rounded-lg bg-background p-6 space-y-4">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" /> Liquidación y Honorarios
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="precio_real" className="text-sm">Precio Real de la Operación</Label>
-                        <Input
-                            id="precio_real"
-                            type="number"
-                            placeholder="Ej: 50000000"
-                            className="h-9"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="honorarios" className="text-sm">Honorarios del Escribano</Label>
-                        <Input
-                            id="honorarios"
-                            type="number"
-                            placeholder="Ej: 1000000"
-                            className="h-9"
-                        />
-                    </div>
-                </div>
+            {/* Liquidación Impositiva y Honorarios (Hito 1.5) */}
+            <div className="border border-border rounded-lg bg-background p-6">
+                <LiquidacionPanel
+                    tipoActo={tipoActo}
+                    valuacionFiscalInicial={valuacionFiscal}
+                />
             </div>
         </div>
     );
