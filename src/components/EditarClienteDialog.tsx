@@ -27,11 +27,17 @@ interface Persona {
     estado_civil_detalle?: string;
     nombres_padres?: string;
     datos_conyuge?: { nombre?: string; nombre_completo?: string };
-    domicilio_real?: { literal?: string };
+    domicilio_real?: { literal?: string } | string;
     contacto?: {
         email?: string;
         telefono?: string;
     };
+    profesion?: string;
+    regimen_patrimonial?: string;
+    nro_documento_conyugal?: string;
+    tipo_persona?: string;
+    cuit_tipo?: string;
+    cuit_is_formal?: boolean;
 }
 
 interface EditarClienteDialogProps {

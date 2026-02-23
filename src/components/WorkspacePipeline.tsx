@@ -35,6 +35,22 @@ import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 
 import { EstudioDominioPanel } from "./EstudioDominioPanel";
+import { EditarClienteDialog } from "./EditarClienteDialog";
+
+/* ── Helper: check if persona has all deed-essential fields ── */
+function fichaEscrituraIncompleta(p: any): string[] {
+    if (!p) return ['datos'];
+    const faltantes: string[] = [];
+    if (!p.dni || p.dni.startsWith('SIN-DNI-')) faltantes.push('DNI');
+    if (!p.cuit) faltantes.push('CUIT');
+    if (!p.profesion) faltantes.push('profesión');
+    if (!p.nacionalidad) faltantes.push('nacionalidad');
+    if (!p.fecha_nacimiento) faltantes.push('fecha nac.');
+    if (!p.estado_civil_detalle) faltantes.push('estado civil');
+    if (!p.domicilio_real?.literal && typeof p.domicilio_real !== 'string') faltantes.push('domicilio');
+    if (!p.nombres_padres) faltantes.push('filiación');
+    return faltantes;
+}
 
 /* ── Shared types ── */
 
@@ -312,7 +328,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                 {titulares.map((t: any, idx: number) => {
                                     const persona = t.persona || t.personas;
                                     return (
-                                        <div key={persona?.id || idx} className="flex items-center gap-3 rounded-md border border-border bg-muted/20 px-3 py-2.5">
+                                        <div key={persona?.id || idx} className="group flex items-center gap-3 rounded-md border border-border bg-muted/20 px-3 py-2.5 hover:bg-muted/40 transition-colors">
                                             <Users className="h-4 w-4 text-muted-foreground shrink-0" />
                                             <div className="min-w-0 flex-1">
                                                 <p className="text-sm font-medium text-foreground truncate">
@@ -324,10 +340,18 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                                     {" · "}
                                                     <span className="font-medium">{t.rol}</span>
                                                 </p>
-                                                {(!persona?.profesion || !persona?.cuit || !persona?.fecha_nacimiento) && (
-                                                    <p className="text-[10px] text-amber-600 mt-0.5">⚠ Ficha incompleta</p>
-                                                )}
+                                                {(() => {
+                                                    const faltantes = fichaEscrituraIncompleta(persona);
+                                                    return faltantes.length > 0 ? (
+                                                        <p className="text-[10px] text-amber-600 mt-0.5">⚠ Faltan: {faltantes.join(', ')}</p>
+                                                    ) : null;
+                                                })()}
                                             </div>
+                                            {persona && (
+                                                <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <EditarClienteDialog persona={persona} />
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })}
@@ -360,9 +384,12 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                                     {a.tipo_persona === "JURIDICA" && " · Persona Jurídica"}
                                                     {apoderados[a.dni] && ` · Rep. por: ${apoderados[a.dni].persona.nombre_completo}`}
                                                 </p>
-                                                {a.tipo_persona !== "JURIDICA" && (!a.profesion || !a.cuit || !a.fecha_nacimiento) && (
-                                                    <p className="text-[10px] text-amber-600 mt-0.5">⚠ Ficha incompleta</p>
-                                                )}
+                                                {a.tipo_persona !== "JURIDICA" && (() => {
+                                                    const faltantes = fichaEscrituraIncompleta(a);
+                                                    return faltantes.length > 0 ? (
+                                                        <p className="text-[10px] text-amber-600 mt-0.5">⚠ Faltan: {faltantes.join(', ')}</p>
+                                                    ) : null;
+                                                })()}
                                             </div>
                                             <div className="flex items-center gap-1 shrink-0">
                                                 {a.tipo_persona === "JURIDICA" && !apoderados[a.dni] && (
@@ -390,6 +417,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                                         Quitar Representante
                                                     </Button>
                                                 )}
+                                                <EditarClienteDialog persona={a} />
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
