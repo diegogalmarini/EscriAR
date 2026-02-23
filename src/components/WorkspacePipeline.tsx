@@ -30,6 +30,7 @@ import { AMLCompliance } from "./AMLCompliance";
 import { InscriptionTracker } from "./InscriptionTracker";
 import { TaxBreakdownCard } from "./smart/TaxBreakdownCard";
 import { PersonSearch } from "./PersonSearch";
+import { CertificadosPanel } from "./CertificadosPanel";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 
@@ -37,6 +38,7 @@ import { toast } from "sonner";
 
 interface FasePreEscrituraProps {
     currentEscritura: any;
+    carpetaId: string;
 }
 
 interface FaseRedaccionProps {
@@ -57,31 +59,12 @@ interface FasePostEscrituraProps {
    Certificados + TaxBreakdown + Liquidación y Honorarios
    ══════════════════════════════════════════════════════════ */
 
-export function FasePreEscritura({ currentEscritura }: FasePreEscrituraProps) {
+export function FasePreEscritura({ currentEscritura, carpetaId }: FasePreEscrituraProps) {
     return (
         <div className="space-y-6">
             {/* Certificados */}
             <div className="border border-border rounded-lg bg-background p-6 space-y-4">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <ClipboardCheck className="h-4 w-4" /> Certificados
-                </h3>
-                <div className="space-y-3">
-                    {[
-                        { name: "Dominio e Inhibición", key: "dominio" },
-                        { name: "Catastral", key: "catastral" },
-                        { name: "Anotaciones Personales", key: "anotaciones" },
-                        { name: "Libre Deuda Municipal", key: "municipal" },
-                    ].map((cert) => (
-                        <div key={cert.key} className="flex items-center gap-4 py-2 border-b border-border last:border-0">
-                            <span className="text-sm text-foreground flex-1">{cert.name}</span>
-                            <Input type="date" className="h-8 w-40 text-sm" />
-                            <Badge variant="outline" className="text-xs px-2.5 py-1 text-muted-foreground gap-1.5">
-                                <span className="h-2 w-2 rounded-full bg-slate-300" />
-                                Pendiente
-                            </Badge>
-                        </div>
-                    ))}
-                </div>
+                <CertificadosPanel carpetaId={carpetaId} />
             </div>
 
             {/* Presupuesto Impositivo */}

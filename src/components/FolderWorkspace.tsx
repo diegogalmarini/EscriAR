@@ -368,7 +368,7 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                 </TabsContent>
 
                 <TabsContent value="pre-escritura" className="mt-6">
-                    <FasePreEscritura currentEscritura={currentEscritura} />
+                    <FasePreEscritura currentEscritura={currentEscritura} carpetaId={carpeta.id} />
                 </TabsContent>
 
                 <TabsContent value="post-escritura" className="mt-6">

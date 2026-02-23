@@ -961,12 +961,25 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 - Taxonomía CESBA sincronizada 100%
 - Tabla de Actos: paginación, dropdown fix, búsqueda
 
+### 2026-02-23 (Antigravity) — Sesión 2: Gestor de Certificados (Hito 1.1)
+
+#### Backend y Base de Datos
+- Creación de migración SQL `031_create_certificados_table.sql` para alojar metadatos de los certificados (tipo, estado, fechas, nro, pdf, etc.).
+- Definición de tipos TypeScript estrictos (`Certificado`, `CertificadoInsert`, `CertificadoUpdate`, `TipoCertificado`, `EstadoCertificado`).
+- Creación de Endpoints Server Actions CRUD en `src/app/actions/certificados.ts` (`getCertificadosPorCarpeta`, `createCertificado`, `updateCertificado`, `deleteCertificado`).
+
+#### Interfaz de Usuario (UI)
+- Implementación de `CertificadosPanel.tsx` con listado reactivo y Badges dinámicos tipo **Semáforo** (Vigente, Por Vencer > 3 días, Vencido).
+- Creación de modal `CertificadoDialog.tsx` que actúa como formulario híbrido de alta y edición con inputs acotados a los enums estrictos de la tabla.
+- Integración del Panel dentro del hub central de la carpeta (`WorkspacePipeline.tsx` / `FasePreEscritura.tsx`), en reemplazo del los componentes estáticos "mockeados". 
+
 ---
 
 ## 18. Pendientes Conocidos
 
 ### Urgentes (hacer antes de seguir con ROADMAP)
 - [ ] **Ejecutar migración 029** en Supabase SQL Editor (dedup personas jurídicas por CUIT)
+- [ ] **Ejecutar migración 031** en Supabase SQL Editor (creación de tabla de certificados)
 - [ ] **Verificar `poder_detalle`** funciona tras redeploy Railway (subir un PDF con apoderado)
 - [ ] **Redeploy Worker** en Railway para activar: File API + taxonomía CESBA + ingesta_estado fix
 
@@ -975,7 +988,7 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 
 ### Roadmap
 - **Ver `ROADMAP.md`** para el plan completo de desarrollo en 3 etapas
-- Próximos hitos: 1.1 Certificados, 1.3 Ficha Comprador, 1.4 Determinación Acto (pueden ir en paralelo)
+- Próximos hitos: 1.3 Ficha Comprador, 1.4 Determinación Acto. Módulo 1.1 (Certificados) finalizado a nivel código.
 
 ---
 
@@ -987,4 +1000,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-02-23 (Sesión 1) — Antigravity — Ficha de Poderes, Estabilización Frontend y Estrategia de IA
+> **Última actualización**: 2026-02-23 (Sesión 2) — Antigravity — Base DB y UI para el panel de Certificados (Hito 1.1)
