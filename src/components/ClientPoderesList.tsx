@@ -12,6 +12,7 @@ interface Poder {
     fecha_otorgamiento?: string;
     escribano_autorizante?: string;
     registro?: string;
+    tipo_poder?: string;
     facultades_extracto?: string;
     pdf_url?: string;
     apoderado?: { nombre_completo: string; dni: string };
@@ -82,8 +83,8 @@ export function ClientPoderesList({ poderesOtorgados, poderesActivos }: ClientPo
                                         <span className="text-slate-900">{poder.escribano_autorizante || 'N/A'}</span>
                                     </div>
                                     <div className="col-span-2">
-                                        <span className="text-slate-500 font-medium block">Registro</span>
-                                        <span className="text-slate-900">{poder.registro || 'N/A'}</span>
+                                        <span className="text-slate-500 font-medium block">Tipo de Poder</span>
+                                        <span className="text-slate-900">{poder.tipo_poder || poder.registro || 'N/A'}</span>
                                     </div>
                                 </div>
                             </div>

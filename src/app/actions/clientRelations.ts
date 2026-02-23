@@ -7,8 +7,12 @@ function extractPoderData(text: string) {
         nro_escritura: null,
         fecha_otorgamiento: null,
         escribano_autorizante: null,
-        registro: null
+        tipo_poder: null
     };
+
+    // Extraer tipo de poder: "poder general amplio que le fuera conferido..."
+    const tipoPoderMatch = text.match(/^\s*(poder[^,()]*?)(?:\s+que|\s+otorgad|\s+conferid|\s+por\s+escritura)/i);
+    const tipo_poder = tipoPoderMatch ? tipoPoderMatch[1].trim() : null;
 
     // Extraer número de escritura: "escritura número 100", "escritura N° 100", etc.
     const nroMatch = text.match(/escritura[^\d]+(\d+)/i);
@@ -18,19 +22,24 @@ function extractPoderData(text: string) {
     const fechaMatch = text.match(/fecha\s+(\d{1,2}\s+de\s+[a-záéíóú]+\s+de\s+[\d.]+)/i);
     const fecha_otorgamiento = fechaMatch ? fechaMatch[1] : null;
 
-    // Extraer escribano: "ante el escribano ... Santiago Manuel Alvarez Fourcade,"
-    const escribanoMatch = text.match(/escribano[^A-ZÁÉÍÓÚÑ]+([A-ZÁÉÍÓÚÑ][a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+),/);
-    const escribano_autorizante = escribanoMatch ? escribanoMatch[1].trim() : null;
-
-    // Extraer registro
-    const registroMatch = text.match(/Registro\s+([^,]+)/i);
-    const registro = registroMatch ? registroMatch[1].trim() : null;
+    // Extraer escribano: 
+    const escrMatch = text.match(/escriban[oa](.*?)(?:,|$)/i);
+    let escribano_autorizante = null;
+    if (escrMatch) {
+        let escName = escrMatch[1].trim();
+        // Limpiar jurisdicciones y prefijos comunes
+        escName = escName.replace(/^(?:de\sla\sCiudad\sAut[oó]noma\sde\sBuenos\sAires|de\sesta\sCiudad|de\sCapital\sFederal|autorizante|titular|interino|adscripto)\s*/ig, '');
+        // El nombre propio que queda
+        escribano_autorizante = escName.trim();
+        // Si no quedó nada útil por algún motivo, lo dejamos null
+        if (escribano_autorizante.length < 5) escribano_autorizante = null;
+    }
 
     return {
         nro_escritura,
         fecha_otorgamiento,
         escribano_autorizante,
-        registro
+        tipo_poder
     };
 }
 
@@ -165,7 +174,7 @@ export async function getClientWithRelations(dni: string) {
                     otorgante_dni: dni,
                     apoderado_dni: p.persona_id,
                     nro_escritura: extracted.nro_escritura,
-                    registro: extracted.registro,
+                    tipo_poder: extracted.tipo_poder,
                     escribano_autorizante: extracted.escribano_autorizante,
                     fecha_otorgamiento: extracted.fecha_otorgamiento,
                     facultades_extracto: p.datos_representacion?.poder_detalle || 'Poder histórico de operación',
@@ -187,7 +196,7 @@ export async function getClientWithRelations(dni: string) {
                     otorgante_dni: 'Desconocido', // No tenemos el DNI del otorgante en el histórico, solo el nombre
                     apoderado_dni: dni,
                     nro_escritura: extracted.nro_escritura,
-                    registro: extracted.registro,
+                    tipo_poder: extracted.tipo_poder,
                     escribano_autorizante: extracted.escribano_autorizante,
                     fecha_otorgamiento: extracted.fecha_otorgamiento,
                     facultades_extracto: p.datos_representacion?.poder_detalle || 'Poder histórico de operación',
