@@ -34,11 +34,14 @@ import { CertificadosPanel } from "./CertificadosPanel";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 
+import { EstudioDominioPanel } from "./EstudioDominioPanel";
+
 /* ── Shared types ── */
 
 interface FasePreEscrituraProps {
     currentEscritura: any;
     carpetaId: string;
+    carpeta: any;
 }
 
 interface FaseRedaccionProps {
@@ -59,12 +62,29 @@ interface FasePostEscrituraProps {
    Certificados + TaxBreakdown + Liquidación y Honorarios
    ══════════════════════════════════════════════════════════ */
 
-export function FasePreEscritura({ currentEscritura, carpetaId }: FasePreEscrituraProps) {
+export function FasePreEscritura({ currentEscritura, carpetaId, carpeta }: FasePreEscrituraProps) {
+    // Extraer DNIs de todos los participantes involucrados en la carpeta
+    const personasDni = carpeta?.escrituras
+        ?.flatMap((esc: any) => esc.operaciones || [])
+        ?.flatMap((op: any) => op.participantes_operacion || [])
+        ?.map((p: any) => {
+            const person = p.persona || p.personas;
+            return person?.dni;
+        })
+        ?.filter(Boolean) || [];
+
+    const uniqueDnis: string[] = Array.from(new Set(personasDni));
+
     return (
         <div className="space-y-6">
-            {/* Certificados */}
-            <div className="border border-border rounded-lg bg-background p-6 space-y-4">
-                <CertificadosPanel carpetaId={carpetaId} />
+            {/* Certificados y Estudio de Dominio (Hitos 1.1 y 1.2) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="border border-border rounded-lg bg-background p-6 space-y-4">
+                    <CertificadosPanel carpetaId={carpetaId} />
+                </div>
+                <div className="border border-border rounded-lg bg-background p-6 space-y-4">
+                    <EstudioDominioPanel carpetaId={carpetaId} carpetasDnis={uniqueDnis} />
+                </div>
             </div>
 
             {/* Presupuesto Impositivo */}
@@ -300,9 +320,13 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                                 </p>
                                                 <p className="text-xs text-muted-foreground">
                                                     {persona?.dni ? `DNI ${persona.dni}` : persona?.cuit ? `CUIT ${persona.cuit}` : "Sin documento"}
+                                                    {persona?.profesion && ` · ${persona.profesion}`}
                                                     {" · "}
                                                     <span className="font-medium">{t.rol}</span>
                                                 </p>
+                                                {(!persona?.profesion || !persona?.cuit || !persona?.fecha_nacimiento) && (
+                                                    <p className="text-[10px] text-amber-600 mt-0.5">⚠ Ficha incompleta</p>
+                                                )}
                                             </div>
                                         </div>
                                     );
@@ -332,9 +356,13 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                                 <p className="text-sm font-medium text-foreground truncate">{a.nombre_completo}</p>
                                                 <p className="text-xs text-muted-foreground mt-0.5">
                                                     {a.dni ? `DNI ${a.dni}` : "Sin documento"}
+                                                    {a.profesion && ` · ${a.profesion}`}
                                                     {a.tipo_persona === "JURIDICA" && " · Persona Jurídica"}
                                                     {apoderados[a.dni] && ` · Rep. por: ${apoderados[a.dni].persona.nombre_completo}`}
                                                 </p>
+                                                {a.tipo_persona !== "JURIDICA" && (!a.profesion || !a.cuit || !a.fecha_nacimiento) && (
+                                                    <p className="text-[10px] text-amber-600 mt-0.5">⚠ Ficha incompleta</p>
+                                                )}
                                             </div>
                                             <div className="flex items-center gap-1 shrink-0">
                                                 {a.tipo_persona === "JURIDICA" && !apoderados[a.dni] && (

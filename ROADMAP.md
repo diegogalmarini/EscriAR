@@ -86,19 +86,19 @@ Lo que ya está construido y funcionando en producción:
 
 El escribano necesita solicitar y trackear certificados obligatorios antes de escriturar.
 
-- [ ] Crear tabla `certificados` en BD:
+- [x] Crear tabla `certificados` en BD:
   ```
   id UUID PK, carpeta_id FK, tipo TEXT (DOMINIO, INHIBICION, CATASTRAL, DEUDA_MUNICIPAL, DEUDA_ARBA, RENTAS, AFIP, ANOTACIONES_PERSONALES),
   estado TEXT (PENDIENTE, SOLICITADO, RECIBIDO, VENCIDO),
   fecha_solicitud DATE, fecha_recepcion DATE, fecha_vencimiento DATE,
   nro_certificado TEXT, organismo TEXT, observaciones TEXT, pdf_url TEXT
   ```
-- [ ] UI: Panel de certificados en FolderWorkspace con semáforo (verde/amarillo/rojo por vencimiento)
-- [ ] Lógica de vencimiento automática: certificados de dominio vencen a los 15/30 días según jurisdicción
-- [ ] Alerta visual cuando un certificado está por vencer o ya venció
-- [ ] Posibilidad de adjuntar PDF del certificado recibido
+- [x] UI: Panel de certificados en FolderWorkspace con semáforo (verde/amarillo/rojo por vencimiento)
+- [x] Lógica de vencimiento automática: certificados de dominio vencen a los 15/30 días según jurisdicción
+- [x] Alerta visual cuando un certificado está por vencer o ya venció
+- [x] Posibilidad de adjuntar PDF del certificado recibido
 
-**Criterio de aceptación**: El escribano ve en la carpeta un panel con todos los certificados requeridos, su estado, y alertas de vencimiento.
+**Criterio de aceptación**: El escribano ve en la carpeta un panel con todos los certificados requeridos, su estado, y alertas de vencimiento. ✅ COMPLETADO
 
 ---
 
@@ -107,20 +107,20 @@ El escribano necesita solicitar y trackear certificados obligatorios antes de es
 
 El escribano sube el certificado de dominio/inhibición y NotiAR extrae automáticamente gravámenes, embargos, hipotecas, inhibiciones.
 
-- [ ] Implementar skill `notary-rpi-reader` en TypeScript:
+- [x] Implementar skill `notary-rpi-reader` en TypeScript:
   - Subir PDF del certificado → extraer con Gemini
   - Detectar: EMBARGO (preventivo/ejecutivo/definitivo), HIPOTECA VIGENTE, INHIBICION GENERAL, BIEN DE FAMILIA, USUFRUCTO, LITIS
   - Extraer por cada gravamen: tipo, monto, autos, juzgado, fecha inscripción
-- [ ] Crear tabla `gravamenes` en BD:
+- [x] Crear tabla `gravamenes` en BD:
   ```
   id UUID PK, inmueble_id FK, tipo TEXT, monto NUMERIC, moneda TEXT,
   autos TEXT, juzgado TEXT, fecha_inscripcion DATE, estado TEXT (VIGENTE, CANCELADO),
   certificado_id FK → certificados
   ```
-- [ ] UI: Sección "Estudio de Dominio" en FolderWorkspace con lista de gravámenes y semáforo
-- [ ] Cruce automático: si hay inhibición sobre alguna de las partes → alerta bloqueante
+- [x] UI: Sección "Estudio de Dominio" en FolderWorkspace con lista de gravámenes y semáforo
+- [x] Cruce automático: si hay inhibición sobre alguna de las partes → alerta bloqueante
 
-**Criterio de aceptación**: El escribano sube un certificado de dominio, ve los gravámenes extraídos, y recibe alertas si hay impedimentos para escriturar.
+**Criterio de aceptación**: El escribano sube un certificado de dominio, ve los gravámenes extraídos, y recibe alertas si hay impedimentos para escriturar. ✅ COMPLETADO
 
 ---
 
@@ -129,13 +129,13 @@ El escribano sube el certificado de dominio/inhibición y NotiAR extrae automát
 
 Ampliar los datos del cliente para cubrir todo lo que necesita la escritura.
 
-- [ ] Agregar campos faltantes a tabla `personas`:
+- [x] Agregar campos faltantes a tabla `personas`:
   - `profesion TEXT`, `nro_documento_conyugal TEXT`, `regimen_patrimonial TEXT` (separación de bienes / comunidad)
   - `email TEXT`, `telefono TEXT`
-- [ ] Mejorar ficha pública (`/ficha/[token]`): formulario completo para que el cliente llene sus datos antes de la escritura
-- [ ] UI: tarjeta de persona expandida en FolderWorkspace con todos los campos
+- [x] Mejorar ficha pública (`/ficha/[token]`): formulario completo para que el cliente llene sus datos antes de la escritura
+- [x] UI: tarjeta de persona expandida en FolderWorkspace con todos los campos
 
-**Criterio de aceptación**: La ficha del cliente tiene todos los campos que aparecen en una escritura estándar. El cliente puede completar sus datos via link público.
+**Criterio de aceptación**: La ficha del cliente tiene todos los campos que aparecen en una escritura estándar. El cliente puede completar sus datos via link público. ✅ COMPLETADO
 
 ---
 

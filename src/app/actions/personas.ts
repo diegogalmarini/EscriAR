@@ -69,6 +69,9 @@ export async function updatePersona(identifier: string, formData: {
     cuit?: string;
     cuit_tipo?: string;
     cuit_is_formal?: boolean;
+    profesion?: string;
+    regimen_patrimonial?: string;
+    nro_documento_conyugal?: string;
 }) {
     try {
         const supabase = await createClient();
@@ -88,6 +91,9 @@ export async function updatePersona(identifier: string, formData: {
             cuit: formData.cuit || null,
             cuit_tipo: formData.cuit_tipo || 'CUIT',
             cuit_is_formal: formData.cuit_is_formal ?? true,
+            profesion: formData.profesion || null,
+            regimen_patrimonial: formData.regimen_patrimonial || null,
+            nro_documento_conyugal: formData.nro_documento_conyugal || null,
             updated_at: new Date().toISOString()
         };
 

@@ -973,22 +973,54 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 - Creación de modal `CertificadoDialog.tsx` que actúa como formulario híbrido de alta y edición con inputs acotados a los enums estrictos de la tabla.
 - Integración del Panel dentro del hub central de la carpeta (`WorkspacePipeline.tsx` / `FasePreEscritura.tsx`), en reemplazo del los componentes estáticos "mockeados". 
 
+### 2026-02-23 (Antigravity) — Sesión 3: Lector RPI y Cruce de Inhibiciones (Hito 1.2)
+
+#### AI Skill
+- Actualización de `notary-rpi-reader.ts`: se agregó extracción de `persona_inhibida_dni` al JSON Schema para Gemini.
+
+#### Backend y Base de Datos
+- Migración `032_create_gravamenes_table.sql`: tabla de gravámenes (EMBARGO, HIPOTECA, INHIBICION, etc.) con FK a `carpetas`, `inmuebles`, `personas`, `certificados`.
+- Server Actions CRUD en `src/app/actions/gravamenes.ts` con tipos estrictos (`Gravamen`, `GravamenInsert`, `GravamenUpdate`).
+- `analyzeCertificadoRPI` en `ai-analysis.ts`: ahora persiste automáticamente cada gravamen detectado por Gemini en la tabla `gravamenes`, incluyendo nombre y DNI de persona inhibida en observaciones.
+
+#### Interfaz de Usuario (UI)
+- `EstudioDominioPanel.tsx`: semáforo de dominio (Libre / Observado / **BLOQUEO: Parte Inhibida**), cruce de DNIs de participantes vs. inhibiciones, alerta roja crítica bloqueante.
+- `WorkspacePipeline.tsx`: extracción de DNIs únicos de participantes y propagación al panel.
+
+### 2026-02-23 (Antigravity) — Sesión 4: Ficha Completa del Comprador (Hito 1.3)
+
+#### Base de Datos
+- Migración `033_personas_add_escritura_fields.sql`: columnas `profesion`, `regimen_patrimonial` (CHECK: COMUNIDAD/SEPARACION_BIENES), `nro_documento_conyugal`.
+
+#### Backend
+- `fichas.ts` (`submitFichaData`) y `personas.ts` (`updatePersona`): persisten los 3 campos nuevos.
+
+#### Interfaz de Usuario (UI)
+- `PersonForm.tsx`: sección "Estado Civil, Profesión y Filiación" con campo Profesión, panel amber condicional (cuando casado) con Cónyuge, DNI Cónyuge y Select de Régimen Patrimonial.
+- `FichaForm.tsx` (ficha pública `/ficha/[token]`): mismos campos con lógica condicional.
+- `WorkspacePipeline.tsx`: tarjetas de participantes muestran profesión e indicador "⚠ Ficha incompleta" si faltan datos.
+
 ---
 
 ## 18. Pendientes Conocidos
 
 ### Urgentes (hacer antes de seguir con ROADMAP)
 - [ ] **Ejecutar migración 029** en Supabase SQL Editor (dedup personas jurídicas por CUIT)
-- [ ] **Ejecutar migración 031** en Supabase SQL Editor (creación de tabla de certificados)
+- [ ] **Ejecutar migración 031** en Supabase SQL Editor (tabla certificados)
+- [ ] **Ejecutar migración 032** en Supabase SQL Editor (tabla gravámenes)
+- [ ] **Ejecutar migración 033** en Supabase SQL Editor (campos profesion, regimen_patrimonial, nro_documento_conyugal en personas)
 - [ ] **Verificar `poder_detalle`** funciona tras redeploy Railway (subir un PDF con apoderado)
 - [ ] **Redeploy Worker** en Railway para activar: File API + taxonomía CESBA + ingesta_estado fix
 
 ### Deuda técnica
 - [ ] Integración con Resend para emails transaccionales
+- [ ] Pipeline OCR real para certificados RPI (actualmente mocked)
+- [ ] Botón "Analizar Certificado" en la UI de certificados
 
 ### Roadmap
 - **Ver `ROADMAP.md`** para el plan completo de desarrollo en 3 etapas
-- Próximos hitos: 1.3 Ficha Comprador, 1.4 Determinación Acto. Módulo 1.1 (Certificados) finalizado a nivel código.
+- **Hitos completados**: 1.1 (Certificados), 1.2 (Lector RPI + Inhibiciones), 1.3 (Ficha Comprador)
+- **Próximos hitos**: 1.4 Determinación Automática del Acto, 1.5 Liquidación Impositiva
 
 ---
 
@@ -1000,4 +1032,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-02-23 (Sesión 2) — Antigravity — Base DB y UI para el panel de Certificados (Hito 1.1)
+> **Última actualización**: 2026-02-23 (Sesión 4) — Antigravity — Hitos 1.2 (Lector RPI + Inhibiciones) y 1.3 (Ficha Comprador) completados

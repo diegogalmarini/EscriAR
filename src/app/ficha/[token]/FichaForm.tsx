@@ -35,7 +35,10 @@ export function FichaForm({ tokenData }: { tokenData: any }) {
         estado_civil: persona.estado_civil_detalle || "",
         nombre_conyuge: persona.datos_conyuge?.nombre_completo || persona.datos_conyuge?.nombre || "",
         email: persona.contacto?.email || "",
-        telefono: persona.contacto?.telefono || ""
+        telefono: persona.contacto?.telefono || "",
+        profesion: persona.profesion || "",
+        regimen_patrimonial: persona.regimen_patrimonial || "",
+        nro_documento_conyugal: persona.nro_documento_conyugal || "",
     });
 
     // Check if married for conditional fields
@@ -211,21 +214,65 @@ export function FichaForm({ tokenData }: { tokenData: any }) {
                             />
                         </div>
 
-                        {/* Cónyuge - shows when married */}
+                        <div className="space-y-2">
+                            <Label htmlFor="profesion">Profesión / Ocupación</Label>
+                            <Input
+                                id="profesion"
+                                required
+                                placeholder="Ej: Comerciante, Empleada, Ingeniero, Ama de casa"
+                                value={formData.profesion}
+                                onChange={e => setFormData({ ...formData, profesion: e.target.value })}
+                            />
+                        </div>
+
                         {isCasado && (
-                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <Label htmlFor="conyuge" className="font-medium text-slate-700">
-                                    Nombre del Cónyuge <span className="text-red-500">*</span>
-                                </Label>
-                                <Input
-                                    id="conyuge"
-                                    required={isCasado}
-                                    placeholder="Nombre completo de su cónyuge"
-                                    value={formData.nombre_conyuge}
-                                    onChange={e => setFormData({ ...formData, nombre_conyuge: e.target.value })}
-                                    className="border-amber-200 focus-visible:ring-amber-400"
-                                />
-                                <p className="text-[10px] text-amber-600">Obligatorio para personas casadas.</p>
+                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300 p-4 bg-amber-50/50 border border-amber-200 rounded-lg">
+                                <div className="space-y-2">
+                                    <Label htmlFor="conyuge" className="font-medium text-slate-700">
+                                        Nombre del Cónyuge <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Input
+                                        id="conyuge"
+                                        required={isCasado}
+                                        placeholder="Nombre completo de su cónyuge"
+                                        value={formData.nombre_conyuge}
+                                        onChange={e => setFormData({ ...formData, nombre_conyuge: e.target.value })}
+                                        className="border-amber-200 focus-visible:ring-amber-400"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="dni_conyuge" className="font-medium text-slate-700">
+                                            DNI del Cónyuge <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input
+                                            id="dni_conyuge"
+                                            required={isCasado}
+                                            placeholder="Ej: 27841387"
+                                            value={formData.nro_documento_conyugal}
+                                            onChange={e => setFormData({ ...formData, nro_documento_conyugal: e.target.value })}
+                                            className="font-mono border-amber-200 focus-visible:ring-amber-400"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="regimen" className="font-medium text-slate-700">
+                                            Régimen Patrimonial <span className="text-red-500">*</span>
+                                        </Label>
+                                        <select
+                                            id="regimen"
+                                            required={isCasado}
+                                            value={formData.regimen_patrimonial}
+                                            onChange={e => setFormData({ ...formData, regimen_patrimonial: e.target.value })}
+                                            className="flex h-9 w-full rounded-md border border-amber-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
+                                        >
+                                            <option value="">Seleccionar...</option>
+                                            <option value="COMUNIDAD">Comunidad de Ganancias</option>
+                                            <option value="SEPARACION_BIENES">Separación de Bienes</option>
+                                        </select>
+                                        <p className="text-[10px] text-amber-600">Si no sabe, probablemente sea "Comunidad de Ganancias" (régimen supletorio).</p>
+                                    </div>
+                                </div>
+                                <p className="text-[10px] text-amber-600">Datos obligatorios para personas casadas.</p>
                             </div>
                         )}
 

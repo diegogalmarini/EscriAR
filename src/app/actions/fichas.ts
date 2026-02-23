@@ -50,6 +50,9 @@ export async function submitFichaData(tokenId: string, oldDni: string, formData:
                     email: formData.email,
                     telefono: formData.telefono
                 },
+                profesion: formData.profesion || null,
+                regimen_patrimonial: formData.regimen_patrimonial || null,
+                nro_documento_conyugal: formData.nro_documento_conyugal || null,
                 updated_at: new Date().toISOString()
             })
             .eq("dni", oldDni);

@@ -78,6 +78,9 @@ export function PersonForm({ initialData, onSuccess, onCancel }: PersonFormProps
         telefono: initialData?.contacto?.telefono || "",
         cuit_tipo: initialData?.cuit_tipo || 'CUIT',
         cuit_is_formal: initialData?.cuit_is_formal ?? true,
+        profesion: initialData?.profesion || '',
+        regimen_patrimonial: initialData?.regimen_patrimonial || '',
+        nro_documento_conyugal: initialData?.nro_documento_conyugal || '',
     });
 
     // Update full name on parts change
@@ -148,6 +151,9 @@ export function PersonForm({ initialData, onSuccess, onCancel }: PersonFormProps
                     updatePayload.estado_civil = finalData.estado;
                     updatePayload.nombres_padres = finalData.padres;
                     updatePayload.nombre_conyuge = formatPersonName(finalData.conyuge);
+                    updatePayload.profesion = finalData.profesion;
+                    updatePayload.regimen_patrimonial = finalData.regimen_patrimonial || null;
+                    updatePayload.nro_documento_conyugal = finalData.nro_documento_conyugal;
                 }
                 updatePayload.cuit_tipo = finalData.cuit_tipo;
                 updatePayload.cuit_is_formal = finalData.cuit_is_formal;
@@ -170,7 +176,10 @@ export function PersonForm({ initialData, onSuccess, onCancel }: PersonFormProps
                     nacionalidad: finalData.nacionalidad,
                     fecha_nacimiento: finalData.fecha_nacimiento || null,
                     cuit_tipo: finalData.cuit_tipo,
-                    cuit_is_formal: finalData.cuit_is_formal
+                    cuit_is_formal: finalData.cuit_is_formal,
+                    profesion: finalData.profesion || null,
+                    regimen_patrimonial: finalData.regimen_patrimonial || null,
+                    nro_documento_conyugal: finalData.nro_documento_conyugal || null,
                 };
                 const res = await upsertPerson(createPayload);
                 if (res.success) {
@@ -362,38 +371,89 @@ export function PersonForm({ initialData, onSuccess, onCancel }: PersonFormProps
 
             {tipoPersona === 'FISICA' && (
                 <div className="border-t pt-4 mt-2">
-                    <p className="text-sm font-bold text-indigo-700 mb-4 uppercase tracking-wider">Estado Civil y Filiación</p>
+                    <p className="text-sm font-bold text-indigo-700 mb-4 uppercase tracking-wider">Estado Civil, Profesión y Filiación</p>
                     <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>Estado Civil (Detalle)</Label>
-                            <Textarea
-                                rows={3}
-                                value={formData.estado || ''}
-                                onChange={e => setFormData({ ...formData, estado: e.target.value })}
-                                placeholder="Ej: Casado en primeras nupcias con..."
-                                className="resize-none"
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Profesión / Ocupación</Label>
+                                <Input
+                                    value={formData.profesion || ''}
+                                    onChange={e => setFormData({ ...formData, profesion: e.target.value })}
+                                    placeholder="Ej: Comerciante, Empleada, Ingeniero"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Estado Civil (Detalle)</Label>
+                                <Textarea
+                                    rows={1}
+                                    value={formData.estado || ''}
+                                    onChange={e => setFormData({ ...formData, estado: e.target.value })}
+                                    placeholder="Ej: Casado en primeras nupcias con..."
+                                    className="resize-none"
+                                />
+                            </div>
                         </div>
+                        {formData.estado?.toLowerCase().includes('casad') && (
+                            <div className="grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2 duration-300 p-3 bg-amber-50/50 border border-amber-200 rounded-lg">
+                                <div className="space-y-2">
+                                    <Label>Cónyuge (Nombre)</Label>
+                                    <Input
+                                        value={formData.conyuge || ''}
+                                        onChange={e => setFormData({ ...formData, conyuge: e.target.value })}
+                                        onBlur={(e) => {
+                                            const formatted = formatPersonName(e.target.value);
+                                            if (formatted !== "Sin nombre") {
+                                                setFormData(prev => ({ ...prev, conyuge: formatted }));
+                                            }
+                                        }}
+                                        placeholder="Nombre completo del cónyuge"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>DNI del Cónyuge</Label>
+                                    <Input
+                                        value={formData.nro_documento_conyugal || ''}
+                                        onChange={e => setFormData({ ...formData, nro_documento_conyugal: e.target.value })}
+                                        placeholder="DNI del cónyuge"
+                                        className="font-mono"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Régimen Patrimonial</Label>
+                                    <select
+                                        value={formData.regimen_patrimonial || ''}
+                                        onChange={e => setFormData({ ...formData, regimen_patrimonial: e.target.value })}
+                                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                    >
+                                        <option value="">Seleccionar...</option>
+                                        <option value="COMUNIDAD">Comunidad de Ganancias</option>
+                                        <option value="SEPARACION_BIENES">Separación de Bienes</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+                        {!formData.estado?.toLowerCase().includes('casad') && (
+                            <div className="space-y-2">
+                                <Label>Cónyuge (Nombre)</Label>
+                                <Input
+                                    value={formData.conyuge || ''}
+                                    onChange={e => setFormData({ ...formData, conyuge: e.target.value })}
+                                    onBlur={(e) => {
+                                        const formatted = formatPersonName(e.target.value);
+                                        if (formatted !== "Sin nombre") {
+                                            setFormData(prev => ({ ...prev, conyuge: formatted }));
+                                        }
+                                    }}
+                                    placeholder="Nombre completo del cónyuge"
+                                />
+                            </div>
+                        )}
                         <div className="space-y-2">
                             <Label>Filiación (Padres)</Label>
                             <Input
                                 value={formData.padres || ''}
                                 onChange={e => setFormData({ ...formData, padres: e.target.value })}
                                 placeholder="Hijo de [Padre] y de [Madre]"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Cónyuge (Nombre)</Label>
-                            <Input
-                                value={formData.conyuge || ''}
-                                onChange={e => setFormData({ ...formData, conyuge: e.target.value })}
-                                onBlur={(e) => {
-                                    const formatted = formatPersonName(e.target.value);
-                                    if (formatted !== "Sin nombre") {
-                                        setFormData(prev => ({ ...prev, conyuge: formatted }));
-                                    }
-                                }}
-                                placeholder="Nombre completo del cónyuge"
                             />
                         </div>
                     </div>
