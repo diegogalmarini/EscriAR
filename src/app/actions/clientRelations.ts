@@ -62,10 +62,27 @@ export async function getClientWithRelations(dni: string) {
             .select("*, apoderado:personas!poderes_apoderado_dni_fkey(*)")
             .eq("otorgante_dni", dni);
 
+        // 6b. Obtener Poderes Históricos (donde es otorgante/representado)
+        // Buscamos en participantes_operacion donde datos_representacion->>representa_a contiene el nombre de este cliente
+        // Esto es un poco más complejo porque requiere buscar por nombre en el JSON. 
+        // Lo simplificaremos buscando todas las participaciones con rol APODERADO en las operaciones donde este cliente participa, o buscando textualmente
+        const { data: participacionesHistoricasOtorgadas } = await supabase
+            .from("participantes_operacion")
+            .select("*, persona:personas!participantes_operacion_persona_id_fkey(*)")
+            .ilike("rol", "%APODERADO%")
+            .filter("datos_representacion->>representa_a", "ilike", `%${persona.nombre_completo}%`);
+
         const { data: poderesActivosData } = await supabase
             .from("poderes")
             .select("*, otorgante:personas!poderes_otorgante_dni_fkey(*)")
             .eq("apoderado_dni", dni);
+
+        // 6d. Obtener Poderes Históricos Activos (donde es apoderado en una operacion)
+        const { data: participacionesHistoricasActivas } = await supabase
+            .from("participantes_operacion")
+            .select("*")
+            .eq("persona_id", dni)
+            .ilike("rol", "%APODERADO%");
 
         console.log("[DEBUG] Poderes Otorgados:", poderesOtorgadosData);
         console.log("[DEBUG] Poderes Activos:", poderesActivosData);
@@ -104,8 +121,46 @@ export async function getClientWithRelations(dni: string) {
             tipo: e.tipo // This might still be null, but let's keep it for now
         })) || [];
 
-        const poderesOtorgados = poderesOtorgadosData || [];
-        const poderesActivos = poderesActivosData || [];
+        // Mapear y deduplicar históricos otorgados
+        const historicosOtorgados = (participacionesHistoricasOtorgadas || [])
+            .filter((p, index, self) =>
+                index === self.findIndex((t) => t.persona_id === p.persona_id)
+            )
+            .map(p => ({
+                id: `hist-otorg-${p.id}`,
+                otorgante_dni: dni,
+                apoderado_dni: p.persona_id,
+                nro_escritura: null,
+                registro: null,
+                escribano_autorizante: null,
+                fecha_otorgamiento: null,
+                facultades_extracto: p.datos_representacion?.poder_detalle || 'Poder histórico de operación',
+                pdf_url: null,
+                estado: 'HISTORICO',
+                apoderado: p.persona
+            }));
+
+        // Mapear y deduplicar históricos activos
+        const historicosActivos = (participacionesHistoricasActivas || [])
+            .filter((p, index, self) =>
+                index === self.findIndex((t) => t.datos_representacion?.representa_a === p.datos_representacion?.representa_a)
+            )
+            .map(p => ({
+                id: `hist-act-${p.id}`,
+                otorgante_dni: 'Desconocido', // No tenemos el DNI del otorgante en el histórico, solo el nombre
+                apoderado_dni: dni,
+                nro_escritura: null,
+                registro: null,
+                escribano_autorizante: null,
+                fecha_otorgamiento: null,
+                facultades_extracto: p.datos_representacion?.poder_detalle || 'Poder histórico de operación',
+                pdf_url: null,
+                estado: 'HISTORICO',
+                otorgante: { nombre_completo: p.datos_representacion?.representa_a || 'Desconocido' }
+            }));
+
+        const poderesOtorgados = [...(poderesOtorgadosData || []), ...historicosOtorgados];
+        const poderesActivos = [...(poderesActivosData || []), ...historicosActivos];
 
         return {
             success: true,

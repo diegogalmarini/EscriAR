@@ -16,6 +16,7 @@ interface Poder {
     pdf_url?: string;
     apoderado?: { nombre_completo: string; dni: string };
     otorgante?: { nombre_completo: string; dni: string };
+    estado?: string;
 }
 
 interface ClientPoderesListProps {
@@ -43,6 +44,9 @@ export function ClientPoderesList({ poderesOtorgados, poderesActivos }: ClientPo
                                 <CardTitle className="text-sm font-semibold text-slate-800">
                                     Poder / Escritura N° {poder.nro_escritura || 'S/N'}
                                 </CardTitle>
+                                {poder.estado === 'HISTORICO' && (
+                                    <Badge variant="outline" className="text-[10px] bg-slate-100 text-slate-500 ml-2">Histórico</Badge>
+                                )}
                             </div>
                             {poder.pdf_url && (
                                 <a href={poder.pdf_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-xs font-medium">
