@@ -37,18 +37,17 @@ import { toast } from "sonner";
 import { EstudioDominioPanel } from "./EstudioDominioPanel";
 import { EditarClienteDialog } from "./EditarClienteDialog";
 
-/* ── Helper: check if persona has all deed-essential fields ── */
+/* ── Helper: campos OBLIGATORIOS según Art. 305 inc. b CCyC + Art. 3 bis Ley 17.801 ── */
+/* Solo verifica datos que causan nulidad u observación registral.                        */
+/* Profesión, nacionalidad, filiación = secundarios, NO disparan alerta.                  */
 function fichaEscrituraIncompleta(p: any): string[] {
     if (!p) return ['datos'];
     const faltantes: string[] = [];
     if (!p.dni || p.dni.startsWith('SIN-DNI-')) faltantes.push('DNI');
-    if (!p.cuit) faltantes.push('CUIT');
-    if (!p.profesion) faltantes.push('profesión');
-    if (!p.nacionalidad) faltantes.push('nacionalidad');
+    if (!p.cuit) faltantes.push('CUIT/CUIL');
     if (!p.fecha_nacimiento) faltantes.push('fecha nac.');
     if (!p.estado_civil_detalle) faltantes.push('estado civil');
     if (!p.domicilio_real?.literal && typeof p.domicilio_real !== 'string') faltantes.push('domicilio');
-    if (!p.nombres_padres) faltantes.push('filiación');
     return faltantes;
 }
 
