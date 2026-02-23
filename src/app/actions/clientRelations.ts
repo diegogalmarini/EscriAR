@@ -2,6 +2,38 @@
 
 import { createClient } from "@/lib/supabaseServer";
 
+function extractPoderData(text: string) {
+    if (!text) return {
+        nro_escritura: null,
+        fecha_otorgamiento: null,
+        escribano_autorizante: null,
+        registro: null
+    };
+
+    // Extraer número de escritura: "escritura número 100", "escritura N° 100", etc.
+    const nroMatch = text.match(/escritura[^\d]+(\d+)/i);
+    const nro_escritura = nroMatch ? nroMatch[1] : null;
+
+    // Extraer fecha: "21 de marzo de 2.018" o similar
+    const fechaMatch = text.match(/fecha\s+(\d{1,2}\s+de\s+[a-záéíóú]+\s+de\s+[\d.]+)/i);
+    const fecha_otorgamiento = fechaMatch ? fechaMatch[1] : null;
+
+    // Extraer escribano: "ante el escribano ... Santiago Manuel Alvarez Fourcade,"
+    const escribanoMatch = text.match(/escribano[^A-ZÁÉÍÓÚÑ]+([A-ZÁÉÍÓÚÑ][a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+),/);
+    const escribano_autorizante = escribanoMatch ? escribanoMatch[1].trim() : null;
+
+    // Extraer registro
+    const registroMatch = text.match(/Registro\s+([^,]+)/i);
+    const registro = registroMatch ? registroMatch[1].trim() : null;
+
+    return {
+        nro_escritura,
+        fecha_otorgamiento,
+        escribano_autorizante,
+        registro
+    };
+}
+
 export async function getClientWithRelations(dni: string) {
     try {
         const supabase = await createClient();
@@ -126,38 +158,44 @@ export async function getClientWithRelations(dni: string) {
             .filter((p, index, self) =>
                 index === self.findIndex((t) => t.persona_id === p.persona_id)
             )
-            .map(p => ({
-                id: `hist-otorg-${p.id}`,
-                otorgante_dni: dni,
-                apoderado_dni: p.persona_id,
-                nro_escritura: null,
-                registro: null,
-                escribano_autorizante: null,
-                fecha_otorgamiento: null,
-                facultades_extracto: p.datos_representacion?.poder_detalle || 'Poder histórico de operación',
-                pdf_url: null,
-                estado: 'HISTORICO',
-                apoderado: p.persona
-            }));
+            .map(p => {
+                const extracted = extractPoderData(p.datos_representacion?.poder_detalle || '');
+                return {
+                    id: `hist-otorg-${p.id}`,
+                    otorgante_dni: dni,
+                    apoderado_dni: p.persona_id,
+                    nro_escritura: extracted.nro_escritura,
+                    registro: extracted.registro,
+                    escribano_autorizante: extracted.escribano_autorizante,
+                    fecha_otorgamiento: extracted.fecha_otorgamiento,
+                    facultades_extracto: p.datos_representacion?.poder_detalle || 'Poder histórico de operación',
+                    pdf_url: null,
+                    estado: 'HISTORICO',
+                    apoderado: p.persona
+                };
+            });
 
         // Mapear y deduplicar históricos activos
         const historicosActivos = (participacionesHistoricasActivas || [])
             .filter((p, index, self) =>
                 index === self.findIndex((t) => t.datos_representacion?.representa_a === p.datos_representacion?.representa_a)
             )
-            .map(p => ({
-                id: `hist-act-${p.id}`,
-                otorgante_dni: 'Desconocido', // No tenemos el DNI del otorgante en el histórico, solo el nombre
-                apoderado_dni: dni,
-                nro_escritura: null,
-                registro: null,
-                escribano_autorizante: null,
-                fecha_otorgamiento: null,
-                facultades_extracto: p.datos_representacion?.poder_detalle || 'Poder histórico de operación',
-                pdf_url: null,
-                estado: 'HISTORICO',
-                otorgante: { nombre_completo: p.datos_representacion?.representa_a || 'Desconocido' }
-            }));
+            .map(p => {
+                const extracted = extractPoderData(p.datos_representacion?.poder_detalle || '');
+                return {
+                    id: `hist-act-${p.id}`,
+                    otorgante_dni: 'Desconocido', // No tenemos el DNI del otorgante en el histórico, solo el nombre
+                    apoderado_dni: dni,
+                    nro_escritura: extracted.nro_escritura,
+                    registro: extracted.registro,
+                    escribano_autorizante: extracted.escribano_autorizante,
+                    fecha_otorgamiento: extracted.fecha_otorgamiento,
+                    facultades_extracto: p.datos_representacion?.poder_detalle || 'Poder histórico de operación',
+                    pdf_url: null,
+                    estado: 'HISTORICO',
+                    otorgante: { nombre_completo: p.datos_representacion?.representa_a || 'Desconocido' }
+                };
+            });
 
         const poderesOtorgados = [...(poderesOtorgadosData || []), ...historicosOtorgados];
         const poderesActivos = [...(poderesActivosData || []), ...historicosActivos];
