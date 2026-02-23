@@ -100,12 +100,16 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting }: CarpetaHe
     const { titulo, subtipo } = useMemo(() => generarCaratula(carpeta), [carpeta]);
 
     const estadoKey = useMemo(() => {
-        if (carpeta.ingesta_estado === "PROCESANDO") return "PROCESANDO";
+        const tieneTipoActo = !!carpeta.escrituras?.[0]?.operaciones?.[0]?.tipo_acto;
+
+        // Solo mantenemos visualmente "Procesando" si no hay datos todavía
+        if (carpeta.ingesta_estado === "PROCESANDO" && !tieneTipoActo) return "PROCESANDO";
+
         if (carpeta.estado === "INSCRIPTA") return "INSCRIPTA";
         if (carpeta.estado === "FIRMADA") return "FIRMADA";
         if (carpeta.estado === "LISTA_PARA_FIRMAR") return "LISTA_PARA_FIRMAR";
         return "ABIERTA";
-    }, [carpeta.ingesta_estado, carpeta.estado]);
+    }, [carpeta.ingesta_estado, carpeta.estado, carpeta.escrituras]);
 
     const estadoCfg = ESTADO_CONFIG[estadoKey] || ESTADO_CONFIG.ABIERTA;
     const isProcessing = estadoKey === "PROCESANDO";
