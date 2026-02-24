@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Printer, Download, Search } from "lucide-react";
+import { Printer, Download, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { PaginationControls } from "@/components/PaginationControls";
@@ -108,9 +108,6 @@ function generateIndiceEntries(registros: ProtocoloRegistro[]): IndiceEntry[] {
         }
     }
 
-    // Ordenar alfabéticamente por apellido
-    entries.sort((a, b) => a.sortKey.localeCompare(b.sortKey, "es"));
-
     return entries;
 }
 
@@ -118,20 +115,47 @@ export function IndiceProtocolo({ registros, anio, userName = "GONZALO" }: Props
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(20);
+    const [sortCol, setSortCol] = useState<keyof IndiceEntry>("esc");
+    const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
     const printRef = useRef<HTMLDivElement>(null);
+
+    // Sort handler
+    const handleSort = (key: keyof IndiceEntry) => {
+        if (sortCol === key) {
+            setSortDir(d => d === "asc" ? "desc" : "asc");
+        } else {
+            setSortCol(key);
+            setSortDir("asc");
+        }
+        setCurrentPage(1);
+    };
 
     // Generar todas las entradas del índice
     const allEntries = useMemo(() => generateIndiceEntries(registros), [registros]);
 
     // Filtrar por búsqueda
     const filteredEntries = useMemo(() => {
-        if (!search.trim()) return allEntries;
-        const q = search.toLowerCase();
-        return allEntries.filter(e =>
-            e.interviniente.toLowerCase().includes(q) ||
-            e.operacion.toLowerCase().includes(q)
-        );
-    }, [allEntries, search]);
+        let data = allEntries;
+        if (search.trim()) {
+            const q = search.toLowerCase();
+            data = data.filter(e =>
+                e.interviniente.toLowerCase().includes(q) ||
+                e.operacion.toLowerCase().includes(q)
+            );
+        }
+        // Ordenar
+        data = [...data].sort((a, b) => {
+            const aVal = a[sortCol];
+            const bVal = b[sortCol];
+            if (aVal === null || aVal === undefined || aVal === "") return 1;
+            if (bVal === null || bVal === undefined || bVal === "") return -1;
+            const cmp = typeof aVal === "number" && typeof bVal === "number"
+                ? aVal - bVal
+                : String(aVal).localeCompare(String(bVal), "es", { numeric: true });
+            return sortDir === "asc" ? cmp : -cmp;
+        });
+        return data;
+    }, [allEntries, search, sortCol, sortDir]);
 
     // Paginación
     const totalPages = Math.max(1, Math.ceil(filteredEntries.length / pageSize));
@@ -263,11 +287,31 @@ export function IndiceProtocolo({ registros, anio, userName = "GONZALO" }: Props
                 <div className="overflow-x-auto">
                     {/* Header */}
                     <div className="bg-[#e1e1e1] text-black text-[11px] font-semibold tracking-wide grid grid-cols-[1fr_180px_100px_60px_70px]">
-                        <div className="px-3 py-2.5">Intervinientes</div>
-                        <div className="px-3 py-2.5 text-center">Operación</div>
-                        <div className="px-3 py-2.5 text-center">Fecha</div>
-                        <div className="px-3 py-2.5 text-center">Esc.</div>
-                        <div className="px-3 py-2.5 text-center">Folio</div>
+                        {([
+                            { key: "interviniente" as keyof IndiceEntry, label: "Intervinientes", align: "text-left" },
+                            { key: "operacion" as keyof IndiceEntry, label: "Operación", align: "text-center" },
+                            { key: "fecha" as keyof IndiceEntry, label: "Fecha", align: "text-center" },
+                            { key: "esc" as keyof IndiceEntry, label: "Esc.", align: "text-center" },
+                            { key: "folio" as keyof IndiceEntry, label: "Folio", align: "text-center" },
+                        ]).map(col => (
+                            <div
+                                key={col.key}
+                                className={cn(
+                                    "px-3 py-2.5 cursor-pointer select-none hover:bg-[#d5d5d5] transition-colors flex items-center gap-1",
+                                    col.align
+                                )}
+                                onClick={() => handleSort(col.key)}
+                            >
+                                <span>{col.label}</span>
+                                {sortCol === col.key ? (
+                                    sortDir === "asc"
+                                        ? <ArrowUp className="h-3 w-3 shrink-0" />
+                                        : <ArrowDown className="h-3 w-3 shrink-0" />
+                                ) : (
+                                    <ArrowUpDown className="h-3 w-3 shrink-0 opacity-30" />
+                                )}
+                            </div>
+                        ))}
                     </div>
 
                     {/* Empty state */}

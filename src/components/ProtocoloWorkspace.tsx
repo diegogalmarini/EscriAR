@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
     Plus, Save, Trash2, ClipboardList, BookOpen,
-    AlertTriangle, Check, Loader2
+    AlertTriangle, Check, Loader2, Search,
+    ArrowUpDown, ArrowUp, ArrowDown
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
@@ -81,11 +82,58 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
     const [editingCell, setEditingCell] = useState<{ row: number; col: string } | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [sortCol, setSortCol] = useState<string>("nro_escritura");
+    const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+    const [searchQuery, setSearchQuery] = useState("");
+
+    // ── Sort handler ──
+    const handleSort = useCallback((key: string) => {
+        setSortCol(prev => {
+            if (prev === key) {
+                setSortDir(d => d === "asc" ? "desc" : "asc");
+                return key;
+            }
+            setSortDir("asc");
+            return key;
+        });
+    }, []);
+
+    // ── Filtrado + Ordenamiento + Paginación ──
+    const processedData = useMemo(() => {
+        let data = registros.map((r, originalIndex) => ({ ...r, _originalIndex: originalIndex }));
+
+        // Filtrar por búsqueda
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            data = data.filter(r =>
+                String(r.nro_escritura).includes(q) ||
+                (r.tipo_acto || "").toLowerCase().includes(q) ||
+                (r.vendedor_acreedor || "").toLowerCase().includes(q) ||
+                (r.comprador_deudor || "").toLowerCase().includes(q) ||
+                (r.folios || "").toLowerCase().includes(q) ||
+                (r.codigo_acto || "").toLowerCase().includes(q)
+            );
+        }
+
+        // Ordenar
+        data.sort((a, b) => {
+            const aVal = (a as any)[sortCol];
+            const bVal = (b as any)[sortCol];
+            if (aVal === null || aVal === undefined || aVal === "") return 1;
+            if (bVal === null || bVal === undefined || bVal === "") return -1;
+            const cmp = typeof aVal === "number" && typeof bVal === "number"
+                ? aVal - bVal
+                : String(aVal).localeCompare(String(bVal), "es", { numeric: true });
+            return sortDir === "asc" ? cmp : -cmp;
+        });
+
+        return data;
+    }, [registros, searchQuery, sortCol, sortDir]);
 
     // ── Paginación ──
-    const totalPages = Math.max(1, Math.ceil(registros.length / pageSize));
+    const totalPages = Math.max(1, Math.ceil(processedData.length / pageSize));
     const pageOffset = (currentPage - 1) * pageSize;
-    const paginatedRegistros = registros.slice(pageOffset, pageOffset + pageSize);
+    const paginatedRegistros = processedData.slice(pageOffset, pageOffset + pageSize);
 
     // ── Agregar fila ──
     const addRow = useCallback(() => {
@@ -240,6 +288,18 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                         <Button onClick={addErrose} size="sm" variant="outline" className="gap-1.5 text-amber-700 border-amber-300 hover:bg-amber-50">
                             <AlertTriangle className="h-4 w-4" /> Errose
                         </Button>
+                        <div className="relative ml-2">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Buscar..."
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                                className="pl-8 h-9 w-[220px]"
+                            />
+                        </div>
                     </div>
                     <div className="flex items-center gap-2">
                         {hasDirtyRows && (
@@ -268,11 +328,19 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                 <div
                                     key={col.key}
                                     className={cn(
-                                        "px-2 py-2.5 border-r border-[#ccc] shrink-0",
+                                        "px-2 py-2.5 border-r border-[#ccc] shrink-0 cursor-pointer select-none hover:bg-[#d5d5d5] transition-colors flex items-center gap-1",
                                         col.width, col.align
                                     )}
+                                    onClick={() => handleSort(col.key)}
                                 >
-                                    {col.label}
+                                    <span>{col.label}</span>
+                                    {sortCol === col.key ? (
+                                        sortDir === "asc"
+                                            ? <ArrowUp className="h-3 w-3 shrink-0" />
+                                            : <ArrowDown className="h-3 w-3 shrink-0" />
+                                    ) : (
+                                        <ArrowUpDown className="h-3 w-3 shrink-0 opacity-30" />
+                                    )}
                                 </div>
                             ))}
                             <div className="w-[40px] shrink-0 px-1 py-2.5" />
@@ -288,7 +356,7 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                         )}
 
                         {paginatedRegistros.map((row, localIndex) => {
-                            const realIndex = pageOffset + localIndex;
+                            const realIndex = (row as any)._originalIndex;
                             const isErrose = row.es_errose || row.tipo_acto?.toLowerCase().includes("errose");
                             const isEven = localIndex % 2 === 0;
 
@@ -376,7 +444,7 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                 <PaginationControls
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    totalItems={registros.length}
+                    totalItems={processedData.length}
                     pageSize={pageSize}
                     onPageChange={setCurrentPage}
                     onPageSizeChange={setPageSize}
