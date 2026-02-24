@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Tabs,
@@ -34,7 +34,7 @@ import { Input } from "@/components/ui/input";
 import { UsersTab } from "./UsersTab";
 import { EscribanosTab } from "./EscribanosTab";
 import { KnowledgeTab } from "./KnowledgeTab";
-import { ModelosTab } from "./ModelosTab";
+const ModelosTab = lazy(() => import("./ModelosTab").then(m => ({ default: m.ModelosTab })));
 
 export default function AdminUsersPage() {
     const [activeTab, setActiveTab] = useState("escribanos");
@@ -151,7 +151,9 @@ export default function AdminUsersPage() {
                 </TabsContent>
 
                 <TabsContent value="modelos" className="mt-0 border-none p-0 focus-visible:ring-0">
-                    <ModelosTab />
+                    <Suspense fallback={<div className="flex justify-center p-12"><span className="text-slate-400">Cargando modelos...</span></div>}>
+                        <ModelosTab />
+                    </Suspense>
                 </TabsContent>
             </Tabs>
 
