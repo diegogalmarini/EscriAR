@@ -13,7 +13,8 @@ import {
     UserPlus,
     Users,
     Award,
-    BookOpen
+    BookOpen,
+    Package
 } from "lucide-react";
 import { getAllUsers, getUserStats, preCreateUser } from "@/app/actions/admin";
 import { getEscribanos, Escribano } from "@/app/actions/escribanos";
@@ -33,6 +34,7 @@ import { Input } from "@/components/ui/input";
 import { UsersTab } from "./UsersTab";
 import { EscribanosTab } from "./EscribanosTab";
 import { KnowledgeTab } from "./KnowledgeTab";
+import { ModelosTab } from "./ModelosTab";
 
 export default function AdminUsersPage() {
     const [activeTab, setActiveTab] = useState("escribanos");
@@ -121,6 +123,10 @@ export default function AdminUsersPage() {
                         <BookOpen size={16} />
                         CONOCIMIENTO
                     </TabsTrigger>
+                    <TabsTrigger value="modelos" className="gap-2 px-6">
+                        <Package size={16} />
+                        MODELOS
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="escribanos" className="mt-0 border-none p-0 focus-visible:ring-0">
@@ -142,6 +148,10 @@ export default function AdminUsersPage() {
 
                 <TabsContent value="conocimiento" className="mt-0 border-none p-0 focus-visible:ring-0">
                     <KnowledgeTab />
+                </TabsContent>
+
+                <TabsContent value="modelos" className="mt-0 border-none p-0 focus-visible:ring-0">
+                    <ModelosTab />
                 </TabsContent>
             </Tabs>
 
