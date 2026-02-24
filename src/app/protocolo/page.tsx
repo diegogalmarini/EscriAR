@@ -11,7 +11,7 @@ export default async function ProtocoloPage() {
         .from("protocolo_registros")
         .select("*")
         .eq("anio", currentYear)
-        .order("nro_escritura", { ascending: true });
+        .order("folios", { ascending: true });
 
     if (error) {
         console.error("Error loading protocolo:", error);
