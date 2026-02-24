@@ -9,6 +9,7 @@ import {
     Users,
     Building2,
     Calendar,
+    BookOpen,
     FileSpreadsheet,
     Settings,
     LogOut,
@@ -28,6 +29,7 @@ const baseMenuItems = [
     { name: "Clientes", href: "/clientes", icon: Users },
     { name: "Inmuebles", href: "/inmuebles", icon: Building2 },
     { name: "Agenda", href: "/agenda", icon: Calendar },
+    { name: "Protocolo", href: "/protocolo", icon: BookOpen },
     { name: "Tabla de Actos", href: "/tabla-actos", icon: FileSpreadsheet },
 ];
 
