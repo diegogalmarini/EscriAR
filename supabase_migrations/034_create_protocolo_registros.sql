@@ -43,6 +43,6 @@ ADD CONSTRAINT uq_protocolo_nro_anio UNIQUE (nro_escritura, anio);
 -- RLS: habilitar
 ALTER TABLE protocolo_registros ENABLE ROW LEVEL SECURITY;
 
--- Política: todos los usuarios autenticados pueden CRUD
-CREATE POLICY "Authenticated users can manage protocolo" ON protocolo_registros
-  FOR ALL USING (auth.role() = 'authenticated');
+-- Política: acceso libre (igual que carpetas/escrituras)
+CREATE POLICY "Allow all" ON protocolo_registros
+  FOR ALL USING (true) WITH CHECK (true);
