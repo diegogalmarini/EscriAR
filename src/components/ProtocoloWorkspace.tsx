@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
     Plus, Save, Trash2, ClipboardList, BookOpen,
-    AlertTriangle, Check, Loader2
+    AlertTriangle, Check, Loader2,
+    ChevronLeft, ChevronRight
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
@@ -71,12 +72,20 @@ function emptyRow(anio: number, nextNro: number): ProtocoloRegistro {
     };
 }
 
+const ITEMS_PER_PAGE = 25;
+
 export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props) {
     const [registros, setRegistros] = useState<ProtocoloRegistro[]>(
         initialRegistros.map(r => ({ ...r, _isNew: false, _isDirty: false }))
     );
     const [saving, setSaving] = useState(false);
     const [editingCell, setEditingCell] = useState<{ row: number; col: string } | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    // ── Paginación ──
+    const totalPages = Math.max(1, Math.ceil(registros.length / ITEMS_PER_PAGE));
+    const pageOffset = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedRegistros = registros.slice(pageOffset, pageOffset + ITEMS_PER_PAGE);
 
     // ── Agregar fila ──
     const addRow = useCallback(() => {
@@ -278,13 +287,14 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                             </div>
                         )}
 
-                        {registros.map((row, rowIndex) => {
+                        {paginatedRegistros.map((row, localIndex) => {
+                            const realIndex = pageOffset + localIndex;
                             const isErrose = row.es_errose || row.tipo_acto?.toLowerCase().includes("errose");
-                            const isEven = rowIndex % 2 === 0;
+                            const isEven = localIndex % 2 === 0;
 
                             return (
                                 <div
-                                    key={row.id || `new-${rowIndex}`}
+                                    key={row.id || `new-${realIndex}`}
                                     className={cn(
                                         "flex min-w-fit border-b border-slate-100 group",
                                         isErrose
@@ -296,7 +306,7 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                     )}
                                 >
                                     {COLUMN_HEADERS.map(col => {
-                                        const isEditing = editingCell?.row === rowIndex && editingCell?.col === col.key;
+                                        const isEditing = editingCell?.row === realIndex && editingCell?.col === col.key;
                                         const rawValue = (row as any)[col.key];
                                         const displayValue = (col.key === "monto_usd" || col.key === "monto_ars")
                                             ? fmtMoney(rawValue)
@@ -309,7 +319,7 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                                     "px-1 py-0.5 border-r border-slate-100 shrink-0 flex items-center",
                                                     col.width, col.align
                                                 )}
-                                                onClick={() => setEditingCell({ row: rowIndex, col: col.key })}
+                                                onClick={() => setEditingCell({ row: realIndex, col: col.key })}
                                             >
                                                 {isEditing ? (
                                                     <input
@@ -321,7 +331,7 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                                             const val = e.target.value;
                                                             const numFields = ["nro_escritura", "dia", "mes", "monto_usd", "monto_ars"];
                                                             updateCell(
-                                                                rowIndex,
+                                                                realIndex,
                                                                 col.key,
                                                                 numFields.includes(col.key) ? (val ? parseFloat(val) : null) : val
                                                             );
@@ -349,7 +359,7 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                     {/* Delete button */}
                                     <div className="w-[40px] shrink-0 flex items-center justify-center">
                                         <button
-                                            onClick={() => deleteRow(rowIndex)}
+                                            onClick={() => deleteRow(realIndex)}
                                             className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-50 text-red-400 hover:text-red-600"
                                             title="Eliminar fila"
                                         >
@@ -362,14 +372,53 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                     </div>
                 </div>
 
-                {/* Summary footer */}
-                <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+                {/* Footer con paginación */}
+                <div className="flex items-center justify-between text-xs text-muted-foreground px-1 py-2">
                     <span>
                         {registros.length} escritura{registros.length !== 1 ? "s" : ""} registrada{registros.length !== 1 ? "s" : ""}
                         {registros.filter(r => r.es_errose).length > 0 && (
                             <> · {registros.filter(r => r.es_errose).length} errose</>
                         )}
                     </span>
+
+                    {totalPages > 1 && (
+                        <div className="flex items-center gap-1">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(p => p - 1)}
+                            >
+                                <ChevronLeft className="h-3.5 w-3.5 mr-0.5" />
+                                Anterior
+                            </Button>
+
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <Button
+                                    key={page}
+                                    variant={page === currentPage ? "default" : "outline"}
+                                    size="sm"
+                                    className="h-7 w-7 px-0 text-xs"
+                                    onClick={() => setCurrentPage(page)}
+                                >
+                                    {page}
+                                </Button>
+                            ))}
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage(p => p + 1)}
+                            >
+                                Siguiente
+                                <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
+                            </Button>
+                        </div>
+                    )}
+
                     <span>
                         Protocolo {anio}
                     </span>
