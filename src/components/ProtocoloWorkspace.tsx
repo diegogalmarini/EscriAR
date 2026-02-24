@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PaginationControls } from "@/components/PaginationControls";
+import { IndiceProtocolo } from "@/components/IndiceProtocolo";
 
 interface ProtocoloRegistro {
     id?: string;
@@ -384,13 +385,7 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
 
             {/* ── TAB 2: Índice ── */}
             <TabsContent value="indice">
-                <div className="border-2 border-dashed border-border rounded-lg py-16 px-4 text-center">
-                    <BookOpen className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-                    <h3 className="text-lg font-medium text-slate-700">Índice del Protocolo {anio}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        Próximamente — Se generará automáticamente a partir de las escrituras registradas en el Seguimiento.
-                    </p>
-                </div>
+                <IndiceProtocolo registros={registros} anio={anio} />
             </TabsContent>
         </Tabs>
     );
