@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
     Plus, Save, Trash2, ClipboardList, BookOpen,
-    AlertTriangle, Check, Loader2,
-    ChevronLeft, ChevronRight
+    AlertTriangle, Check, Loader2
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { PaginationControls } from "@/components/PaginationControls";
 
 interface ProtocoloRegistro {
     id?: string;
@@ -72,8 +72,6 @@ function emptyRow(anio: number, nextNro: number): ProtocoloRegistro {
     };
 }
 
-const ITEMS_PER_PAGE = 25;
-
 export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props) {
     const [registros, setRegistros] = useState<ProtocoloRegistro[]>(
         initialRegistros.map(r => ({ ...r, _isNew: false, _isDirty: false }))
@@ -81,11 +79,12 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
     const [saving, setSaving] = useState(false);
     const [editingCell, setEditingCell] = useState<{ row: number; col: string } | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
 
     // ── Paginación ──
-    const totalPages = Math.max(1, Math.ceil(registros.length / ITEMS_PER_PAGE));
-    const pageOffset = (currentPage - 1) * ITEMS_PER_PAGE;
-    const paginatedRegistros = registros.slice(pageOffset, pageOffset + ITEMS_PER_PAGE);
+    const totalPages = Math.max(1, Math.ceil(registros.length / pageSize));
+    const pageOffset = (currentPage - 1) * pageSize;
+    const paginatedRegistros = registros.slice(pageOffset, pageOffset + pageSize);
 
     // ── Agregar fila ──
     const addRow = useCallback(() => {
@@ -372,57 +371,15 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                     </div>
                 </div>
 
-                {/* Footer con paginación */}
-                <div className="flex items-center justify-between text-xs text-muted-foreground px-1 py-2">
-                    <span>
-                        {registros.length} escritura{registros.length !== 1 ? "s" : ""} registrada{registros.length !== 1 ? "s" : ""}
-                        {registros.filter(r => r.es_errose).length > 0 && (
-                            <> · {registros.filter(r => r.es_errose).length} errose</>
-                        )}
-                    </span>
-
-                    {totalPages > 1 && (
-                        <div className="flex items-center gap-1">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 px-2 text-xs"
-                                disabled={currentPage === 1}
-                                onClick={() => setCurrentPage(p => p - 1)}
-                            >
-                                <ChevronLeft className="h-3.5 w-3.5 mr-0.5" />
-                                Anterior
-                            </Button>
-
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                <Button
-                                    key={page}
-                                    variant={page === currentPage ? "default" : "outline"}
-                                    size="sm"
-                                    className="h-7 w-7 px-0 text-xs"
-                                    onClick={() => setCurrentPage(page)}
-                                >
-                                    {page}
-                                </Button>
-                            ))}
-
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 px-2 text-xs"
-                                disabled={currentPage === totalPages}
-                                onClick={() => setCurrentPage(p => p + 1)}
-                            >
-                                Siguiente
-                                <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
-                            </Button>
-                        </div>
-                    )}
-
-                    <span>
-                        Protocolo {anio}
-                    </span>
-                </div>
+                {/* Footer con paginación — mismo componente que el resto del sitio */}
+                <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={registros.length}
+                    pageSize={pageSize}
+                    onPageChange={setCurrentPage}
+                    onPageSizeChange={setPageSize}
+                />
             </TabsContent>
 
             {/* ── TAB 2: Índice ── */}
