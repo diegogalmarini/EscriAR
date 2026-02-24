@@ -59,10 +59,59 @@ function capitalizeActo(acto: string): string {
 }
 
 /**
+ * Separa un campo multi-persona en nombres individuales.
+ * Ej: "LAVAYEN, Walter y BROGGI, Marina" → ["LAVAYEN, Walter", "BROGGI, Marina"]
+ * Ej: "JUAN, Ana y otro" → ["JUAN, Ana y otro"] (no se splitea, "y otro" es calificador)
+ * Ej: "MOSCARDI, Juan y otros" → ["MOSCARDI, Juan y otros"] (no se splitea)
+ */
+function splitPersonas(campo: string): string[] {
+    if (!campo) return [];
+
+    // Buscar posiciones de " y " en el texto
+    const parts: string[] = [];
+    let remaining = campo;
+
+    while (true) {
+        // Buscar " y " seguido de algo que parece un nuevo apellido (mayúscula + coma posterior)
+        const match = remaining.match(/^(.+?)\s+y\s+(?=[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ]*\s*,)/);
+        if (match) {
+            parts.push(match[1].trim());
+            remaining = remaining.slice(match[0].length).trim();
+        } else {
+            // También split cuando " y " seguido de apellido compuesto sin coma pero con patrón
+            // "APELLIDO APELLIDO, Nombre"
+            const match2 = remaining.match(/^(.+?)\s+y\s+(?=[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ]+\s+[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ]*\s*,)/);
+            if (match2) {
+                parts.push(match2[1].trim());
+                remaining = remaining.slice(match2[0].length).trim();
+            } else {
+                parts.push(remaining.trim());
+                break;
+            }
+        }
+    }
+
+    return parts.filter(p => p.length > 0);
+}
+
+/**
+ * Formatea la referencia a la contraparte.
+ * Si hay una sola persona, muestra su nombre completo.
+ * Si hay varias, muestra la primera "y otro" / "y otros".
+ */
+function formatContraparte(personas: string[], count: number): string {
+    if (count === 0) return "";
+    const primera = personas[0];
+    if (count === 1) return primera;
+    return `${primera} y otro`;
+}
+
+/**
  * Genera entradas del índice desde los registros del protocolo.
- * Cada participante genera una línea:
- * - Vendedor: "VENDEDOR a COMPRADOR"
- * - Comprador: "COMPRADOR de VENDEDOR"
+ * Cada persona individual genera su propia línea, replicando exactamente
+ * el formato del PDF "Listado de Control" del escribano:
+ * - Por cada vendedor: "VENDEDOR y otro a COMPRADOR y otro"
+ * - Por cada comprador: "COMPRADOR y otro de VENDEDOR y otro"
  */
 function generateIndiceEntries(registros: ProtocoloRegistro[]): IndiceEntry[] {
     const entries: IndiceEntry[] = [];
@@ -75,11 +124,16 @@ function generateIndiceEntries(registros: ProtocoloRegistro[]): IndiceEntry[] {
         const folio = extractFirstFolio(reg.folios);
         const operacion = capitalizeActo(reg.tipo_acto || "");
 
-        // Entry for vendedor/acreedor/poderdante → "VENDEDOR a COMPRADOR"
-        if (reg.vendedor_acreedor) {
-            const interviniente = reg.comprador_deudor
-                ? `${reg.vendedor_acreedor} a ${reg.comprador_deudor}`
-                : reg.vendedor_acreedor;
+        const vendedores = splitPersonas(reg.vendedor_acreedor || "");
+        const compradores = splitPersonas(reg.comprador_deudor || "");
+
+        // Para cada vendedor individual → "VENDEDOR (y otro) a COMPRADOR (y otro)"
+        for (const vendedor of vendedores) {
+            const otrosVendedores = vendedores.length > 1 ? ` y otro` : "";
+            const contraRef = compradores.length > 0
+                ? ` a ${formatContraparte(compradores, compradores.length)}`
+                : "";
+            const interviniente = `${vendedor}${otrosVendedores}${contraRef}`;
 
             entries.push({
                 interviniente,
@@ -87,15 +141,17 @@ function generateIndiceEntries(registros: ProtocoloRegistro[]): IndiceEntry[] {
                 fecha,
                 esc: reg.nro_escritura,
                 folio,
-                sortKey: reg.vendedor_acreedor.toUpperCase(),
+                sortKey: vendedor.toUpperCase(),
             });
         }
 
-        // Entry for comprador/deudor/apoderado → "COMPRADOR de VENDEDOR"
-        if (reg.comprador_deudor) {
-            const interviniente = reg.vendedor_acreedor
-                ? `${reg.comprador_deudor} de ${reg.vendedor_acreedor}`
-                : reg.comprador_deudor;
+        // Para cada comprador individual → "COMPRADOR (y otro) de VENDEDOR (y otro)"
+        for (const comprador of compradores) {
+            const otrosCompradores = compradores.length > 1 ? ` y otro` : "";
+            const contraRef = vendedores.length > 0
+                ? ` de ${formatContraparte(vendedores, vendedores.length)}`
+                : "";
+            const interviniente = `${comprador}${otrosCompradores}${contraRef}`;
 
             entries.push({
                 interviniente,
@@ -103,7 +159,7 @@ function generateIndiceEntries(registros: ProtocoloRegistro[]): IndiceEntry[] {
                 fecha,
                 esc: reg.nro_escritura,
                 folio,
-                sortKey: reg.comprador_deudor.toUpperCase(),
+                sortKey: comprador.toUpperCase(),
             });
         }
     }
