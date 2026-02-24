@@ -41,16 +41,16 @@ interface Props {
 }
 
 const COLUMN_HEADERS = [
-    { key: "nro_escritura", label: "ESC", width: "w-[60px]", align: "text-center" },
-    { key: "folios", label: "FOLIOS", width: "w-[100px]", align: "text-center" },
-    { key: "dia", label: "DÍA", width: "w-[55px]", align: "text-center" },
-    { key: "mes", label: "MES", width: "w-[55px]", align: "text-center" },
-    { key: "tipo_acto", label: "ACTO", width: "w-[160px]", align: "text-left" },
-    { key: "vendedor_acreedor", label: "VENDEDOR / ACREEDOR / PODERDANTE", width: "min-w-[200px] flex-1", align: "text-left" },
-    { key: "comprador_deudor", label: "COMPRADOR / DEUDOR / APODERADO", width: "min-w-[200px] flex-1", align: "text-left" },
+    { key: "nro_escritura", label: "Esc.", width: "w-[60px]", align: "text-center" },
+    { key: "folios", label: "Folios", width: "w-[100px]", align: "text-center" },
+    { key: "dia", label: "Día", width: "w-[55px]", align: "text-center" },
+    { key: "mes", label: "Mes", width: "w-[55px]", align: "text-center" },
+    { key: "tipo_acto", label: "Acto", width: "w-[160px]", align: "text-left" },
+    { key: "vendedor_acreedor", label: "Vendedor / Acreedor / Poderdante", width: "min-w-[200px] flex-1", align: "text-left" },
+    { key: "comprador_deudor", label: "Comprador / Deudor / Apoderado", width: "min-w-[200px] flex-1", align: "text-left" },
     { key: "monto_usd", label: "USD", width: "w-[120px]", align: "text-right" },
     { key: "monto_ars", label: "$", width: "w-[140px]", align: "text-right" },
-    { key: "codigo_acto", label: "CÓDIGO ACTO", width: "w-[120px]", align: "text-center" },
+    { key: "codigo_acto", label: "Código Acto", width: "w-[120px]", align: "text-center" },
 ];
 
 function emptyRow(anio: number, nextNro: number): ProtocoloRegistro {
@@ -263,12 +263,12 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                 <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
                     <div className="overflow-x-auto">
                         {/* Header row — sticky */}
-                        <div className="flex bg-[#4472C4] text-white text-[11px] font-bold uppercase tracking-wide min-w-fit sticky top-0 z-10">
+                        <div className="flex bg-[#e1e1e1] text-black text-[11px] font-semibold tracking-wide min-w-fit sticky top-0 z-10">
                             {COLUMN_HEADERS.map(col => (
                                 <div
                                     key={col.key}
                                     className={cn(
-                                        "px-2 py-2.5 border-r border-[#3563a8] shrink-0",
+                                        "px-2 py-2.5 border-r border-[#ccc] shrink-0",
                                         col.width, col.align
                                     )}
                                 >

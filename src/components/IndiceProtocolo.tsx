@@ -173,12 +173,11 @@ export function IndiceProtocolo({ registros, anio, userName = "GONZALO" }: Props
                     .header p { font-size: 11px; margin: 0; color: #555; }
                     table { width: 100%; border-collapse: collapse; }
                     thead th {
-                        background: #4472C4;
-                        color: white;
+                        background: #e1e1e1;
+                        color: #1a1a1a;
                         padding: 5px 6px;
                         font-size: 10px;
-                        text-transform: uppercase;
-                        font-weight: bold;
+                        font-weight: 600;
                         text-align: left;
                         letter-spacing: 0.3px;
                     }
@@ -208,10 +207,10 @@ export function IndiceProtocolo({ registros, anio, userName = "GONZALO" }: Props
                     <thead>
                         <tr>
                             <th style="width:45%;">Intervinientes</th>
-                            <th style="width:22%;">Operación</th>
-                            <th style="width:13%;">Fecha</th>
-                            <th style="width:8%;">Esc.</th>
-                            <th style="width:12%;">Folio</th>
+                            <th style="width:22%;text-align:center;">Operación</th>
+                            <th style="width:13%;text-align:center;">Fecha</th>
+                            <th style="width:8%;text-align:center;">Esc.</th>
+                            <th style="width:12%;text-align:center;">Folio</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -263,7 +262,7 @@ export function IndiceProtocolo({ registros, anio, userName = "GONZALO" }: Props
             <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
                 <div className="overflow-x-auto">
                     {/* Header */}
-                    <div className="bg-[#4472C4] text-white text-[11px] font-bold uppercase tracking-wide grid grid-cols-[1fr_180px_100px_60px_70px]">
+                    <div className="bg-[#e1e1e1] text-black text-[11px] font-semibold tracking-wide grid grid-cols-[1fr_180px_100px_60px_70px]">
                         <div className="px-3 py-2.5">Intervinientes</div>
                         <div className="px-3 py-2.5 text-center">Operación</div>
                         <div className="px-3 py-2.5 text-center">Fecha</div>
