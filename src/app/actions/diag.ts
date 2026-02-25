@@ -25,9 +25,9 @@ export async function runDiag() {
 
     try {
         const admin = getSupabaseAdmin();
-        const { data, error } = await admin.from('user_profiles').select('count', { count: 'exact', head: true });
+        const { count, error } = await admin.from('user_profiles').select('*', { count: 'exact', head: true });
         if (error) throw error;
-        results.checks.adminClient = { success: true, count: data };
+        results.checks.adminClient = { success: true, count };
     } catch (err: any) {
         results.checks.adminClient = { success: false, error: err.message };
     }

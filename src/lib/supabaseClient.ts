@@ -20,6 +20,10 @@ export function getSupabaseBrowserClient() {
 export const supabase = new Proxy({} as any, {
     get: (target, prop, receiver) => {
         const client = getSupabaseBrowserClient();
-        return Reflect.get(client, prop, receiver);
+        const value = Reflect.get(client, prop, receiver);
+        if (typeof value === 'function') {
+            return value.bind(client);
+        }
+        return value;
     }
 });
