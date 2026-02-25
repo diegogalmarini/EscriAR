@@ -1,0 +1,59 @@
+
+> notiar@0.1.0 build
+> next build
+
+Ôû▓ Next.js 16.1.3 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  ┬À serverActions
+
+ÔÜá The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+Ô£ô Compiled successfully in 72s
+  Running TypeScript ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/25) ...
+  Generating static pages using 15 workers (6/25) 
+  Generating static pages using 15 workers (12/25) 
+  Generating static pages using 15 workers (18/25) 
+Ô£ô Generating static pages using 15 workers (25/25) in 5.8s
+  Finalizing page optimization ...
+
+Route (app)
+Ôöî Ôùï /
+Ôö£ Ôùï /_not-found
+Ôö£ Ôùï /admin/users
+Ôö£ Ôùï /agenda
+Ôö£ ãÆ /api/admin/clean-storage
+Ôö£ ãÆ /api/auth-diag
+Ôö£ ãÆ /api/dev-auth
+Ôö£ ãÆ /api/ingest
+Ôö£ ãÆ /api/ingest/queue
+Ôö£ ãÆ /api/jobs/[id]
+Ôö£ ãÆ /api/search/assets
+Ôö£ ãÆ /api/search/people
+Ôö£ ãÆ /api/templates/render
+Ôö£ Ôùï /auth/callback
+Ôö£ Ôùï /auth/callback-client
+Ôö£ ãÆ /carpeta/[id]
+Ôö£ Ôùï /carpetas
+Ôö£ Ôùï /clientes
+Ôö£ ãÆ /clientes/[dni]
+Ôö£ ãÆ /dashboard
+Ôö£ Ôùï /diag
+Ôö£ ãÆ /ficha/[token]
+Ôö£ Ôùï /inmuebles
+Ôö£ ãÆ /inmuebles/[id]
+Ôö£ Ôùï /login
+Ôö£ Ôùï /pending-approval
+Ôö£ ãÆ /protocolo
+Ôö£ Ôùï /signup
+Ôö£ Ôùï /tabla-actos
+Ôöö Ôùï /unauthorized
+
+
+ãÆ Proxy (Middleware)
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+

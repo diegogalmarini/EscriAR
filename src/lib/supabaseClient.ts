@@ -1,29 +1,14 @@
 import { createBrowserClient } from '@supabase/ssr';
 
-let _supabaseClient: ReturnType<typeof createBrowserClient> | null = null;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 
+/**
+ * Standard Supabase Browser Client.
+ */
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
+
+// Helper for dynamic access if needed (optional)
 export function getSupabaseBrowserClient() {
-    if (_supabaseClient) return _supabaseClient;
-
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-        console.error("[supabaseClient] Missing NEXT_PUBLIC_SUPABASE credentials!");
-    }
-
-    _supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
-    return _supabaseClient;
+    return supabase;
 }
-
-// Browser Supabase client (Proxy for safe top-level export/import on server/client)
-export const supabase = new Proxy({} as any, {
-    get: (target, prop, receiver) => {
-        const client = getSupabaseBrowserClient();
-        const value = Reflect.get(client, prop, receiver);
-        if (typeof value === 'function') {
-            return value.bind(client);
-        }
-        return value;
-    }
-});

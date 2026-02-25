@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabaseServer";
-import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin, supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function runDiag() {
     const results: any = {
@@ -24,7 +24,7 @@ export async function runDiag() {
     }
 
     try {
-        const admin = getSupabaseAdmin();
+        const admin = supabaseAdmin;
         const { count, error } = await admin.from('user_profiles').select('*', { count: 'exact', head: true });
         if (error) throw error;
         results.checks.adminClient = { success: true, count };
