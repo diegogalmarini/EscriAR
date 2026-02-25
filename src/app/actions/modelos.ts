@@ -62,10 +62,14 @@ export async function getModelos(): Promise<{ success: boolean; data?: ModeloAct
             .order("act_type", { ascending: true })
             .order("version", { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+            console.error("[getModelos] DB Error:", error);
+            throw error;
+        }
         return { success: true, data: data as ModeloActo[] };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        console.error("[getModelos] Exception:", error);
+        return { success: false, error: error.message || "Error al cargar modelos" };
     }
 }
 
@@ -191,8 +195,8 @@ export async function uploadModeloZip(
 
         return { success: true, data: inserted as ModeloActo };
     } catch (error: any) {
-        console.error("[uploadModeloZip]", error);
-        return { success: false, error: error.message };
+        console.error("[uploadModeloZip] CRITICAL ERROR:", error);
+        return { success: false, error: `Error interno al procesar el ZIP: ${error.message}` };
     }
 }
 
@@ -293,9 +297,14 @@ async function parseZip(data: Uint8Array): Promise<{
     return {
         entries,
         getEntry: async (name: string) => {
-            const file = zip.file(name);
-            if (!file) throw new Error(`Entry "${name}" not found in ZIP`);
-            return file.async("uint8array");
+            try {
+                const file = zip.file(name);
+                if (!file) throw new Error(`Entry "${name}" not found in ZIP`);
+                return await file.async("uint8array");
+            } catch (err: any) {
+                console.error(`[parseZip] Error reading entry ${name}:`, err);
+                throw err;
+            }
         },
     };
 }

@@ -27,11 +27,14 @@ export async function getEscribanos() {
             .select("*")
             .order("nombre_completo", { ascending: true });
 
-        if (error) throw error;
+        if (error) {
+            console.error("[getEscribanos] DB Error:", error);
+            throw error;
+        }
         return { success: true, data };
     } catch (error: any) {
-        console.error("Error fetching escribanos:", error);
-        return { success: false, error: error.message };
+        console.error("[getEscribanos] Exception:", error);
+        return { success: false, error: error.message || "Error al cargar escribanos" };
     }
 }
 

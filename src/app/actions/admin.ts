@@ -11,33 +11,40 @@ const SUPER_ADMIN_EMAIL = "diegogalmarini@gmail.com";
  * Verify if the current user is a super admin
  */
 async function isAdmin(): Promise<boolean> {
-    const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const userRes = await supabase.auth.getUser();
+        const user = userRes.data?.user;
 
-    if (userError || !user) {
-        // Fallback to session for performance or if getUser is too strict
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) return false;
+        if (!user) {
+            // Fallback to session for performance or if getUser is too strict
+            const sessionRes = await supabase.auth.getSession();
+            const session = sessionRes.data?.session;
+            if (!session?.user) return false;
 
-        if (session.user.email === SUPER_ADMIN_EMAIL) return true;
+            if (session.user.email === SUPER_ADMIN_EMAIL) return true;
+
+            const { data: profile } = await supabase
+                .from("user_profiles")
+                .select("role")
+                .eq("id", session.user.id)
+                .single();
+            return profile?.role === "admin";
+        }
+
+        if (user.email === SUPER_ADMIN_EMAIL) return true;
 
         const { data: profile } = await supabase
             .from("user_profiles")
             .select("role")
-            .eq("id", session.user.id)
+            .eq("id", user.id)
             .single();
+
         return profile?.role === "admin";
+    } catch (err) {
+        console.error("[isAdmin] Check failed:", err);
+        return false;
     }
-
-    if (user.email === SUPER_ADMIN_EMAIL) return true;
-
-    const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-    return profile?.role === "admin";
 }
 
 /**
@@ -54,12 +61,15 @@ export async function getAllUsers() {
             .select("*")
             .order("created_at", { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+            console.error("[getAllUsers] DB Error:", error);
+            throw error;
+        }
 
         return { success: true, data: data || [] };
     } catch (error: any) {
-        console.error("Error fetching users:", error);
-        return { success: false, error: error.message, data: [] };
+        console.error("[getAllUsers] Exception:", error);
+        return { success: false, error: error.message || "Internal Server Error", data: [] };
     }
 }
 
@@ -166,7 +176,10 @@ export async function getUserStats() {
             .from("admin_user_list")
             .select("approval_status");
 
-        if (error) throw error;
+        if (error) {
+            console.error("[getUserStats] DB Error:", error);
+            throw error;
+        }
 
         const stats = {
             total: data.length,
@@ -177,8 +190,8 @@ export async function getUserStats() {
 
         return { success: true, data: stats };
     } catch (error: any) {
-        console.error("Error fetching user stats:", error);
-        return { success: false, error: error.message, data: null };
+        console.error("[getUserStats] Exception:", error);
+        return { success: false, error: error.message || "Internal Server Error", data: null };
     }
 }
 
