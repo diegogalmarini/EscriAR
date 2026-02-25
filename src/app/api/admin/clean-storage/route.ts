@@ -36,15 +36,15 @@ export async function DELETE() {
         // Extract just the filenames from the URLs
         const validFilenames = new Set(
             (escrituras || [])
-                .map(e => {
+                .map((e: any) => {
                     const match = e.pdf_url?.match(/\/documents\/(.+)$/);
                     return match ? match[1] : null;
                 })
-                .filter((name): name is string => !!name)
+                .filter((name: any): name is string => !!name)
         );
 
         // 3. Find orphaned files (exist in storage but not in database)
-        const orphanedFiles = files.filter(file => !validFilenames.has(file.name));
+        const orphanedFiles = files.filter((file: any) => !validFilenames.has(file.name));
 
         if (orphanedFiles.length === 0) {
             return NextResponse.json({
@@ -55,7 +55,7 @@ export async function DELETE() {
         }
 
         // 4. Delete orphaned files
-        const filePaths = orphanedFiles.map(f => `documents/${f.name}`);
+        const filePaths = orphanedFiles.map((f: any) => `documents/${f.name}`);
         const { error: deleteError } = await supabaseAdmin.storage
             .from('escrituras')
             .remove(filePaths);
@@ -66,7 +66,7 @@ export async function DELETE() {
             success: true,
             message: `Successfully removed ${orphanedFiles.length} orphaned file(s)`,
             filesRemoved: orphanedFiles.length,
-            removedFileNames: orphanedFiles.map(f => f.name)
+            removedFileNames: orphanedFiles.map((f: any) => f.name)
         });
 
     } catch (error: any) {

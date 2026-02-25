@@ -180,7 +180,7 @@ export async function deleteCarpeta(carpetaId: string) {
 
             if (pdfUrls.length > 0) {
                 // Extract clean file paths from URLs (ignoring query params/tokens)
-                const filePaths = pdfUrls.map(url => {
+                const filePaths = pdfUrls.map((url: any) => {
                     try {
                         const parts = url.split('/escrituras/');
                         if (parts.length < 2) return null;
@@ -188,10 +188,10 @@ export async function deleteCarpeta(carpetaId: string) {
                         // The relative path is in parts[1], but we must strip query params
                         const pathWithQuery = parts[1];
                         return pathWithQuery.split('?')[0].split('#')[0].split('%3F')[0];
-                    } catch (e) {
+                    } catch (e: any) {
                         return null;
                     }
-                }).filter((path): path is string => !!path);
+                }).filter((path: any): path is string => !!path);
 
                 if (filePaths.length > 0) {
                     console.log(`[STORAGE] Attempting to delete ${filePaths.length} files:`, filePaths);

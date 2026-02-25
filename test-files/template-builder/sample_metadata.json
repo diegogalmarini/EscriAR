@@ -1,0 +1,660 @@
+{
+  "schema_version": "1.0",
+  "template_name": "compraventa_inmueble_sanisidro_template",
+  "source_document": "Compraventa_Inmueble_SanIsidro.docx",
+  "act_type": "compraventa",
+  "created_at": "2026-02-24T13:06:43.956182+00:00",
+  "total_variables": 62,
+  "total_replacements": 62,
+  "categories_used": [
+    "certificados",
+    "compradores",
+    "conyuge",
+    "escritura",
+    "impuestos",
+    "inmueble",
+    "operacion",
+    "titulo_antecedente",
+    "vendedores"
+  ],
+  "required_variables": [
+    {
+      "jinja_tag": "{{ certificados.catastro_numero }}",
+      "field_name": "certificados.catastro_numero",
+      "category": "certificados",
+      "category_label": "Certificados e Informes",
+      "description": "Catastro numero del certificados",
+      "type": "text",
+      "example": "Cert. cat. 11111",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ certificados.deuda_arba }}",
+      "field_name": "certificados.deuda_arba",
+      "category": "certificados",
+      "category_label": "Certificados e Informes",
+      "description": "Deuda arba del certificados",
+      "type": "text",
+      "example": "libre de deuda ARBA",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ certificados.deuda_municipal }}",
+      "field_name": "certificados.deuda_municipal",
+      "category": "certificados",
+      "category_label": "Certificados e Informes",
+      "description": "Deuda municipal del certificados",
+      "type": "text",
+      "example": "libre de deuda municipal",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ certificados.dominio_fecha }}",
+      "field_name": "certificados.dominio_fecha",
+      "category": "certificados",
+      "category_label": "Certificados e Informes",
+      "description": "Dominio fecha del certificados",
+      "type": "date",
+      "example": "10 de junio de 2025 dominio",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ certificados.dominio_numero }}",
+      "field_name": "certificados.dominio_numero",
+      "category": "certificados",
+      "category_label": "Certificados e Informes",
+      "description": "Dominio numero del certificados",
+      "type": "text",
+      "example": "Cert. dom. 12345",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ certificados.inhibiciones_fecha }}",
+      "field_name": "certificados.inhibiciones_fecha",
+      "category": "certificados",
+      "category_label": "Certificados e Informes",
+      "description": "Inhibiciones fecha del certificados",
+      "type": "date",
+      "example": "10 de junio de 2025 inhibiciones",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ certificados.inhibiciones_numero }}",
+      "field_name": "certificados.inhibiciones_numero",
+      "category": "certificados",
+      "category_label": "Certificados e Informes",
+      "description": "Inhibiciones numero del certificados",
+      "type": "text",
+      "example": "Cert. inh. 67890",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ compradores[0].cuit_cuil }}",
+      "field_name": "compradores[0].cuit_cuil",
+      "category": "compradores",
+      "category_label": "Compradores / Parte Adquirente",
+      "description": "CUIT o CUIL del comprador",
+      "type": "text",
+      "example": "20-20345678-5",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ compradores[0].domicilio }}",
+      "field_name": "compradores[0].domicilio",
+      "category": "compradores",
+      "category_label": "Compradores / Parte Adquirente",
+      "description": "Domicilio real del comprador",
+      "type": "address",
+      "example": "Calle Mitre 1234, Rosario, Santa Fe",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ compradores[0].estado_civil }}",
+      "field_name": "compradores[0].estado_civil",
+      "category": "compradores",
+      "category_label": "Compradores / Parte Adquirente",
+      "description": "Estado civil del comprador",
+      "type": "select",
+      "example": "casado/a en primeras nupcias",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ compradores[0].fecha_nacimiento }}",
+      "field_name": "compradores[0].fecha_nacimiento",
+      "category": "compradores",
+      "category_label": "Compradores / Parte Adquirente",
+      "description": "Fecha de nacimiento del comprador",
+      "type": "date",
+      "example": "15 de marzo de 1970",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ compradores[0].nacionalidad }}",
+      "field_name": "compradores[0].nacionalidad",
+      "category": "compradores",
+      "category_label": "Compradores / Parte Adquirente",
+      "description": "Nacionalidad del comprador",
+      "type": "select",
+      "example": "argentina",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ compradores[0].nombre_completo }}",
+      "field_name": "compradores[0].nombre_completo",
+      "category": "compradores",
+      "category_label": "Compradores / Parte Adquirente",
+      "description": "Nombre y apellido completo del comprador",
+      "type": "text",
+      "example": "Juan Carlos PÉREZ",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ compradores[0].numero_documento }}",
+      "field_name": "compradores[0].numero_documento",
+      "category": "compradores",
+      "category_label": "Compradores / Parte Adquirente",
+      "description": "Número de documento del comprador",
+      "type": "text",
+      "example": "20.345.678",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ compradores[0].profesion }}",
+      "field_name": "compradores[0].profesion",
+      "category": "compradores",
+      "category_label": "Compradores / Parte Adquirente",
+      "description": "Profesión u ocupación del comprador",
+      "type": "text",
+      "example": "comerciante",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ compradores[0].tipo_documento }}",
+      "field_name": "compradores[0].tipo_documento",
+      "category": "compradores",
+      "category_label": "Compradores / Parte Adquirente",
+      "description": "Tipo de documento de identidad del comprador",
+      "type": "select",
+      "example": "DNI",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ conyuge.domicilio }}",
+      "field_name": "conyuge.domicilio",
+      "category": "conyuge",
+      "category_label": "Cónyuge (Asentimiento Conyugal)",
+      "description": "Domicilio real del cónyuge",
+      "type": "address",
+      "example": "Calle Mitre 1234, Rosario, Santa Fe",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ conyuge.estado_civil }}",
+      "field_name": "conyuge.estado_civil",
+      "category": "conyuge",
+      "category_label": "Cónyuge (Asentimiento Conyugal)",
+      "description": "Estado civil del cónyuge",
+      "type": "select",
+      "example": "casado/a en primeras nupcias",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ conyuge.nacionalidad }}",
+      "field_name": "conyuge.nacionalidad",
+      "category": "conyuge",
+      "category_label": "Cónyuge (Asentimiento Conyugal)",
+      "description": "Nacionalidad del cónyuge",
+      "type": "select",
+      "example": "argentina",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ conyuge.nombre_completo }}",
+      "field_name": "conyuge.nombre_completo",
+      "category": "conyuge",
+      "category_label": "Cónyuge (Asentimiento Conyugal)",
+      "description": "Nombre y apellido completo del cónyuge",
+      "type": "text",
+      "example": "Juan Carlos PÉREZ",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ conyuge.numero_documento }}",
+      "field_name": "conyuge.numero_documento",
+      "category": "conyuge",
+      "category_label": "Cónyuge (Asentimiento Conyugal)",
+      "description": "Número de documento del cónyuge",
+      "type": "text",
+      "example": "20.345.678",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ escritura.caracter }}",
+      "field_name": "escritura.caracter",
+      "category": "escritura",
+      "category_label": "Datos del Instrumento (Escritura / Acta)",
+      "description": "Caracter del escritura",
+      "type": "text",
+      "example": "titular",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ escritura.distrito }}",
+      "field_name": "escritura.distrito",
+      "category": "escritura",
+      "category_label": "Datos del Instrumento (Escritura / Acta)",
+      "description": "Distrito del escritura",
+      "type": "text",
+      "example": "San Isidro distrito",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ escritura.escribano }}",
+      "field_name": "escritura.escribano",
+      "category": "escritura",
+      "category_label": "Datos del Instrumento (Escritura / Acta)",
+      "description": "Nombre del escribano autorizante",
+      "type": "text",
+      "example": "Esc. Ana María GALMARINI",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ escritura.fecha }}",
+      "field_name": "escritura.fecha",
+      "category": "escritura",
+      "category_label": "Datos del Instrumento (Escritura / Acta)",
+      "description": "Fecha de la escritura",
+      "type": "date",
+      "example": "23 de febrero de 2026",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ escritura.folio }}",
+      "field_name": "escritura.folio",
+      "category": "escritura",
+      "category_label": "Datos del Instrumento (Escritura / Acta)",
+      "description": "Folio del protocolo donde se labra",
+      "type": "text",
+      "example": "Folio 456",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ escritura.localidad }}",
+      "field_name": "escritura.localidad",
+      "category": "escritura",
+      "category_label": "Datos del Instrumento (Escritura / Acta)",
+      "description": "Localidad del escritura",
+      "type": "text",
+      "example": "ciudad de San Isidro",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ escritura.numero }}",
+      "field_name": "escritura.numero",
+      "category": "escritura",
+      "category_label": "Datos del Instrumento (Escritura / Acta)",
+      "description": "Número de escritura pública",
+      "type": "text",
+      "example": "Escritura Número Ciento Veintitrés (123)",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ escritura.provincia }}",
+      "field_name": "escritura.provincia",
+      "category": "escritura",
+      "category_label": "Datos del Instrumento (Escritura / Acta)",
+      "description": "Provincia donde se otorga",
+      "type": "select",
+      "example": "provincia de Buenos Aires",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ escritura.registro }}",
+      "field_name": "escritura.registro",
+      "category": "escritura",
+      "category_label": "Datos del Instrumento (Escritura / Acta)",
+      "description": "Registro notarial autorizante",
+      "type": "text",
+      "example": "Registro N° 12 de Rosario",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ escritura.tomo }}",
+      "field_name": "escritura.tomo",
+      "category": "escritura",
+      "category_label": "Datos del Instrumento (Escritura / Acta)",
+      "description": "Tomo del escritura",
+      "type": "text",
+      "example": "tomo A del protocolo",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ impuestos.base_imponible }}",
+      "field_name": "impuestos.base_imponible",
+      "category": "impuestos",
+      "category_label": "Impuestos y Retenciones",
+      "description": "Base imponible del impuestos",
+      "type": "text",
+      "example": "$180.000.000 base",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ impuestos.iti }}",
+      "field_name": "impuestos.iti",
+      "category": "impuestos",
+      "category_label": "Impuestos y Retenciones",
+      "description": "Iti del impuestos",
+      "type": "text",
+      "example": "$2.700.000 ITI",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ impuestos.sellados }}",
+      "field_name": "impuestos.sellados",
+      "category": "impuestos",
+      "category_label": "Impuestos y Retenciones",
+      "description": "Sellados del impuestos",
+      "type": "text",
+      "example": "$3.600.000 sellados",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ inmueble.descripcion_legal }}",
+      "field_name": "inmueble.descripcion_legal",
+      "category": "inmueble",
+      "category_label": "Datos del Inmueble",
+      "description": "Descripcion legal del inmueble",
+      "type": "textarea",
+      "example": "LOTE de terreno ubicado en...",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ inmueble.linderos_norte }}",
+      "field_name": "inmueble.linderos_norte",
+      "category": "inmueble",
+      "category_label": "Datos del Inmueble",
+      "description": "Linderos norte del inmueble",
+      "type": "text",
+      "example": "Lote 5 de Juan Garcia",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ inmueble.linderos_sur }}",
+      "field_name": "inmueble.linderos_sur",
+      "category": "inmueble",
+      "category_label": "Datos del Inmueble",
+      "description": "Linderos sur del inmueble",
+      "type": "text",
+      "example": "Calle publica lindero",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ inmueble.matricula }}",
+      "field_name": "inmueble.matricula",
+      "category": "inmueble",
+      "category_label": "Datos del Inmueble",
+      "description": "Número de matrícula del Registro de la Propiedad",
+      "type": "text",
+      "example": "Matrícula N° 123456/2005",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ inmueble.nomenclatura_catastral }}",
+      "field_name": "inmueble.nomenclatura_catastral",
+      "category": "inmueble",
+      "category_label": "Datos del Inmueble",
+      "description": "Nomenclatura catastral completa (Sección-Manzana-Parcela)",
+      "type": "text",
+      "example": "Sección 01, Manzana 123, Parcela 04",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ inmueble.partida_fiscal }}",
+      "field_name": "inmueble.partida_fiscal",
+      "category": "inmueble",
+      "category_label": "Datos del Inmueble",
+      "description": "Partida fiscal del inmueble",
+      "type": "text",
+      "example": "012-34567-0",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ inmueble.superficie_cubierta }}",
+      "field_name": "inmueble.superficie_cubierta",
+      "category": "inmueble",
+      "category_label": "Datos del Inmueble",
+      "description": "Superficie cubierta construida",
+      "type": "number",
+      "example": "180,50 m²",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ inmueble.superficie_terreno }}",
+      "field_name": "inmueble.superficie_terreno",
+      "category": "inmueble",
+      "category_label": "Datos del Inmueble",
+      "description": "Superficie terreno del inmueble",
+      "type": "number",
+      "example": "250 m2 terreno",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ inmueble.ubicacion_calle }}",
+      "field_name": "inmueble.ubicacion_calle",
+      "category": "inmueble",
+      "category_label": "Datos del Inmueble",
+      "description": "Ubicacion calle del inmueble",
+      "type": "address",
+      "example": "Avenida Centenario 500",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ inmueble.ubicacion_localidad }}",
+      "field_name": "inmueble.ubicacion_localidad",
+      "category": "inmueble",
+      "category_label": "Datos del Inmueble",
+      "description": "Ubicacion localidad del inmueble",
+      "type": "address",
+      "example": "San Isidro ubicacion",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ operacion.forma_pago }}",
+      "field_name": "operacion.forma_pago",
+      "category": "operacion",
+      "category_label": "Datos de la Operación / Transacción",
+      "description": "Forma de pago pactada",
+      "type": "text",
+      "example": "en este acto, en dinero en efectivo",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ operacion.moneda }}",
+      "field_name": "operacion.moneda",
+      "category": "operacion",
+      "category_label": "Datos de la Operación / Transacción",
+      "description": "Moneda de la operación",
+      "type": "text",
+      "example": "pesos",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ operacion.plazo_pago }}",
+      "field_name": "operacion.plazo_pago",
+      "category": "operacion",
+      "category_label": "Datos de la Operación / Transacción",
+      "description": "Plazo pago del operacion",
+      "type": "text",
+      "example": "al contado en este acto",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ operacion.precio_letras }}",
+      "field_name": "operacion.precio_letras",
+      "category": "operacion",
+      "category_label": "Datos de la Operación / Transacción",
+      "description": "Precio expresado solo en letras",
+      "type": "currency",
+      "example": "PESOS DIEZ MILLONES",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ operacion.precio_venta }}",
+      "field_name": "operacion.precio_venta",
+      "category": "operacion",
+      "category_label": "Datos de la Operación / Transacción",
+      "description": "Precio venta del operacion",
+      "type": "currency",
+      "example": "USD 150.000",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ titulo_antecedente.escribano_autorizante }}",
+      "field_name": "titulo_antecedente.escribano_autorizante",
+      "category": "titulo_antecedente",
+      "category_label": "Título Antecedente (Origen del Dominio)",
+      "description": "Escribano autorizante del titulo_antecedente",
+      "type": "text",
+      "example": "Esc. Roberto MARTINEZ",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ titulo_antecedente.escritura_numero }}",
+      "field_name": "titulo_antecedente.escritura_numero",
+      "category": "titulo_antecedente",
+      "category_label": "Título Antecedente (Origen del Dominio)",
+      "description": "Escritura numero del titulo_antecedente",
+      "type": "text",
+      "example": "Escritura Nro. 456 antecedente",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ titulo_antecedente.fecha }}",
+      "field_name": "titulo_antecedente.fecha",
+      "category": "titulo_antecedente",
+      "category_label": "Título Antecedente (Origen del Dominio)",
+      "description": "Fecha del acto antecedente",
+      "type": "date",
+      "example": "15 de junio de 2005",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ titulo_antecedente.registro }}",
+      "field_name": "titulo_antecedente.registro",
+      "category": "titulo_antecedente",
+      "category_label": "Título Antecedente (Origen del Dominio)",
+      "description": "Registro notarial del título anterior",
+      "type": "text",
+      "example": "Registro N° 45 de Rosario",
+      "is_array": false
+    },
+    {
+      "jinja_tag": "{{ vendedores[0].cuit_cuil }}",
+      "field_name": "vendedores[0].cuit_cuil",
+      "category": "vendedores",
+      "category_label": "Vendedores / Parte Transmitente",
+      "description": "CUIT o CUIL del vendedor",
+      "type": "text",
+      "example": "20-20345678-5",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ vendedores[0].domicilio }}",
+      "field_name": "vendedores[0].domicilio",
+      "category": "vendedores",
+      "category_label": "Vendedores / Parte Transmitente",
+      "description": "Domicilio real del vendedor",
+      "type": "address",
+      "example": "Calle Mitre 1234, Rosario, Santa Fe",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ vendedores[0].estado_civil }}",
+      "field_name": "vendedores[0].estado_civil",
+      "category": "vendedores",
+      "category_label": "Vendedores / Parte Transmitente",
+      "description": "Estado civil del vendedor",
+      "type": "select",
+      "example": "casado/a en primeras nupcias",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ vendedores[0].fecha_nacimiento }}",
+      "field_name": "vendedores[0].fecha_nacimiento",
+      "category": "vendedores",
+      "category_label": "Vendedores / Parte Transmitente",
+      "description": "Fecha de nacimiento del vendedor",
+      "type": "date",
+      "example": "15 de marzo de 1970",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ vendedores[0].nacionalidad }}",
+      "field_name": "vendedores[0].nacionalidad",
+      "category": "vendedores",
+      "category_label": "Vendedores / Parte Transmitente",
+      "description": "Nacionalidad del vendedor",
+      "type": "select",
+      "example": "argentina",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ vendedores[0].nombre_completo }}",
+      "field_name": "vendedores[0].nombre_completo",
+      "category": "vendedores",
+      "category_label": "Vendedores / Parte Transmitente",
+      "description": "Nombre y apellido completo del vendedor",
+      "type": "text",
+      "example": "Juan Carlos PÉREZ",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ vendedores[0].numero_documento }}",
+      "field_name": "vendedores[0].numero_documento",
+      "category": "vendedores",
+      "category_label": "Vendedores / Parte Transmitente",
+      "description": "Número de documento del vendedor",
+      "type": "text",
+      "example": "20.345.678",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ vendedores[0].profesion }}",
+      "field_name": "vendedores[0].profesion",
+      "category": "vendedores",
+      "category_label": "Vendedores / Parte Transmitente",
+      "description": "Profesión u ocupación del vendedor",
+      "type": "text",
+      "example": "comerciante",
+      "is_array": true,
+      "array_index": 0
+    },
+    {
+      "jinja_tag": "{{ vendedores[0].tipo_documento }}",
+      "field_name": "vendedores[0].tipo_documento",
+      "category": "vendedores",
+      "category_label": "Vendedores / Parte Transmitente",
+      "description": "Tipo de documento de identidad del vendedor",
+      "type": "select",
+      "example": "DNI",
+      "is_array": true,
+      "array_index": 0
+    }
+  ]
+}

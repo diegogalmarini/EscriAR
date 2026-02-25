@@ -34,7 +34,7 @@ export async function getInmuebleWithRelations(id: string) {
         }
 
         if (directEscrituras) {
-            escrituraIds = directEscrituras.map(e => e.id);
+            escrituraIds = directEscrituras.map((e: any) => e.id);
         }
 
         if (escrituraIds.length === 0) {
@@ -55,7 +55,7 @@ export async function getInmuebleWithRelations(id: string) {
             .in("id", escrituraIds)
             .order("fecha_escritura", { ascending: false }); // Newest first
 
-        const carpetaIds = escrituras?.map(e => e.carpeta_id).filter(Boolean) || [];
+        const carpetaIds = escrituras?.map((e: any) => e.carpeta_id).filter(Boolean) || [];
 
         // 4. Get Carpetas Linked
         const { data: carpetas } = await supabase
@@ -112,8 +112,8 @@ export async function getInmuebleWithRelations(id: string) {
                 console.log("Primary participants found:", participantes.length);
                 // Return them as an array or single
                 titularActual = participantes
-                    .map(p => p.persona)
-                    .filter(p => p !== null);
+                    .map((p: any) => p.persona)
+                    .filter((p: any) => p !== null);
             } else {
                 // Fallback: Get ALL participants except Escribano if no specific role matches
                 const { data: allParticipantes } = await supabase
@@ -129,8 +129,8 @@ export async function getInmuebleWithRelations(id: string) {
                 if (allParticipantes && allParticipantes.length > 0) {
                     console.log("Fallback participants found:", allParticipantes.length);
                     titularActual = allParticipantes
-                        .map(p => p.persona)
-                        .filter(p => p !== null);
+                        .map((p: any) => p.persona)
+                        .filter((p: any) => p !== null);
                 }
             }
         }

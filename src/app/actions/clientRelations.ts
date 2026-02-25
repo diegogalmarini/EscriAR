@@ -71,7 +71,7 @@ export async function getClientWithRelations(dni: string) {
         console.log("[DEBUG] Participaciones for DNI", dni, ":", participaciones);
 
         // 3. Get operaciones details
-        const operacionIds = participaciones?.map(p => p.operacion_id).filter(Boolean) || [];
+        const operacionIds = participaciones?.map((p: any) => p.operacion_id).filter(Boolean) || [];
         const { data: operacionesData } = await supabase
             .from("operaciones")
             .select("*")
@@ -80,7 +80,7 @@ export async function getClientWithRelations(dni: string) {
         console.log("[DEBUG] Operaciones:", operacionesData);
 
         // 4. Get escrituras details
-        const escrituraIds = operacionesData?.map(o => o.escritura_id).filter(Boolean) || [];
+        const escrituraIds = operacionesData?.map((o: any) => o.escritura_id).filter(Boolean) || [];
         const { data: escriturasData } = await supabase
             .from("escrituras")
             .select("*")
@@ -89,7 +89,7 @@ export async function getClientWithRelations(dni: string) {
         console.log("[DEBUG] Escrituras:", escriturasData);
 
         // 5. Get carpetas details
-        const carpetaIds = escriturasData?.map(e => e.carpeta_id).filter(Boolean) || [];
+        const carpetaIds = escriturasData?.map((e: any) => e.carpeta_id).filter(Boolean) || [];
         const { data: carpetasData } = await supabase
             .from("carpetas")
             .select("*")
@@ -129,10 +129,10 @@ export async function getClientWithRelations(dni: string) {
         console.log("[DEBUG] Poderes Activos:", poderesActivosData);
 
         // 7. Build the relationships
-        const operaciones = participaciones?.map(part => {
-            const op = operacionesData?.find(o => o.id === part.operacion_id);
-            const esc = escriturasData?.find(e => e.id === op?.escritura_id);
-            const carp = carpetasData?.find(c => c.id === esc?.carpeta_id);
+        const operaciones = participaciones?.map((part: any) => {
+            const op = operacionesData?.find((o: any) => o.id === part.operacion_id);
+            const esc = escriturasData?.find((e: any) => e.id === op?.escritura_id);
+            const carp = carpetasData?.find((c: any) => c.id === esc?.carpeta_id);
 
             return {
                 id: op?.id || '',
@@ -148,15 +148,15 @@ export async function getClientWithRelations(dni: string) {
                     } : undefined
                 } : undefined
             };
-        }).filter(op => op.id) || [];
+        }).filter((op: any) => op.id) || [];
 
-        const carpetas = carpetasData?.map(c => ({
+        const carpetas = carpetasData?.map((c: any) => ({
             id: c.id,
             numero: c.nro_carpeta_interna,
             observaciones: c.observaciones || c.descripcion || ''
         })) || [];
 
-        const escrituras = escriturasData?.map(e => ({
+        const escrituras = escriturasData?.map((e: any) => ({
             id: e.id,
             numero: e.nro_protocolo,
             tipo: e.tipo // This might still be null, but let's keep it for now
@@ -164,10 +164,10 @@ export async function getClientWithRelations(dni: string) {
 
         // Mapear y deduplicar históricos otorgados
         const historicosOtorgados = (participacionesHistoricasOtorgadas || [])
-            .filter((p, index, self) =>
-                index === self.findIndex((t) => t.persona_id === p.persona_id)
+            .filter((p: any, index: number, self: any[]) =>
+                index === self.findIndex((t: any) => t.persona_id === p.persona_id)
             )
-            .map(p => {
+            .map((p: any) => {
                 const extracted = extractPoderData(p.datos_representacion?.poder_detalle || '');
                 return {
                     id: `hist-otorg-${p.id}`,
@@ -186,10 +186,10 @@ export async function getClientWithRelations(dni: string) {
 
         // Mapear y deduplicar históricos activos
         const historicosActivos = (participacionesHistoricasActivas || [])
-            .filter((p, index, self) =>
-                index === self.findIndex((t) => t.datos_representacion?.representa_a === p.datos_representacion?.representa_a)
+            .filter((p: any, index: number, self: any[]) =>
+                index === self.findIndex((t: any) => t.datos_representacion?.representa_a === p.datos_representacion?.representa_a)
             )
-            .map(p => {
+            .map((p: any) => {
                 const extracted = extractPoderData(p.datos_representacion?.poder_detalle || '');
                 return {
                     id: `hist-act-${p.id}`,

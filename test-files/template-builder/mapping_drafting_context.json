@@ -1,0 +1,343 @@
+{
+  "_description": "Mapeo completo de DraftingContext (NotiAR SaaS actual) → Variables Jinja2 del Template Builder",
+  "_purpose": "Guía para que el agente NotiAR SaaS expanda DraftingContext para cubrir todas las variables de los templates",
+  "_generated_at": "2025-06",
+
+  "current_drafting_context_fields": {
+    "numero_escritura": {
+      "our_variable": "{{ escritura.numero }}",
+      "our_category": "escritura",
+      "status": "MAPPED",
+      "notes": "Mapeo directo. Dato ingresado por el escribano al autorizar."
+    },
+    "acto_titulo": {
+      "our_variable": null,
+      "our_category": null,
+      "status": "DERIVED",
+      "notes": "No existe como variable Jinja2. Se usa como metadata. El acto se identifica por act_type en metadata.json."
+    },
+    "fecha": {
+      "our_variable": "{{ escritura.fecha }}",
+      "our_category": "escritura",
+      "status": "MAPPED",
+      "notes": "Mapeo directo."
+    },
+    "escribano": {
+      "our_variable": "{{ escritura.escribano }}",
+      "our_category": "escritura",
+      "status": "MAPPED",
+      "notes": "En nuestro schema es nombre completo del escribano."
+    },
+    "registro": {
+      "our_variable": "{{ escritura.registro }}",
+      "our_category": "escritura",
+      "status": "MAPPED",
+      "notes": "Mapeo directo."
+    },
+    "caracter_escribano": {
+      "our_variable": "{{ escritura.caracter }}",
+      "our_category": "escritura",
+      "status": "MAPPED",
+      "notes": "Titular, adscripto, interino. Mapeo directo."
+    },
+    "distrito_notarial": {
+      "our_variable": "{{ escritura.distrito }}",
+      "our_category": "escritura",
+      "status": "MAPPED",
+      "notes": "Mapeo directo."
+    },
+    "clientes[].nombre_completo": {
+      "our_variable": "{{ vendedores[i].nombre_completo }} / {{ compradores[i].nombre_completo }}",
+      "our_category": "vendedores / compradores",
+      "status": "RESTRUCTURE",
+      "notes": "En DraftingContext es un array genérico 'clientes' con un campo 'rol'. Nosotros separamos en arrays tipados por rol. El SaaS debe mapear clientes.filter(rol='vendedor') → vendedores[]."
+    },
+    "clientes[].nacionalidad": {
+      "our_variable": "{{ vendedores[i].nacionalidad }}",
+      "our_category": "vendedores / compradores",
+      "status": "MAPPED",
+      "notes": "Campo presente. Debe duplicarse por rol."
+    },
+    "clientes[].dni": {
+      "our_variable": "{{ vendedores[i].numero_documento }}",
+      "our_category": "vendedores / compradores",
+      "status": "RENAME",
+      "notes": "'dni' → 'numero_documento'. También necesita 'tipo_documento' (DNI, LE, LC, Pasaporte)."
+    },
+    "clientes[].rol": {
+      "our_variable": null,
+      "our_category": null,
+      "status": "ELIMINATED",
+      "notes": "No existe como variable separada. El rol está implícito en el prefix del array (vendedores, compradores, donante, etc.)."
+    },
+    "inmuebles[].transcripcion_literal": {
+      "our_variable": "{{ inmueble.descripcion_legal }}",
+      "our_category": "inmueble",
+      "status": "EXPAND",
+      "notes": "CRÍTICO: El SaaS guarda todo el inmueble como un blob de texto. Nosotros lo descomponemos en 16 campos estructurados (matrícula, partida, superficie, linderos, nomenclatura, etc.). La IA debe extraer estos campos del texto."
+    },
+    "tax_calculation.baseCalculoArs": {
+      "our_variable": "{{ impuestos.base_imponible }}",
+      "our_category": "impuestos",
+      "status": "MAPPED",
+      "notes": "Mapeo directo."
+    },
+    "tax_calculation.detail.sellosPba": {
+      "our_variable": "{{ impuestos.sellados }}",
+      "our_category": "impuestos",
+      "status": "MAPPED",
+      "notes": "Mapeo directo."
+    },
+    "tax_calculation.detail.itiAfip": {
+      "our_variable": "{{ impuestos.iti }}",
+      "our_category": "impuestos",
+      "status": "MAPPED",
+      "notes": "Mapeo directo."
+    },
+    "compliance.risk_level": {
+      "our_variable": null,
+      "our_category": null,
+      "status": "INTERNAL",
+      "notes": "No es dato de la escritura. Es dato interno del SaaS para cumplimiento UIF. No va en el template."
+    },
+    "compliance.alerts[]": {
+      "our_variable": null,
+      "our_category": null,
+      "status": "INTERNAL",
+      "notes": "Ídem risk_level. Dato interno."
+    },
+    "mortgage.financial_terms.capital": {
+      "our_variable": "{{ hipoteca_datos.monto_capital }}",
+      "our_category": "hipoteca_datos",
+      "status": "MAPPED",
+      "notes": "Solo para acto=hipoteca. Mapeo directo."
+    },
+    "mortgage.financial_terms.rate": {
+      "our_variable": "{{ hipoteca_datos.tasa_interes }}",
+      "our_category": "hipoteca_datos",
+      "status": "MAPPED",
+      "notes": "Solo para acto=hipoteca."
+    },
+    "mortgage.financial_terms.system": {
+      "our_variable": "{{ hipoteca_datos.sistema_amortizacion }}",
+      "our_category": "hipoteca_datos",
+      "status": "MAPPED",
+      "notes": "Francés, alemán, etc."
+    },
+    "mortgage.legal_status.letra_hipotecaria": {
+      "our_variable": "{{ hipoteca_datos.letra_hipotecaria }}",
+      "our_category": "hipoteca_datos",
+      "status": "MAPPED",
+      "notes": "Si hay emisión de letra hipotecaria."
+    }
+  },
+
+  "missing_from_saas": {
+    "_summary": "Categorías completas que NO existen en DraftingContext y deben agregarse",
+
+    "apoderado": {
+      "priority": "ALTA",
+      "reason": "Muchas escrituras se otorgan por poder. El apoderado comparece en lugar de la parte.",
+      "variables_needed": 9,
+      "fields": [
+        "nombre_completo", "tipo_documento", "numero_documento",
+        "nacionalidad", "estado_civil", "domicilio",
+        "cuit_cuil", "fecha_nacimiento", "profesion"
+      ]
+    },
+
+    "conyuge": {
+      "priority": "ALTA",
+      "reason": "Art. 456 CCyCN: asentimiento conyugal obligatorio para disponer de bienes gananciales y vivienda familiar.",
+      "variables_needed": 9,
+      "fields": [
+        "nombre_completo", "tipo_documento", "numero_documento",
+        "nacionalidad", "estado_civil", "domicilio",
+        "cuit_cuil", "fecha_nacimiento", "profesion"
+      ]
+    },
+
+    "titulo_antecedente": {
+      "priority": "ALTA",
+      "reason": "Toda escritura debe citar el título por el cual el transmitente adquirió el bien.",
+      "variables_needed": 7,
+      "fields": [
+        "escritura_numero", "escribano_autorizante", "fecha",
+        "registro", "folio", "tomo", "matricula"
+      ]
+    },
+
+    "certificados": {
+      "priority": "ALTA",
+      "reason": "Requisito legal. Sin certificados no hay escritura válida.",
+      "variables_needed": 8,
+      "fields": [
+        "dominio_numero", "dominio_fecha", "inhibiciones_numero",
+        "inhibiciones_fecha", "catastro_numero", "catastro_fecha",
+        "deuda_municipal", "deuda_arba"
+      ]
+    },
+
+    "persona_juridica": {
+      "priority": "MEDIA",
+      "reason": "Cuando una parte es empresa/sociedad, necesita datos corporativos extra.",
+      "variables_needed": 9,
+      "fields": [
+        "razon_social", "cuit", "tipo_sociedad", "inscripcion_igj",
+        "fecha_inscripcion", "sede_social", "representante_legal",
+        "cargo_representante", "acta_designacion"
+      ]
+    },
+
+    "poder_datos": {
+      "priority": "MEDIA",
+      "reason": "Cuando alguien actúa por poder, debe citarse el instrumento que lo acredita.",
+      "variables_needed": 5,
+      "fields": [
+        "tipo_poder", "escritura_poder", "escribano_poder",
+        "registro_poder", "facultades"
+      ]
+    },
+
+    "operacion": {
+      "priority": "ALTA",
+      "reason": "Precio, moneda, forma de pago — datos esenciales de la transacción.",
+      "variables_needed": 8,
+      "fields": [
+        "precio_venta", "precio_letras", "moneda", "tipo_cambio",
+        "forma_pago", "sena_entregada", "saldo_pendiente", "plazo_pago"
+      ]
+    },
+
+    "inmueble_structured": {
+      "priority": "CRÍTICA",
+      "reason": "Reemplazar transcripcion_literal por campos estructurados. Es la brecha más grande.",
+      "variables_needed": 16,
+      "fields": [
+        "descripcion_legal", "matricula", "tomo", "folio", "numero",
+        "partida_fiscal", "nomenclatura_catastral", "superficie_terreno",
+        "superficie_cubierta", "ubicacion_calle", "ubicacion_localidad",
+        "ubicacion_partido", "ubicacion_provincia", "linderos_norte",
+        "linderos_sur", "linderos_este"
+      ]
+    }
+  },
+
+  "status_legend": {
+    "MAPPED": "Campo existente con equivalencia directa",
+    "RENAME": "Campo existente pero con nombre diferente",
+    "RESTRUCTURE": "Campo existente pero requiere reestructuración",
+    "EXPAND": "Campo existente pero insuficiente (necesita descomposición)",
+    "DERIVED": "No se almacena como variable, se calcula o es metadata",
+    "ELIMINATED": "No se necesita como variable (implícito en la estructura)",
+    "INTERNAL": "Dato interno del SaaS, no va en el template de la escritura"
+  },
+
+  "recommended_new_drafting_context": {
+    "_description": "Estructura recomendada para DraftingContext expandido",
+    "ejemplo_compraventa": {
+      "escritura": {
+        "numero": "Escritura Número Ciento Veintitrés (123)",
+        "fecha": "veinte de junio de dos mil veinticinco",
+        "escribano": "Diego Oscar GALMARINI",
+        "registro": "Registro Notarial Nro. 5",
+        "caracter": "titular",
+        "distrito": "San Isidro",
+        "folio": "123",
+        "tomo": "A",
+        "localidad": "San Isidro",
+        "provincia": "Buenos Aires"
+      },
+      "vendedores": [
+        {
+          "nombre_completo": "Juan Carlos PÉREZ",
+          "tipo_documento": "DNI",
+          "numero_documento": "20.345.678",
+          "nacionalidad": "argentina",
+          "estado_civil": "casado en primeras nupcias",
+          "domicilio": "Calle Mitre 1234, San Isidro, Buenos Aires",
+          "cuit_cuil": "20-20345678-5",
+          "fecha_nacimiento": "15 de marzo de 1970",
+          "profesion": "comerciante"
+        }
+      ],
+      "compradores": [
+        {
+          "nombre_completo": "María Elena GÓMEZ",
+          "tipo_documento": "DNI",
+          "numero_documento": "30.456.789",
+          "nacionalidad": "argentina",
+          "estado_civil": "soltera",
+          "domicilio": "Av. Libertador 5678, CABA",
+          "cuit_cuil": "27-30456789-5",
+          "fecha_nacimiento": "22 de agosto de 1985",
+          "profesion": "abogada"
+        }
+      ],
+      "conyuge": {
+        "nombre_completo": "Ana Laura RODRÍGUEZ",
+        "tipo_documento": "DNI",
+        "numero_documento": "25.678.901",
+        "nacionalidad": "argentina",
+        "estado_civil": "casada en primeras nupcias",
+        "domicilio": "Calle Mitre 1234, San Isidro, Buenos Aires",
+        "cuit_cuil": "27-25678901-5",
+        "fecha_nacimiento": "3 de diciembre de 1972",
+        "profesion": "docente"
+      },
+      "inmueble": {
+        "descripcion_legal": "LOTE de terreno...",
+        "matricula": "FRE-12345/2010",
+        "tomo": "123",
+        "folio": "456",
+        "numero": "789",
+        "partida_fiscal": "012-34567-0",
+        "nomenclatura_catastral": "C-III-M-123-P-01",
+        "superficie_terreno": "250 m²",
+        "superficie_cubierta": "180 m²",
+        "ubicacion_calle": "Avenida Centenario 500",
+        "ubicacion_localidad": "San Isidro",
+        "ubicacion_partido": "San Isidro",
+        "ubicacion_provincia": "Buenos Aires",
+        "linderos_norte": "Lote 5 de Juan García",
+        "linderos_sur": "Calle pública",
+        "linderos_este": "Lote 3 de Pedro López"
+      },
+      "titulo_antecedente": {
+        "escritura_numero": "Escritura Nro. 456",
+        "escribano_autorizante": "Esc. Roberto MARTÍNEZ",
+        "fecha": "15 de mayo de 2015",
+        "registro": "Registro Nro. 12 de San Isidro",
+        "folio": "789",
+        "tomo": "B",
+        "matricula": "FRE-12345/2010"
+      },
+      "operacion": {
+        "precio_venta": "U$S 150.000",
+        "precio_letras": "DÓLARES ESTADOUNIDENSES CIENTO CINCUENTA MIL",
+        "moneda": "dólares estadounidenses",
+        "tipo_cambio": "1.200",
+        "forma_pago": "transferencia bancaria",
+        "sena_entregada": "U$S 15.000",
+        "saldo_pendiente": "U$S 135.000",
+        "plazo_pago": "al contado en este acto"
+      },
+      "certificados": {
+        "dominio_numero": "Cert. 12345",
+        "dominio_fecha": "10 de junio de 2025",
+        "inhibiciones_numero": "Cert. 67890",
+        "inhibiciones_fecha": "10 de junio de 2025",
+        "catastro_numero": "Cert. Cat. 11111",
+        "catastro_fecha": "5 de junio de 2025",
+        "deuda_municipal": "libre de deuda",
+        "deuda_arba": "libre de deuda"
+      },
+      "impuestos": {
+        "base_imponible": "$180.000.000",
+        "sellados": "$3.600.000",
+        "iti": "$2.700.000",
+        "retencion_ganancias": "no aplica"
+      }
+    }
+  }
+}

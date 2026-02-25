@@ -133,7 +133,7 @@ function looseNameMatch(n1: string, n2: string): boolean {
     if (t1.length === 0 || t2.length === 0) return s1.includes(s2) || s2.includes(s1);
 
     const set2 = new Set(t2);
-    const intersection = t1.filter(t => set2.has(t));
+    const intersection = t1.filter((t: any) => set2.has(t));
     const matchCount = intersection.length;
     const minTokens = Math.min(t1.length, t2.length);
 
@@ -186,7 +186,7 @@ function safeParseInt(val: any): number | null {
     if (textNumbers[str]) return textNumbers[str];
 
     // Compound handling: "SETECIENTOS SETENTA Y UNO" → 700 + 70 + 1 = 771
-    const parts = str.split(/[\s-]+/).filter(p => p && p !== 'Y');
+    const parts = str.split(/[\s-]+/).filter((p: any) => p && p !== 'Y');
     if (parts.length > 1) {
         let total = 0;
         for (const part of parts) {
@@ -450,7 +450,7 @@ function normalizeAIData(raw: any) {
 
     // Helper to add or merge client to prevent duplicates and role loss
     const addOrMergeClient = (newCl: any) => {
-        const existingIdx = allClients.findIndex(cl => {
+        const existingIdx = allClients.findIndex((cl: any) => {
             const nameMatch = looseNameMatch(cl.nombre_completo, newCl.nombre_completo);
             if (!nameMatch) return false;
             // DNI/CUIT Conflict check (normalize to strip dots/dashes)
@@ -490,7 +490,7 @@ function normalizeAIData(raw: any) {
             const isFideicomiso = e.tipo_entidad === 'FIDEICOMISO' ||
                 (d.nombre_completo?.toString() || d.razon_social?.toString() || d.nombre?.toString() || '').toUpperCase().includes('FIDEICOMISO');
 
-            const forcedTipoPersona = isFideicomiso ? 'FIDEICOMISO' : (e.tipo_persona || (['30', '33', '34'].some(p => rawCuit.startsWith(p)) ? 'JURIDICA' : 'FISICA'));
+            const forcedTipoPersona = isFideicomiso ? 'FIDEICOMISO' : (e.tipo_persona || (['30', '33', '34'].some((p: any) => rawCuit.startsWith(p)) ? 'JURIDICA' : 'FISICA'));
             let rawNombre = isFideicomiso
                 ? (extractString(d.nombre_completo, false) || extractString(d.razon_social, false) || 'Desconocido')
                 : (extractString(d.nombre_completo) || 'Desconocido');
@@ -623,7 +623,7 @@ function normalizeAIData(raw: any) {
 
         // Fallback: if still no match, try to find any JURIDICA entity this person might represent
         if (!c._representacion) {
-            const juridicas = allClients.filter(cl => cl.tipo_persona === 'JURIDICA' || cl.tipo_persona === 'FIDEICOMISO');
+            const juridicas = allClients.filter((cl: any) => cl.tipo_persona === 'JURIDICA' || cl.tipo_persona === 'FIDEICOMISO');
             if (juridicas.length === 1) {
                 c._representacion = {
                     representa_a: juridicas[0].nombre_completo,

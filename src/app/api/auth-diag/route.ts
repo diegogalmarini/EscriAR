@@ -9,7 +9,7 @@ export async function GET() {
 
     try {
         const cookieStore = await cookies();
-        const allCookies = cookieStore.getAll().map(c => ({ name: c.name, value: c.name.includes('token') ? '[REDACTED]' : c.value }));
+        const allCookies = cookieStore.getAll().map((c: any) => ({ name: c.name, value: c.name.includes('token') ? '[REDACTED]' : c.value }));
 
         const supabase = await createClient();
         const { data: { user }, error: userError } = await supabase.auth.getUser();
