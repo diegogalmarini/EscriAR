@@ -183,9 +183,9 @@ export async function getUserStats() {
 
         const stats = {
             total: data.length,
-            pending: data.filter(u => u.approval_status === "pending").length,
-            approved: data.filter(u => u.approval_status === "approved").length,
-            rejected: data.filter(u => u.approval_status === "rejected").length,
+            pending: data.filter((u: any) => u.approval_status === "pending").length,
+            approved: data.filter((u: any) => u.approval_status === "approved").length,
+            rejected: data.filter((u: any) => u.approval_status === "rejected").length,
         };
 
         return { success: true, data: stats };
