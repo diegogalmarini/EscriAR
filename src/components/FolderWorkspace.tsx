@@ -64,7 +64,7 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                     table: 'carpetas',
                     filter: `id=eq.${carpeta.id}`
                 },
-                (payload) => {
+                (payload: any) => {
                     console.log('[REALTIME] Folder change detected:', payload);
                     const newData = payload.new as any;
                     setCarpeta((prev: any) => ({ ...prev, ...newData }));
@@ -828,7 +828,7 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                     </DialogHeader>
 
                     <div className="space-y-6 my-4">
-                        {pendingConflicts.map((conflict, idx) => (
+                        {pendingConflicts.map((conflict: any, idx: number) => (
                             <div key={idx} className="border rounded-xl p-4 bg-slate-50 space-y-3">
                                 <div className="flex items-center justify-between">
                                     <Badge variant="outline" className="bg-amber-100 text-amber-700">

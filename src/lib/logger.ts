@@ -1,13 +1,15 @@
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { createClient } from "@/lib/supabaseServer";
 
 /**
  * Log an action to the audit_logs table
  */
 export async function logAction(action: string, entity: string, details: any = {}) {
     try {
+        const supabase = await createClient();
         const { data: { session } } = await supabase.auth.getSession();
 
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
             .from("audit_logs")
             .insert([{
                 user_id: session?.user?.id,
@@ -17,9 +19,9 @@ export async function logAction(action: string, entity: string, details: any = {
             }]);
 
         if (error) {
-            console.error("Failed to log action:", error);
+            console.error("[logAction] Error:", error.message);
         }
     } catch (err) {
-        console.error("Error in logAction:", err);
+        console.error("[logAction] Exception:", err);
     }
 }

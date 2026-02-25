@@ -51,8 +51,10 @@ async function isAdmin(): Promise<boolean> {
  * Get all users with their approval status
  */
 export async function getAllUsers() {
+    console.log("[getAllUsers] Starting...");
     try {
         if (!(await isAdmin())) {
+            console.warn("[getAllUsers] Unauthorized access attempt");
             return { success: false, error: "Unauthorized", data: [] };
         }
 
@@ -66,6 +68,7 @@ export async function getAllUsers() {
             throw error;
         }
 
+        console.log(`[getAllUsers] Success, returned ${data?.length || 0} users`);
         return { success: true, data: data || [] };
     } catch (error: any) {
         console.error("[getAllUsers] Exception:", error);
@@ -167,8 +170,10 @@ export async function deleteUser(userId: string) {
  * Get user statistics
  */
 export async function getUserStats() {
+    console.log("[getUserStats] Starting...");
     try {
         if (!(await isAdmin())) {
+            console.warn("[getUserStats] Unauthorized access attempt");
             return { success: false, error: "Unauthorized", data: null };
         }
 

@@ -21,6 +21,7 @@ export type Escribano = {
 };
 
 export async function getEscribanos() {
+    console.log("[getEscribanos] Starting...");
     try {
         const { data, error } = await supabaseAdmin
             .from("escribanos")
@@ -31,6 +32,7 @@ export async function getEscribanos() {
             console.error("[getEscribanos] DB Error:", error);
             throw error;
         }
+        console.log(`[getEscribanos] Success, returned ${data?.length || 0} escribanos`);
         return { success: true, data };
     } catch (error: any) {
         console.error("[getEscribanos] Exception:", error);
