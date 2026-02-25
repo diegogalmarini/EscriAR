@@ -51,7 +51,16 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    const { data: { user } } = await supabase.auth.getUser()
+    let user = null;
+    try {
+        const { data, error } = await supabase.auth.getUser()
+        if (error) {
+            console.error("[middleware] getUser error:", error.message);
+        }
+        user = data?.user;
+    } catch (err) {
+        console.error("[middleware] getUser exception:", err);
+    }
 
     if (user && pathname === '/login') {
         return NextResponse.redirect(new URL('/dashboard', request.url))
