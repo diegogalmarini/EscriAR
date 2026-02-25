@@ -20,7 +20,7 @@ export async function getKnowledgeFiles() {
         // Grouping logic to show unique documents
         const docsMap = new Map<string, any>();
 
-        data.forEach(item => {
+        data.forEach((item: any) => {
             const meta = item.metadata as any;
             const fileName = meta.source_file;
 

@@ -148,7 +148,7 @@ export async function uploadModeloZip(
 
         // 7. Archive previous active version
         if (existingModels && existingModels.length > 0) {
-            const activeIds = existingModels.filter(m => m.is_active).map(m => m.id);
+            const activeIds = existingModels.filter((m: any) => m.is_active).map((m: any) => m.id);
             if (activeIds.length > 0) {
                 await supabase
                     .from("modelos_actos")
