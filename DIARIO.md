@@ -738,6 +738,7 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 | 028 | Normalizar tildes en partido + merge duplicados con FK remap | ✅ Ejecutada |
 | 029 | Dedup personas jurídicas por CUIT (merge canónico) | ⚠️ **PENDIENTE** |
 | 030 | Agregar telefono/email a escribanos + A_CARGO enum + datos Galmarini | ✅ Ejecutada |
+| 035 | Tabla modelos_actos — Templates DOCX para actos notariales | ✅ Ejecutada |
 
 **Nota**: las migraciones se ejecutan MANUAL en Supabase SQL Editor. No hay sistema de migración automático.
 
@@ -1000,6 +1001,19 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 - `FichaForm.tsx` (ficha pública `/ficha/[token]`): mismos campos con lógica condicional.
 - `WorkspacePipeline.tsx`: tarjetas de participantes muestran profesión e indicador "⚠ Ficha incompleta" si faltan datos.
 
+### 2026-02-26 (Claude Opus) — Fix crítico: Error 500 en panel de administración
+
+#### Bug resuelto: Server actions crasheaban en /admin/users
+- **Causa raíz**: `SUPPORTED_ACT_TYPES` (const array) se exportaba desde `modelos.ts` que tiene `"use server"`. Next.js registraba la constante como server action en el manifiesto, rompiendo el módulo completo en runtime de Vercel. Como todas las actions de `/admin/users` comparten módulo, el 500 afectaba a `getAllUsers`, `getUserStats` y `getEscribanos`.
+- **Fix**: Creado `src/app/actions/modelos-types.ts` (sin `"use server"`) con `ModeloActo` interface y `SUPPORTED_ACT_TYPES` constante. `modelos.ts` ahora solo exporta funciones async.
+- **Lección**: Los archivos `"use server"` SOLO deben exportar funciones async. Exportar constantes, arrays u objetos rompe el runtime de server actions.
+
+#### Limpieza de 10 commits de debug fallidos
+- Eliminados `console.log` de debug excesivos en `admin.ts` y `escribanos.ts` agregados por agente anterior que intentó arreglar el 500 sin éxito.
+
+#### Migración 035 confirmada ejecutada
+- La tabla `modelos_actos` ya existía en producción. Se subieron 2 modelos: Compraventa (30 vars) y Autorización Vehicular (24 vars).
+
 ---
 
 ## 18. Pendientes Conocidos
@@ -1032,4 +1046,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-02-23 (Sesión 4) — Antigravity — Hitos 1.2 (Lector RPI + Inhibiciones) y 1.3 (Ficha Comprador) completados
+> **Última actualización**: 2026-02-26 — Claude Opus — Fix crítico error 500 en admin, sistema de modelos DOCX funcional
