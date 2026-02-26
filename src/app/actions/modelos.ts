@@ -219,9 +219,12 @@ export async function deleteModelo(
             .single();
 
         if (modelo?.docx_path) {
-            await supabaseAdmin.storage
+            const { error: storageError } = await supabaseAdmin.storage
                 .from("escrituras")
                 .remove([modelo.docx_path]);
+            if (storageError) {
+                console.error("[deleteModelo] Error borrando archivo de storage:", storageError);
+            }
         }
 
         const { error } = await supabase

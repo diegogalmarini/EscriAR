@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Escribano, deleteEscribano, setDefaultEscribano } from "@/app/actions/escribanos";
 import { NuevoEscribanoDialog } from "./NuevoEscribanoDialog";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -39,16 +40,21 @@ export function EscribanosTab({ escribanos, loading, onRefresh }: EscribanosTabP
     const [isEditing, setIsEditing] = useState(false);
     const [currentEscribano, setCurrentEscribano] = useState<Escribano | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("¿Está seguro de eliminar este escribano?")) return;
-        const res = await deleteEscribano(id);
+    const handleDeleteConfirm = async () => {
+        if (!deleteTargetId) return;
+        setDeleting(true);
+        const res = await deleteEscribano(deleteTargetId);
         if (res.success) {
             toast.success("Escribano eliminado correctamente");
             onRefresh();
         } else {
             toast.error(res.error || "Error al eliminar");
         }
+        setDeleting(false);
+        setDeleteTargetId(null);
     };
 
     const handleSetDefault = async (id: string) => {
@@ -178,7 +184,7 @@ export function EscribanosTab({ escribanos, loading, onRefresh }: EscribanosTabP
                                             variant="ghost"
                                             size="sm"
                                             className="text-red-600 hover:text-red-700 hover:bg-red-50 justify-start"
-                                            onClick={() => handleDelete(esc.id)}
+                                            onClick={() => setDeleteTargetId(esc.id)}
                                         >
                                             <Trash2 size={16} className="mr-2" />
                                             <span>Eliminar</span>
@@ -200,6 +206,14 @@ export function EscribanosTab({ escribanos, loading, onRefresh }: EscribanosTabP
                 }}
                 escribano={currentEscribano}
                 mode={isEditing ? 'edit' : 'create'}
+            />
+
+            <ConfirmDeleteDialog
+                open={!!deleteTargetId}
+                onOpenChange={(open) => { if (!open) setDeleteTargetId(null); }}
+                onConfirm={handleDeleteConfirm}
+                loading={deleting}
+                description="Se eliminará este escribano del sistema. Esta acción no se puede deshacer."
             />
         </div>
     );

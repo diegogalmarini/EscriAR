@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen, Upload, Trash2, FileText, LayoutTemplate, Scale, Loader2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { getKnowledgeFiles, uploadKnowledgeFile, deleteKnowledgeFile } from "@/app/actions/knowledge";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +19,8 @@ export function KnowledgeTab() {
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [deleteTargetName, setDeleteTargetName] = useState<string | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     const loadFiles = async () => {
         setLoading(true);
@@ -41,16 +44,18 @@ export function KnowledgeTab() {
         loadFiles();
     }, []);
 
-    const handleDelete = async (fileName: string) => {
-        if (!confirm(`¿Está seguro de eliminar "${fileName}" de la base de conocimiento?`)) return;
-
-        const res = await deleteKnowledgeFile(fileName);
+    const handleDeleteConfirm = async () => {
+        if (!deleteTargetName) return;
+        setDeleting(true);
+        const res = await deleteKnowledgeFile(deleteTargetName);
         if (res.success) {
             toast.success("Archivo eliminado correctamente");
             loadFiles();
         } else {
             toast.error("Error al eliminar el archivo");
         }
+        setDeleting(false);
+        setDeleteTargetName(null);
     };
 
     const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -213,7 +218,7 @@ export function KnowledgeTab() {
                                                 variant="ghost"
                                                 size="icon"
                                                 className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-red-600 hover:bg-red-50"
-                                                onClick={() => handleDelete(file.name)}
+                                                onClick={() => setDeleteTargetName(file.name)}
                                             >
                                                 <Trash2 size={16} />
                                             </Button>
@@ -225,6 +230,18 @@ export function KnowledgeTab() {
                     </div>
                 )}
             </CardContent>
+
+            <ConfirmDeleteDialog
+                open={!!deleteTargetName}
+                onOpenChange={(open) => { if (!open) setDeleteTargetName(null); }}
+                onConfirm={handleDeleteConfirm}
+                loading={deleting}
+                description={
+                    deleteTargetName
+                        ? `Se eliminará "${deleteTargetName}" y todos sus vectores de la base de conocimiento. Esta acción no se puede deshacer.`
+                        : ""
+                }
+            />
         </Card>
     );
 }

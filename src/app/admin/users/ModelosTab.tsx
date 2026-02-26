@@ -27,6 +27,7 @@ import {
     getModelos, uploadModeloZip, deleteModelo, toggleModeloActive,
 } from "@/app/actions/modelos";
 import { type ModeloActo, SUPPORTED_ACT_TYPES } from "@/app/actions/modelos-types";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 
 // ---------------------------------------------------------------------------
 // Variable Detail View
@@ -116,6 +117,10 @@ export function ModelosTab() {
 
     // Detail view
     const [detailModelo, setDetailModelo] = useState<ModeloActo | null>(null);
+
+    // Delete confirmation
+    const [deleteTarget, setDeleteTarget] = useState<ModeloActo | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     const loadModelos = async () => {
         setLoading(true);
@@ -207,18 +212,19 @@ export function ModelosTab() {
         }
     };
 
-    const handleDelete = async (modelo: ModeloActo) => {
-        if (!confirm(`¿Eliminar "${modelo.label || modelo.act_type}" v${modelo.version}? Esta acción no se puede deshacer.`)) {
-            return;
-        }
-        const res = await deleteModelo(modelo.id);
+    const handleDeleteConfirm = async () => {
+        if (!deleteTarget) return;
+        setDeleting(true);
+        const res = await deleteModelo(deleteTarget.id);
         if (res.success) {
             toast.success("Modelo eliminado");
-            if (detailModelo?.id === modelo.id) setDetailModelo(null);
+            if (detailModelo?.id === deleteTarget.id) setDetailModelo(null);
             loadModelos();
         } else {
             toast.error(res.error || "Error al eliminar");
         }
+        setDeleting(false);
+        setDeleteTarget(null);
     };
 
     // ------ Detail dialog ------
@@ -465,7 +471,7 @@ export function ModelosTab() {
                                                     variant="ghost"
                                                     size="icon"
                                                     className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
-                                                    onClick={() => handleDelete(m)}
+                                                    onClick={() => setDeleteTarget(m)}
                                                     title="Eliminar"
                                                 >
                                                     <Trash2 size={16} />
@@ -479,6 +485,18 @@ export function ModelosTab() {
                     </div>
                 )}
             </CardContent>
+
+            <ConfirmDeleteDialog
+                open={!!deleteTarget}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+                onConfirm={handleDeleteConfirm}
+                loading={deleting}
+                description={
+                    deleteTarget
+                        ? `Se eliminará "${deleteTarget.label || deleteTarget.act_type}" v${deleteTarget.version} junto con su template DOCX del almacenamiento. Esta acción no se puede deshacer.`
+                        : ""
+                }
+            />
         </Card>
     );
 }
