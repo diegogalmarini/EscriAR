@@ -2,52 +2,7 @@
 
 import { createClient } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-export interface ModeloActo {
-    id: string;
-    act_type: string;
-    template_name: string;
-    label: string | null;
-    description: string | null;
-    instrument_category: string;
-    version: number;
-    is_active: boolean;
-    docx_path: string;
-    metadata: any;
-    total_variables: number;
-    categories: string[];
-    created_at: string;
-    updated_at: string;
-}
-
-/** Actos soportados para el dropdown cuando act_type viene como "auto" */
-export const SUPPORTED_ACT_TYPES = [
-    { value: "compraventa", label: "Compraventa" },
-    { value: "hipoteca", label: "Hipoteca" },
-    { value: "donacion", label: "Donaci\u00f3n" },
-    { value: "cancelacion_hipoteca", label: "Cancelaci\u00f3n de Hipoteca" },
-    { value: "cesion_derechos", label: "Cesi\u00f3n de Derechos" },
-    { value: "usufructo", label: "Usufructo" },
-    { value: "afectacion_vivienda", label: "Afectaci\u00f3n a Vivienda" },
-    { value: "division_condominio", label: "Divisi\u00f3n de Condominio" },
-    { value: "fideicomiso", label: "Fideicomiso" },
-    { value: "poder", label: "Poder" },
-    { value: "constitucion_sociedad", label: "Constituci\u00f3n de Sociedad" },
-    { value: "declaratoria_herederos", label: "Declaratoria de Herederos" },
-    { value: "testamento", label: "Testamento" },
-    { value: "permuta", label: "Permuta" },
-    { value: "dacion_en_pago", label: "Daci\u00f3n en Pago" },
-    { value: "servidumbre", label: "Servidumbre" },
-    { value: "reglamento_ph", label: "Reglamento PH" },
-    { value: "autorizacion_vehicular", label: "Autorización Vehicular / a Conducir" },
-    { value: "protocolizacion", label: "Protocolización" },
-    { value: "certificacion_firmas", label: "Certificación de Firmas" },
-    { value: "acta_constatacion", label: "Acta de Constatación" },
-] as const;
+import { type ModeloActo, SUPPORTED_ACT_TYPES } from "./modelos-types";
 
 // ---------------------------------------------------------------------------
 // List all modelos

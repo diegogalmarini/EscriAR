@@ -25,8 +25,8 @@ import {
 import { toast } from "sonner";
 import {
     getModelos, uploadModeloZip, deleteModelo, toggleModeloActive,
-    ModeloActo, SUPPORTED_ACT_TYPES,
 } from "@/app/actions/modelos";
+import { type ModeloActo, SUPPORTED_ACT_TYPES } from "@/app/actions/modelos-types";
 
 // ---------------------------------------------------------------------------
 // Variable Detail View

@@ -51,10 +51,8 @@ async function isAdmin(): Promise<boolean> {
  * Get all users with their approval status
  */
 export async function getAllUsers() {
-    console.log("[getAllUsers] Starting...");
     try {
         if (!(await isAdmin())) {
-            console.warn("[getAllUsers] Unauthorized access attempt");
             return { success: false, error: "Unauthorized", data: [] };
         }
 
@@ -63,15 +61,11 @@ export async function getAllUsers() {
             .select("*")
             .order("created_at", { ascending: false });
 
-        if (error) {
-            console.error("[getAllUsers] DB Error:", error);
-            throw error;
-        }
+        if (error) throw error;
 
-        console.log(`[getAllUsers] Success, returned ${data?.length || 0} users`);
         return { success: true, data: data || [] };
     } catch (error: any) {
-        console.error("[getAllUsers] Exception:", error);
+        console.error("[getAllUsers]", error);
         return { success: false, error: error.message || "Internal Server Error", data: [] };
     }
 }
@@ -170,10 +164,8 @@ export async function deleteUser(userId: string) {
  * Get user statistics
  */
 export async function getUserStats() {
-    console.log("[getUserStats] Starting...");
     try {
         if (!(await isAdmin())) {
-            console.warn("[getUserStats] Unauthorized access attempt");
             return { success: false, error: "Unauthorized", data: null };
         }
 
@@ -181,10 +173,7 @@ export async function getUserStats() {
             .from("admin_user_list")
             .select("approval_status");
 
-        if (error) {
-            console.error("[getUserStats] DB Error:", error);
-            throw error;
-        }
+        if (error) throw error;
 
         const stats = {
             total: data.length,
@@ -195,7 +184,7 @@ export async function getUserStats() {
 
         return { success: true, data: stats };
     } catch (error: any) {
-        console.error("[getUserStats] Exception:", error);
+        console.error("[getUserStats]", error);
         return { success: false, error: error.message || "Internal Server Error", data: null };
     }
 }

@@ -21,21 +21,16 @@ export type Escribano = {
 };
 
 export async function getEscribanos() {
-    console.log("[getEscribanos] Starting...");
     try {
         const { data, error } = await supabaseAdmin
             .from("escribanos")
             .select("*")
             .order("nombre_completo", { ascending: true });
 
-        if (error) {
-            console.error("[getEscribanos] DB Error:", error);
-            throw error;
-        }
-        console.log(`[getEscribanos] Success, returned ${data?.length || 0} escribanos`);
+        if (error) throw error;
         return { success: true, data };
     } catch (error: any) {
-        console.error("[getEscribanos] Exception:", error);
+        console.error("[getEscribanos]", error);
         return { success: false, error: error.message || "Error al cargar escribanos" };
     }
 }
