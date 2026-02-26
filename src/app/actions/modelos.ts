@@ -134,7 +134,7 @@ export async function uploadModeloZip(
                 act_type: actType,
                 template_name: metadata.template_name || `${actType}_template`,
                 label: label,
-                description: `Template v${newVersion} — ${metadata.total_variables || 0} variables en ${(metadata.categories_used || []).length} categor\u00edas`,
+                description: `Template v${newVersion}${metadata.schema_version ? ` (schema ${metadata.schema_version})` : ""} — ${metadata.total_variables || 0} variables en ${(metadata.categories_used || []).length} categorías`,
                 instrument_category: "ESCRITURA_PUBLICA",
                 version: newVersion,
                 is_active: true,

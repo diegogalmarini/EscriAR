@@ -231,6 +231,11 @@ export function ModelosTab() {
                         <CardTitle className="text-xl flex items-center gap-2">
                             <Package className="text-blue-600" />
                             {detailModelo.label || detailModelo.act_type} — v{detailModelo.version}
+                            {detailModelo.metadata?.schema_version && (
+                                <span className="text-sm font-normal text-slate-400">
+                                    (schema {detailModelo.metadata.schema_version})
+                                </span>
+                            )}
                         </CardTitle>
                         <CardDescription>
                             {detailModelo.total_variables} variables en{" "}
@@ -388,9 +393,16 @@ export function ModelosTab() {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <span className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200">
-                                                v{m.version}
-                                            </span>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200">
+                                                    v{m.version}
+                                                </span>
+                                                {m.metadata?.schema_version && (
+                                                    <span className="text-xs text-slate-400" title="Schema version del metadata">
+                                                        schema {m.metadata.schema_version}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             <span className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200">
