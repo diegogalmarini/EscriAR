@@ -39,18 +39,42 @@ const ESTADO_CONFIG: Record<string, { label: string; dot: string }> = {
     INSCRIPTA: { label: "Finalizada", dot: "bg-emerald-500" },
 };
 
+// --- Helper: Extraer apellido de nombre_completo ---
+function extractApellido(nombreCompleto: string | null | undefined): string | null {
+    if (!nombreCompleto?.trim()) return null;
+    const trimmed = nombreCompleto.trim();
+
+    // Formato DB estándar: "APELLIDO, Nombre"
+    if (trimmed.includes(",")) {
+        return trimmed.split(",")[0].trim() || null;
+    }
+
+    // Formato alternativo: "Nombre APELLIDO" — buscar palabra en MAYÚSCULAS
+    const parts = trimmed.split(/\s+/);
+    const upper = parts.filter(
+        (p) => p.length > 1 && p === p.toUpperCase() && /[A-ZÁÉÍÓÚÑ]/.test(p)
+    );
+    if (upper.length > 0) return upper[0];
+
+    // Fallback: última palabra en mayúsculas
+    return parts[parts.length - 1]?.toUpperCase() || null;
+}
+
 // --- Helper: Generar carátula dinámica ---
-function generarCaratula(carpeta: any): { titulo: string; subtipo: string | null } {
+function generarCaratula(carpeta: any): { titulo: string; subtipo: string } {
     const escritura = carpeta.escrituras?.[0];
     const operacion = escritura?.operaciones?.[0];
 
-    if (!operacion?.tipo_acto) {
-        if (carpeta.ingesta_estado === "PROCESANDO") {
-            return { titulo: "Procesando operación...", subtipo: null };
-        }
-        return { titulo: carpeta.caratula || "Nueva Carpeta", subtipo: null };
+    // Subtítulo: tipo de acto real o placeholder
+    const tipoActo = operacion?.tipo_acto?.toUpperCase() || null;
+    const subtipo = tipoActo || "Acto por definir";
+
+    // Estado procesando sin datos
+    if (carpeta.ingesta_estado === "PROCESANDO" && !tipoActo) {
+        return { titulo: "Procesando operación…", subtipo };
     }
 
+    // Buscar partes
     const participantes = operacion?.participantes_operacion || [];
 
     const vendedor = participantes.find(
@@ -69,21 +93,24 @@ function generarCaratula(carpeta: any): { titulo: string; subtipo: string | null
             p.rol?.toUpperCase().includes("DONATARIO")
     );
 
-    const apellidoVendedor = vendedor?.persona?.nombre_completo?.split(" ").pop() || null;
-    const apellidoComprador = comprador?.persona?.nombre_completo?.split(" ").pop() || null;
+    const apellidoVendedor = extractApellido(vendedor?.persona?.nombre_completo);
+    const apellidoComprador = extractApellido(comprador?.persona?.nombre_completo);
 
-    const tipoActo = operacion.tipo_acto.toUpperCase();
-
+    // Título: perspectiva adquirente con "de"
     let titulo: string;
-    if (apellidoVendedor && apellidoComprador) {
-        titulo = `${apellidoVendedor} a ${apellidoComprador}`;
+    if (apellidoComprador && apellidoVendedor) {
+        // Ambas partes: "COMPRADOR de VENDEDOR"
+        titulo = `${apellidoComprador} de ${apellidoVendedor}`;
     } else if (apellidoVendedor) {
-        titulo = apellidoVendedor;
+        // Solo transmitente: placeholder para adquirente
+        titulo = `… de ${apellidoVendedor}`;
+    } else if (apellidoComprador) {
+        titulo = apellidoComprador;
     } else {
-        titulo = carpeta.caratula?.replace(".pdf", "") || "Operación";
+        titulo = carpeta.caratula?.replace(".pdf", "") || "Nuevo trámite";
     }
 
-    return { titulo, subtipo: tipoActo };
+    return { titulo, subtipo };
 }
 
 function formatDate(dateStr: string): string {
@@ -128,11 +155,13 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting }: CarpetaHe
             {/* === Title + Status === */}
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-1.5 min-w-0 flex-1">
-                    {subtipo && (
-                        <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                            {subtipo}
-                        </p>
-                    )}
+                    <p className={`text-xs font-medium tracking-wider uppercase ${
+                        subtipo === "Acto por definir"
+                            ? "text-muted-foreground/50 italic"
+                            : "text-muted-foreground"
+                    }`}>
+                        {subtipo}
+                    </p>
 
                     <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">
                         {isProcessing ? (
