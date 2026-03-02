@@ -74,38 +74,34 @@ function generarCaratula(carpeta: any): { titulo: string; subtipo: string } {
         return { titulo: "Procesando operación…", subtipo };
     }
 
-    // Buscar partes
+    // Buscar partes según lógica de Mesa de Trabajo:
+    // - Transmitente = actual propietario (fue COMPRADOR/TITULAR/CESIONARIO/DONATARIO en el antecedente)
+    // - Adquirente = nuevo comprador (rol ADQUIRENTE, agregado manualmente)
     const participantes = operacion?.participantes_operacion || [];
 
-    const vendedor = participantes.find(
-        (p: any) =>
-            p.rol?.toUpperCase().includes("VENDEDOR") ||
-            p.rol?.toUpperCase().includes("TRANSMITENTE") ||
-            p.rol?.toUpperCase().includes("CEDENTE") ||
-            p.rol?.toUpperCase().includes("DONANTE")
+    const transmitente = participantes.find((p: any) => {
+        const rol = p.rol?.toUpperCase() || "";
+        return rol.includes("COMPRADOR") || rol.includes("CESIONARIO") ||
+            rol.includes("DONATARIO") || rol.includes("TITULAR");
+    });
+
+    const adquirente = participantes.find(
+        (p: any) => p.rol?.toUpperCase() === "ADQUIRENTE"
     );
 
-    const comprador = participantes.find(
-        (p: any) =>
-            p.rol?.toUpperCase().includes("COMPRADOR") ||
-            p.rol?.toUpperCase().includes("ADQUIRENTE") ||
-            p.rol?.toUpperCase().includes("CESIONARIO") ||
-            p.rol?.toUpperCase().includes("DONATARIO")
-    );
-
-    const apellidoVendedor = extractApellido(vendedor?.persona?.nombre_completo);
-    const apellidoComprador = extractApellido(comprador?.persona?.nombre_completo);
+    const apellidoTransmitente = extractApellido(transmitente?.persona?.nombre_completo);
+    const apellidoAdquirente = extractApellido(adquirente?.persona?.nombre_completo);
 
     // Título: perspectiva adquirente con "de"
     let titulo: string;
-    if (apellidoComprador && apellidoVendedor) {
-        // Ambas partes: "COMPRADOR de VENDEDOR"
-        titulo = `${apellidoComprador} de ${apellidoVendedor}`;
-    } else if (apellidoVendedor) {
+    if (apellidoAdquirente && apellidoTransmitente) {
+        // Ambas partes: "ADQUIRENTE de TRANSMITENTE"
+        titulo = `${apellidoAdquirente} de ${apellidoTransmitente}`;
+    } else if (apellidoTransmitente) {
         // Solo transmitente: placeholder para adquirente
-        titulo = `… de ${apellidoVendedor}`;
-    } else if (apellidoComprador) {
-        titulo = apellidoComprador;
+        titulo = `… de ${apellidoTransmitente}`;
+    } else if (apellidoAdquirente) {
+        titulo = apellidoAdquirente;
     } else {
         titulo = carpeta.caratula?.replace(".pdf", "") || "Nuevo trámite";
     }
