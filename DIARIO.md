@@ -1014,6 +1014,26 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 #### Migración 035 confirmada ejecutada
 - La tabla `modelos_actos` ya existía en producción. Se subieron 2 modelos: Compraventa (30 vars) y Autorización Vehicular (24 vars).
 
+### 2026-03-03 (Antigravity) — Integración Template Builder → SaaS NotiAR
+
+#### Lo hecho
+- Se procesaron 34 modelos DOCX (escrituras públicas + instrumentos privados) con el Template Builder de Streamlit. 767 variables Jinja2 extraídas en total.
+- Los 34 ZIPs se subieron a Supabase Storage (bucket escrituras) y sus metadatos a la tabla modelos_actos.
+- El dropdown de tipo de acto en `WorkspacePipeline.tsx` ahora es dinámico — consulta `modelos_actos` en tiempo real, mostrando solo modelos activos.
+- Se agregó un botón "Generar desde Modelo" que ejecuta el pipeline completo: descarga template DOCX → arma contexto desde datos de la carpeta → renderiza con Python docxtpl → sube DOCX final → entrega URL de descarga firmada.
+- `buildTemplateContext.ts` expandido con 30+ aliases de roles (donantes, cedentes, poderdantes, usufructuarios, etc.) para que cada template use sus propios nombres de variable sin romper.
+- Se creó `numberToWords.ts` para conversión de montos a letras en español notarial. Integrado en `operacion.precio_letras`.
+- `SUPPORTED_ACT_TYPES` expandido de 21 a 47 entradas organizadas por categoría.
+- Build Next.js pasa limpio (0 errores TS).
+
+#### Archivos modificados en NotiAR SaaS
+- `src/components/WorkspacePipeline.tsx` — dropdown dinámico + botón render
+- `buildTemplateContext.ts` — aliases + precio_letras
+- `src/lib/templates/numberToWords.ts` — nuevo
+- `src/app/actions/modelos-types.ts` — 47 act types
+- `src/app/actions/modelos.ts` — ajustes menores
+- `src/app/admin/users/ModelosTab.tsx` — ajustes UI
+
 ---
 
 ## 18. Pendientes Conocidos
@@ -1025,6 +1045,11 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 - [ ] **Ejecutar migración 033** en Supabase SQL Editor (campos profesion, regimen_patrimonial, nro_documento_conyugal en personas)
 - [ ] **Verificar `poder_detalle`** funciona tras redeploy Railway (subir un PDF con apoderado)
 - [ ] **Redeploy Worker** en Railway para activar: File API + taxonomía CESBA + ingesta_estado fix
+
+### Integración Template Builder
+- [ ] Test end-to-end real (crear carpeta con datos → generar DOCX → verificar output)
+- [ ] Wiring del botón "Borrador IA" (Path A con Gemini)
+- [ ] Persistencia de campos faltantes en BD: forma_pago, título_antecedente estructurado, vehículo, etc.
 
 ### Deuda técnica
 - [ ] Integración con Resend para emails transaccionales
@@ -1046,4 +1071,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-02-26 — Claude Opus — Fix crítico error 500 en admin, sistema de modelos DOCX funcional
+> **Última actualización**: 2026-03-03 — Antigravity — Integración Template Builder → SaaS NotiAR, Pipeline render docxtpl y 34 modelos activos
