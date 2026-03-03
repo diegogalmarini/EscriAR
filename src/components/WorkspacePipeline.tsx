@@ -631,28 +631,6 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                     </div>
                 </div>
 
-                {/* ── Generación IA (alternativa) ── */}
-                <div className="border border-border rounded-lg bg-background p-6">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <FileSignature className="h-8 w-8 text-muted-foreground shrink-0" />
-                            <div>
-                                <h3 className="text-base font-semibold text-foreground">Borrador Inteligente (IA)</h3>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                    {!tipoActo && "Seleccione un tipo de escritura"}
-                                    {tipoActo && adquirentes.length === 0 && "Agregue al menos un adquirente"}
-                                    {tipoActo && adquirentes.length > 0 && "Generar texto libre con IA"}
-                                </p>
-                            </div>
-                        </div>
-                        <Button size="lg" variant="outline" disabled={!canGenerate}>
-                            <FileSignature className="h-4 w-4 mr-2" />
-                            Generar Borrador con IA
-                            <ArrowRight className="h-4 w-4 ml-2" />
-                        </Button>
-                    </div>
-                </div>
-
                 {/* Redacción Manual */}
                 {activeDeedId && (
                     <details>
