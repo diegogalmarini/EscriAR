@@ -11,6 +11,7 @@
  */
 
 import { createClient } from "@/lib/supabaseServer";
+import { priceToSpanishWords, amountToWords } from "./numberToWords";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -124,6 +125,14 @@ interface EscrituraTemplate {
     tomo: string;
     localidad: string;
     provincia: string;
+    // --- Alias Template Builder ---
+    localidad_otorgamiento: string;
+    distrito_notarial: string;
+    tipo_acto: string;
+    partido: string;
+    fecha_dia_letras: string;
+    fecha_mes_letras: string;
+    fecha_anio_letras: string;
 }
 
 interface InmuebleTemplate {
@@ -140,6 +149,17 @@ interface InmuebleTemplate {
     linderos_norte: string;
     linderos_sur: string;
     linderos_este: string;
+    // --- Alias Template Builder ---
+    descripcion: string;
+    partida_inmobiliaria: string;
+    partido: string;
+    circunscripcion: string;
+    seccion: string;
+    quinta: string;
+    manzana: string;
+    parcela: string;
+    subparcela: string;
+    porcentaje_copropiedad: string;
 }
 
 interface TituloAntecedenteTemplate {
@@ -150,6 +170,8 @@ interface TituloAntecedenteTemplate {
     folio: string;
     tomo: string;
     matricula: string;
+    // --- Alias Template Builder ---
+    tipo_acto: string;
 }
 
 interface OperacionTemplate {
@@ -158,6 +180,13 @@ interface OperacionTemplate {
     moneda: string;
     forma_pago: string;
     plazo_pago: string;
+    // --- Alias Template Builder ---
+    precio_total: string;
+    precio_numeros: string;
+    senia: string;
+    saldo: string;
+    valuacion_fiscal: string;
+    valuacion_fiscal_acto: string;
 }
 
 interface CertificadosTemplate {
@@ -168,12 +197,19 @@ interface CertificadosTemplate {
     catastro_numero: string;
     deuda_municipal: string;
     deuda_arba: string;
+    // --- Alias Template Builder ---
+    catastro: string;
+    inhibiciones: string;
+    fecha_registro_propiedad: string;
 }
 
 interface ImpuestosTemplate {
     base_imponible: string;
     sellados: string;
     iti: string;
+    // --- Alias Template Builder ---
+    iti_monto: string;
+    ganancias: string;
 }
 
 interface ApoderadoTemplate extends PersonaTemplate {
@@ -196,6 +232,9 @@ interface PersonaJuridicaTemplate {
     sede_social: string;
     representante_legal: string;
     cargo_representante: string;
+    // --- Alias Template Builder ---
+    domicilio_legal: string;
+    representante_nombre: string;
 }
 
 export interface TemplateContext {
@@ -211,6 +250,49 @@ export interface TemplateContext {
     impuestos: ImpuestosTemplate;
     poder_datos: PoderDatosTemplate;
     persona_juridica: PersonaJuridicaTemplate;
+
+    // ── Role aliases for act-type-specific templates ──
+    // These are synonyms pointing to the same underlying participant data.
+    // The Template Builder generates placeholders like {{ donantes[0].nombre_completo }}
+    // which docxtpl resolves from these keys.
+    donantes: PersonaTemplate[];
+    donatarios: PersonaTemplate[];
+    donante: PersonaTemplate;
+    cedentes: PersonaTemplate[];
+    cesionarios: PersonaTemplate[];
+    transmitentes: PersonaTemplate[];
+    adquirentes: PersonaTemplate[];
+    poderdantes: PersonaTemplate[];
+    apoderados: PersonaTemplate[];
+    requirente: PersonaTemplate;
+    requirentes: PersonaTemplate[];
+    comparecientes: PersonaTemplate[];
+    autorizados: PersonaTemplate[];
+    permutantes: PersonaTemplate[];
+    beneficiarios: PersonaTemplate[];
+    usufructuantes: PersonaTemplate[];
+    usufructuarios: PersonaTemplate[];
+    partes: PersonaTemplate[];
+    otros_comparecientes: PersonaTemplate[];
+    acreedor: PersonaTemplate;
+    deudor: PersonaTemplate;
+    causante: PersonaTemplate;
+    apoderado_vendedor: PersonaTemplate;
+    apoderado_comprador: PersonaTemplate;
+    trabajador: PersonaTemplate;
+    empleador: Record<string, string>;
+
+    // ── Act-specific data sections ──
+    vehiculo: Record<string, string>;
+    boleto_datos: Record<string, string>;
+    dacion_datos: Record<string, string>;
+    condominio_datos: Record<string, string>;
+    permuta_datos: Record<string, string>;
+    constatacion: Record<string, string>;
+    constatacion_datos: Record<string, string>;
+    sucesion: Record<string, string>;
+    escribano: Record<string, string>;
+    inmuebles: Record<string, string>[];
 }
 
 // ---------------------------------------------------------------------------
@@ -218,6 +300,61 @@ export interface TemplateContext {
 // ---------------------------------------------------------------------------
 
 const EMPTY = "";
+
+// ---------------------------------------------------------------------------
+// Spanish date helpers — for notarial date format
+// "a los {{ fecha_dia_letras }} días del mes de {{ fecha_mes_letras }}
+//  del año {{ fecha_anio_letras }}"
+// ---------------------------------------------------------------------------
+
+const _UNIDADES = [
+    "", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve",
+    "diez", "once", "doce", "trece", "catorce", "quince",
+    "dieciséis", "diecisiete", "dieciocho", "diecinueve", "veinte",
+    "veintiuno", "veintidós", "veintitrés", "veinticuatro", "veinticinco",
+    "veintiséis", "veintisiete", "veintiocho", "veintinueve", "treinta", "treinta y uno",
+];
+
+const _MESES = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+];
+
+function dayToSpanish(day: number): string {
+    if (day >= 1 && day <= 31) return _UNIDADES[day];
+    return day.toString();
+}
+
+function monthToSpanish(month: number): string {
+    if (month >= 0 && month <= 11) return _MESES[month];
+    return (month + 1).toString();
+}
+
+function yearToSpanish(year: number): string {
+    if (year < 2000 || year > 2099) return year.toString();
+    const remainder = year - 2000;
+    if (remainder === 0) return "dos mil";
+    return `dos mil ${_UNIDADES[remainder] || remainder.toString()}`;
+}
+
+/** Extract date parts as Spanish words from an ISO date string */
+function extractDatePartsSpanish(dateStr: string | null): {
+    dia: string;
+    mes: string;
+    anio: string;
+} {
+    if (!dateStr) return { dia: EMPTY, mes: EMPTY, anio: EMPTY };
+    try {
+        const d = new Date(dateStr);
+        return {
+            dia: dayToSpanish(d.getDate()),
+            mes: monthToSpanish(d.getMonth()),
+            anio: yearToSpanish(d.getFullYear()),
+        };
+    } catch {
+        return { dia: EMPTY, mes: EMPTY, anio: EMPTY };
+    }
+}
 
 function formatDateNotarial(dateStr: string | null): string {
     if (!dateStr) return EMPTY;
@@ -263,6 +400,21 @@ function filterByRol(participantes: ParticipanteDB[], ...keywords: string[]): Pa
 
 function findCert(certs: CertificadoDB[], tipo: string): CertificadoDB | undefined {
     return certs.find((c) => c.tipo === tipo);
+}
+
+/** Returns an empty PersonaTemplate (all fields = "") */
+function emptyPersona(): PersonaTemplate {
+    return {
+        nombre_completo: EMPTY,
+        tipo_documento: EMPTY,
+        numero_documento: EMPTY,
+        nacionalidad: EMPTY,
+        estado_civil: EMPTY,
+        domicilio: EMPTY,
+        cuit_cuil: EMPTY,
+        fecha_nacimiento: EMPTY,
+        profesion: EMPTY,
+    };
 }
 
 // ---------------------------------------------------------------------------
@@ -332,6 +484,11 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
     );
 
     // 8. Build the context object matching Jinja2 tags exactly
+    //    Fields marked "Alias TB" are synonyms emitted for the Template Builder
+    //    templates. They duplicate an existing value under the name the template expects.
+    const fechaParts = extractDatePartsSpanish(escritura?.fecha_escritura);
+    const actoTitulo = operacion?.tipo_acto || EMPTY;
+
     const context: TemplateContext = {
         // --- escritura ---
         escritura: {
@@ -345,6 +502,14 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
             tomo: EMPTY,  // se completa al momento de autorizar
             localidad: escribano?.distrito_notarial || EMPTY,
             provincia: "Buenos Aires",
+            // Alias TB
+            localidad_otorgamiento: escribano?.distrito_notarial || EMPTY,
+            distrito_notarial: escribano?.distrito_notarial || EMPTY,
+            tipo_acto: actoTitulo,
+            partido: escribano?.distrito_notarial || EMPTY,
+            fecha_dia_letras: fechaParts.dia,
+            fecha_mes_letras: fechaParts.mes,
+            fecha_anio_letras: fechaParts.anio,
         },
 
         // --- vendedores ---
@@ -393,6 +558,17 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
             linderos_norte: EMPTY,
             linderos_sur: EMPTY,
             linderos_este: EMPTY,
+            // Alias TB
+            descripcion: inmueble?.transcripcion_literal || EMPTY,
+            partida_inmobiliaria: inmueble?.nro_partida || EMPTY,
+            partido: inmueble?.partido_id || EMPTY,
+            circunscripcion: EMPTY, // extraer de nomenclatura a futuro
+            seccion: EMPTY,
+            quinta: EMPTY,
+            manzana: EMPTY,
+            parcela: EMPTY,
+            subparcela: EMPTY,
+            porcentaje_copropiedad: EMPTY,
         },
 
         // --- título antecedente ---
@@ -404,6 +580,8 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
             folio: EMPTY,
             tomo: EMPTY,
             matricula: EMPTY,
+            // Alias TB
+            tipo_acto: EMPTY, // ej: "Compraventa", extraer de titulo_antecedente texto
             // Nota: el campo inmuebles.titulo_antecedente contiene el texto completo
             // del tracto. A futuro la IA lo puede descomponer en campos estructurados.
         },
@@ -413,10 +591,21 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
             precio_venta: operacion?.monto_operacion
                 ? `$${operacion.monto_operacion.toLocaleString("es-AR")}`
                 : EMPTY,
-            precio_letras: EMPTY, // requiere conversión num→letras
+            precio_letras: operacion?.monto_operacion
+                ? priceToSpanishWords(operacion.monto_operacion)
+                : EMPTY,
             moneda: "pesos",
             forma_pago: EMPTY, // no persiste en BD aún
             plazo_pago: EMPTY,
+            // Alias TB
+            precio_total: operacion?.monto_operacion
+                ? `$${operacion.monto_operacion.toLocaleString("es-AR")}`
+                : EMPTY,
+            precio_numeros: operacion?.monto_operacion?.toString() || EMPTY,
+            senia: EMPTY,
+            saldo: EMPTY,
+            valuacion_fiscal: EMPTY,
+            valuacion_fiscal_acto: EMPTY,
         },
 
         // --- certificados ---
@@ -428,6 +617,10 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
             catastro_numero: findCert(certs, "CATASTRAL")?.nro_certificado || EMPTY,
             deuda_municipal: findCert(certs, "DEUDA_MUNICIPAL")?.observaciones || EMPTY,
             deuda_arba: findCert(certs, "DEUDA_ARBA")?.observaciones || EMPTY,
+            // Alias TB
+            catastro: findCert(certs, "CATASTRAL")?.nro_certificado || EMPTY,
+            inhibiciones: findCert(certs, "INHIBICION")?.nro_certificado || EMPTY,
+            fecha_registro_propiedad: formatDateNotarial(findCert(certs, "DOMINIO")?.fecha_recepcion || null),
         },
 
         // --- impuestos ---
@@ -435,6 +628,9 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
             base_imponible: EMPTY, // se calcula con taxCalculator
             sellados: EMPTY,
             iti: EMPTY,
+            // Alias TB
+            iti_monto: EMPTY,
+            ganancias: EMPTY,
         },
 
         // --- poder_datos ---
@@ -457,7 +653,108 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
                 ? personaJuridica.datos_representacion.representa_a
                 : EMPTY,
             cargo_representante: personaJuridica?.datos_representacion?.caracter || EMPTY,
+            // Alias TB
+            domicilio_legal: personaJuridica?.personas?.domicilio_real?.literal || EMPTY,
+            representante_nombre: personaJuridica?.datos_representacion?.representa_a
+                ? personaJuridica.datos_representacion.representa_a
+                : EMPTY,
         },
+
+        // ═══════════════════════════════════════════════════════════════
+        // ROLE ALIASES — same data, different Jinja2 key per act type
+        // The Template Builder templates use role-specific names like
+        // {{ donantes[0].nombre_completo }} instead of generic vendedores.
+        // docxtpl resolves these from the context keys below.
+        // ═══════════════════════════════════════════════════════════════
+
+        // Donaciones: donantes = transmitentes, donatarios = adquirentes
+        donantes: vendedoresDB.map((p) => mapPersona(p.personas)),
+        donatarios: compradoresDB.map((p) => mapPersona(p.personas)),
+        donante: vendedoresDB[0] ? mapPersona(vendedoresDB[0].personas) : emptyPersona(),
+
+        // Cesiones: cedentes = transmitentes, cesionarios = adquirentes
+        cedentes: vendedoresDB.map((p) => mapPersona(p.personas)),
+        cesionarios: compradoresDB.map((p) => mapPersona(p.personas)),
+
+        // Genéricos: transmitentes / adquirentes
+        transmitentes: vendedoresDB.map((p) => mapPersona(p.personas)),
+        adquirentes: compradoresDB.map((p) => mapPersona(p.personas)),
+
+        // Poderes: poderdantes = otorgantes, apoderados = representantes
+        poderdantes: vendedoresDB.map((p) => mapPersona(p.personas)),
+        apoderados: apoderadoDB
+            ? [mapPersona(apoderadoDB.personas)]
+            : compradoresDB.map((p) => mapPersona(p.personas)),
+
+        // Actas: requirente (singular y plural)
+        requirente: vendedoresDB[0] ? mapPersona(vendedoresDB[0].personas) : emptyPersona(),
+        requirentes: vendedoresDB.map((p) => mapPersona(p.personas)),
+
+        // Generales: comparecientes = todos los participantes
+        comparecientes: participantes.map((p) => mapPersona(p.personas)),
+        autorizados: compradoresDB.map((p) => mapPersona(p.personas)),
+        permutantes: participantes.map((p) => mapPersona(p.personas)),
+        beneficiarios: compradoresDB.map((p) => mapPersona(p.personas)),
+        usufructuantes: vendedoresDB.map((p) => mapPersona(p.personas)),
+        usufructuarios: compradoresDB.map((p) => mapPersona(p.personas)),
+        partes: participantes.map((p) => mapPersona(p.personas)),
+        otros_comparecientes: participantes.map((p) => mapPersona(p.personas)),
+
+        // Roles singulares
+        acreedor: compradoresDB[0] ? mapPersona(compradoresDB[0].personas) : emptyPersona(),
+        deudor: vendedoresDB[0] ? mapPersona(vendedoresDB[0].personas) : emptyPersona(),
+        causante: vendedoresDB[0] ? mapPersona(vendedoresDB[0].personas) : emptyPersona(),
+
+        // Apoderados por parte
+        apoderado_vendedor: apoderadoDB ? mapPersona(apoderadoDB.personas) : emptyPersona(),
+        apoderado_comprador: apoderadoDB ? mapPersona(apoderadoDB.personas) : emptyPersona(),
+
+        // Trabajador / Empleador (autorizaciones)
+        trabajador: compradoresDB[0] ? mapPersona(compradoresDB[0].personas) : emptyPersona(),
+        empleador: {
+            razon_social: personaJuridica?.personas?.nombre_completo || EMPTY,
+            cuit: personaJuridica?.personas?.cuit || EMPTY,
+            domicilio: personaJuridica?.personas?.domicilio_real?.literal || EMPTY,
+        },
+
+        // ═══════════════════════════════════════════════════════════════
+        // ACT-SPECIFIC DATA SECTIONS — empty stubs, filled via overrides
+        // The escribano can supply these through contextOverrides when
+        // calling renderTemplate(). BD persistence pending.
+        // ═══════════════════════════════════════════════════════════════
+
+        vehiculo: {
+            dominio: EMPTY, marca: EMPTY, modelo: EMPTY, tipo: EMPTY,
+            chasis_marca: EMPTY, chasis_numero: EMPTY, motor_marca: EMPTY, motor_numero: EMPTY,
+        },
+        boleto_datos: {
+            plazo_escrituracion: EMPTY, escribano_designado: EMPTY,
+        },
+        dacion_datos: {
+            deuda_original: EMPTY, instrumento_deuda: EMPTY, monto_deuda: EMPTY, valor_bien_dado: EMPTY,
+        },
+        condominio_datos: {
+            origen_condominio: EMPTY,
+        },
+        permuta_datos: {
+            bien_1: EMPTY,
+        },
+        constatacion: {
+            domicilio: EMPTY,
+        },
+        constatacion_datos: {
+            lugar: EMPTY,
+        },
+        sucesion: {
+            caratula: EMPTY, expediente_numero: EMPTY, juzgado_numero: EMPTY,
+            secretaria_numero: EMPTY, departamento_judicial: EMPTY,
+        },
+        escribano: {
+            domicilio: escribano?.domicilio_legal || EMPTY,
+        },
+        inmuebles: inmueble ? [{
+            descripcion: inmueble.transcripcion_literal || EMPTY,
+        }] : [],
     };
 
     return context;

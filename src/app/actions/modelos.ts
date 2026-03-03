@@ -125,16 +125,20 @@ export async function uploadModeloZip(
             throw new Error(`Error subiendo template a Storage: ${uploadError.message}`);
         }
 
-        // 9. Insert record in modelos_actos
+        // 9. Extract act_code from metadata (Template Builder >= schema 1.1)
+        const actCode: string | null = metadata.act_code || null;
+
+        // 10. Insert record in modelos_actos
         const label = SUPPORTED_ACT_TYPES.find(t => t.value === actType)?.label || actType;
 
         const { data: inserted, error: insertError } = await supabase
             .from("modelos_actos")
             .insert({
                 act_type: actType,
+                act_code: actCode,
                 template_name: metadata.template_name || `${actType}_template`,
                 label: label,
-                description: `Template v${newVersion}${metadata.schema_version ? ` (schema ${metadata.schema_version})` : ""} — ${metadata.total_variables || 0} variables en ${(metadata.categories_used || []).length} categorías`,
+                description: `Template v${newVersion}${metadata.schema_version ? ` (schema ${metadata.schema_version})` : ""}${actCode ? ` · Cód. ${actCode}` : ""} — ${metadata.total_variables || 0} variables en ${(metadata.categories_used || []).length} categorías`,
                 instrument_category: "ESCRITURA_PUBLICA",
                 version: newVersion,
                 is_active: true,

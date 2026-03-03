@@ -181,8 +181,9 @@ export function ModelosTab() {
             }
 
             if (res.success) {
+                const codeStr = res.data?.act_code ? ` · Cód. ${res.data.act_code}` : "";
                 toast.success(
-                    `Modelo "${res.data?.act_type}" v${res.data?.version} subido — ${res.data?.total_variables} variables`
+                    `Modelo "${res.data?.act_type}" v${res.data?.version}${codeStr} subido — ${res.data?.total_variables} variables`
                 );
                 setIsUploadOpen(false);
                 setPendingFile(null);
@@ -237,6 +238,11 @@ export function ModelosTab() {
                         <CardTitle className="text-xl flex items-center gap-2">
                             <Package className="text-blue-600" />
                             {detailModelo.label || detailModelo.act_type} — v{detailModelo.version}
+                            {(detailModelo.act_code || detailModelo.metadata?.act_code) && (
+                                <span className="text-sm font-mono font-semibold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded">
+                                    Cód. {detailModelo.act_code || detailModelo.metadata?.act_code}
+                                </span>
+                            )}
                             {detailModelo.metadata?.schema_version && (
                                 <span className="text-sm font-normal text-slate-400">
                                     (schema {detailModelo.metadata.schema_version})
@@ -247,6 +253,9 @@ export function ModelosTab() {
                             {detailModelo.total_variables} variables en{" "}
                             {detailModelo.categories.length} categorías —{" "}
                             {detailModelo.metadata?.template_name}
+                            {detailModelo.metadata?.act_code_info?.description && (
+                                <span className="text-slate-400"> · {detailModelo.metadata.act_code_info.description}</span>
+                            )}
                         </CardDescription>
                     </div>
                     <Button variant="outline" onClick={() => setDetailModelo(null)}>
@@ -381,6 +390,7 @@ export function ModelosTab() {
                             <TableHeader>
                                 <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
                                     <TableHead>Tipo de Acto</TableHead>
+                                    <TableHead>Código</TableHead>
                                     <TableHead>Versión</TableHead>
                                     <TableHead>Variables</TableHead>
                                     <TableHead>Categorías</TableHead>
@@ -397,6 +407,15 @@ export function ModelosTab() {
                                                 <FileText size={16} className="text-slate-400" />
                                                 {m.label || m.act_type}
                                             </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            {(m.act_code || m.metadata?.act_code) ? (
+                                                <span className="text-xs font-mono bg-blue-50 px-1.5 py-0.5 rounded text-blue-700 border border-blue-200 font-semibold" title={m.metadata?.act_code_info?.description || ""}>
+                                                    {m.act_code || m.metadata?.act_code}
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs text-slate-300">—</span>
+                                            )}
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-1.5">

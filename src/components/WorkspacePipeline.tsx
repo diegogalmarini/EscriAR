@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/select";
 import {
     FileSignature, ClipboardCheck, Pencil, DollarSign, Home, Users,
-    Search, UserPlus, Send, Briefcase, ArrowRight, X, Upload, Loader2
+    Search, UserPlus, Send, Briefcase, ArrowRight, X, Upload, Loader2,
+    FileText, Download
 } from "lucide-react";
 import {
     Dialog,
@@ -34,6 +35,7 @@ import { PersonSearch } from "./PersonSearch";
 import { CertificadosPanel } from "./CertificadosPanel";
 import { supabase } from "@/lib/supabaseClient";
 import { linkPersonToOperation, removePersonFromOperation } from "@/app/actions/carpeta";
+import { renderTemplate } from "@/app/actions/template-render";
 import { toast } from "sonner";
 
 import { EstudioDominioPanel } from "./EstudioDominioPanel";
@@ -124,24 +126,44 @@ export function FasePreEscritura({ currentEscritura, carpetaId, carpeta }: FaseP
    Selector de acto + Constructor de Partes + Borrador IA
    ══════════════════════════════════════════════════════════ */
 
-const MODELOS_ESCRITURA = [
-    { value: "compraventa", label: "Compraventa Completa" },
-    { value: "compraventa-hipoteca", label: "Compraventa con Hipoteca" },
+/** Fallback básico por si la query a modelos_actos falla */
+const MODELOS_ESCRITURA_FALLBACK = [
+    { value: "compraventa", label: "Compraventa" },
+    { value: "hipoteca", label: "Hipoteca" },
     { value: "donacion", label: "Donación" },
-    { value: "donacion-usufructo", label: "Donación con Usufructo" },
-    { value: "poder-especial", label: "Poder Especial" },
-    { value: "poder-general", label: "Poder General" },
+    { value: "cesion_derechos", label: "Cesión de Derechos" },
+    { value: "poder_especial_venta", label: "Poder Especial para Venta" },
+    { value: "poder_general_administracion", label: "Poder General de Administración" },
 ];
 
 export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseRedaccionProps) {
+    // ── Cargar modelos activos desde BD ──
+    const [modelosEscritura, setModelosEscritura] = useState<{ value: string; label: string }[]>(MODELOS_ESCRITURA_FALLBACK);
+    useEffect(() => {
+        supabase
+            .from("modelos_actos")
+            .select("act_type, label")
+            .eq("is_active", true)
+            .order("label", { ascending: true })
+            .then(({ data }) => {
+                if (data && data.length > 0) {
+                    setModelosEscritura(
+                        data.map((m: any) => ({ value: m.act_type, label: m.label || m.act_type }))
+                    );
+                }
+            });
+    }, []);
+
     // Inicializar tipoActo desde BD si existe
     const existingTipoActo = currentEscritura?.operaciones?.[0]?.tipo_acto || "";
-    const matchedValue = MODELOS_ESCRITURA.find(m =>
+    const matchedValue = modelosEscritura.find(m =>
         existingTipoActo.toUpperCase().includes(m.label.toUpperCase().replace('Ó', 'O')) ||
         m.value === existingTipoActo
     )?.value || existingTipoActo;
     const [tipoActo, setTipoActo] = useState<string>(matchedValue);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [isRendering, setIsRendering] = useState(false);
+    const [renderResult, setRenderResult] = useState<{ url: string; path: string } | null>(null);
 
     // Estado para gestionar los apoderados mapeados por DNI del adquirente (persona jurídica)
     // Guardamos la persona y un objeto con los datos del poder
@@ -323,18 +345,17 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                     </h3>
                     <Select value={tipoActo} onValueChange={async (val) => {
                         setTipoActo(val);
-                        // Persistir en BD
+                        // Persistir en BD — guardamos el act_type (value) como tipo_acto
                         const opId = currentEscritura?.operaciones?.[0]?.id;
                         if (opId) {
-                            const label = MODELOS_ESCRITURA.find(m => m.value === val)?.label || val;
-                            await supabase.from('operaciones').update({ tipo_acto: label }).eq('id', opId);
+                            await supabase.from('operaciones').update({ tipo_acto: val }).eq('id', opId);
                         }
                     }}>
                         <SelectTrigger className="w-full max-w-md">
                             <SelectValue placeholder="Seleccione el tipo de acto a redactar..." />
                         </SelectTrigger>
                         <SelectContent>
-                            {MODELOS_ESCRITURA.map((m) => (
+                            {modelosEscritura.map((m) => (
                                 <SelectItem key={m.value} value={m.value}>
                                     {m.label}
                                 </SelectItem>
@@ -552,21 +573,79 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                     </div>
                 </div>
 
-                {/* ── Generación IA ── */}
-                < div className="border border-border rounded-lg bg-background p-6" >
+                {/* ── Generación desde Template ── */}
+                <div className="border border-primary/20 rounded-lg bg-primary/5 p-6">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <FileText className="h-8 w-8 text-primary shrink-0" />
+                            <div>
+                                <h3 className="text-base font-semibold text-foreground">Generar Escritura desde Modelo</h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    {!tipoActo && "Seleccione un tipo de acto"}
+                                    {tipoActo && adquirentes.length === 0 && "Agregue al menos un participante"}
+                                    {tipoActo && adquirentes.length > 0 && (
+                                        renderResult
+                                            ? "✓ Documento generado — descargue abajo"
+                                            : `Modelo: ${modelosEscritura.find(m => m.value === tipoActo)?.label || tipoActo}`
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button
+                                size="lg"
+                                disabled={!canGenerate || isRendering}
+                                onClick={async () => {
+                                    if (!carpeta?.id || !tipoActo) return;
+                                    setIsRendering(true);
+                                    setRenderResult(null);
+                                    try {
+                                        const result = await renderTemplate(carpeta.id, tipoActo);
+                                        if (result.success && result.downloadUrl) {
+                                            setRenderResult({ url: result.downloadUrl, path: result.storagePath || "" });
+                                            toast.success("Escritura generada correctamente");
+                                        } else {
+                                            toast.error(result.error || "Error al generar la escritura");
+                                        }
+                                    } catch (err: any) {
+                                        toast.error(err.message || "Error inesperado");
+                                    } finally {
+                                        setIsRendering(false);
+                                    }
+                                }}
+                            >
+                                {isRendering ? (
+                                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando...</>
+                                ) : (
+                                    <><FileText className="h-4 w-4 mr-2" /> Generar desde Modelo<ArrowRight className="h-4 w-4 ml-2" /></>
+                                )}
+                            </Button>
+                            {renderResult && (
+                                <Button size="lg" variant="outline" asChild>
+                                    <a href={renderResult.url} download>
+                                        <Download className="h-4 w-4 mr-2" /> Descargar DOCX
+                                    </a>
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Generación IA (alternativa) ── */}
+                <div className="border border-border rounded-lg bg-background p-6">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <FileSignature className="h-8 w-8 text-muted-foreground shrink-0" />
                             <div>
-                                <h3 className="text-base font-semibold text-foreground">Borrador Inteligente</h3>
+                                <h3 className="text-base font-semibold text-foreground">Borrador Inteligente (IA)</h3>
                                 <p className="text-xs text-muted-foreground mt-0.5">
                                     {!tipoActo && "Seleccione un tipo de escritura"}
                                     {tipoActo && adquirentes.length === 0 && "Agregue al menos un adquirente"}
-                                    {tipoActo && adquirentes.length > 0 && "Listo para generar"}
+                                    {tipoActo && adquirentes.length > 0 && "Generar texto libre con IA"}
                                 </p>
                             </div>
                         </div>
-                        <Button size="lg" disabled={!canGenerate}>
+                        <Button size="lg" variant="outline" disabled={!canGenerate}>
                             <FileSignature className="h-4 w-4 mr-2" />
                             Generar Borrador con IA
                             <ArrowRight className="h-4 w-4 ml-2" />
