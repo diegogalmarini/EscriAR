@@ -10,6 +10,7 @@ import Docxtemplater from "docxtemplater";
 import PizZip from "pizzip";
 // @ts-ignore
 import expressionParser from "docxtemplater/expressions.js";
+import mammoth from "mammoth";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -21,6 +22,8 @@ export interface RenderResult {
     downloadUrl?: string;
     /** Path en storage donde se guardó */
     storagePath?: string;
+    /** HTML preview del DOCX generado (via mammoth) */
+    htmlPreview?: string;
     /** Context JSON que se usó (para debug) */
     context?: Record<string, unknown>;
     error?: string;
@@ -150,10 +153,28 @@ export async function renderTemplate(
         // 5. Renderizar DOCX con docxtemplater (JS — no requiere Python)
         const renderedBuffer = renderDocx(templateBuffer, context);
 
-        // 6. Subir a storage
+        // 6. Convertir a HTML para preview en el navegador
+        let htmlPreview = "";
+        try {
+            const mammothResult = await mammoth.convertToHtml(
+                { buffer: renderedBuffer },
+                {
+                    styleMap: [
+                        "b => strong",
+                        "i => em",
+                        "u => u",
+                    ],
+                }
+            );
+            htmlPreview = mammothResult.value;
+        } catch (e) {
+            console.warn("[renderTemplate] mammoth preview failed:", e);
+        }
+
+        // 7. Subir a storage
         const storagePath = await uploadRendered(renderedBuffer, carpetaId, actType);
 
-        // 7. Generar URL firmada (1 hora)
+        // 8. Generar URL firmada (1 hora)
         const { data: signedUrl } = await supabaseAdmin.storage
             .from("escrituras")
             .createSignedUrl(storagePath, 3600);
@@ -162,6 +183,7 @@ export async function renderTemplate(
             success: true,
             downloadUrl: signedUrl?.signedUrl || undefined,
             storagePath,
+            htmlPreview,
             context,
         };
     } catch (error: any) {

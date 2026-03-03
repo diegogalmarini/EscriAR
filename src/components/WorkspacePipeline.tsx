@@ -15,7 +15,7 @@ import {
 import {
     FileSignature, ClipboardCheck, Pencil, DollarSign, Home, Users,
     Search, UserPlus, Send, Briefcase, ArrowRight, X, Upload, Loader2,
-    FileText, Download
+    FileText, Download, Eye
 } from "lucide-react";
 import {
     Dialog,
@@ -163,7 +163,8 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
     const [tipoActo, setTipoActo] = useState<string>(matchedValue);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isRendering, setIsRendering] = useState(false);
-    const [renderResult, setRenderResult] = useState<{ url: string; path: string } | null>(null);
+    const [renderResult, setRenderResult] = useState<{ url: string; path: string; html: string } | null>(null);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
 
     // Estado para gestionar los apoderados mapeados por DNI del adquirente (persona jurídica)
     // Guardamos la persona y un objeto con los datos del poder
@@ -574,7 +575,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                 </div>
 
                 {/* ── Generación desde Template ── */}
-                <div className="border border-primary/20 rounded-lg bg-primary/5 p-6">
+                <div className="border border-primary/20 rounded-lg bg-primary/5 p-6 space-y-4">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <FileText className="h-8 w-8 text-primary shrink-0" />
@@ -583,11 +584,10 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                 <p className="text-xs text-muted-foreground mt-0.5">
                                     {!tipoActo && "Seleccione un tipo de acto"}
                                     {tipoActo && adquirentes.length === 0 && "Agregue al menos un participante"}
-                                    {tipoActo && adquirentes.length > 0 && (
-                                        renderResult
-                                            ? "✓ Documento generado — descargue abajo"
-                                            : `Modelo: ${modelosEscritura.find(m => m.value === tipoActo)?.label || tipoActo}`
+                                    {tipoActo && adquirentes.length > 0 && !renderResult && (
+                                        `Modelo: ${modelosEscritura.find(m => m.value === tipoActo)?.label || tipoActo}`
                                     )}
+                                    {renderResult && "✓ Documento generado — revise abajo"}
                                 </p>
                             </div>
                         </div>
@@ -602,7 +602,11 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                     try {
                                         const result = await renderTemplate(carpeta.id, tipoActo);
                                         if (result.success && result.downloadUrl) {
-                                            setRenderResult({ url: result.downloadUrl, path: result.storagePath || "" });
+                                            setRenderResult({
+                                                url: result.downloadUrl,
+                                                path: result.storagePath || "",
+                                                html: result.htmlPreview || "",
+                                            });
                                             toast.success("Escritura generada correctamente");
                                         } else {
                                             toast.error(result.error || "Error al generar la escritura");
@@ -617,19 +621,97 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                 {isRendering ? (
                                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando...</>
                                 ) : (
-                                    <><FileText className="h-4 w-4 mr-2" /> Generar desde Modelo<ArrowRight className="h-4 w-4 ml-2" /></>
+                                    <><FileText className="h-4 w-4 mr-2" /> {renderResult ? "Regenerar" : "Generar desde Modelo"}<ArrowRight className="h-4 w-4 ml-2" /></>
                                 )}
                             </Button>
                             {renderResult && (
-                                <Button size="lg" variant="outline" asChild>
+                                <>
+                                    <Button
+                                        size="lg"
+                                        variant="outline"
+                                        onClick={() => setShowPreviewModal(true)}
+                                        title="Vista previa completa"
+                                    >
+                                        <Eye className="h-4 w-4 mr-2" /> Vista Previa
+                                    </Button>
+                                    <Button size="lg" variant="outline" asChild>
+                                        <a href={renderResult.url} download>
+                                            <Download className="h-4 w-4 mr-2" /> Descargar
+                                        </a>
+                                    </Button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* ── Preview inline del documento generado ── */}
+                    {renderResult?.html && (
+                        <div className="border border-border rounded-lg bg-white">
+                            <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b border-border rounded-t-lg">
+                                <span className="text-xs font-medium text-muted-foreground">
+                                    Vista previa del documento
+                                </span>
+                                <div className="flex gap-1">
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-7 px-2 text-xs"
+                                        onClick={() => setShowPreviewModal(true)}
+                                    >
+                                        <Eye className="h-3 w-3 mr-1" /> Pantalla completa
+                                    </Button>
+                                </div>
+                            </div>
+                            <div
+                                className="p-6 max-h-[500px] overflow-y-auto prose prose-sm max-w-none
+                                    prose-headings:mb-2 prose-headings:mt-4 prose-p:mb-1 prose-p:mt-0
+                                    text-[13px] leading-relaxed"
+                                dangerouslySetInnerHTML={{ __html: renderResult.html }}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* ── Modal de Vista Previa Completa ── */}
+                <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
+                    <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <Eye className="h-5 w-5" />
+                                Vista Previa — {modelosEscritura.find(m => m.value === tipoActo)?.label || tipoActo}
+                            </DialogTitle>
+                            <DialogDescription>
+                                Revise el documento generado. Para modificar, edite los datos de la carpeta y regenere.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="flex-1 overflow-y-auto border border-border rounded-lg bg-white">
+                            {renderResult?.html ? (
+                                <div
+                                    className="p-8 prose max-w-none
+                                        prose-headings:mb-3 prose-headings:mt-5 prose-p:mb-2 prose-p:mt-0
+                                        text-[14px] leading-relaxed"
+                                    dangerouslySetInnerHTML={{ __html: renderResult.html }}
+                                />
+                            ) : (
+                                <p className="p-8 text-muted-foreground text-center">
+                                    No hay contenido para previsualizar.
+                                </p>
+                            )}
+                        </div>
+                        <div className="flex justify-end gap-2 pt-2">
+                            {renderResult && (
+                                <Button variant="outline" asChild>
                                     <a href={renderResult.url} download>
                                         <Download className="h-4 w-4 mr-2" /> Descargar DOCX
                                     </a>
                                 </Button>
                             )}
+                            <Button onClick={() => setShowPreviewModal(false)}>
+                                Cerrar
+                            </Button>
                         </div>
-                    </div>
-                </div>
+                    </DialogContent>
+                </Dialog>
 
                 {/* Redacción Manual */}
                 {activeDeedId && (
