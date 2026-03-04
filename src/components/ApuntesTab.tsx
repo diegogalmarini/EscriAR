@@ -668,16 +668,45 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
 function renderPayload(payload: any): React.ReactNode {
     if (!payload) return null;
 
-    if (payload.descripcion) return <p>{payload.descripcion}</p>;
-    if (payload.description) return <p>{payload.description}</p>;
-
-    if (payload.campo && payload.valor !== undefined) {
+    // v2: AGREGAR_PERSONA con datos estructurados
+    if (payload.nombre && payload.rol) {
         return (
-            <p>
-                <span className="font-medium">{payload.campo}</span>: {String(payload.valor)}
-            </p>
+            <div className="space-y-0.5">
+                <p>
+                    <span className="font-medium">{payload.nombre}</span>
+                    {payload.dni && <span className="text-muted-foreground"> (DNI {payload.dni})</span>}
+                    {" \u2192 "}
+                    <span className="font-medium text-blue-600">{payload.rol}</span>
+                </p>
+                {payload.descripcion && <p className="text-xs text-muted-foreground">{payload.descripcion}</p>}
+            </div>
         );
     }
+
+    // v2: AGREGAR_CERTIFICADO con tipo_certificado
+    if (payload.tipo_certificado) {
+        return (
+            <div className="space-y-0.5">
+                <p>Certificado: <span className="font-medium text-blue-600">{payload.tipo_certificado}</span></p>
+                {payload.descripcion && <p className="text-xs text-muted-foreground">{payload.descripcion}</p>}
+            </div>
+        );
+    }
+
+    // v1/v2: COMPLETAR_DATOS con campo/valor
+    if (payload.campo && payload.valor !== undefined) {
+        return (
+            <div className="space-y-0.5">
+                <p>
+                    <span className="font-medium">{payload.campo}</span>: {String(payload.valor)}
+                </p>
+                {payload.descripcion && <p className="text-xs text-muted-foreground">{payload.descripcion}</p>}
+            </div>
+        );
+    }
+
+    // Fallback: descripcion sola
+    if (payload.descripcion) return <p>{payload.descripcion}</p>;
 
     return <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(payload, null, 2)}</pre>;
 }
