@@ -647,15 +647,12 @@ async function processNoteAnalysis(job: any) {
 
         // 2. Ejecutar análisis con Gemini Flash
         const geminiKey = process.env.GEMINI_API_KEY!;
+        console.log(`[WORKER] NOTE_ANALYSIS: texto="${apunte.contenido.substring(0, 200)}"`);
         const analysis = await analyzeNote(apunte.contenido, geminiKey);
 
-        // 3. Validar output con Zod (ya validado por generateObject, pero double-check)
-        const parsed = NoteAnalysisOutputSchema.safeParse(analysis);
-        if (!parsed.success) {
-            throw new Error(`Schema validation failed: ${parsed.error.message}`);
-        }
+        console.log(`[WORKER] NOTE_ANALYSIS: raw analysis=`, JSON.stringify(analysis).substring(0, 500));
 
-        const sugerencias = parsed.data.sugerencias;
+        const sugerencias = analysis.sugerencias || [];
         console.log(`[WORKER] NOTE_ANALYSIS: ${sugerencias.length} sugerencias generadas`);
 
         // 4. Insertar sugerencias en BD
