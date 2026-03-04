@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { getOrgIdForUser } from '@/lib/auth/getOrg';
 
 export async function POST(req: Request) {
     try {
@@ -32,10 +33,12 @@ export async function POST(req: Request) {
         }
 
         // Create the folder for this ingestion
+        const orgId = await getOrgIdForUser(user.id);
         const { data: carpeta, error: folderError } = await supabaseAdmin.from('carpetas').insert({
             caratula: fileName.substring(0, 100),
             ingesta_estado: 'PROCESANDO',
-            ingesta_paso: 'En cola'
+            ingesta_paso: 'En cola',
+            org_id: orgId
         }).select().single();
 
         if (folderError) throw new Error(`Error creando carpeta: ${folderError.message}`);

@@ -791,6 +791,26 @@ Pipeline dual (frontend sync + worker async Railway) 100% funcional y estabiliza
 
 ## 17. Changelog
 
+### 2026-03-04 (Claude) — ETAPA 2: Seguridad multi-tenant por Organización
+
+#### Migración 038: organizaciones + RLS real
+- Nueva tabla `organizaciones` (id, nombre, cuit, created_at)
+- Nueva tabla `organizaciones_users` (org_id, user_id, role ENUM owner/admin/member)
+- Columna `org_id` en `carpetas` (FK a organizaciones, NOT NULL tras backfill)
+- Bootstrap anti lock-out: org "Escribanía Galmarini" + Diego como OWNER
+- RLS habilitado en 9 tablas: carpetas, escrituras, operaciones, participantes_operacion, certificados, gravamenes, ingestion_jobs, organizaciones, organizaciones_users
+- Políticas: acceso por membresía de org, child tables derivan acceso via JOIN a carpetas
+- Bypass `service_role` para worker Railway en todas las tablas
+- DELETE restringido a roles OWNER/ADMIN
+- RPC `search_carpetas` actualizado: filtra por org del usuario autenticado
+
+#### Código: auth helpers + protección de rutas
+- Nuevo `src/lib/auth/getOrg.ts`: getUserOrgId(), getOrgIdForUser(), requireOrgMembership()
+- `createFolder()` ahora requiere org_id (rechaza si usuario sin org)
+- APIs de ingesta (`/api/ingest`, `/api/ingest/queue`) resuelven org_id del usuario
+- `carpeta/[id]/page.tsx` migrado de browser client a server client (RLS funcional en SSR)
+- Autenticación verificada en page.tsx, redirect a /login si no hay sesión
+
 ### 2026-02-23 (Antigravity) — Sesión 1: Ficha de Poderes y Estabilización Visual
 
 #### Módulo de Poderes (Retrocompatibilidad e UI)

@@ -15,7 +15,7 @@ export default async function CarpetaDetailPage({ params }: { params: Promise<{ 
         redirect("/login");
     }
 
-    // Fetch full hierarchy
+    // Fetch full hierarchy (RLS filters by org membership)
     const { data: carpeta, error } = await supabase
         .from("carpetas")
         .select(`

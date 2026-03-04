@@ -65,9 +65,13 @@ Antes de tocar RLS/Policies o tablas core, exportar (si aplica):
 ### ETAPA 1 — Estabilización (sin migración DB esperada)
 - Normalmente **sin SQL**. Si se agrega algo, documentarlo aquí.
 
-### ETAPA 2 — Membresía por carpeta + Roles + RLS
-1) Ejecutar: `038_etapa_2__carpetas_users_and_rls.sql`
-2) Verificar POSTCHECKS y smoke tests de acceso.
+### ETAPA 2 — Organizaciones + Roles + RLS multi-tenant
+1) Ejecutar: `038_etapa_2__org_and_rls.sql`
+2) Verificar POSTCHECKS (9 checks: tablas, org por defecto, Diego OWNER, RLS enabled, policies count)
+3) Smoke tests de acceso:
+   - Login como Diego → puede ver/crear/editar carpetas
+   - Usuario sin membresía → NO puede ver carpetas (count = 0)
+4) **IMPORTANTE**: Antes de ejecutar, asegurarse de que el código de la app ya está desplegado (la app debe usar `createClient()` server-side para RLS)
 
 ### ETAPA 3 — Apuntes + Sugerencias (sin IA)
 1) Ejecutar: `039_etapa_3__apuntes_sugerencias.sql`
