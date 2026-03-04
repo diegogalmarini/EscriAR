@@ -26,27 +26,41 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { filePath, fileName, fileSize, mimeType } = body;
+        const { filePath, fileName, fileSize, mimeType, carpetaId } = body;
 
         if (!filePath || !fileName) {
             return NextResponse.json({ error: "Faltan datos del archivo" }, { status: 400 });
         }
 
-        // Create the folder for this ingestion
-        const orgId = await getOrgIdForUser(user.id);
-        const { data: carpeta, error: folderError } = await supabaseAdmin.from('carpetas').insert({
-            caratula: fileName.substring(0, 100),
-            ingesta_estado: 'PROCESANDO',
-            ingesta_paso: 'En cola',
-            org_id: orgId
-        }).select().single();
+        let folderId: string;
 
-        if (folderError) throw new Error(`Error creando carpeta: ${folderError.message}`);
+        if (carpetaId) {
+            // Use existing carpeta — just update its ingestion status
+            const { error: updateError } = await supabaseAdmin.from('carpetas').update({
+                ingesta_estado: 'PROCESANDO',
+                ingesta_paso: 'En cola',
+            }).eq('id', carpetaId);
+
+            if (updateError) throw new Error(`Error actualizando carpeta: ${updateError.message}`);
+            folderId = carpetaId;
+        } else {
+            // Create new folder for this ingestion
+            const orgId = await getOrgIdForUser(user.id);
+            const { data: carpeta, error: folderError } = await supabaseAdmin.from('carpetas').insert({
+                caratula: fileName.substring(0, 100),
+                ingesta_estado: 'PROCESANDO',
+                ingesta_paso: 'En cola',
+                org_id: orgId
+            }).select().single();
+
+            if (folderError) throw new Error(`Error creando carpeta: ${folderError.message}`);
+            folderId = carpeta.id;
+        }
 
         // Insert the job
         const { data: job, error: jobError } = await supabaseAdmin.from('ingestion_jobs').insert({
             user_id: user.id,
-            carpeta_id: carpeta.id,
+            carpeta_id: folderId,
             file_path: filePath,
             original_filename: fileName,
             file_size_bytes: fileSize,
@@ -59,7 +73,7 @@ export async function POST(req: Request) {
         return NextResponse.json({
             success: true,
             jobId: job.id,
-            folderId: carpeta.id,
+            folderId,
             message: "Encolado para procesamiento"
         });
 

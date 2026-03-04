@@ -368,6 +368,7 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
 
                 <TabsContent value="antecedentes" className="mt-6">
                     <WorkspaceRadiography
+                        carpetaId={carpeta.id}
                         currentEscritura={currentEscritura}
                         optimisticOps={optimisticOps}
                         storageFiles={storageFiles}

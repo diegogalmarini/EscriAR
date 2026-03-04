@@ -78,7 +78,7 @@ function generarCaratula(carpeta: any): { titulo: string; subtipo: string } {
     const tipoActo = tipoActoRaw
         ? (ACTOS_CONOCIDOS.find(a => tipoActoRaw.includes(a)) || tipoActoRaw)
         : null;
-    const subtipo = tipoActo || "ACTO A DEFINIR";
+    const subtipo = tipoActo || "ACTO POR SELECCIONAR";
 
     // Estado procesando sin datos
     if (carpeta.ingesta_estado === "PROCESANDO" && !tipoActo) {

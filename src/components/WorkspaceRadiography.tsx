@@ -4,11 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Users, Home, Trash2, Pencil, Download, Eye, BookOpen, ChevronDown } from "lucide-react";
+import { FileText, Users, Home, Trash2, Pencil, Download, Eye, BookOpen, ChevronDown, Upload, Loader2 } from "lucide-react";
 import { cn, formatDateInstructions } from "@/lib/utils";
 import { formatCUIT, formatPersonName, isLegalEntity } from "@/lib/utils/normalization";
+import { supabase } from "@/lib/supabaseClient";
+import { toast } from "sonner";
 
 interface WorkspaceRadiographyProps {
+    carpetaId: string;
     currentEscritura: any;
     optimisticOps: any[];
     storageFiles: any[];
@@ -68,6 +71,7 @@ const participantOrder = (rol: string = '') => {
 };
 
 export function WorkspaceRadiography({
+    carpetaId,
     currentEscritura,
     optimisticOps,
     storageFiles,
@@ -82,9 +86,101 @@ export function WorkspaceRadiography({
 }: WorkspaceRadiographyProps) {
     const [expandedTitulo, setExpandedTitulo] = useState(false);
     const [expandedTranscripcion, setExpandedTranscripcion] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState("");
+
+    const hasDocument = !!currentEscritura?.pdf_url;
+
+    const handleFileUpload = async (file: File) => {
+        setIsUploading(true);
+        setUploadProgress("Subiendo archivo...");
+
+        try {
+            // 1. Upload to storage
+            const fileExt = file.name.split('.').pop();
+            const filePath = `user_uploads/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('escrituras')
+                .upload(filePath, file);
+
+            if (uploadError) throw new Error(`Error al subir: ${uploadError.message}`);
+
+            setUploadProgress("Encolando para extracción...");
+
+            // 2. Queue ingestion job for THIS existing carpeta
+            const res = await fetch("/api/ingest/queue", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    filePath,
+                    fileName: file.name,
+                    fileSize: file.size,
+                    mimeType: file.type,
+                    carpetaId, // <-- use existing folder
+                }),
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error || "Error encolando tarea");
+            }
+
+            setUploadProgress("Procesando con IA...");
+            toast.success("Archivo subido. La extracción se está procesando en segundo plano.");
+
+            // Reload the page to pick up realtime updates
+            setTimeout(() => window.location.reload(), 2000);
+        } catch (err: any) {
+            console.error(err);
+            toast.error(err.message || "Error al procesar el archivo");
+        } finally {
+            setIsUploading(false);
+            setUploadProgress("");
+        }
+    };
 
     return (
         <div className="space-y-6">
+
+            {/* ── Upload de Documento (cuando no hay documento cargado) ── */}
+            {!hasDocument && (
+                <div className="border-2 border-dashed border-border rounded-lg bg-muted/20 p-8">
+                    <div className="flex flex-col items-center justify-center text-center space-y-4">
+                        <div className="p-4 rounded-full bg-muted/50">
+                            <Upload className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <div>
+                            <h3 className="text-base font-semibold">Subir documento antecedente</h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                Suba la escritura antecedente (PDF o DOCX) para extraer automáticamente los datos del inmueble, partes y acto.
+                            </p>
+                        </div>
+                        {isUploading ? (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                {uploadProgress}
+                            </div>
+                        ) : (
+                            <label className="cursor-pointer">
+                                <input
+                                    type="file"
+                                    accept=".pdf,.doc,.docx"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleFileUpload(file);
+                                    }}
+                                />
+                                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
+                                    <Upload className="h-4 w-4" />
+                                    Seleccionar archivo
+                                </span>
+                            </label>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* ── Documento Original ── */}
             {currentEscritura && (
