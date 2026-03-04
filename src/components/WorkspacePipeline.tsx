@@ -67,6 +67,7 @@ interface FaseRedaccionProps {
     currentEscritura: any;
     activeDeedId: string | null;
     carpeta: any;
+    onTipoActoChange?: (nuevoTipoActo: string) => void;
 }
 
 interface FasePostEscrituraProps {
@@ -136,7 +137,7 @@ const MODELOS_ESCRITURA_FALLBACK = [
     { value: "poder_general_administracion", label: "Poder General de Administración" },
 ];
 
-export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseRedaccionProps) {
+export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta, onTipoActoChange }: FaseRedaccionProps) {
     // ── Cargar modelos activos desde BD ──
     const [modelosEscritura, setModelosEscritura] = useState<{ value: string; label: string }[]>(MODELOS_ESCRITURA_FALLBACK);
     useEffect(() => {
@@ -568,6 +569,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                     </h3>
                     <Select value={tipoActo} onValueChange={async (val) => {
                         setTipoActo(val);
+                        onTipoActoChange?.(val);
                         // Persistir en BD — guardamos el act_type (value) como tipo_acto
                         const opId = currentEscritura?.operaciones?.[0]?.id;
                         if (opId) {

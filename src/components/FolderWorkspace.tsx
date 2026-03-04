@@ -348,6 +348,21 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                         currentEscritura={currentEscritura}
                         activeDeedId={activeDeedId}
                         carpeta={carpeta}
+                        onTipoActoChange={(val) => {
+                            setCarpeta((prev: any) => {
+                                const updated = { ...prev };
+                                if (updated.escrituras?.[0]?.operaciones?.[0]) {
+                                    updated.escrituras = [...updated.escrituras];
+                                    updated.escrituras[0] = { ...updated.escrituras[0] };
+                                    updated.escrituras[0].operaciones = [...updated.escrituras[0].operaciones];
+                                    updated.escrituras[0].operaciones[0] = {
+                                        ...updated.escrituras[0].operaciones[0],
+                                        tipo_acto: val,
+                                    };
+                                }
+                                return updated;
+                            });
+                        }}
                     />
                 </TabsContent>
 

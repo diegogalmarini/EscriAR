@@ -92,12 +92,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Button>
             </div>
 
-            {/* Sidebar */}
+            {/* Sidebar — always fixed, never scrolls */}
             <aside
                 className={cn(
-                    "fixed inset-y-0 left-0 z-40 bg-white border-r transition-all duration-300 transform lg:relative lg:translate-x-0",
+                    "fixed inset-y-0 left-0 z-40 bg-white border-r transition-all duration-300 transform",
                     isCollapsed ? "w-20" : "w-64",
-                    isMobileOpen ? "translate-x-0" : "-translate-x-full"
+                    isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
                 )}
             >
                 <div className="flex flex-col h-full">
@@ -158,8 +158,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 />
             )}
 
-            {/* Main Content */}
-            <main className="flex-1 pt-16 lg:pt-0">
+            {/* Main Content — offset by sidebar width */}
+            <main className={cn(
+                "flex-1 pt-16 lg:pt-0 transition-all duration-300",
+                isCollapsed ? "lg:ml-20" : "lg:ml-64"
+            )}>
                 <div className="mx-auto max-w-7xl min-h-full">
                     {children}
                 </div>
