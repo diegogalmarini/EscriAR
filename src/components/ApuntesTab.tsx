@@ -211,14 +211,25 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
         setDeleteTarget(null);
     };
 
+    const [acceptingId, setAcceptingId] = useState<string | null>(null);
+
     const handleAccept = async (sugerenciaId: string) => {
+        setAcceptingId(sugerenciaId);
         const result = await acceptSuggestion(sugerenciaId, carpetaId);
         if (result.success) {
-            toast.success("Sugerencia aceptada");
+            const changes = result.applied_changes;
+            const detail = changes?.persona_dni
+                ? ` — ${changes.nombre || changes.persona_dni} (${changes.rol})`
+                : changes?.tipo
+                    ? ` — Certificado ${changes.tipo}`
+                    : "";
+            toast.success(`Sugerencia aplicada${detail}`);
             fetchData();
         } else {
-            toast.error(result.error || "Error");
+            toast.error(result.error || "Error al aplicar sugerencia", { duration: 6000 });
+            fetchData();
         }
+        setAcceptingId(null);
     };
 
     const handleReject = async (sugerenciaId: string) => {
@@ -570,13 +581,25 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                                     <div className="text-sm">
                                         {renderPayload(sug.payload)}
                                     </div>
+                                    {sug.apply_error && (
+                                        <p className="text-[11px] text-red-500 bg-red-50 rounded px-2 py-1">
+                                            {sug.apply_error}
+                                        </p>
+                                    )}
                                     <div className="flex gap-2 pt-1">
                                         <Button size="sm" variant="outline" className="h-7 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                                            onClick={() => handleAccept(sug.id)}>
-                                            <ThumbsUp className="h-3 w-3 mr-1" /> Aceptar
+                                            onClick={() => handleAccept(sug.id)}
+                                            disabled={acceptingId === sug.id}>
+                                            {acceptingId === sug.id ? (
+                                                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                            ) : (
+                                                <ThumbsUp className="h-3 w-3 mr-1" />
+                                            )}
+                                            {acceptingId === sug.id ? "Aplicando..." : "Aceptar"}
                                         </Button>
                                         <Button size="sm" variant="outline" className="h-7 text-xs text-red-500 hover:text-red-600 hover:bg-red-50"
-                                            onClick={() => handleReject(sug.id)}>
+                                            onClick={() => handleReject(sug.id)}
+                                            disabled={!!acceptingId}>
                                             <ThumbsDown className="h-3 w-3 mr-1" /> Rechazar
                                         </Button>
                                     </div>
@@ -600,6 +623,9 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                                         <div className="text-sm mt-1">
                                             {renderPayload(sug.payload)}
                                         </div>
+                                        {sug.apply_error && (
+                                            <p className="text-[11px] text-red-500 mt-1">{sug.apply_error}</p>
+                                        )}
                                     </div>
                                 );
                             })}

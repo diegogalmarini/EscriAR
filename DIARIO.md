@@ -1086,6 +1086,39 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 - `src/components/ApuntesTab.tsx` — polling, retry, skeletons, badge Analizando
 - `RUN_MIGRATIONS.md` — actualizado con migración 041
 
+### 2026-03-04 (Claude Opus) — ETAPA 5: Motor determinístico (Aceptar sugerencias aplica cambios reales)
+
+#### Migración 042: Audit columns en sugerencias
+- Nuevas columnas: `applied_at` (timestamptz), `applied_by` (UUID FK auth.users), `apply_error` (text), `applied_changes` (JSONB)
+- Permite auditar qué cambios reales se ejecutaron al aceptar cada sugerencia
+
+#### Motor determinístico: `src/lib/deterministic/applySuggestion.ts`
+- Dispatcher por tipo de sugerencia con handlers idempotentes
+- **AGREGAR_PERSONA**: upsert persona por DNI + vincular como participante a la operación
+- **COMPLETAR_DATOS**: actualiza campos de operación (monto, tipo_acto, codigo) o carpeta (caratula)
+- **AGREGAR_CERTIFICADO**: crea certificado PENDIENTE del tipo indicado (idempotente: skip si ya existe)
+- **VERIFICAR_DATO / ACCION_REQUERIDA**: informativos, solo registran aceptación del usuario
+- Cada handler devuelve `ApplyResult { success, applied_changes, error }` para audit trail
+
+#### Backend: acceptSuggestion con ejecución real
+- Lee sugerencia y verifica estado PROPOSED (idempotencia)
+- Ejecuta motor determinístico según tipo
+- Actualiza sugerencia con audit trail: applied_at, applied_by, applied_changes, apply_error
+- Si el motor falla, mantiene estado PROPOSED y registra error
+
+#### UI: ApuntesTab con feedback de aplicación
+- Spinner "Aplicando..." en botón Aceptar durante ejecución
+- Botones deshabilitados durante procesamiento
+- Muestra errores de aplicación (apply_error) en sugerencias pendientes y resueltas
+- Toast diferenciado: "Sugerencia aplicada" vs "Error al aplicar sugerencia"
+
+#### Archivos modificados/creados
+- `supabase_migrations/042_etapa_5__sugerencias_audit.sql` — NUEVO
+- `src/lib/deterministic/applySuggestion.ts` — NUEVO
+- `src/app/actions/sugerencias.ts` — acceptSuggestion con motor determinístico
+- `src/components/ApuntesTab.tsx` — spinner, error states, disabled buttons
+- `RUN_MIGRATIONS.md` — actualizado con migración 042
+
 ---
 
 ## 18. Pendientes Conocidos
@@ -1098,6 +1131,7 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 - [ ] **Verificar `poder_detalle`** funciona tras redeploy Railway (subir un PDF con apoderado)
 - [ ] **Redeploy Worker** en Railway para activar: File API + taxonomía CESBA + ingesta_estado fix + NOTE_ANALYSIS
 - [ ] **Ejecutar migración 041** en Supabase SQL Editor (extender ingestion_jobs para NOTE_ANALYSIS)
+- [ ] **Ejecutar migración 042** en Supabase SQL Editor (audit columns en sugerencias)
 
 ### Integración Template Builder
 - [ ] Test end-to-end real (crear carpeta con datos → generar DOCX → verificar output)
@@ -1124,4 +1158,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-03-04 — Claude Opus — ETAPA 4: NOTE_ANALYSIS con Gemini Flash, sugerencias reales, polling UI
+> **Última actualización**: 2026-03-04 — Claude Opus — ETAPA 5: Motor determinístico, audit trail, applySuggestion dispatcher
