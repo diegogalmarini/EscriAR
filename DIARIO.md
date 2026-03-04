@@ -621,7 +621,8 @@ Todas las acciones del servidor están en `src/app/actions/`. Son funciones `"us
 
 | Componente | Qué hace |
 |---|---|
-| `FolderWorkspace.tsx` | **Orquestador.** State, handlers, realtime subscriptions, dialogs. Renderiza CarpetaHero + Tabs (4 pestañas: Mesa de Trabajo, Antecedentes, Pre-Escriturario, Post-Firma). |
+| `FolderWorkspace.tsx` | **Orquestador.** Usa `useCarpetaState()` hook + dialogs de `CarpetaDialogs.tsx`. Renderiza CarpetaHero + Tabs (4 pestañas). ~230 líneas. |
+| `CarpetaDialogs.tsx` | 6 dialogs extraídos: EditPerson, EditRepresentacion, Transcription, EditDeed, DocumentViewer, ConflictResolution. |
 | `WorkspaceRadiography.tsx` | **Pestaña Antecedentes** (full width). Datos extraídos read-only: Documento, Inmueble, Partes, Archivos. Sin `<details>`, DNI/CUIT siempre visible, line-clamp-4 con "Ver más". |
 | `WorkspacePipeline.tsx` | Exporta 3 componentes: `FasePreEscritura` (Certificados + Tax + Liquidación), `FaseRedaccion` (Borrador IA + Editor), `FasePostEscritura` (Minuta + Compliance + Inscripción). |
 | `CarpetaHero.tsx` | Header de carpeta: carátula, badge estado, botón eliminar con AlertDialog. Props: `onDelete`, `isDeleting`. |
@@ -713,7 +714,9 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 |---|---|---|
 | `src/app/api/ingest/route.ts` | Pipeline sync de ingesta — el archivo más complejo | ~822 |
 | `worker/src/index.ts` | Pipeline async (Railway worker) | ~600 |
-| `src/components/FolderWorkspace.tsx` | Orquestador de carpeta (state + dialogs) | ~800 |
+| `src/hooks/useCarpetaState.ts` | Hook centralizado de estado carpeta | ~160 |
+| `src/components/CarpetaDialogs.tsx` | 6 dialogs extraídos de FolderWorkspace | ~430 |
+| `src/components/FolderWorkspace.tsx` | Orquestador de carpeta (usa hook + dialogs) | ~230 |
 | `src/components/WorkspaceRadiography.tsx` | Columna izquierda — datos extraídos | ~450 |
 | `src/components/WorkspacePipeline.tsx` | Columna derecha — pipeline notarial | ~130 |
 | `src/lib/agent/SkillExecutor.ts` | Orquestador de skills AI | ~500 |
@@ -1015,6 +1018,25 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 #### Migración 035 confirmada ejecutada
 - La tabla `modelos_actos` ya existía en producción. Se subieron 2 modelos: Compraventa (30 vars) y Autorización Vehicular (24 vars).
 
+### 2026-03-04 (Claude Opus) — ETAPA 1: Estabilización del módulo Carpeta
+
+#### Hook useCarpetaState (fuente de verdad única)
+- Nuevo `src/hooks/useCarpetaState.ts`: centraliza estado de carpeta, suscripción Realtime (debounced), CrossCheck engine, `resolveDocumentUrl`, y `refreshCarpeta()` controlado.
+- FolderWorkspace ahora consume el hook en vez de manejar estado propio.
+
+#### Modularización de dialogs
+- Nuevo `src/components/CarpetaDialogs.tsx`: 6 dialogs extraídos de FolderWorkspace (EditPerson, EditRepresentacion, Transcription, EditDeed, DocumentViewer, ConflictResolution).
+- FolderWorkspace pasa de ~913 a ~230 líneas.
+
+#### Eliminación de window.location.reload() (10 → 0)
+- Reemplazado con `router.refresh()` en: DeleteCarpetaDialog, InscriptionTracker (x2), EditarClienteDialog, DeleteInmuebleDialog, StatusStepper, WorkspacePipeline (x2), FolderWorkspace (x2).
+- Estrategia unificada: `router.refresh()` re-ejecuta el server component y sincroniza estado via `useEffect` en el hook.
+
+#### Documentos de arquitectura
+- `ARCHITECTURE_PLAN.md`: plan de 8 etapas para rediseño Carpeta AI-First.
+- `DISCOVERY_PACK.md`: documentación técnica completa del módulo Carpeta.
+- `RUN_MIGRATIONS.md`: guía de ejecución de migraciones con convenciones PRECHECKS/APPLY/POSTCHECKS/ROLLBACK.
+
 ### 2026-03-04 — Normalización tipo de acto en CarpetaHero
 
 - **CarpetaHero.tsx**: el subtítulo superior ahora normaliza el `tipo_acto` de la BD contra una lista de actos conocidos (COMPRAVENTA, HIPOTECA, DONACIÓN, etc.), eliminando sufijos espurios como "COMPLETA" que la ingesta AI a veces agrega.
@@ -1083,4 +1105,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-03-03 — Antigravity — Integración Template Builder → SaaS NotiAR, Vista Previa Mammoth Inline
+> **Última actualización**: 2026-03-04 — Claude Opus — ETAPA 1: Estabilización del módulo Carpeta (hook useCarpetaState, 6 dialogs extraídos, 0 location.reload)
