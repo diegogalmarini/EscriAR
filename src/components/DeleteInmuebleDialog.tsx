@@ -44,7 +44,7 @@ export function DeleteInmuebleDialog({ inmuebleId, nomenclatura, onInmuebleDelet
             } else if (redirectTo) {
                 router.push(redirectTo);
             } else {
-                window.location.reload();
+                router.refresh();
             }
         } else {
             // Error handling for foreign key or general failure

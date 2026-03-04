@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -138,6 +139,7 @@ const MODELOS_ESCRITURA_FALLBACK = [
 ];
 
 export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta, onTipoActoChange }: FaseRedaccionProps) {
+    const router = useRouter();
     // ── Cargar modelos activos desde BD ──
     const [modelosEscritura, setModelosEscritura] = useState<{ value: string; label: string }[]>(MODELOS_ESCRITURA_FALLBACK);
     useEffect(() => {
@@ -265,7 +267,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta, onTipoA
                 toast.error('Error al quitar participante');
                 setOptimisticRemoves(prev => prev.filter(d => d !== dni));
             } else {
-                window.location.reload();
+                router.refresh();
             }
         }
     };
@@ -536,7 +538,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta, onTipoA
                                         setOptimisticAdds(prev => prev.filter((a: any) => a.dni !== person.dni));
                                     } else {
                                         toast.success(`${person.nombre_completo} agregado como adquirente`);
-                                        window.location.reload();
+                                        router.refresh();
                                     }
                                 } else {
                                     toast.error('No hay operación disponible para vincular');

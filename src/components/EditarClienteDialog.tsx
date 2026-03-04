@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
     Dialog,
     DialogContent,
@@ -46,6 +47,7 @@ interface EditarClienteDialogProps {
 
 export function EditarClienteDialog({ persona }: EditarClienteDialogProps) {
     const [open, setOpen] = useState(false);
+    const router = useRouter();
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -66,7 +68,7 @@ export function EditarClienteDialog({ persona }: EditarClienteDialogProps) {
                     initialData={persona}
                     onSuccess={() => {
                         setOpen(false);
-                        window.location.reload();
+                        router.refresh();
                     }}
                     onCancel={() => setOpen(false)}
                 />
