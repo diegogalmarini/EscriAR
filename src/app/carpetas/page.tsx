@@ -8,11 +8,16 @@ import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
 import { CarpetasTable } from "@/components/CarpetasTable";
 import { PaginationControls } from "@/components/PaginationControls";
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useDebounce } from "use-debounce";
+import { createFolder } from "@/app/actions/carpeta";
+import { toast } from "sonner";
 
 export default function CarpetasPage() {
+    const router = useRouter();
     const [carpetas, setCarpetas] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [creating, setCreating] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [debouncedSearchTerm] = useDebounce(searchTerm, 500); // Wait 500ms before searching
 
@@ -67,9 +72,21 @@ export default function CarpetasPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Expedientes / Carpetas</h1>
                     <p className="text-muted-foreground">Listado completo de todas las operaciones notariales.</p>
                 </div>
-                <Button>
+                <Button
+                    disabled={creating}
+                    onClick={async () => {
+                        setCreating(true);
+                        const result = await createFolder();
+                        setCreating(false);
+                        if (result.success && result.carpetaId) {
+                            router.push(`/carpeta/${result.carpetaId}`);
+                        } else {
+                            toast.error(result.error || "Error al crear carpeta");
+                        }
+                    }}
+                >
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Nueva Carpeta
+                    {creating ? "Creando..." : "Nueva Carpeta"}
                 </Button>
             </div>
 
