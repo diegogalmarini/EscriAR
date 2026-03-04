@@ -30,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CarpetaHero from "./CarpetaHero";
 import { WorkspaceRadiography } from "./WorkspaceRadiography";
 import { FasePreEscritura, FaseRedaccion, FasePostEscritura } from "./WorkspacePipeline";
+import ApuntesTab from "./ApuntesTab";
 
 export default function FolderWorkspace({ initialData }: { initialData: any }) {
     const [carpeta, setCarpeta] = useState(initialData);
@@ -330,9 +331,10 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
 
     return (
         <div className="px-6 md:px-10 pb-10">
-            <Tabs defaultValue="mesa-trabajo" className="w-full">
+            <Tabs defaultValue="apuntes" className="w-full">
             <CarpetaHero carpeta={carpeta} onDelete={handleDeleteFolder} isDeleting={isDeleting}>
                 <TabsList>
+                    <TabsTrigger value="apuntes">Apuntes</TabsTrigger>
                     <TabsTrigger value="mesa-trabajo">Mesa de Trabajo</TabsTrigger>
                     <TabsTrigger value="antecedentes">Antecedentes</TabsTrigger>
                     <TabsTrigger value="pre-escritura">Pre-Escriturario</TabsTrigger>
@@ -342,6 +344,10 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
 
             <PersonSearch open={isPersonSearchOpen} setOpen={setIsPersonSearchOpen} onSelect={handleLinkPerson} />
             <AssetSearch open={isAssetSearchOpen} setOpen={setIsAssetSearchOpen} onSelect={handleLinkAsset} />
+
+                <TabsContent value="apuntes" className="mt-6">
+                    <ApuntesTab carpetaId={carpeta.id} />
+                </TabsContent>
 
                 <TabsContent value="mesa-trabajo" className="mt-6">
                     <FaseRedaccion
