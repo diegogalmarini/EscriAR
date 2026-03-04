@@ -67,7 +67,10 @@ async function getFirstOperacion(supabase: SupabaseClient, carpetaId: string) {
         .limit(1)
         .single();
 
-    if (escErr || !escritura) return null;
+    if (escErr || !escritura) {
+        console.log(`[ET5] getFirstOperacion: no escritura para carpeta ${carpetaId}`, escErr?.message);
+        return null;
+    }
 
     const { data: operacion, error: opErr } = await supabase
         .from("operaciones")
@@ -77,7 +80,12 @@ async function getFirstOperacion(supabase: SupabaseClient, carpetaId: string) {
         .limit(1)
         .single();
 
-    if (opErr || !operacion) return null;
+    if (opErr || !operacion) {
+        console.log(`[ET5] getFirstOperacion: no operación para escritura ${escritura.id}`, opErr?.message);
+        return null;
+    }
+
+    console.log(`[ET5] getFirstOperacion: operacion_id=${operacion.id} tipo_acto=${operacion.tipo_acto}`);
     return operacion;
 }
 
@@ -178,6 +186,8 @@ async function handleAgregarPersona(
         ? normalizeRol(rolRaw)
         : extractRolFromText(payload.descripcion || "");
 
+    console.log(`[ET5] AGREGAR_PERSONA: nombre="${nombre}", dni="${dni}", rol="${rol}", payload=${JSON.stringify(payload)}`);
+
     if (!nombre && !dni) {
         return {
             success: false,
@@ -187,7 +197,6 @@ async function handleAgregarPersona(
     }
 
     if (!dni) {
-        // Sin DNI: NO crear automáticamente. Informar al usuario.
         return {
             success: false,
             applied_changes: null,
@@ -195,23 +204,33 @@ async function handleAgregarPersona(
         };
     }
 
-    // 1. Upsert persona por DNI
+    // 1. Buscar o crear persona por DNI
     const { data: existing } = await supabase
         .from("personas")
         .select("dni, nombre_completo")
         .eq("dni", dni)
         .maybeSingle();
 
+    console.log(`[ET5] AGREGAR_PERSONA: persona existente=${existing ? existing.nombre_completo : 'NO'}`);
+
     if (!existing) {
-        const { error: insertErr } = await supabase
+        // Insert persona y VERIFICAR que se creó (RLS puede bloquear silenciosamente)
+        const { data: newPersona, error: insertErr } = await supabase
             .from("personas")
-            .insert({ dni, nombre_completo: nombre || `Persona DNI ${dni}`, tipo_persona: "FISICA" });
+            .insert({ dni, nombre_completo: nombre || `Persona DNI ${dni}`, tipo_persona: "FISICA" })
+            .select("dni")
+            .single();
+
         if (insertErr) {
             return { success: false, applied_changes: null, error: `Error creando persona: ${insertErr.message}` };
         }
+        if (!newPersona) {
+            return { success: false, applied_changes: null, error: `RLS bloqueó creación de persona DNI ${dni}. Verifique permisos.` };
+        }
+        console.log(`[ET5] AGREGAR_PERSONA: persona creada dni=${newPersona.dni}`);
     }
 
-    // 2. Vincular a la operación
+    // 2. Obtener operación activa
     const operacion = await getFirstOperacion(supabase, ctx.carpetaId);
     if (!operacion) {
         return {
@@ -221,7 +240,7 @@ async function handleAgregarPersona(
         };
     }
 
-    // Idempotencia: verificar si ya está vinculado
+    // 3. Verificar si ya está vinculado (idempotencia)
     const { data: existingLink } = await supabase
         .from("participantes_operacion")
         .select("id")
@@ -230,6 +249,7 @@ async function handleAgregarPersona(
         .maybeSingle();
 
     if (existingLink) {
+        console.log(`[ET5] AGREGAR_PERSONA: ya vinculado como participante`);
         return {
             success: true,
             applied_changes: {
@@ -242,24 +262,38 @@ async function handleAgregarPersona(
         };
     }
 
-    const { error: linkErr } = await supabase
+    // 4. Vincular — usar .select().single() para detectar si RLS bloquea
+    console.log(`[ET5] AGREGAR_PERSONA: insertando participante operacion_id=${operacion.id} persona_id=${dni} rol=${rol}`);
+    const { data: linkData, error: linkErr } = await supabase
         .from("participantes_operacion")
-        .insert({ operacion_id: operacion.id, persona_id: dni, rol });
+        .insert({ operacion_id: operacion.id, persona_id: dni, rol })
+        .select("id")
+        .single();
 
     if (linkErr) {
+        console.error(`[ET5] AGREGAR_PERSONA: error vinculando:`, linkErr.message, linkErr.details, linkErr.hint);
         return {
             success: false,
-            applied_changes: { persona_dni: dni },
+            applied_changes: { persona_dni: dni, operacion_id: operacion.id },
             error: `Error vinculando participante: ${linkErr.message}`,
         };
     }
+    if (!linkData) {
+        return {
+            success: false,
+            applied_changes: { persona_dni: dni, operacion_id: operacion.id },
+            error: `INSERT en participantes_operacion no devolvió datos. Posible bloqueo RLS.`,
+        };
+    }
 
+    console.log(`[ET5] AGREGAR_PERSONA: vinculado OK, participante_id=${linkData.id}`);
     return {
         success: true,
         applied_changes: {
             persona_dni: dni,
             nombre: existing?.nombre_completo || nombre,
             operacion_id: operacion.id,
+            participante_id: linkData.id,
             rol,
             ya_existia: false,
         },
@@ -279,7 +313,6 @@ async function handleCompletarDatos(
         return { success: false, applied_changes: null, error: "campo o valor faltante en payload" };
     }
 
-    // Campos de operación que se pueden actualizar
     const camposOperacion: Record<string, string> = {
         monto: "monto_operacion",
         monto_operacion: "monto_operacion",
@@ -320,7 +353,6 @@ async function handleCompletarDatos(
         };
     }
 
-    // Campos de carpeta: caratula
     if (campoNorm === "caratula") {
         const { error } = await supabase
             .from("carpetas")
@@ -337,7 +369,6 @@ async function handleCompletarDatos(
         };
     }
 
-    // Campo no mapeado: registrar pero no fallar
     return {
         success: true,
         applied_changes: { campo_no_mapeado: campo, valor, nota: "Campo sin mapeo automático, registrado como audit" },
@@ -355,7 +386,6 @@ async function handleAgregarCertificado(
         "DEUDA_ARBA", "RENTAS", "AFIP", "ANOTACIONES_PERSONALES", "OTRO",
     ];
 
-    // Extraer tipo de certificado de múltiples fuentes
     const rawTipo = (payload.campo || payload.valor || payload.descripcion || "")
         .toUpperCase()
         .replace(/\s+/g, "_")
@@ -364,7 +394,6 @@ async function handleAgregarCertificado(
 
     let tipoCert = tiposValidos.find(t => rawTipo.includes(t)) || "OTRO";
 
-    // Heurísticas adicionales
     const desc = (payload.descripcion || "").toLowerCase();
     if (tipoCert === "OTRO") {
         if (desc.includes("dominio")) tipoCert = "DOMINIO";
@@ -377,7 +406,7 @@ async function handleAgregarCertificado(
         else if (desc.includes("anotaciones")) tipoCert = "ANOTACIONES_PERSONALES";
     }
 
-    // Idempotencia: verificar si ya existe del mismo tipo en la carpeta (cualquier estado)
+    // Idempotencia: verificar si ya existe del mismo tipo en la carpeta
     const { data: existing } = await supabase
         .from("certificados")
         .select("id, estado")
