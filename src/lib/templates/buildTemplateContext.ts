@@ -470,8 +470,16 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
     const participantes: ParticipanteDB[] = operacion?.participantes_operacion || [];
 
     // 5. Classify participants by role
-    const vendedoresDB = filterByRol(participantes, "VENDEDOR", "TRANSMITENTE", "CEDENTE", "DONANTE");
-    const compradoresDB = filterByRol(participantes, "COMPRADOR", "ADQUIRENTE", "CESIONARIO", "DONATARIO");
+    //    Mesa de Trabajo convention:
+    //    - Transmitentes (vendedores): son los titulares del antecedente, tienen roles
+    //      COMPRADOR/TITULAR/CESIONARIO/DONATARIO asignados por la ingesta.
+    //    - Adquirentes (compradores): agregados manualmente con rol "ADQUIRENTE".
+    //    - También aceptamos "VENDEDOR"/"TRANSMITENTE" para carpetas sin antecedente.
+    const vendedoresDB = filterByRol(participantes,
+        "VENDEDOR", "TRANSMITENTE", "CEDENTE", "DONANTE",
+        "COMPRADOR", "TITULAR", "CESIONARIO", "DONATARIO"
+    ).filter(p => p.rol?.toUpperCase() !== "ADQUIRENTE"); // excluir adquirentes manuales
+    const compradoresDB = filterByRol(participantes, "ADQUIRENTE");
     const apoderadoDB = findByRol(participantes, "APODERADO", "REPRESENTANTE");
 
     // 6. Build conyuge from vendedor's datos_conyuge

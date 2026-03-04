@@ -13,9 +13,9 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import {
-    FileSignature, ClipboardCheck, Pencil, DollarSign, Home, Users,
+    FileSignature, ClipboardCheck, DollarSign, Home, Users,
     Search, UserPlus, Send, Briefcase, ArrowRight, X, Upload, Loader2,
-    FileText, Download, Eye
+    FileText, Download, Pencil
 } from "lucide-react";
 import {
     Dialog,
@@ -25,7 +25,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";  // ADDED
-import { DeedEditor } from "./DeedEditor";
+import DeedRichEditor from "./DeedRichEditor";
 import { MinutaGenerator } from "./MinutaGenerator";
 import { AMLCompliance } from "./AMLCompliance";
 import { InscriptionTracker } from "./InscriptionTracker";
@@ -164,7 +164,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isRendering, setIsRendering] = useState(false);
     const [renderResult, setRenderResult] = useState<{ url: string; path: string; html: string } | null>(null);
-    const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [showEditor, setShowEditor] = useState(false);
     const [isLoadingPrevious, setIsLoadingPrevious] = useState(false);
 
     // Load previously-rendered document from Storage on mount
@@ -647,6 +647,11 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                 )}
                             </Button>
                             {renderResult && (
+                                <Button size="lg" variant="outline" onClick={() => setShowEditor(true)}>
+                                    <Pencil className="h-4 w-4 mr-2" /> Editar
+                                </Button>
+                            )}
+                            {renderResult && (
                                 <Button size="lg" variant="outline" asChild>
                                     <a href={renderResult.url} download>
                                         <Download className="h-4 w-4 mr-2" /> Descargar
@@ -667,20 +672,10 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                     {/* ── Preview inline del documento generado ── */}
                     {renderResult?.html && (
                         <div className="border border-border rounded-lg bg-white">
-                            <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b border-border rounded-t-lg">
+                            <div className="flex items-center px-4 py-2 bg-muted/50 border-b border-border rounded-t-lg">
                                 <span className="text-xs font-medium text-muted-foreground">
                                     Vista previa del documento
                                 </span>
-                                <div className="flex gap-1">
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-7 px-2 text-xs"
-                                        onClick={() => setShowPreviewModal(true)}
-                                    >
-                                        <Eye className="h-3 w-3 mr-1" /> Pantalla completa
-                                    </Button>
-                                </div>
                             </div>
                             <div
                                 className="p-6 max-h-[500px] overflow-y-auto prose prose-sm max-w-none
@@ -692,61 +687,14 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                     )}
                 </div>
 
-                {/* ── Modal de Vista Previa Completa ── */}
-                <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
-                    <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                <Eye className="h-5 w-5" />
-                                Vista Previa — {modelosEscritura.find(m => m.value === tipoActo)?.label || tipoActo}
-                            </DialogTitle>
-                            <DialogDescription>
-                                Revise el documento generado. Para modificar, edite los datos de la carpeta y regenere.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="flex-1 overflow-y-auto border border-border rounded-lg bg-white">
-                            {renderResult?.html ? (
-                                <div
-                                    className="p-8 prose max-w-none
-                                        prose-headings:mb-3 prose-headings:mt-5 prose-p:mb-2 prose-p:mt-0
-                                        text-[14px] leading-relaxed"
-                                    dangerouslySetInnerHTML={{ __html: renderResult.html }}
-                                />
-                            ) : (
-                                <p className="p-8 text-muted-foreground text-center">
-                                    No hay contenido para previsualizar.
-                                </p>
-                            )}
-                        </div>
-                        <div className="flex justify-end gap-2 pt-2">
-                            {renderResult && (
-                                <Button variant="outline" asChild>
-                                    <a href={renderResult.url} download>
-                                        <Download className="h-4 w-4 mr-2" /> Descargar DOCX
-                                    </a>
-                                </Button>
-                            )}
-                            <Button onClick={() => setShowPreviewModal(false)}>
-                                Cerrar
-                            </Button>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-
-                {/* Redacción Manual */}
-                {activeDeedId && (
-                    <details>
-                        <summary className="text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1.5">
-                            <Pencil className="h-3.5 w-3.5" /> Redacción Manual
-                        </summary>
-                        <div className="mt-4 h-[500px] overflow-hidden rounded-lg border border-border">
-                            <DeedEditor
-                                escrituraId={activeDeedId}
-                                initialContent={currentEscritura?.contenido_borrador}
-                                dataSummary={currentEscritura}
-                            />
-                        </div>
-                    </details>
+                {/* ── Editor fullscreen ── */}
+                {showEditor && renderResult?.html && (
+                    <DeedRichEditor
+                        html={renderResult.html}
+                        title={modelosEscritura.find(m => m.value === tipoActo)?.label || tipoActo}
+                        onSave={(html) => setRenderResult(prev => prev ? { ...prev, html } : prev)}
+                        onClose={() => setShowEditor(false)}
+                    />
                 )}
             </div>
 
