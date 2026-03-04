@@ -1,16 +1,27 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
     StickyNote, Send, Loader2, CheckCircle2, XCircle,
     Clock, AlertTriangle, Sparkles, ThumbsUp, ThumbsDown,
-    Trash2
+    Trash2, Mic, MicOff, Lightbulb, ArrowRight
 } from "lucide-react";
 import { createApunte, listApuntes, deleteApunte } from "@/app/actions/apuntes";
 import { listSugerencias, acceptSuggestion, rejectSuggestion } from "@/app/actions/sugerencias";
+import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 
 interface ApuntesTabProps {
@@ -66,6 +77,22 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
     const [apuntes, setApuntes] = useState<any[]>([]);
     const [sugerencias, setSugerencias] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+    // Delete confirmation
+    const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // Dictation
+    const [isListening, setIsListening] = useState(false);
+    const recognitionRef = useRef<any>(null);
+
+    // Get current user
+    useEffect(() => {
+        supabase.auth.getUser().then(({ data }) => {
+            setCurrentUserId(data.user?.id || null);
+        });
+    }, []);
 
     const fetchData = useCallback(async () => {
         const [apRes, sugRes] = await Promise.all([
@@ -95,14 +122,18 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
         setIsSaving(false);
     };
 
-    const handleDelete = async (apunteId: string) => {
-        const result = await deleteApunte(apunteId);
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        setIsDeleting(true);
+        const result = await deleteApunte(deleteTarget);
         if (result.success) {
             toast.success("Apunte eliminado");
             fetchData();
         } else {
             toast.error(result.error || "Error al eliminar");
         }
+        setIsDeleting(false);
+        setDeleteTarget(null);
     };
 
     const handleAccept = async (sugerenciaId: string) => {
@@ -125,6 +156,69 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
         }
     };
 
+    // ── Web Speech API dictation ──
+    const toggleDictation = () => {
+        if (isListening) {
+            recognitionRef.current?.stop();
+            setIsListening(false);
+            return;
+        }
+
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            toast.error("Tu navegador no soporta dictado por voz. Usa Chrome o Edge.");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = "es-AR";
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognitionRef.current = recognition;
+
+        let finalTranscript = "";
+
+        recognition.onresult = (event: any) => {
+            let interim = "";
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript + " ";
+                } else {
+                    interim = transcript;
+                }
+            }
+            setContenido(prev => {
+                // Base = what was there before dictation started + accumulated finals
+                const base = prev.replace(/\u200B.*$/, ""); // remove interim marker
+                return (base ? base.trimEnd() + " " : "") + finalTranscript + (interim ? "\u200B" + interim : "");
+            });
+        };
+
+        recognition.onerror = (event: any) => {
+            if (event.error !== "aborted") {
+                toast.error(`Error de dictado: ${event.error}`);
+            }
+            setIsListening(false);
+        };
+
+        recognition.onend = () => {
+            setIsListening(false);
+            // Clean up interim markers
+            setContenido(prev => prev.replace(/\u200B/g, "").trim());
+        };
+
+        recognition.start();
+        setIsListening(true);
+        finalTranscript = "";
+    };
+
+    const getAuthorLabel = (autorId: string | null) => {
+        if (!autorId) return null;
+        if (autorId === currentUserId) return "Yo";
+        return null; // future: resolve from user_profiles
+    };
+
     const pendingSugerencias = sugerencias.filter(s => s.estado === "PROPOSED");
     const resolvedSugerencias = sugerencias.filter(s => s.estado !== "PROPOSED");
 
@@ -139,7 +233,7 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                         Nuevo apunte
                     </h3>
                     <Textarea
-                        placeholder="Escriba instrucciones, observaciones o datos para esta carpeta... (Ej: 'El comprador paga con cheque de pago diferido del Banco Nación', 'Verificar inhibición del vendedor')"
+                        placeholder="Escriba instrucciones, observaciones o datos para esta carpeta... (Ej: 'El comprador paga con cheque de pago diferido del Banco Nacion', 'Verificar inhibicion del vendedor')"
                         value={contenido}
                         onChange={(e) => setContenido(e.target.value)}
                         rows={3}
@@ -152,22 +246,50 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                         }}
                     />
                     <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">
-                            Ctrl+Enter para guardar
-                        </span>
-                        <Button
-                            size="sm"
-                            onClick={handleSave}
-                            disabled={!contenido.trim() || isSaving}
-                        >
-                            {isSaving ? (
-                                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-                            ) : (
-                                <Send className="h-4 w-4 mr-1.5" />
-                            )}
-                            Guardar
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">
+                                Ctrl+Enter para guardar
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                size="sm"
+                                variant={isListening ? "destructive" : "outline"}
+                                onClick={toggleDictation}
+                                title={isListening ? "Detener dictado" : "Dictar por voz"}
+                            >
+                                {isListening ? (
+                                    <>
+                                        <MicOff className="h-4 w-4 mr-1.5" />
+                                        Detener
+                                    </>
+                                ) : (
+                                    <>
+                                        <Mic className="h-4 w-4 mr-1.5" />
+                                        Dictar
+                                    </>
+                                )}
+                            </Button>
+                            <Button
+                                size="sm"
+                                onClick={handleSave}
+                                disabled={!contenido.trim() || isSaving}
+                            >
+                                {isSaving ? (
+                                    <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                                ) : (
+                                    <Send className="h-4 w-4 mr-1.5" />
+                                )}
+                                Guardar
+                            </Button>
+                        </div>
                     </div>
+                    {isListening && (
+                        <div className="flex items-center gap-2 text-xs text-red-500 animate-pulse">
+                            <span className="h-2 w-2 rounded-full bg-red-500" />
+                            Escuchando... hable con claridad
+                        </div>
+                    )}
                 </div>
 
                 {/* Lista de apuntes */}
@@ -186,13 +308,14 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                         <div className="p-8 text-center">
                             <StickyNote className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
                             <p className="text-sm text-muted-foreground">
-                                No hay apuntes todavia. Escriba una nota arriba para empezar.
+                                No hay apuntes todavia. Escriba una nota o use el dictado por voz.
                             </p>
                         </div>
                     ) : (
                         <div className="divide-y divide-border">
                             {apuntes.map((apunte) => {
                                 const statusCfg = IA_STATUS_CONFIG[apunte.ia_status] || IA_STATUS_CONFIG.PENDIENTE;
+                                const authorLabel = getAuthorLabel(apunte.autor_id);
                                 return (
                                     <div key={apunte.id} className="px-5 py-3 group">
                                         <div className="flex items-start justify-between gap-3">
@@ -205,7 +328,7 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                                                     {statusCfg.label}
                                                 </Badge>
                                                 <button
-                                                    onClick={() => handleDelete(apunte.id)}
+                                                    onClick={() => setDeleteTarget(apunte.id)}
                                                     className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-muted transition-all text-muted-foreground hover:text-red-500"
                                                     title="Eliminar apunte"
                                                 >
@@ -214,7 +337,16 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                                             </div>
                                         </div>
                                         <p className="text-[11px] text-muted-foreground mt-1">
+                                            {authorLabel && (
+                                                <span className="font-medium text-foreground/70">{authorLabel}</span>
+                                            )}
+                                            {authorLabel && " \u00B7 "}
                                             {formatRelativeTime(apunte.created_at)}
+                                            {apunte.origen === "voz" && (
+                                                <span className="ml-1.5 inline-flex items-center gap-0.5">
+                                                    <Mic className="h-3 w-3" /> voz
+                                                </span>
+                                            )}
                                             {apunte.ia_last_error && (
                                                 <span className="ml-2 text-red-500">{apunte.ia_last_error}</span>
                                             )}
@@ -247,13 +379,46 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                         </div>
                     ) : sugerencias.length === 0 ? (
-                        <div className="p-8 text-center">
-                            <Sparkles className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
-                            <p className="text-sm text-muted-foreground">
-                                Las sugerencias de NotiAR aparecen aqui cuando procesemos sus apuntes.
-                            </p>
-                            <p className="text-xs text-muted-foreground/60 mt-1">
-                                Escriba un apunte para comenzar.
+                        <div className="px-5 py-6 space-y-4">
+                            {/* Empty state pro */}
+                            <div className="text-center">
+                                <div className="mx-auto w-12 h-12 rounded-full bg-gradient-to-br from-blue-50 to-violet-50 flex items-center justify-center mb-3">
+                                    <Sparkles className="h-6 w-6 text-blue-400" />
+                                </div>
+                                <p className="text-sm font-medium text-foreground">
+                                    Asistente inteligente
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    NotiAR analiza sus apuntes y sugiere acciones para completar la carpeta.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex items-start gap-2.5 p-2.5 rounded-md bg-muted/30 border border-border/50">
+                                    <Lightbulb className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-xs font-medium text-foreground">Completar datos</p>
+                                        <p className="text-[11px] text-muted-foreground">Detecta datos faltantes de partes, inmueble o acto.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-2.5 p-2.5 rounded-md bg-muted/30 border border-border/50">
+                                    <ArrowRight className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-xs font-medium text-foreground">Acciones sugeridas</p>
+                                        <p className="text-[11px] text-muted-foreground">Propone agregar personas, certificados o datos del inmueble.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-2.5 p-2.5 rounded-md bg-muted/30 border border-border/50">
+                                    <AlertTriangle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-xs font-medium text-foreground">Alertas</p>
+                                        <p className="text-[11px] text-muted-foreground">Advierte sobre inconsistencias o datos a verificar.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p className="text-[11px] text-center text-muted-foreground/60 pt-1">
+                                Escriba un apunte para activar las sugerencias.
                             </p>
                         </div>
                     ) : (
@@ -316,6 +481,33 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                     )}
                 </div>
             </div>
+
+            {/* ── Modal confirmación borrado ── */}
+            <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Eliminar apunte</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Esta accion es irreversible. El apunte y las sugerencias asociadas se eliminaran permanentemente.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmDelete}
+                            disabled={isDeleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {isDeleting ? (
+                                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                            ) : (
+                                <Trash2 className="h-4 w-4 mr-1.5" />
+                            )}
+                            Eliminar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
@@ -324,11 +516,9 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
 function renderPayload(payload: any): React.ReactNode {
     if (!payload) return null;
 
-    // Si tiene un campo "descripcion" o "description", mostrarlo
     if (payload.descripcion) return <p>{payload.descripcion}</p>;
     if (payload.description) return <p>{payload.description}</p>;
 
-    // Si tiene campo/valor (sugerencia tipo campo)
     if (payload.campo && payload.valor !== undefined) {
         return (
             <p>
@@ -337,6 +527,5 @@ function renderPayload(payload: any): React.ReactNode {
         );
     }
 
-    // Fallback: mostrar JSON legible
     return <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(payload, null, 2)}</pre>;
 }
