@@ -4,14 +4,18 @@ import { createClient } from "@/lib/supabaseServer";
 import { revalidatePath } from "next/cache";
 import { logAction } from "@/lib/logger";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getUserOrgId } from "@/lib/auth/getOrg";
 
 export async function createFolder(caratula?: string) {
     try {
         const supabase = await createClient();
+        const orgId = await getUserOrgId();
+        if (!orgId) return { success: false, error: "No pertenece a ninguna organización" };
+
         // 1. Crear la Carpeta
         const { data: carpeta, error: carpetaError } = await supabase
             .from('carpetas')
-            .insert([{ caratula, estado: 'ABIERTA' }])
+            .insert([{ caratula, estado: 'ABIERTA', org_id: orgId }])
             .select()
             .single();
 

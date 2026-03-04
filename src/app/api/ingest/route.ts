@@ -19,6 +19,7 @@ import { normalizeID, toTitleCase, formatCUIT, normalizePartido, normalizePartid
 import { SkillExecutor } from '@/lib/agent/SkillExecutor';
 import { classifyDocument } from '@/lib/skills/routing/documentClassifier';
 import { taxonomyService, ActIntent } from '@/lib/services/TaxonomyService';
+import { getOrgIdForUser } from '@/lib/auth/getOrg';
 
 // Helper to get CESBA code from tipo_acto
 // Direct code mappings for acts that don't follow baseCode-subcode pattern
@@ -224,12 +225,24 @@ export async function POST(req: Request) {
 
         const buffer = Buffer.from(await file.arrayBuffer());
 
+        // Resolve org_id for multi-tenant
+        let orgId = 'a0000000-0000-0000-0000-000000000001'; // default org
+        try {
+            const { createClient: createServerSupa } = await import('@/lib/supabaseServer');
+            const serverSupa = await createServerSupa();
+            const { data: { user: currentUser } } = await serverSupa.auth.getUser();
+            if (currentUser?.id) {
+                orgId = await getOrgIdForUser(currentUser.id);
+            }
+        } catch { /* fallback to default org */ }
+
         // 1. Initial creation for status tracking
         console.log(`[PIPELINE] Creating folder for: ${file.name}`);
         const { data: carpeta, error: folderError } = await supabaseAdmin.from('carpetas').insert({
             caratula: file.name.substring(0, 100),
             ingesta_estado: 'PROCESANDO',
-            ingesta_paso: 'Iniciando análisis'
+            ingesta_paso: 'Iniciando análisis',
+            org_id: orgId
         }).select().single();
 
         if (folderError) throw new Error(`Error creando carpeta: ${folderError.message}`);
