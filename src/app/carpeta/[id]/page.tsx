@@ -1,5 +1,5 @@
-import { supabase } from "@/lib/supabaseClient";
-import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabaseServer";
+import { notFound, redirect } from "next/navigation";
 import FolderWorkspace from "@/components/FolderWorkspace";
 
 export const dynamic = 'force-dynamic';
@@ -7,7 +7,13 @@ export const revalidate = 0;
 
 export default async function CarpetaDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    console.log("🔍 FETCHING CARPETA ID:", id);
+    const supabase = await createClient();
+
+    // Verify user is authenticated
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        redirect("/login");
+    }
 
     // Fetch full hierarchy
     const { data: carpeta, error } = await supabase
@@ -29,9 +35,9 @@ export default async function CarpetaDetailPage({ params }: { params: Promise<{ 
         .eq("id", id)
         .single();
 
-    if (error) console.error("❌ SUPABASE FETCH ERROR:", error);
-    if (!carpeta) console.warn("⚠️ CARPETA NOT FOUND");
-    else console.log("✅ CARPETA DATA LOADED, WRITINGS COUNT:", carpeta.escrituras?.length);
+    if (error || !carpeta) {
+        notFound();
+    }
 
     return (
         <div className="min-h-screen bg-slate-50/50">
