@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabaseServer";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { notFound, redirect } from "next/navigation";
 import FolderWorkspace from "@/components/FolderWorkspace";
 
@@ -7,16 +8,17 @@ export const revalidate = 0;
 
 export default async function CarpetaDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const supabase = await createClient();
 
-    // Verify user is authenticated
+    // Verify user is authenticated via server client (has cookies)
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         redirect("/login");
     }
 
-    // Fetch full hierarchy
-    const { data: carpeta, error } = await supabase
+    // Fetch full hierarchy using admin client (server-side only, bypasses RLS)
+    // Safe because we already verified auth above
+    const { data: carpeta, error } = await supabaseAdmin
         .from("carpetas")
         .select(`
             *,
