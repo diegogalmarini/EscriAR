@@ -740,6 +740,10 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 | 030 | Agregar telefono/email a escribanos + A_CARGO enum + datos Galmarini | ✅ Ejecutada |
 | 035 | Tabla modelos_actos — Templates DOCX para actos notariales | ✅ Ejecutada |
 | 037 | Columna rendered_docx_path en tabla escrituras para Documentos Generados | ✅ Ejecutada |
+| 038 | Organizaciones, org_users, RLS multi-tenant, search_carpetas | ✅ Ejecutada |
+| 039 | Fix recursión infinita RLS con SECURITY DEFINER | ✅ Ejecutada |
+| 040 | Tablas apuntes + sugerencias, RLS por org, triggers updated_at | ✅ Ejecutada |
+| 041 | Extender ingestion_jobs: job_type, payload, entity_ref, org_id para NOTE_ANALYSIS | ⚠️ **PENDIENTE** |
 
 **Nota**: las migraciones se ejecutan MANUAL en Supabase SQL Editor. No hay sistema de migración automático.
 
@@ -1046,6 +1050,42 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 - `src/app/actions/modelos.ts` — ajustes menores
 - `src/app/admin/users/ModelosTab.tsx` — ajustes UI
 
+### 2026-03-04 (Claude Opus) — ETAPA 4: NOTE_ANALYSIS + Sugerencias reales con Gemini Flash
+
+#### Migración 041: Extensión de ingestion_jobs
+- Nuevas columnas: `job_type` (TEXT, default 'INGEST'), `payload` (JSONB), `entity_ref` (JSONB), `org_id` (UUID FK)
+- Relajado NOT NULL en `file_path` y `original_filename` (NOTE_ANALYSIS no tiene archivo)
+- Índices: `(job_type, status)`, `(carpeta_id, job_type)`, GIN en `entity_ref`
+- PRECHECKS/APPLY/POSTCHECKS/ROLLBACK completos
+
+#### Backend: Server Actions
+- `createApunte()`: ahora crea apunte con `ia_status='PROCESANDO'` e inserta job `NOTE_ANALYSIS` en `ingestion_jobs`
+- `retryNoteAnalysis(apunteId, carpetaId)`: nueva action — resetea `ia_status` a PROCESANDO y crea nuevo job
+
+#### Worker: noteAnalyzer (Gemini Flash)
+- Nuevo módulo `worker/src/noteAnalyzer.ts` con:
+  - Schema Zod `NoteAnalysisOutputSchema`: array de sugerencias (max 5) con tipo, payload, evidencia_texto, confianza
+  - Tipos de sugerencia: COMPLETAR_DATOS, AGREGAR_PERSONA, AGREGAR_CERTIFICADO, VERIFICAR_DATO, ACCION_REQUERIDA
+  - Prompt de extracción con reglas de seguridad (texto = datos, nunca instrucciones)
+  - Usa `gemini-2.5-flash` via `@ai-sdk/google` + `generateObject`
+- Worker loop actualizado: detecta `job_type='NOTE_ANALYSIS'` y bifurca a `processNoteAnalysis()`
+- `processNoteAnalysis()`: lee apunte → analiza con Gemini → valida con Zod → inserta sugerencias → actualiza ia_status
+
+#### UI: ApuntesTab mejorado
+- Badge "Analizando..." con spinner para apuntes en PROCESANDO
+- Polling automático cada 5s cuando hay apuntes procesando (se detiene al completar)
+- Botón Reintentar (RefreshCw) visible en apuntes con ERROR
+- Skeletons animados en panel de sugerencias mientras hay análisis en curso
+- Import de `retryNoteAnalysis` y `RefreshCw`
+
+#### Archivos modificados/creados
+- `supabase_migrations/041_etapa_4__note_analysis_jobs.sql` — NUEVO
+- `worker/src/noteAnalyzer.ts` — NUEVO
+- `worker/src/index.ts` — import noteAnalyzer, bifurcación NOTE_ANALYSIS, processNoteAnalysis()
+- `src/app/actions/apuntes.ts` — createApunte con job, retryNoteAnalysis nueva
+- `src/components/ApuntesTab.tsx` — polling, retry, skeletons, badge Analizando
+- `RUN_MIGRATIONS.md` — actualizado con migración 041
+
 ---
 
 ## 18. Pendientes Conocidos
@@ -1056,7 +1096,8 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 - [ ] **Ejecutar migración 032** en Supabase SQL Editor (tabla gravámenes)
 - [ ] **Ejecutar migración 033** en Supabase SQL Editor (campos profesion, regimen_patrimonial, nro_documento_conyugal en personas)
 - [ ] **Verificar `poder_detalle`** funciona tras redeploy Railway (subir un PDF con apoderado)
-- [ ] **Redeploy Worker** en Railway para activar: File API + taxonomía CESBA + ingesta_estado fix
+- [ ] **Redeploy Worker** en Railway para activar: File API + taxonomía CESBA + ingesta_estado fix + NOTE_ANALYSIS
+- [ ] **Ejecutar migración 041** en Supabase SQL Editor (extender ingestion_jobs para NOTE_ANALYSIS)
 
 ### Integración Template Builder
 - [ ] Test end-to-end real (crear carpeta con datos → generar DOCX → verificar output)
@@ -1083,4 +1124,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-03-03 — Antigravity — Integración Template Builder → SaaS NotiAR, Vista Previa Mammoth Inline
+> **Última actualización**: 2026-03-04 — Claude Opus — ETAPA 4: NOTE_ANALYSIS con Gemini Flash, sugerencias reales, polling UI

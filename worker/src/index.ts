@@ -9,6 +9,7 @@ import * as http from 'http';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import actsData from './acts_taxonomy_2026.json';
+import { analyzeNote, NoteAnalysisOutputSchema } from './noteAnalyzer';
 const pdfParse = require('pdf-parse');
 
 dotenv.config();
@@ -207,11 +208,12 @@ async function workerLoop() {
 
     while (true) {
         try {
-            // 1. Fetch pending
+            // 1. Fetch pending (both INGEST and NOTE_ANALYSIS)
             const { data: jobs, error: fetchError } = await supabase
                 .from('ingestion_jobs')
                 .select('*')
                 .eq('status', 'pending')
+                .in('job_type', ['INGEST', 'NOTE_ANALYSIS'])
                 .order('created_at', { ascending: true })
                 .limit(1);
 
@@ -234,6 +236,12 @@ async function workerLoop() {
 
             if (lockError) {
                 console.log(`[WORKER] Job ${job.id} tomado por otro thread. Omitiendo.`);
+                continue;
+            }
+
+            // ── NOTE_ANALYSIS: procesar con Gemini Flash ──
+            if (job.job_type === 'NOTE_ANALYSIS') {
+                await processNoteAnalysis(job);
                 continue;
             }
 
@@ -607,6 +615,101 @@ async function workerLoop() {
             }
             await new Promise(res => setTimeout(res, 5000));
         }
+    }
+}
+
+// ── NOTE_ANALYSIS handler ──
+async function processNoteAnalysis(job: any) {
+    const apunteId = job.entity_ref?.apunte_id;
+    if (!apunteId) {
+        console.error(`[WORKER] NOTE_ANALYSIS job ${job.id}: sin apunte_id en entity_ref`);
+        await supabase.from('ingestion_jobs').update({
+            status: 'failed',
+            error_message: 'entity_ref.apunte_id faltante',
+            finished_at: new Date().toISOString(),
+        }).eq('id', job.id);
+        return;
+    }
+
+    console.log(`[WORKER] NOTE_ANALYSIS: Analizando apunte ${apunteId}`);
+
+    try {
+        // 1. Obtener texto del apunte
+        const { data: apunte, error: fetchErr } = await supabase
+            .from('apuntes')
+            .select('contenido, carpeta_id, org_id')
+            .eq('id', apunteId)
+            .single();
+
+        if (fetchErr || !apunte) {
+            throw new Error(`Apunte ${apunteId} no encontrado: ${fetchErr?.message || 'sin data'}`);
+        }
+
+        // 2. Ejecutar análisis con Gemini Flash
+        const geminiKey = process.env.GEMINI_API_KEY!;
+        const analysis = await analyzeNote(apunte.contenido, geminiKey);
+
+        // 3. Validar output con Zod (ya validado por generateObject, pero double-check)
+        const parsed = NoteAnalysisOutputSchema.safeParse(analysis);
+        if (!parsed.success) {
+            throw new Error(`Schema validation failed: ${parsed.error.message}`);
+        }
+
+        const sugerencias = parsed.data.sugerencias;
+        console.log(`[WORKER] NOTE_ANALYSIS: ${sugerencias.length} sugerencias generadas`);
+
+        // 4. Insertar sugerencias en BD
+        if (sugerencias.length > 0) {
+            const rows = sugerencias.map(s => ({
+                org_id: apunte.org_id,
+                carpeta_id: apunte.carpeta_id,
+                apunte_id: apunteId,
+                tipo: s.tipo,
+                payload: s.payload,
+                evidencia_texto: s.evidencia_texto,
+                confianza: s.confianza,
+                estado: 'PROPOSED',
+            }));
+
+            const { error: insertErr } = await supabase
+                .from('sugerencias')
+                .insert(rows);
+
+            if (insertErr) {
+                throw new Error(`Error insertando sugerencias: ${insertErr.message}`);
+            }
+        }
+
+        // 5. Marcar apunte como COMPLETADO
+        await supabase.from('apuntes').update({
+            ia_status: 'COMPLETADO',
+            ia_last_error: null,
+        }).eq('id', apunteId);
+
+        // 6. Marcar job como completed
+        await supabase.from('ingestion_jobs').update({
+            status: 'completed',
+            result_data: { sugerencias_count: sugerencias.length },
+            finished_at: new Date().toISOString(),
+        }).eq('id', job.id);
+
+        console.log(`[WORKER] NOTE_ANALYSIS job ${job.id} COMPLETADO: ${sugerencias.length} sugerencias`);
+
+    } catch (error: any) {
+        console.error(`[WORKER] NOTE_ANALYSIS job ${job.id} FAILED:`, error.message);
+
+        // Marcar apunte como ERROR
+        await supabase.from('apuntes').update({
+            ia_status: 'ERROR',
+            ia_last_error: error.message?.substring(0, 500) || 'Error desconocido',
+        }).eq('id', apunteId);
+
+        // Marcar job como failed
+        await supabase.from('ingestion_jobs').update({
+            status: 'failed',
+            error_message: error.message || 'Error desconocido',
+            finished_at: new Date().toISOString(),
+        }).eq('id', job.id);
     }
 }
 

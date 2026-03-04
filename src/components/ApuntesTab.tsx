@@ -17,9 +17,9 @@ import {
 import {
     StickyNote, Send, Loader2, CheckCircle2, XCircle,
     Clock, AlertTriangle, Sparkles, ThumbsUp, ThumbsDown,
-    Trash2, Mic, MicOff, Lightbulb, ArrowRight
+    Trash2, Mic, MicOff, Lightbulb, ArrowRight, RefreshCw
 } from "lucide-react";
-import { createApunte, listApuntes, deleteApunte } from "@/app/actions/apuntes";
+import { createApunte, listApuntes, deleteApunte, retryNoteAnalysis } from "@/app/actions/apuntes";
 import { listSugerencias, acceptSuggestion, rejectSuggestion } from "@/app/actions/sugerencias";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
@@ -35,7 +35,7 @@ const IA_STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; c
         className: "bg-slate-100 text-slate-600 border-slate-200",
     },
     PROCESANDO: {
-        label: "Procesando",
+        label: "Analizando...",
         icon: <Loader2 className="h-3 w-3 animate-spin" />,
         className: "bg-amber-100 text-amber-700 border-amber-200",
     },
@@ -175,6 +175,14 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
         fetchData();
     }, [fetchData]);
 
+    // Polling: refrescar cuando hay apuntes en PROCESANDO
+    const hasProcessing = apuntes.some(a => a.ia_status === "PROCESANDO");
+    useEffect(() => {
+        if (!hasProcessing) return;
+        const interval = setInterval(() => fetchData(), 5000);
+        return () => clearInterval(interval);
+    }, [hasProcessing, fetchData]);
+
     const handleSave = async () => {
         if (!contenido.trim()) return;
         setIsSaving(true);
@@ -220,6 +228,16 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
             fetchData();
         } else {
             toast.error(result.error || "Error");
+        }
+    };
+
+    const handleRetry = async (apunteId: string) => {
+        const result = await retryNoteAnalysis(apunteId, carpetaId);
+        if (result.success) {
+            toast.success("Reintentando analisis...");
+            fetchData();
+        } else {
+            toast.error(result.error || "Error al reintentar");
         }
     };
 
@@ -409,6 +427,15 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                                                     {statusCfg.icon}
                                                     {statusCfg.label}
                                                 </Badge>
+                                                {apunte.ia_status === "ERROR" && (
+                                                    <button
+                                                        onClick={() => handleRetry(apunte.id)}
+                                                        className="p-1 rounded hover:bg-amber-50 transition-all text-amber-600 hover:text-amber-700"
+                                                        title="Reintentar analisis"
+                                                    >
+                                                        <RefreshCw className="h-3.5 w-3.5" />
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => setDeleteTarget(apunte.id)}
                                                     className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-muted transition-all text-muted-foreground hover:text-red-500"
@@ -459,6 +486,23 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                     {isLoading ? (
                         <div className="p-8 flex justify-center">
                             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        </div>
+                    ) : hasProcessing && sugerencias.length === 0 ? (
+                        <div className="px-5 py-4 space-y-3">
+                            <div className="flex items-center gap-2 text-xs text-amber-600">
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                Analizando apuntes...
+                            </div>
+                            {[1, 2].map(i => (
+                                <div key={i} className="space-y-2 animate-pulse">
+                                    <div className="flex gap-2">
+                                        <div className="h-5 w-28 bg-muted rounded" />
+                                        <div className="h-5 w-12 bg-muted rounded" />
+                                    </div>
+                                    <div className="h-4 w-full bg-muted/60 rounded" />
+                                    <div className="h-4 w-3/4 bg-muted/40 rounded" />
+                                </div>
+                            ))}
                         </div>
                     ) : sugerencias.length === 0 ? (
                         <div className="px-5 py-6 space-y-4">
