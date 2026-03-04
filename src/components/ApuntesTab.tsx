@@ -86,6 +86,8 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
     // Dictation
     const [isListening, setIsListening] = useState(false);
     const recognitionRef = useRef<any>(null);
+    const baseTextRef = useRef(""); // texto que había antes de empezar a dictar
+    const finalChunksRef = useRef(""); // chunks finales acumulados durante dictado
 
     // Get current user
     useEffect(() => {
@@ -170,29 +172,31 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
             return;
         }
 
+        // Snapshot del texto actual como base
+        baseTextRef.current = contenido;
+        finalChunksRef.current = "";
+
         const recognition = new SpeechRecognition();
         recognition.lang = "es-AR";
         recognition.continuous = true;
         recognition.interimResults = true;
         recognitionRef.current = recognition;
 
-        let finalTranscript = "";
-
         recognition.onresult = (event: any) => {
-            let interim = "";
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                const transcript = event.results[i][0].transcript;
+            let currentInterim = "";
+            // Recalcular todos los finals desde el principio de la sesión
+            let allFinals = "";
+            for (let i = 0; i < event.results.length; i++) {
                 if (event.results[i].isFinal) {
-                    finalTranscript += transcript + " ";
+                    allFinals += event.results[i][0].transcript + " ";
                 } else {
-                    interim = transcript;
+                    currentInterim += event.results[i][0].transcript;
                 }
             }
-            setContenido(prev => {
-                // Base = what was there before dictation started + accumulated finals
-                const base = prev.replace(/\u200B.*$/, ""); // remove interim marker
-                return (base ? base.trimEnd() + " " : "") + finalTranscript + (interim ? "\u200B" + interim : "");
-            });
+            finalChunksRef.current = allFinals;
+            const base = baseTextRef.current;
+            const separator = base && !base.endsWith(" ") && !base.endsWith("\n") ? " " : "";
+            setContenido(base + separator + allFinals + currentInterim);
         };
 
         recognition.onerror = (event: any) => {
@@ -204,13 +208,17 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
 
         recognition.onend = () => {
             setIsListening(false);
-            // Clean up interim markers
-            setContenido(prev => prev.replace(/\u200B/g, "").trim());
+            // Al terminar, fijar el texto final (base + finals, sin interim)
+            const base = baseTextRef.current;
+            const finals = finalChunksRef.current.trim();
+            if (finals) {
+                const separator = base && !base.endsWith(" ") && !base.endsWith("\n") ? " " : "";
+                setContenido(base + separator + finals);
+            }
         };
 
         recognition.start();
         setIsListening(true);
-        finalTranscript = "";
     };
 
     const getAuthorLabel = (autorId: string | null) => {
