@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Trash2, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { deleteCarpeta } from "@/app/actions/carpeta";
 import { toast } from "sonner";
 
@@ -26,6 +27,7 @@ interface DeleteCarpetaDialogProps {
 export function DeleteCarpetaDialog({ carpetaId, caratula, onCarpetaDeleted }: DeleteCarpetaDialogProps) {
     const [open, setOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const router = useRouter();
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -38,7 +40,7 @@ export function DeleteCarpetaDialog({ carpetaId, caratula, onCarpetaDeleted }: D
             if (onCarpetaDeleted) {
                 onCarpetaDeleted();
             } else {
-                window.location.reload();
+                router.refresh();
             }
         } else {
             toast.error(res.error || "No se pudo eliminar la carpeta.", {

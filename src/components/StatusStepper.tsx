@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Check, CircleDot, Clock, FileCheck, Landmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { updateFolderStatus } from "@/app/actions/carpeta";
@@ -16,13 +17,14 @@ const STATES = [
 
 export function StatusStepper({ folderId, currentStatus }: { folderId: string; currentStatus: string }) {
     const [isPending, startTransition] = useTransition();
+    const router = useRouter();
 
     const handleStatusChange = async (newStatus: string) => {
         startTransition(async () => {
             const res = await updateFolderStatus(folderId, newStatus);
             if (res.success) {
                 toast.success(`Estado actualizado a ${newStatus}`);
-                window.location.reload();
+                router.refresh();
             } else {
                 toast.error(res.error);
             }

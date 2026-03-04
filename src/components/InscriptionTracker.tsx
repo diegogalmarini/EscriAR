@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ export function InscriptionTracker({ data }: { data: any }) {
     const [estado, setEstado] = useState(data?.estado_inscripcion || "PENDIENTE");
     const [nroEntrada, setNroEntrada] = useState(data?.nro_entrada_registro || "");
     const [isUpdating, setIsUpdating] = useState(false);
+    const router = useRouter();
 
     const handleMarkAsSigned = async () => {
         if (!fechaFirma) {
@@ -30,7 +32,7 @@ export function InscriptionTracker({ data }: { data: any }) {
 
         if (res.success) {
             toast.success(`Firmada. Vencimiento: ${res.vencimiento}`);
-            setTimeout(() => window.location.reload(), 1000);
+            setTimeout(() => router.refresh(), 1000);
         } else {
             toast.error(res.error || "Error al marcar como firmada");
         }
@@ -43,7 +45,7 @@ export function InscriptionTracker({ data }: { data: any }) {
 
         if (res.success) {
             toast.success("Estado actualizado");
-            setTimeout(() => window.location.reload(), 1000);
+            setTimeout(() => router.refresh(), 1000);
         } else {
             toast.error(res.error || "Error al actualizar estado");
         }
