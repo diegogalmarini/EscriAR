@@ -159,20 +159,15 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
     const baseTextRef = useRef(""); // texto que había antes de empezar a dictar
     const finalChunksRef = useRef(""); // chunks finales acumulados durante dictado
 
-    // Get current user
-    useEffect(() => {
-        supabase.auth.getUser().then(({ data }) => {
-            setCurrentUserId(data.user?.id || null);
-        });
-    }, []);
-
     const fetchData = useCallback(async () => {
-        const [apRes, sugRes] = await Promise.all([
+        const [apRes, sugRes, userRes] = await Promise.all([
             listApuntes(carpetaId),
             listSugerencias(carpetaId),
+            supabase.auth.getUser(),
         ]);
         if (apRes.success) setApuntes(apRes.apuntes);
         if (sugRes.success) setSugerencias(sugRes.sugerencias);
+        setCurrentUserId(userRes.data.user?.id || null);
         setIsLoading(false);
     }, [carpetaId]);
 
