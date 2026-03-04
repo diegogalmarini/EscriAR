@@ -26,7 +26,8 @@ export async function createApunte(carpetaId: string, contenido: string) {
         if (error) throw error;
 
         // 2. Crear job NOTE_ANALYSIS en ingestion_jobs
-        const { error: jobError } = await supabase
+        console.log(`[ET4] createApunte: apunte ${data.id} creado con ia_status=PROCESANDO. Insertando job...`);
+        const { data: jobData, error: jobError } = await supabase
             .from("ingestion_jobs")
             .insert({
                 user_id: userId,
@@ -39,15 +40,18 @@ export async function createApunte(carpetaId: string, contenido: string) {
                     note_text_preview: contenido.trim().substring(0, 200),
                     version: 1,
                 },
-            });
+            })
+            .select("id")
+            .single();
 
         if (jobError) {
-            console.error("Error creating NOTE_ANALYSIS job:", jobError);
-            // No falla el apunte, pero marca como error
+            console.error(`[ET4] FALLO creando NOTE_ANALYSIS job para apunte ${data.id}:`, jobError.message, jobError.details, jobError.hint);
             await supabase
                 .from("apuntes")
-                .update({ ia_status: "ERROR", ia_last_error: "No se pudo encolar análisis" })
+                .update({ ia_status: "ERROR", ia_last_error: `Job creation failed: ${jobError.message}` })
                 .eq("id", data.id);
+        } else {
+            console.log(`[ET4] NOTE_ANALYSIS job creado: ${jobData.id} para apunte ${data.id}`);
         }
 
         revalidatePath(`/carpeta/${carpetaId}`);
