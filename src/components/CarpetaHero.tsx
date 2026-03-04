@@ -67,7 +67,8 @@ function generarCaratula(carpeta: any): { titulo: string; subtipo: string } {
     const operacion = escritura?.operaciones?.[0];
 
     // Subtítulo: tipo de acto normalizado o placeholder
-    const tipoActoRaw = operacion?.tipo_acto?.toUpperCase()?.trim() || null;
+    const rawActo = operacion?.tipo_acto?.toUpperCase()?.trim() || null;
+    const tipoActoRaw = (rawActo === "POR_DEFINIR") ? null : rawActo;
     // Normalizar: extraer solo la palabra clave del acto (quitar "COMPLETA", "SIMPLE", etc.)
     const ACTOS_CONOCIDOS = [
         "COMPRAVENTA", "HIPOTECA", "DONACIÓN", "DONACION", "CESIÓN DE DERECHOS",

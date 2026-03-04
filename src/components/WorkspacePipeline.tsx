@@ -156,7 +156,8 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta, onTipoA
     }, []);
 
     // Inicializar tipoActo desde BD si existe
-    const existingTipoActo = currentEscritura?.operaciones?.[0]?.tipo_acto || "";
+    const rawTipoActo = currentEscritura?.operaciones?.[0]?.tipo_acto || "";
+    const existingTipoActo = rawTipoActo === "POR_DEFINIR" ? "" : rawTipoActo;
     const matchedValue = modelosEscritura.find(m =>
         existingTipoActo.toUpperCase().includes(m.label.toUpperCase().replace('Ó', 'O')) ||
         m.value === existingTipoActo

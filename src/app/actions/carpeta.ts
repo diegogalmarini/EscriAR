@@ -33,7 +33,7 @@ export async function createFolder(caratula?: string) {
         // 3. Crear una Operación Borrador automáticamente (Simplificación solicitada)
         const { data: operacion, error: operacionError } = await supabase
             .from('operaciones')
-            .insert([{ escritura_id: escritura.id }])
+            .insert([{ escritura_id: escritura.id, tipo_acto: 'POR_DEFINIR' }])
             .select()
             .single();
 
