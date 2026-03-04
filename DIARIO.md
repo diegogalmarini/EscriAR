@@ -739,6 +739,7 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 | 029 | Dedup personas jurídicas por CUIT (merge canónico) | ⚠️ **PENDIENTE** |
 | 030 | Agregar telefono/email a escribanos + A_CARGO enum + datos Galmarini | ✅ Ejecutada |
 | 035 | Tabla modelos_actos — Templates DOCX para actos notariales | ✅ Ejecutada |
+| 037 | Columna rendered_docx_path en tabla escrituras para Documentos Generados | ✅ Ejecutada |
 
 **Nota**: las migraciones se ejecutan MANUAL en Supabase SQL Editor. No hay sistema de migración automático.
 
@@ -1021,6 +1022,12 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 - Los 34 ZIPs se subieron a Supabase Storage (bucket escrituras) y sus metadatos a la tabla modelos_actos.
 - El dropdown de tipo de acto en `WorkspacePipeline.tsx` ahora es dinámico — consulta `modelos_actos` en tiempo real, mostrando solo modelos activos.
 - Se agregó un botón "Generar desde Modelo" que ejecuta el pipeline completo: descarga template DOCX → arma contexto desde datos de la carpeta → renderiza con Python docxtpl → sube DOCX final → entrega URL de descarga firmada.
+- **Vista Previa Inline y Modal (Mammoth)**: El HTML se genera server-side directamente del DOCX renderizado conservando formato.
+  - Panel de texto inline debajo del botón con contenido renderizado (scrollable, max 500px).
+  - Botón "Vista Previa" (ojo) abre un modal grande con el documento DOCX renderizado completo y descargar.
+  - Botón "Regenerar" disponible para corregir datos y volver a generar un mismo documento.
+  - Botón "Descargar" estandarizado post-generación.
+  - Guardado de la ruta `rendered_docx_path` del template en tabla escrituras (Migración 037).
 - `buildTemplateContext.ts` expandido con 30+ aliases de roles (donantes, cedentes, poderdantes, usufructuarios, etc.) para que cada template use sus propios nombres de variable sin romper.
 - Se creó `numberToWords.ts` para conversión de montos a letras en español notarial. Integrado en `operacion.precio_letras`.
 - `SUPPORTED_ACT_TYPES` expandido de 21 a 47 entradas organizadas por categoría.
@@ -1071,4 +1078,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-03-03 — Antigravity — Integración Template Builder → SaaS NotiAR, Pipeline render docxtpl y 34 modelos activos
+> **Última actualización**: 2026-03-03 — Antigravity — Integración Template Builder → SaaS NotiAR, Vista Previa Mammoth Inline
