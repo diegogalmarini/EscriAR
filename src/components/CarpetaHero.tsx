@@ -65,9 +65,19 @@ function generarCaratula(carpeta: any): { titulo: string; subtipo: string } {
     const escritura = carpeta.escrituras?.[0];
     const operacion = escritura?.operaciones?.[0];
 
-    // Subtítulo: tipo de acto real o placeholder
-    const tipoActo = operacion?.tipo_acto?.toUpperCase() || null;
-    const subtipo = tipoActo || "Acto por definir";
+    // Subtítulo: tipo de acto normalizado o placeholder
+    const tipoActoRaw = operacion?.tipo_acto?.toUpperCase()?.trim() || null;
+    // Normalizar: extraer solo la palabra clave del acto (quitar "COMPLETA", "SIMPLE", etc.)
+    const ACTOS_CONOCIDOS = [
+        "COMPRAVENTA", "HIPOTECA", "DONACIÓN", "DONACION", "CESIÓN DE DERECHOS",
+        "CESION DE DERECHOS", "PODER ESPECIAL", "PODER GENERAL", "CANCELACIÓN",
+        "CANCELACION", "USUFRUCTO", "PERMUTA", "FIDEICOMISO", "AFECTACIÓN",
+        "AFECTACION", "DESAFECTACIÓN", "DESAFECTACION",
+    ];
+    const tipoActo = tipoActoRaw
+        ? (ACTOS_CONOCIDOS.find(a => tipoActoRaw.includes(a)) || tipoActoRaw)
+        : null;
+    const subtipo = tipoActo || "ACTO A DEFINIR";
 
     // Estado procesando sin datos
     if (carpeta.ingesta_estado === "PROCESANDO" && !tipoActo) {
@@ -152,7 +162,7 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting }: CarpetaHe
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-1.5 min-w-0 flex-1">
                     <p className={`text-xs font-medium tracking-wider uppercase ${
-                        subtipo === "Acto por definir"
+                        subtipo === "ACTO A DEFINIR"
                             ? "text-muted-foreground/50 italic"
                             : "text-muted-foreground"
                     }`}>

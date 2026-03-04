@@ -1015,6 +1015,11 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 #### Migración 035 confirmada ejecutada
 - La tabla `modelos_actos` ya existía en producción. Se subieron 2 modelos: Compraventa (30 vars) y Autorización Vehicular (24 vars).
 
+### 2026-03-04 — Normalización tipo de acto en CarpetaHero
+
+- **CarpetaHero.tsx**: el subtítulo superior ahora normaliza el `tipo_acto` de la BD contra una lista de actos conocidos (COMPRAVENTA, HIPOTECA, DONACIÓN, etc.), eliminando sufijos espurios como "COMPLETA" que la ingesta AI a veces agrega.
+- Cuando no hay tipo de acto definido, muestra **"ACTO A DEFINIR"** (antes "Acto por definir").
+
 ### 2026-03-03 (Antigravity) — Integración Template Builder → SaaS NotiAR
 
 #### Lo hecho
