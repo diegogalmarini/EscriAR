@@ -57,6 +57,76 @@ const ESTADO_SUGERENCIA: Record<string, { label: string; className: string }> = 
     REJECTED: { label: "Rechazada", className: "bg-red-100 text-red-700 border-red-200" },
 };
 
+/**
+ * Procesa texto dictado: convierte comandos de voz en puntuación/acciones.
+ * "coma" → ,  "punto" → .  "borrar" → elimina última palabra, etc.
+ */
+function processVoiceCommands(raw: string): string {
+    let text = raw;
+
+    // 1. Reemplazos de puntuación (orden importa: frases largas primero)
+    const punctuation: [RegExp, string][] = [
+        [/\bpunto y aparte\b/gi, ".\n"],
+        [/\bpunto seguido\b/gi, ". "],
+        [/\bpunto y coma\b/gi, ";"],
+        [/\bpuntos suspensivos\b/gi, "..."],
+        [/\bdos puntos\b/gi, ":"],
+        [/\bsigno de exclamaci[oó]n\b/gi, "!"],
+        [/\bsigno de interrogaci[oó]n\b/gi, "?"],
+        [/\babrir interrogaci[oó]n\b/gi, "\u00BF"],
+        [/\bcerrar interrogaci[oó]n\b/gi, "?"],
+        [/\babrir exclamaci[oó]n\b/gi, "\u00A1"],
+        [/\bcerrar exclamaci[oó]n\b/gi, "!"],
+        [/\babrir par[eé]ntesis\b/gi, " ("],
+        [/\bcerrar par[eé]ntesis\b/gi, ") "],
+        [/\babrir comillas\b/gi, ' "'],
+        [/\bcerrar comillas\b/gi, '" '],
+        [/\bnueva l[ií]nea\b/gi, "\n"],
+        [/\bnuevo p[aá]rrafo\b/gi, "\n\n"],
+        [/\bpunto\b/gi, ". "],
+        [/\bcoma\b/gi, ", "],
+        [/\bguion\b/gi, " - "],
+    ];
+
+    for (const [pattern, replacement] of punctuation) {
+        text = text.replace(pattern, replacement);
+    }
+
+    // 2. Comandos de borrado
+    // "borrar última frase" / "borrar ultima frase"
+    text = text.replace(/\s*borrar [uú]ltima frase\s*/gi, (_, offset) => {
+        const before = text.substring(0, offset);
+        // Buscar el último punto/salto de línea y borrar desde ahí
+        const lastSentenceEnd = Math.max(before.lastIndexOf(". "), before.lastIndexOf(".\n"), before.lastIndexOf("\n"));
+        if (lastSentenceEnd >= 0) {
+            text = text.substring(0, lastSentenceEnd + 1) + " ";
+            return "";
+        }
+        return "";
+    });
+
+    // "borrar" → elimina última palabra
+    while (/\s*borrar\b/i.test(text)) {
+        // Elimina "borrar" + la palabra anterior
+        text = text.replace(/(\S+)\s+borrar\b/i, "");
+        // Si "borrar" está al inicio (nada antes)
+        text = text.replace(/^\s*borrar\b/i, "");
+    }
+
+    // 3. "mayúscula" → capitaliza la siguiente palabra
+    text = text.replace(/\bmay[uú]scula\s+(\w)/gi, (_, letter) => letter.toUpperCase());
+
+    // 4. Capitalizar después de ". " o ".\n" o inicio de texto
+    text = text.replace(/(^|[.!?]\s+|\n)(\w)/g, (_, prefix, letter) => prefix + letter.toUpperCase());
+
+    // 5. Limpiar espacios múltiples
+    text = text.replace(/  +/g, " ");
+    text = text.replace(/ ([.,;:!?)])/g, "$1"); // quitar espacio antes de puntuación
+    text = text.replace(/([(\u00BF\u00A1"]) /g, "$1"); // quitar espacio después de apertura
+
+    return text.trim();
+}
+
 function formatRelativeTime(dateStr: string): string {
     const now = new Date();
     const date = new Date(dateStr);
@@ -184,7 +254,6 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
 
         recognition.onresult = (event: any) => {
             let currentInterim = "";
-            // Recalcular todos los finals desde el principio de la sesión
             let allFinals = "";
             for (let i = 0; i < event.results.length; i++) {
                 if (event.results[i].isFinal) {
@@ -194,9 +263,14 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                 }
             }
             finalChunksRef.current = allFinals;
+
+            // Procesar comandos de voz en los finals
+            const processed = processVoiceCommands(allFinals);
             const base = baseTextRef.current;
-            const separator = base && !base.endsWith(" ") && !base.endsWith("\n") ? " " : "";
-            setContenido(base + separator + allFinals + currentInterim);
+            const separator = base && !base.endsWith(" ") && !base.endsWith("\n") && processed ? " " : "";
+            // Mostrar interim sin procesar (se ve en gris, se procesa al finalizar)
+            const interimDisplay = currentInterim ? " " + currentInterim : "";
+            setContenido(base + separator + processed + interimDisplay);
         };
 
         recognition.onerror = (event: any) => {
@@ -208,12 +282,12 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
 
         recognition.onend = () => {
             setIsListening(false);
-            // Al terminar, fijar el texto final (base + finals, sin interim)
             const base = baseTextRef.current;
             const finals = finalChunksRef.current.trim();
             if (finals) {
-                const separator = base && !base.endsWith(" ") && !base.endsWith("\n") ? " " : "";
-                setContenido(base + separator + finals);
+                const processed = processVoiceCommands(finals);
+                const separator = base && !base.endsWith(" ") && !base.endsWith("\n") && processed ? " " : "";
+                setContenido(base + separator + processed);
             }
         };
 
@@ -293,9 +367,14 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                         </div>
                     </div>
                     {isListening && (
-                        <div className="flex items-center gap-2 text-xs text-red-500 animate-pulse">
-                            <span className="h-2 w-2 rounded-full bg-red-500" />
-                            Escuchando... hable con claridad
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-xs text-red-500 animate-pulse">
+                                <span className="h-2 w-2 rounded-full bg-red-500" />
+                                Escuchando... hable con claridad
+                            </div>
+                            <p className="text-[10px] text-muted-foreground">
+                                Comandos: &quot;punto&quot;, &quot;coma&quot;, &quot;punto y aparte&quot;, &quot;dos puntos&quot;, &quot;mayuscula&quot;, &quot;borrar&quot;, &quot;borrar ultima frase&quot;
+                            </p>
                         </div>
                     )}
                 </div>
