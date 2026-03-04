@@ -115,7 +115,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1">
+                    <nav className="flex-1 py-6 px-3 space-y-1">
                         {menuItems.map((item) => {
                             const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
                             return (

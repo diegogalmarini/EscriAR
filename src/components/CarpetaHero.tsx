@@ -28,6 +28,7 @@ interface CarpetaHeroProps {
     carpeta: any;
     onDelete?: () => void;
     isDeleting?: boolean;
+    children?: React.ReactNode;
 }
 
 // --- Estado Operativo → dot color + label ---
@@ -129,7 +130,7 @@ function formatDate(dateStr: string): string {
 }
 
 // --- Component ---
-export default function CarpetaHero({ carpeta, onDelete, isDeleting }: CarpetaHeroProps) {
+export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }: CarpetaHeroProps) {
     const { titulo, subtipo } = useMemo(() => generarCaratula(carpeta), [carpeta]);
 
     const estadoKey = useMemo(() => {
@@ -157,7 +158,7 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting }: CarpetaHe
     }, [inmueble]);
 
     return (
-        <div className="space-y-4">
+        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-3 pt-6 border-b border-border space-y-4">
             {/* === Title + Status === */}
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-1.5 min-w-0 flex-1">
@@ -250,6 +251,9 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting }: CarpetaHe
                     Sin certificados cargados en Pre-Escriturario
                 </p>
             </div>
+
+            {/* === Tabs navigation === */}
+            {children}
         </div>
     );
 }

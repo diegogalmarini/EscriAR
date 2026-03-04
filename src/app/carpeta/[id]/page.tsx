@@ -34,7 +34,7 @@ export default async function CarpetaDetailPage({ params }: { params: Promise<{ 
     else console.log("✅ CARPETA DATA LOADED, WRITINGS COUNT:", carpeta.escrituras?.length);
 
     return (
-        <div className="min-h-screen bg-slate-50/50 p-6 md:p-10 space-y-6">
+        <div className="min-h-screen bg-slate-50/50">
             <FolderWorkspace initialData={carpeta} />
         </div>
     );

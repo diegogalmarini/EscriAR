@@ -35,11 +35,20 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
     // Data comes from search_carpetas RPC with shape:
     // { id, number, internal_id, title, status, parties: [{id, full_name, role}], escrituras: [{id, operaciones: [{id, codigo, tipo_acto}]}] }
 
-    // 1. Get Acto (Operation Type)
+    // 1. Get Acto (Operation Type) — formatted for display
+    const formatActo = (raw: string): string => {
+        // snake_case → Title Case ("boleto_compraventa" → "Boleto de Compraventa")
+        return raw
+            .toLowerCase()
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (c) => c.toUpperCase())
+            .replace(/\bDe\b/g, "de")
+            .replace(/\bY\b/g, "y");
+    };
     const getActo = (carpeta: any) => {
         const op = carpeta.escrituras?.[0]?.operaciones?.[0];
-        if (op?.tipo_acto) return op.tipo_acto;
-        return "SIN ACTO";
+        if (op?.tipo_acto) return formatActo(op.tipo_acto);
+        return "";
     };
 
     const getCodigo = (carpeta: any) => {
@@ -208,8 +217,11 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
                                     {carpeta.displayCodigo}
                                 </code>
                             </TableCell>
-                            <TableCell className="text-xs font-medium text-slate-700 max-w-[300px] truncate">
-                                {carpeta.displayActo}
+                            <TableCell className="text-xs font-medium max-w-[300px] truncate">
+                                {carpeta.displayActo
+                                    ? <span className="text-slate-700">{carpeta.displayActo}</span>
+                                    : <span className="text-muted-foreground italic">Acto a definir...</span>
+                                }
                             </TableCell>
                             <TableCell className="text-xs text-slate-600 max-w-[200px] truncate">
                                 {carpeta.displayPartes}

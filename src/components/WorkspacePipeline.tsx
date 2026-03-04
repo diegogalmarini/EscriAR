@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import {
-    FileSignature, ClipboardCheck, DollarSign, Home, Users,
+    FileSignature, ClipboardCheck, DollarSign, Users,
     Search, UserPlus, Send, Briefcase, ArrowRight, X, Upload, Loader2,
     FileText, Download, Pencil
 } from "lucide-react";
@@ -352,40 +352,6 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
     return (
         <>
             <div className="space-y-6">
-                {/* Mini-Contexto: Inmueble */}
-                <div className="rounded-lg bg-muted/30 border border-border px-5 py-3 flex items-center gap-2">
-                    <Home className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <span className="text-sm text-foreground truncate">
-                        {inmuebleLabel || <span className="text-muted-foreground">Sin inmueble vinculado</span>}
-                    </span>
-                </div>
-
-                {/* Selector de tipo de acto */}
-                <div className="border border-border rounded-lg bg-background p-5 space-y-3">
-                    <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                        Tipo de Acto
-                    </h3>
-                    <Select value={tipoActo} onValueChange={async (val) => {
-                        setTipoActo(val);
-                        // Persistir en BD — guardamos el act_type (value) como tipo_acto
-                        const opId = currentEscritura?.operaciones?.[0]?.id;
-                        if (opId) {
-                            await supabase.from('operaciones').update({ tipo_acto: val }).eq('id', opId);
-                        }
-                    }}>
-                        <SelectTrigger className="w-full max-w-md">
-                            <SelectValue placeholder="Seleccione el tipo de acto a redactar..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {modelosEscritura.map((m) => (
-                                <SelectItem key={m.value} value={m.value}>
-                                    {m.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
                 {/* ── Configuración de Partes ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Tarjeta Izquierda — Parte Transmitente */}
@@ -594,6 +560,33 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                         />
                     </div>
                 </div>
+
+                {/* Selector de tipo de acto */}
+                <div className="border border-border rounded-lg bg-background p-5 space-y-3">
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                        Tipo de Acto
+                    </h3>
+                    <Select value={tipoActo} onValueChange={async (val) => {
+                        setTipoActo(val);
+                        // Persistir en BD — guardamos el act_type (value) como tipo_acto
+                        const opId = currentEscritura?.operaciones?.[0]?.id;
+                        if (opId) {
+                            await supabase.from('operaciones').update({ tipo_acto: val }).eq('id', opId);
+                        }
+                    }}>
+                        <SelectTrigger className="w-full max-w-md">
+                            <SelectValue placeholder="Seleccione el tipo de acto a redactar..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {modelosEscritura.map((m) => (
+                                <SelectItem key={m.value} value={m.value}>
+                                    {m.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
 
                 {/* ── Generación desde Template ── */}
                 <div className="border border-primary/20 rounded-lg bg-primary/5 p-6 space-y-4">
