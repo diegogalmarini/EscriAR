@@ -35,7 +35,7 @@ import { PersonSearch } from "./PersonSearch";
 import { CertificadosPanel } from "./CertificadosPanel";
 import { supabase } from "@/lib/supabaseClient";
 import { linkPersonToOperation, removePersonFromOperation } from "@/app/actions/carpeta";
-import { renderTemplate } from "@/app/actions/template-render";
+import { renderTemplate, loadRenderedDocument } from "@/app/actions/template-render";
 import { toast } from "sonner";
 
 import { EstudioDominioPanel } from "./EstudioDominioPanel";
@@ -165,6 +165,27 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
     const [isRendering, setIsRendering] = useState(false);
     const [renderResult, setRenderResult] = useState<{ url: string; path: string; html: string } | null>(null);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [isLoadingPrevious, setIsLoadingPrevious] = useState(false);
+
+    // Load previously-rendered document from Storage on mount
+    useEffect(() => {
+        if (!carpeta?.id || !tipoActo || renderResult) return;
+        let cancelled = false;
+        setIsLoadingPrevious(true);
+        loadRenderedDocument(carpeta.id, tipoActo).then((res) => {
+            if (cancelled) return;
+            if (res.success && res.downloadUrl) {
+                setRenderResult({
+                    url: res.downloadUrl,
+                    path: res.storagePath || "",
+                    html: res.htmlPreview || "",
+                });
+            }
+        }).catch(() => {}).finally(() => {
+            if (!cancelled) setIsLoadingPrevious(false);
+        });
+        return () => { cancelled = true; };
+    }, [carpeta?.id, tipoActo]);
 
     // Estado para gestionar los apoderados mapeados por DNI del adquirente (persona jurídica)
     // Guardamos la persona y un objeto con los datos del poder
@@ -584,9 +605,10 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                 <p className="text-xs text-muted-foreground mt-0.5">
                                     {!tipoActo && "Seleccione un tipo de acto"}
                                     {tipoActo && adquirentes.length === 0 && "Agregue al menos un participante"}
-                                    {tipoActo && adquirentes.length > 0 && !renderResult && (
+                                    {tipoActo && adquirentes.length > 0 && !renderResult && !isLoadingPrevious && (
                                         `Modelo: ${modelosEscritura.find(m => m.value === tipoActo)?.label || tipoActo}`
                                     )}
+                                    {isLoadingPrevious && !renderResult && "Cargando documento anterior…"}
                                     {renderResult && "✓ Documento generado — revise abajo"}
                                 </p>
                             </div>
@@ -625,24 +647,22 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                 )}
                             </Button>
                             {renderResult && (
-                                <>
-                                    <Button
-                                        size="lg"
-                                        variant="outline"
-                                        onClick={() => setShowPreviewModal(true)}
-                                        title="Vista previa completa"
-                                    >
-                                        <Eye className="h-4 w-4 mr-2" /> Vista Previa
-                                    </Button>
-                                    <Button size="lg" variant="outline" asChild>
-                                        <a href={renderResult.url} download>
-                                            <Download className="h-4 w-4 mr-2" /> Descargar
-                                        </a>
-                                    </Button>
-                                </>
+                                <Button size="lg" variant="outline" asChild>
+                                    <a href={renderResult.url} download>
+                                        <Download className="h-4 w-4 mr-2" /> Descargar
+                                    </a>
+                                </Button>
                             )}
                         </div>
                     </div>
+
+                    {/* ── Loading previous render ── */}
+                    {isLoadingPrevious && !renderResult && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            Buscando documento generado anteriormente…
+                        </div>
+                    )}
 
                     {/* ── Preview inline del documento generado ── */}
                     {renderResult?.html && (

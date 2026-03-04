@@ -86,9 +86,50 @@ function renderDocx(templateBuffer: Buffer, context: Record<string, unknown>): B
 
     doc.render(context);
 
-    return Buffer.from(
+    const rawBuffer = Buffer.from(
         doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" })
     );
+
+    // Strip font colors from the rendered DOCX
+    return stripColorsFromDocx(rawBuffer);
+}
+
+// ---------------------------------------------------------------------------
+// stripColorsFromDocx — remove <w:color> and <w:highlight> from document XML
+// so the generated DOCX has uniform black text instead of coloured placeholders
+// ---------------------------------------------------------------------------
+
+function stripColorsFromDocx(docxBuffer: Buffer): Buffer {
+    const zip = new PizZip(docxBuffer);
+
+    // Process all document XML parts (main doc + headers/footers)
+    const xmlParts = [
+        "word/document.xml",
+        "word/header1.xml", "word/header2.xml", "word/header3.xml",
+        "word/footer1.xml", "word/footer2.xml", "word/footer3.xml",
+    ];
+
+    for (const partName of xmlParts) {
+        const file = zip.file(partName);
+        if (!file) continue;
+        let xml = file.asText();
+
+        // Remove <w:color w:val="XXXXXX"/> elements (any colour)
+        xml = xml.replace(/<w:color\s+[^/]*\/>/gi, "");
+        // Remove <w:color ...>...</w:color> (shouldn't exist, but just in case)
+        xml = xml.replace(/<w:color\b[^>]*>[\s\S]*?<\/w:color>/gi, "");
+
+        // Remove <w:highlight w:val="..."/> (coloured background)
+        xml = xml.replace(/<w:highlight\s+[^/]*\/>/gi, "");
+
+        // Remove <w:shd> with colour on run-level (character shading)
+        // Keep paragraph-level shading (<w:pPr><w:shd>) intact
+        xml = xml.replace(/(<w:rPr[^>]*>)((?:(?!<\/w:rPr>)[\s\S])*?)(<w:shd\s+[^/]*\/>)/gi, "$1$2");
+
+        zip.file(partName, xml);
+    }
+
+    return Buffer.from(zip.generate({ type: "nodebuffer", compression: "DEFLATE" }));
 }
 
 // ---------------------------------------------------------------------------
@@ -206,6 +247,79 @@ export async function previewTemplateContext(
         const context = await buildTemplateContext(carpetaId);
         return { success: true, context: context as unknown as Record<string, unknown> };
     } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+// ---------------------------------------------------------------------------
+// loadRenderedDocument — Checks storage for an already-rendered DOCX and
+// returns its signed URL + HTML preview.  Used to persist across reloads.
+// ---------------------------------------------------------------------------
+
+export async function loadRenderedDocument(
+    carpetaId: string,
+    actType: string
+): Promise<RenderResult> {
+    try {
+        const prefix = `carpetas/${carpetaId}/`;
+        const { data: files, error: listErr } = await supabaseAdmin.storage
+            .from("escrituras")
+            .list(prefix.replace(/\/$/, ""), { limit: 100 });
+
+        if (listErr || !files) {
+            return { success: false, error: listErr?.message || "No files" };
+        }
+
+        // Find the most recent rendered DOCX matching the act type
+        const pattern = new RegExp(`^escritura_${actType}_(\\d+)\\.docx$`);
+        const matches = files
+            .filter((f) => pattern.test(f.name))
+            .sort((a, b) => {
+                const tsA = Number(pattern.exec(a.name)?.[1] || 0);
+                const tsB = Number(pattern.exec(b.name)?.[1] || 0);
+                return tsB - tsA; // newest first
+            });
+
+        if (matches.length === 0) {
+            return { success: false, error: "No rendered document found" };
+        }
+
+        const storagePath = `${prefix}${matches[0].name}`;
+
+        // Download to generate HTML preview
+        const { data: blob, error: dlErr } = await supabaseAdmin.storage
+            .from("escrituras")
+            .download(storagePath);
+
+        if (dlErr || !blob) {
+            return { success: false, error: dlErr?.message || "Download failed" };
+        }
+
+        const docxBuffer = Buffer.from(await blob.arrayBuffer());
+
+        let htmlPreview = "";
+        try {
+            const mammothResult = await mammoth.convertToHtml(
+                { buffer: docxBuffer },
+                { styleMap: ["b => strong", "i => em", "u => u"] }
+            );
+            htmlPreview = mammothResult.value;
+        } catch (e) {
+            console.warn("[loadRenderedDocument] mammoth failed:", e);
+        }
+
+        const { data: signedUrl } = await supabaseAdmin.storage
+            .from("escrituras")
+            .createSignedUrl(storagePath, 3600);
+
+        return {
+            success: true,
+            downloadUrl: signedUrl?.signedUrl || undefined,
+            storagePath,
+            htmlPreview,
+        };
+    } catch (error: any) {
+        console.error("[loadRenderedDocument] Error:", error);
         return { success: false, error: error.message };
     }
 }
