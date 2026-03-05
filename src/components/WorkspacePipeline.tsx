@@ -47,7 +47,7 @@ import { EditarClienteDialog } from "./EditarClienteDialog";
 function fichaEscrituraIncompleta(p: any): string[] {
     if (!p) return ['datos'];
     const faltantes: string[] = [];
-    if (!p.dni || p.dni.startsWith('SIN-DNI-')) faltantes.push('DNI');
+    if (!p.dni || p.dni.startsWith('SIN-DNI-') || p.dni.startsWith('TEMP_')) faltantes.push('DNI');
     if (!p.cuit) faltantes.push('CUIT/CUIL');
     if (!p.fecha_nacimiento) faltantes.push('fecha nac.');
     if (!p.estado_civil_detalle) faltantes.push('estado civil');
@@ -387,7 +387,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta, onTipoA
                                                     {persona?.nombre_completo || "—"}
                                                 </p>
                                                 <p className="text-xs text-muted-foreground">
-                                                    {persona?.dni ? `DNI ${persona.dni}` : persona?.cuit ? `CUIT ${persona.cuit}` : "Sin documento"}
+                                                    {persona?.dni && !persona.dni.startsWith('TEMP_') ? `DNI ${persona.dni}` : persona?.cuit ? `CUIT ${persona.cuit}` : <span className="text-amber-600 italic">DNI pendiente</span>}
                                                     {persona?.profesion && ` · ${persona.profesion}`}
                                                     {" · "}
                                                     <span className="font-medium">{t.rol}</span>
@@ -431,7 +431,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta, onTipoA
                                             <div className="min-w-0 flex-1">
                                                 <p className="text-sm font-medium text-foreground truncate">{a.nombre_completo}</p>
                                                 <p className="text-xs text-muted-foreground mt-0.5">
-                                                    {a.dni ? `DNI ${a.dni}` : "Sin documento"}
+                                                    {a.dni && !a.dni.startsWith('TEMP_') ? `DNI ${a.dni}` : "DNI pendiente"}
                                                     {a.profesion && ` · ${a.profesion}`}
                                                     {a.tipo_persona === "JURIDICA" && " · Persona Jurídica"}
                                                     {apoderados[a.dni] && ` · Rep. por: ${apoderados[a.dni].persona.nombre_completo}`}

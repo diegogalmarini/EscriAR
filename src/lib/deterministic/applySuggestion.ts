@@ -125,16 +125,13 @@ async function handleAgregarPersona(
     // Limpiar DNI: quitar puntos y espacios
     if (dni) dni = dni.replace(/[.\s-]/g, "");
 
-    console.log(`[ET5] AGREGAR_PERSONA: nombre="${nombre}", dni="${dni}", rol="${rol}"`);
-
+    // Sin DNI → generar temporal para crear borrador
     if (!dni) {
-        // Sin DNI → no podemos crear persona. Reportar fallo con contexto útil.
-        return {
-            success: false,
-            applied_changes: { nombre, rol },
-            error: `Falta DNI para "${nombre || 'persona'}". Complete el DNI manualmente para agregar esta persona.`,
-        };
+        dni = `TEMP_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        console.log(`[ET5] AGREGAR_PERSONA: sin DNI, generando temporal="${dni}" para "${nombre}"`);
     }
+
+    console.log(`[ET5] AGREGAR_PERSONA: nombre="${nombre}", dni="${dni}", rol="${rol}"`);
 
     // 1. Buscar o crear persona por DNI
     const { data: existing } = await supabase
