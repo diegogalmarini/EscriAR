@@ -418,26 +418,8 @@ export default function ActuacionesPanel({
 
     return (
         <div className="space-y-4">
-            {protocolares.length > 0 && renderSection("Actos Protocolares", protocolares, protocolaresOpen, setProtocolaresOpen, "PROTOCOLAR")}
-            {privados.length > 0 && renderSection("Actos Privados", privados, privadosOpen, setPrivadosOpen, "PRIVADO")}
-
-            {/* Botón para crear acto cuando no hay ninguno */}
-            {actuaciones.length === 0 && (
-                <div className="flex justify-center py-4">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1.5 text-xs"
-                        onClick={() => {
-                            setDialogCategoria("PROTOCOLAR");
-                            setDialogOpen(true);
-                        }}
-                    >
-                        <Plus className="h-3.5 w-3.5" />
-                        Generar documento
-                    </Button>
-                </div>
-            )}
+            {renderSection("Actos Protocolares", protocolares, protocolaresOpen, setProtocolaresOpen, "PROTOCOLAR")}
+            {renderSection("Actos Privados", privados, privadosOpen, setPrivadosOpen, "PRIVADO")}
 
             {/* Dialog para crear nueva actuación */}
             <GenerarActuacionDialog
