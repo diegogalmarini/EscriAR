@@ -148,6 +148,9 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }:
     const estadoCfg = ESTADO_CONFIG[estadoKey] || ESTADO_CONFIG.ABIERTA;
     const isProcessing = estadoKey === "PROCESANDO";
 
+    const operacionActiva = carpeta.escrituras?.[0]?.operaciones?.[0];
+    const codigoActo = operacionActiva?.codigo || null;
+
     const inmueble = carpeta.escrituras?.[0]?.inmuebles;
     const ubicacion = useMemo(() => {
         if (!inmueble) return null;
@@ -167,6 +170,11 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }:
                             ? "text-muted-foreground/50 italic"
                             : "text-muted-foreground"
                     }`}>
+                        {codigoActo && (
+                            <code className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-mono text-[10px] mr-2 not-italic">
+                                {codigoActo}
+                            </code>
+                        )}
                         {subtipo}
                     </p>
 
