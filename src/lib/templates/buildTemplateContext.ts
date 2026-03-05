@@ -463,8 +463,8 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
         .eq("is_default", true)
         .single();
 
-    // 4. Extract nested data
-    const escritura = carpeta.escrituras?.[0];
+    // 4. Extract nested data — fuente de verdad: escritura TRAMITE
+    const escritura = carpeta.escrituras?.find((e: any) => e.source === 'TRAMITE') || carpeta.escrituras?.[0];
     const operacion: OperacionDB | undefined = escritura?.operaciones?.[0];
     const inmueble: InmuebleDB | undefined = escritura?.inmuebles;
     const participantes: ParticipanteDB[] = operacion?.participantes_operacion || [];

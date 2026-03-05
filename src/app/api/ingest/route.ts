@@ -754,6 +754,7 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
     // Build escritura object - FULL v1.1 usando nombres de columna reales
     const escrituraData: any = {
         carpeta_id: folderId,
+        source: 'INGESTA',
         nro_protocolo: safeParseInt(aiData.numero_escritura),
         fecha_escritura: safeParseDate(aiData.fecha_escritura),
         registro: aiData.registro ? String(aiData.registro) : null,

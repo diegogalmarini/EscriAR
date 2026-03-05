@@ -63,7 +63,8 @@ function extractApellido(nombreCompleto: string | null | undefined): string | nu
 
 // --- Helper: Generar carátula dinámica ---
 function generarCaratula(carpeta: any): { titulo: string; subtipo: string } {
-    const escritura = carpeta.escrituras?.[0];
+    // Fuente de verdad: escritura TRAMITE (operación activa), NO antecedente
+    const escritura = carpeta.escrituras?.find((e: any) => e.source === 'TRAMITE') || carpeta.escrituras?.[0];
     const operacion = escritura?.operaciones?.[0];
 
     // Subtítulo: tipo de acto normalizado o placeholder
@@ -134,7 +135,8 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }:
     const { titulo, subtipo } = useMemo(() => generarCaratula(carpeta), [carpeta]);
 
     const estadoKey = useMemo(() => {
-        const tieneTipoActo = !!carpeta.escrituras?.[0]?.operaciones?.[0]?.tipo_acto;
+        const tramite = carpeta.escrituras?.find((e: any) => e.source === 'TRAMITE') || carpeta.escrituras?.[0];
+        const tieneTipoActo = !!tramite?.operaciones?.[0]?.tipo_acto;
 
         // Solo mantenemos visualmente "Procesando" si no hay datos todavía
         if (carpeta.ingesta_estado === "PROCESANDO" && !tieneTipoActo) return "PROCESANDO";
@@ -148,7 +150,10 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }:
     const estadoCfg = ESTADO_CONFIG[estadoKey] || ESTADO_CONFIG.ABIERTA;
     const isProcessing = estadoKey === "PROCESANDO";
 
-    const inmueble = carpeta.escrituras?.[0]?.inmuebles;
+    // Inmueble: preferir TRAMITE, fallback a INGESTA
+    const tramiteEsc = carpeta.escrituras?.find((e: any) => e.source === 'TRAMITE');
+    const ingestaEsc = carpeta.escrituras?.find((e: any) => e.source === 'INGESTA');
+    const inmueble = tramiteEsc?.inmuebles || ingestaEsc?.inmuebles || carpeta.escrituras?.[0]?.inmuebles;
     const ubicacion = useMemo(() => {
         if (!inmueble) return null;
         const parts: string[] = [];

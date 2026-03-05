@@ -9,7 +9,7 @@ import { PersonSearch } from "./PersonSearch";
 import { PersonForm } from "./PersonForm";
 import { AssetSearch } from "./AssetSearch";
 import { linkPersonToOperation, linkAssetToDeed, deleteCarpeta, unlinkPersonFromOperation, updateRepresentacion } from "@/app/actions/carpeta";
-import { updateEscritura, updateOperacion, updateInmueble } from "@/app/actions/escritura";
+import { updateEscritura, updateOperacion, updateInmueble, ensureTramiteEscritura } from "@/app/actions/escritura";
 import { listStorageFiles, deleteStorageFile, getSignedUrl } from "@/app/actions/storageSync";
 import { toast } from "sonner";
 import { CrossCheckService, ValidationState } from "@/lib/agent/CrossCheckService";
@@ -148,7 +148,22 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
     const [viewerWidth, setViewerWidth] = useState(95); // Default 95vw
 
     console.log("📂 FolderWorkspace Initial Data:", JSON.stringify(initialData, null, 2));
-    const [activeDeedId, setActiveDeedId] = useState<string | null>(carpeta.escrituras[0]?.id || null);
+
+    // Fuente de verdad: activeDeedId = escritura TRAMITE (operación activa)
+    const tramiteEscritura = carpeta.escrituras?.find((e: any) => e.source === 'TRAMITE');
+    const [activeDeedId, setActiveDeedId] = useState<string | null>(tramiteEscritura?.id || null);
+
+    // Auto-crear escritura TRAMITE si no existe (carpetas legacy pre-migración 044)
+    useEffect(() => {
+        if (!carpeta.escrituras?.find((e: any) => e.source === 'TRAMITE')) {
+            ensureTramiteEscritura(carpeta.id).then((res) => {
+                if (res.success && res.escritura) {
+                    setActiveDeedId(res.escritura.id);
+                    router.refresh();
+                }
+            });
+        }
+    }, [carpeta.id, carpeta.escrituras, router]);
     const [isPending, startTransition] = useTransition();
     const [isDeleting, setIsDeleting] = useState(false);
     const [editingPerson, setEditingPerson] = useState<any>(null);
@@ -372,11 +387,11 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                 <TabsContent value="antecedentes" className="mt-6">
                     <WorkspaceRadiography
                         carpetaId={carpeta.id}
-                        currentEscritura={currentEscritura}
-                        optimisticOps={optimisticOps}
+                        currentEscritura={carpeta.escrituras?.find((e: any) => e.source === 'INGESTA') || null}
+                        optimisticOps={carpeta.escrituras?.find((e: any) => e.source === 'INGESTA')?.operaciones || []}
                         storageFiles={storageFiles}
                         isLoadingStorage={isLoadingStorage}
-                        carpetaEscrituras={carpeta.escrituras || []}
+                        carpetaEscrituras={(carpeta.escrituras || []).filter((e: any) => e.source === 'INGESTA')}
                         onEditDeed={(deed) => setEditingDeed({ ...deed, operacion: deed.operaciones?.[0] })}
                         onEditPerson={setEditingPerson}
                         onEditRepresentacion={(data) => setEditingRepresentacion(data)}
@@ -598,6 +613,7 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                             {/* Operacion Data */}
                             <div className="space-y-3">
                                 <h4 className="text-sm font-semibold text-slate-700">Datos de la Operación</h4>
+                                <p className="text-xs text-muted-foreground -mt-1">Dato histórico del antecedente. No modifica el trámite actual.</p>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="tipo_acto">Tipo de Acto</Label>

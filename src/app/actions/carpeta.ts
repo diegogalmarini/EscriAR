@@ -24,7 +24,7 @@ export async function createFolder(caratula?: string) {
         // 2. Crear una Escritura Borrador automáticamente (Simplificación solicitada)
         const { data: escritura, error: escrituraError } = await supabase
             .from('escrituras')
-            .insert([{ carpeta_id: carpeta.id }])
+            .insert([{ carpeta_id: carpeta.id, source: 'TRAMITE' }])
             .select()
             .single();
 

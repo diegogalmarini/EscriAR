@@ -46,14 +46,17 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
             .replace(/\bY\b/g, "y");
     };
     const getActo = (carpeta: any) => {
-        const op = carpeta.escrituras?.[0]?.operaciones?.[0];
-        if (op?.tipo_acto) return formatActo(op.tipo_acto);
+        // Fuente de verdad: escritura TRAMITE (operación activa)
+        const tramite = carpeta.escrituras?.find((e: any) => e.source === 'TRAMITE') || carpeta.escrituras?.[0];
+        const op = tramite?.operaciones?.[0];
+        if (op?.tipo_acto && op.tipo_acto !== 'POR_DEFINIR') return formatActo(op.tipo_acto);
         return "";
     };
 
     const getCodigo = (carpeta: any) => {
-        const op = carpeta.escrituras?.[0]?.operaciones?.[0];
-        return op?.codigo || "-";
+        const tramite = carpeta.escrituras?.find((e: any) => e.source === 'TRAMITE') || carpeta.escrituras?.[0];
+        const op = tramite?.operaciones?.[0];
+        return op?.codigo || "—";
     };
 
     // 2. Get Partes from RPC's flat parties array
