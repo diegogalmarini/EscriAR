@@ -39,8 +39,8 @@ const SugerenciaSchema = z.object({
 export const NoteAnalysisOutputSchema = z.object({
     sugerencias: z.array(SugerenciaSchema)
         .min(0)
-        .max(5)
-        .describe('Lista de sugerencias extraídas del apunte (máximo 5)'),
+        .max(10)
+        .describe('Lista de sugerencias extraídas del apunte (máximo 10)'),
 });
 
 export type NoteAnalysisOutput = z.infer<typeof NoteAnalysisOutputSchema>;
@@ -94,9 +94,20 @@ TIPOS DE SUGERENCIAS y campos requeridos en payload:
 5. ACCION_REQUERIDA — Tarea pendiente del escribano.
    Solo campo descripcion.
 
+CERTIFICADOS OBLIGATORIOS POR TIPO DE ACTO:
+Si el apunte menciona o implica un tipo de acto con inmueble (compraventa, hipoteca, donacion, cesion_derechos, permuta, fideicomiso, afectacion_vivienda, division_condominio, distracto_condominio, usufructo, dacion_en_pago, venta_anexion), SIEMPRE sugiere estos certificados:
+- DOMINIO (estudio de título / certificado de dominio)
+- INHIBICION (informe de inhibición de las partes)
+- CATASTRAL (estado parcelario / plancheta catastral)
+- DEUDA_MUNICIPAL (libre deuda municipal)
+- DEUDA_ARBA (libre deuda ARBA / inmobiliario provincial)
+- RENTAS (libre deuda de rentas)
+- ANOTACIONES_PERSONALES (informe de anotaciones personales)
+Si el acto es un poder, acta, o cancelación, NO sugieras certificados de inmueble.
+
 REGLAS:
-- 0 a 5 sugerencias. Lista vacía si el apunte es trivial.
-- evidencia_texto = fragmento exacto del apunte.
+- 0 a 10 sugerencias. Lista vacía si el apunte es trivial.
+- evidencia_texto = fragmento exacto del apunte (puede repetirse si varias sugerencias surgen del mismo fragmento).
 - descripcion = resumen conciso para el escribano.
 - NO inventes datos que no estén en el apunte.
 - DNI siempre sin puntos ni espacios.
