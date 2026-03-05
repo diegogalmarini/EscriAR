@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabaseServer";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -36,6 +37,9 @@ export async function ensureTramiteEscritura(carpetaId: string) {
             .insert({ escritura_id: nuevaEscritura.id, tipo_acto: "POR_DEFINIR" });
 
         if (opErr) throw opErr;
+
+        // Copiar titulares del INGESTA como VENDEDOR
+        await syncVendedoresFromIngesta(carpetaId);
 
         // Re-fetch con relaciones
         const { data: full } = await supabase
@@ -113,6 +117,85 @@ export async function updateInmueble(inmuebleId: string, data: {
         return { success: true };
     } catch (error: any) {
         console.error("[UPDATE INMUEBLE]", error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Sincroniza vendedores desde INGESTA → TRAMITE.
+ * El COMPRADOR/ADQUIRENTE del antecedente es el propietario actual = VENDEDOR en la nueva operación.
+ * Idempotente: solo inserta si no existe ya en la operación TRAMITE.
+ */
+export async function syncVendedoresFromIngesta(carpetaId: string) {
+    try {
+        // 1. Obtener operación TRAMITE
+        const { data: tramiteEsc } = await supabaseAdmin
+            .from("escrituras")
+            .select("operaciones(id, participantes_operacion(persona_id, rol))")
+            .eq("carpeta_id", carpetaId)
+            .eq("source", "TRAMITE")
+            .maybeSingle();
+
+        const tramiteOp = (tramiteEsc as any)?.operaciones?.[0];
+        if (!tramiteOp) return { success: false, error: "No hay operación TRAMITE" };
+
+        // 2. Obtener titulares del INGESTA (COMPRADOR/ADQUIRENTE = propietario actual)
+        const { data: ingestaEscs } = await supabaseAdmin
+            .from("escrituras")
+            .select(`
+                operaciones (
+                    participantes_operacion (
+                        rol,
+                        persona_id
+                    )
+                )
+            `)
+            .eq("carpeta_id", carpetaId)
+            .eq("source", "INGESTA");
+
+        if (!ingestaEscs || ingestaEscs.length === 0) return { success: true, added: 0 };
+
+        const ROLES_TITULAR = ["COMPRADOR", "ADQUIRENTE", "DONATARIO", "CESIONARIO"];
+        const titularesDnis: string[] = [];
+
+        for (const esc of ingestaEscs) {
+            for (const op of (esc as any).operaciones || []) {
+                for (const po of op.participantes_operacion || []) {
+                    const rol = po.rol?.toUpperCase() || "";
+                    if (ROLES_TITULAR.includes(rol) && po.persona_id) {
+                        titularesDnis.push(po.persona_id);
+                    }
+                }
+            }
+        }
+
+        if (titularesDnis.length === 0) return { success: true, added: 0 };
+
+        // 3. Filtrar los que ya están en TRAMITE (cualquier rol)
+        const existingDnis = new Set(
+            (tramiteOp.participantes_operacion || []).map((p: any) => p.persona_id)
+        );
+
+        const toAdd = titularesDnis.filter(dni => !existingDnis.has(dni));
+        if (toAdd.length === 0) return { success: true, added: 0 };
+
+        // 4. Insertar como VENDEDOR
+        const rows = toAdd.map(dni => ({
+            operacion_id: tramiteOp.id,
+            persona_id: dni,
+            rol: "VENDEDOR",
+        }));
+
+        const { error: insertErr } = await supabaseAdmin
+            .from("participantes_operacion")
+            .insert(rows);
+
+        if (insertErr) throw insertErr;
+
+        console.log(`[syncVendedores] Agregados ${toAdd.length} vendedores desde INGESTA:`, toAdd);
+        return { success: true, added: toAdd.length };
+    } catch (error: any) {
+        console.error("[syncVendedoresFromIngesta]", error);
         return { success: false, error: error.message };
     }
 }

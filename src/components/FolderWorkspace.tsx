@@ -9,7 +9,7 @@ import { PersonSearch } from "./PersonSearch";
 import { PersonForm } from "./PersonForm";
 import { AssetSearch } from "./AssetSearch";
 import { linkPersonToOperation, linkAssetToDeed, deleteCarpeta, unlinkPersonFromOperation, updateRepresentacion } from "@/app/actions/carpeta";
-import { updateEscritura, updateOperacion, updateInmueble, ensureTramiteEscritura } from "@/app/actions/escritura";
+import { updateEscritura, updateOperacion, updateInmueble, ensureTramiteEscritura, syncVendedoresFromIngesta } from "@/app/actions/escritura";
 import { listStorageFiles, deleteStorageFile, getSignedUrl } from "@/app/actions/storageSync";
 import { toast } from "sonner";
 import { CrossCheckService, ValidationState } from "@/lib/agent/CrossCheckService";
@@ -164,6 +164,26 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
             });
         }
     }, [carpeta.id, carpeta.escrituras, router]);
+
+    // Auto-popular VENDEDOR desde INGESTA (el propietario actual = COMPRADOR del antecedente)
+    useEffect(() => {
+        const tramite = carpeta.escrituras?.find((e: any) => e.source === 'TRAMITE');
+        const ingesta = carpeta.escrituras?.find((e: any) => e.source === 'INGESTA');
+        if (!tramite || !ingesta) return;
+
+        // Si TRAMITE ya tiene vendedores, no re-sync
+        const tramiteParticipants = tramite.operaciones?.flatMap((op: any) => op.participantes_operacion || []) || [];
+        const ROLES_VEND = ['VENDEDOR', 'TRANSMITENTE', 'DONANTE', 'CEDENTE'];
+        const yaHayVendedor = tramiteParticipants.some((p: any) => ROLES_VEND.includes(p.rol?.toUpperCase()));
+        if (yaHayVendedor) return;
+
+        syncVendedoresFromIngesta(carpeta.id).then((res) => {
+            if (res.success && (res as any).added > 0) {
+                router.refresh();
+            }
+        });
+    }, [carpeta.id, carpeta.escrituras, router]);
+
     const [isPending, startTransition] = useTransition();
     const [isDeleting, setIsDeleting] = useState(false);
     const [editingPerson, setEditingPerson] = useState<any>(null);

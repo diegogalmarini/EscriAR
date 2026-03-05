@@ -11,7 +11,6 @@ import {
 import { toast } from "sonner";
 import { SUPPORTED_ACT_TYPES } from "@/app/actions/modelos-types";
 import type { Actuacion } from "@/app/actions/actuaciones-types";
-import { categoriaForActType } from "@/app/actions/actuaciones-types";
 import {
     getActuaciones,
     createActuacion,
@@ -42,8 +41,6 @@ interface ActuacionesPanelProps {
     operacionId: string | null;
     /** Active model act_types (optional, to filter dialog options) */
     activeModelTypes?: string[];
-    /** Current tipo_acto from the TRAMITE operación — used to auto-create actuación */
-    tipoActo?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -86,7 +83,6 @@ export default function ActuacionesPanel({
     orgId,
     operacionId,
     activeModelTypes,
-    tipoActo,
 }: ActuacionesPanelProps) {
     const [actuaciones, setActuaciones] = useState<Actuacion[]>([]);
     const [loading, setLoading] = useState(true);
@@ -123,25 +119,6 @@ export default function ActuacionesPanel({
     useEffect(() => {
         fetchActuaciones();
     }, [fetchActuaciones]);
-
-    // ── Auto-crear actuación si hay tipo_acto pero no existe actuación para ese tipo ──
-    const [autoCreated, setAutoCreated] = useState(false);
-    useEffect(() => {
-        if (loading || autoCreated || !tipoActo || tipoActo === "POR_DEFINIR") return;
-        const yaExiste = actuaciones.some((a) => a.act_type === tipoActo);
-        if (yaExiste) return;
-
-        const catRaw = categoriaForActType(tipoActo);
-        if (catRaw === "HIDDEN") return;
-        const categoria = catRaw === "AMBIGUO" ? "PROTOCOLAR" : catRaw;
-
-        setAutoCreated(true);
-        createActuacion(carpetaId, tipoActo, categoria, operacionId).then((res) => {
-            if (res.success && res.data) {
-                setActuaciones((prev) => [...prev, res.data!]);
-            }
-        });
-    }, [loading, tipoActo, actuaciones, autoCreated, carpetaId, operacionId]);
 
     // ── Grouped ──
     const privados = actuaciones.filter((a) => a.categoria === "PRIVADO");
