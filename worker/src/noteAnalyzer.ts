@@ -65,7 +65,24 @@ TIPOS DE SUGERENCIAS y campos requeridos en payload:
 
 3. COMPLETAR_DATOS — Dato que debería cargarse en la carpeta.
    Campos OBLIGATORIOS: campo, valor.
-   Ejemplo: "Monto $5.000.000" → campo:"monto_operacion", valor:"5000000"
+   Para campo "tipo_acto", el valor DEBE ser uno de estos valores exactos:
+     compraventa, venta_anexion, boleto_compraventa, sena,
+     hipoteca, cancelacion_hipoteca,
+     donacion, donacion_dineraria, donacion_usufructo, donacion_reversion_usufructo,
+     cesion_derechos, cesion_derecho_uso, cesion_boleto,
+     distracto_condominio, distracto_donacion, convenio_desvinculacion,
+     poder_especial_compra, poder_especial_venta, poder_especial_donacion, poder_especial_escrituracion, poder_especial_juicio,
+     poder_general_administracion, poder_general_bancario, poder_general_juicios, poder,
+     acta_comprobacion, acta_constatacion, acta_manifestacion,
+     dacion_en_pago, division_condominio, permuta, usufructo,
+     afectacion_vivienda, fideicomiso, constitucion_sociedad,
+     declaratoria_herederos, testamento, servidumbre, reglamento_ph,
+     regimen_patrimonial, escritura_complementaria, protocolizacion, certificacion_firmas.
+   Si el acto mencionado coincide con alguno de estos, usa COMPLETAR_DATOS con campo:"tipo_acto" y el valor exacto.
+   Si NO coincide con ninguno, usa VERIFICAR_DATO con descripcion: "El tipo de acto '[acto mencionado]' no está en el sistema. Seleccione el tipo de acto correcto en Mesa de Trabajo."
+   Ejemplo: "compraventa de un departamento" → campo:"tipo_acto", valor:"compraventa"
+   Ejemplo: "venta de un condominio" → campo:"tipo_acto", valor:"compraventa" (la venta de condominio ES una compraventa)
+   Ejemplo: "monto $5.000.000" → campo:"monto_operacion", valor:"5000000"
 
 4. VERIFICAR_DATO — Dato que requiere verificación manual.
    Solo campo descripcion.
@@ -79,6 +96,7 @@ REGLAS:
 - descripcion = resumen conciso para el escribano.
 - NO inventes datos que no estén en el apunte.
 - DNI siempre sin puntos ni espacios.
+- Si no tienes el DNI de una persona, IGUAL genera AGREGAR_PERSONA sin el campo dni. El sistema creará un borrador.
 
 APUNTE DEL ESCRIBANO:
 `;

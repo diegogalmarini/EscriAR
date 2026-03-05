@@ -15,6 +15,7 @@
  */
 
 import { SupabaseClient } from "@supabase/supabase-js";
+import { SUPPORTED_ACT_TYPES } from "@/app/actions/modelos-types";
 
 export interface ApplyContext {
     carpetaId: string;
@@ -275,6 +276,18 @@ async function handleCompletarDatos(
         const operacion = await getFirstOperacion(supabase, ctx.carpetaId);
         if (!operacion) {
             return { success: false, applied_changes: null, error: "Sin operación en carpeta" };
+        }
+
+        // Validar tipo_acto contra lista de tipos soportados
+        if (dbColumn === "tipo_acto") {
+            const isValid = SUPPORTED_ACT_TYPES.some(t => t.value === valor);
+            if (!isValid) {
+                return {
+                    success: false,
+                    applied_changes: { campo: "tipo_acto", valor_intentado: valor },
+                    error: `El tipo de acto "${valor}" no está en el sistema. Seleccione el tipo correcto en Mesa de Trabajo.`,
+                };
+            }
         }
 
         const updateData: Record<string, any> = {};
