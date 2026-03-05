@@ -583,6 +583,26 @@ async function handleCompletarDatos(
         const updateData: Record<string, any> = {};
         updateData[dbColumn] = dbColumn === "monto_operacion" ? parseFloat(valor) : valor;
 
+        // Auto-setear código CESBA cuando se define tipo_acto
+        if (dbColumn === "tipo_acto") {
+            const TIPO_ACTO_TO_CODIGO: Record<string, string> = {
+                compraventa: "100-00",
+                venta_anexion: "100-10",
+                hipoteca: "300-00",
+                cancelacion_hipoteca: "311-00",
+                donacion: "200-30",
+                donacion_dineraria: "200-31",
+                donacion_usufructo: "200-32",
+                donacion_reversion_usufructo: "200-32",
+                cesion_derechos: "100-51",
+                distracto_condominio: "100-20",
+            };
+            const codigoDefault = TIPO_ACTO_TO_CODIGO[valor];
+            if (codigoDefault) {
+                updateData["codigo"] = codigoDefault;
+            }
+        }
+
         console.log(`[ET5] COMPLETAR_DATOS: actualizando operacion_id=${operacion.id} (TRAMITE), ${dbColumn}=${updateData[dbColumn]}`);
         const { error } = await supabaseAdmin
             .from("operaciones")

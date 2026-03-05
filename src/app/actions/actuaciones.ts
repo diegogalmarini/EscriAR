@@ -191,10 +191,10 @@ export async function deleteActuacion(
     try {
         await requireOrgMembership();
 
-        // Obtener docx_path para limpiar storage
+        // Obtener actuación para limpiar storage + resetear tipo_acto
         const { data: actuacion } = await supabaseAdmin
             .from("actuaciones")
-            .select("docx_path")
+            .select("docx_path, act_type, carpeta_id")
             .eq("id", actuacionId)
             .single();
 
@@ -207,13 +207,32 @@ export async function deleteActuacion(
             }
         }
 
-        // Usar admin para bypasear RLS (actuaciones creadas por admin no son visibles al user client)
+        // Usar admin para bypasear RLS
         const { error } = await supabaseAdmin
             .from("actuaciones")
             .delete()
             .eq("id", actuacionId);
 
         if (error) throw error;
+
+        // Si el act_type coincide con el tipo_acto de la operación TRAMITE, resetearlo
+        if (actuacion?.act_type && actuacion?.carpeta_id) {
+            const { data: tramiteEsc } = await supabaseAdmin
+                .from("escrituras")
+                .select("operaciones(id, tipo_acto)")
+                .eq("carpeta_id", actuacion.carpeta_id)
+                .eq("source", "TRAMITE")
+                .maybeSingle();
+
+            const op = (tramiteEsc as any)?.operaciones?.[0];
+            if (op && op.tipo_acto === actuacion.act_type) {
+                await supabaseAdmin
+                    .from("operaciones")
+                    .update({ tipo_acto: "POR_DEFINIR", codigo: null })
+                    .eq("id", op.id);
+            }
+        }
+
         return { success: true };
     } catch (error: any) {
         console.error("[deleteActuacion] Error:", error);
