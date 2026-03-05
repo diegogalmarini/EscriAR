@@ -21,6 +21,10 @@ export interface ApplyContext {
     orgId: string;
     userId: string;
     evidenciaTexto?: string;
+    /** Si true, permite sobreescribir nombre de persona existente (requiere confirmación previa del usuario) */
+    forceUpdateName?: boolean;
+    /** Si true, vincula persona existente sin verificar conflicto de nombre */
+    keepExistingName?: boolean;
 }
 
 export interface ApplyResult {
@@ -155,6 +159,32 @@ async function handleAgregarPersona(
         console.log(`[ET5] AGREGAR_PERSONA: persona creada dni=${dni}`);
     } else {
         console.log(`[ET5] AGREGAR_PERSONA: persona existente=${existing.nombre_completo}`);
+        // Conflicto de nombre: NO sobreescribir sin confirmación explícita
+        if (nombre && nombre.toUpperCase() !== existing.nombre_completo?.toUpperCase() && !ctx.keepExistingName) {
+            if (!ctx.forceUpdateName) {
+                // Primera pasada: devolver conflicto para que UI pida confirmación
+                return {
+                    success: false,
+                    applied_changes: {
+                        conflicto: "NOMBRE_DIFERENTE",
+                        dni,
+                        nombre_existente: existing.nombre_completo,
+                        nombre_apunte: nombre,
+                        rol,
+                    },
+                    error: `El DNI ${dni} ya existe como "${existing.nombre_completo}". El apunte indica "${nombre}". Confirme cuál es correcto.`,
+                };
+            }
+            // Segunda pasada: usuario confirmó, actualizar nombre
+            const { error: updErr } = await supabase
+                .from("personas")
+                .update({ nombre_completo: nombre })
+                .eq("dni", dni);
+            if (updErr) {
+                return { success: false, applied_changes: null, error: `Error actualizando nombre: ${updErr.message}` };
+            }
+            console.log(`[ET5] AGREGAR_PERSONA: nombre actualizado (confirmado) "${existing.nombre_completo}" → "${nombre}"`);
+        }
     }
 
     // 2. Obtener operación activa

@@ -85,6 +85,60 @@ export async function acceptSuggestion(sugerenciaId: string, carpetaId: string) 
     }
 }
 
+/** Acepta sugerencia con confirmación de sobreescritura de nombre (usuario ya confirmó en modal) */
+export async function acceptSuggestionForced(sugerenciaId: string, carpetaId: string, mode: "update" | "keep" = "update") {
+    try {
+        const { userId, orgId } = await requireOrgMembership();
+        const supabase = await createClient();
+
+        const { data: sug, error: fetchErr } = await supabase
+            .from("sugerencias")
+            .select("id, tipo, payload, estado, evidencia_texto")
+            .eq("id", sugerenciaId)
+            .single();
+
+        if (fetchErr) throw fetchErr;
+        if (sug.estado !== "PROPOSED") {
+            return { success: false, error: "Sugerencia ya fue procesada" };
+        }
+
+        const result = await applySuggestion(supabase, sug.tipo, sug.payload, {
+            carpetaId,
+            orgId,
+            userId,
+            evidenciaTexto: sug.evidencia_texto || undefined,
+            forceUpdateName: mode === "update",
+            keepExistingName: mode === "keep",
+        });
+
+        const now = new Date().toISOString();
+        const { error: updateErr } = await supabase
+            .from("sugerencias")
+            .update({
+                estado: result.success ? "ACCEPTED" : "PROPOSED",
+                decided_by: userId,
+                decided_at: now,
+                applied_at: now,
+                applied_by: userId,
+                applied_changes: result.applied_changes,
+                apply_error: result.error || null,
+            })
+            .eq("id", sugerenciaId);
+
+        if (updateErr) throw updateErr;
+
+        revalidatePath(`/carpeta/${carpetaId}`);
+        return {
+            success: result.success,
+            applied_changes: result.applied_changes,
+            error: result.error,
+        };
+    } catch (err: any) {
+        console.error("[ET5] Error en acceptSuggestionForced:", err);
+        return { success: false, error: err.message };
+    }
+}
+
 export async function rejectSuggestion(sugerenciaId: string, carpetaId: string) {
     try {
         const { userId } = await requireOrgMembership();

@@ -21,7 +21,7 @@ import {
     Trash2, Mic, MicOff, Lightbulb, ArrowRight, RefreshCw
 } from "lucide-react";
 import { createApunte, listApuntes, deleteApunte, retryNoteAnalysis } from "@/app/actions/apuntes";
-import { listSugerencias, acceptSuggestion, rejectSuggestion } from "@/app/actions/sugerencias";
+import { listSugerencias, acceptSuggestion, acceptSuggestionForced, rejectSuggestion } from "@/app/actions/sugerencias";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 
@@ -215,6 +215,16 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
 
     const [acceptingId, setAcceptingId] = useState<string | null>(null);
 
+    // Conflicto de nombre: modal de confirmación
+    const [conflicto, setConflicto] = useState<{
+        sugerenciaId: string;
+        dni: string;
+        nombreExistente: string;
+        nombreApunte: string;
+        rol: string;
+    } | null>(null);
+    const [isForcing, setIsForcing] = useState(false);
+
     const handleAccept = async (sugerenciaId: string) => {
         setAcceptingId(sugerenciaId);
         const result = await acceptSuggestion(sugerenciaId, carpetaId);
@@ -227,13 +237,41 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                     : "";
             toast.success(`Sugerencia aplicada${detail}`);
             fetchData();
-            // Refrescar data principal de la carpeta (participantes, certificados, etc.)
             router.refresh();
+        } else if (result.applied_changes?.conflicto === "NOMBRE_DIFERENTE") {
+            // Conflicto de nombre → abrir modal de confirmación
+            setConflicto({
+                sugerenciaId,
+                dni: result.applied_changes.dni,
+                nombreExistente: result.applied_changes.nombre_existente,
+                nombreApunte: result.applied_changes.nombre_apunte,
+                rol: result.applied_changes.rol,
+            });
         } else {
             toast.error(result.error || "Error al aplicar sugerencia", { duration: 6000 });
             fetchData();
         }
         setAcceptingId(null);
+    };
+
+    const handleConflictResolve = async (mode: "update" | "keep") => {
+        if (!conflicto) return;
+        setIsForcing(true);
+        const result = await acceptSuggestionForced(conflicto.sugerenciaId, carpetaId, mode);
+        if (result.success) {
+            toast.success(
+                mode === "update"
+                    ? `Nombre actualizado a "${conflicto.nombreApunte}" y persona vinculada`
+                    : `Persona "${conflicto.nombreExistente}" vinculada como ${conflicto.rol}`
+            );
+            fetchData();
+            router.refresh();
+        } else {
+            toast.error(result.error || "Error al aplicar", { duration: 6000 });
+            fetchData();
+        }
+        setIsForcing(false);
+        setConflicto(null);
     };
 
     const handleReject = async (sugerenciaId: string) => {
@@ -637,6 +675,53 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                     )}
                 </div>
             </div>
+
+            {/* ── Modal conflicto de nombre ── */}
+            <AlertDialog open={!!conflicto} onOpenChange={(open) => { if (!open && !isForcing) setConflicto(null); }}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Conflicto de datos</AlertDialogTitle>
+                        <AlertDialogDescription asChild>
+                            <div className="space-y-3">
+                                <p>
+                                    El DNI <strong>{conflicto?.dni}</strong> ya existe en la base de datos con el nombre:
+                                </p>
+                                <div className="bg-muted rounded-md px-3 py-2 text-sm font-medium text-foreground">
+                                    {conflicto?.nombreExistente}
+                                </div>
+                                <p>
+                                    El apunte indica un nombre diferente:
+                                </p>
+                                <div className="bg-amber-50 border border-amber-200 rounded-md px-3 py-2 text-sm font-medium text-foreground">
+                                    {conflicto?.nombreApunte}
+                                </div>
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                        <AlertDialogCancel disabled={isForcing} onClick={() => setConflicto(null)}>
+                            Cancelar
+                        </AlertDialogCancel>
+                        <Button
+                            variant="outline"
+                            disabled={isForcing}
+                            onClick={() => handleConflictResolve("keep")}
+                        >
+                            {isForcing ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : null}
+                            Mantener &ldquo;{conflicto?.nombreExistente}&rdquo;
+                        </Button>
+                        <Button
+                            variant="default"
+                            disabled={isForcing}
+                            onClick={() => handleConflictResolve("update")}
+                            className="bg-amber-600 hover:bg-amber-700 text-white"
+                        >
+                            {isForcing ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : null}
+                            Actualizar a &ldquo;{conflicto?.nombreApunte}&rdquo;
+                        </Button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             {/* ── Modal confirmación borrado ── */}
             <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>

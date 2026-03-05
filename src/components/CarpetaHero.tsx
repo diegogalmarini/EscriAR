@@ -86,19 +86,18 @@ function generarCaratula(carpeta: any): { titulo: string; subtipo: string } {
         return { titulo: "Procesando operación…", subtipo };
     }
 
-    // Buscar partes según lógica de Mesa de Trabajo:
-    // - Transmitente = actual propietario (fue COMPRADOR/TITULAR/CESIONARIO/DONATARIO en el antecedente)
-    // - Adquirente = nuevo comprador (rol ADQUIRENTE, agregado manualmente)
+    // Roles alineados con WorkspacePipeline (Mesa de Trabajo)
     const participantes = operacion?.participantes_operacion || [];
 
-    const transmitente = participantes.find((p: any) => {
-        const rol = p.rol?.toUpperCase() || "";
-        return rol.includes("COMPRADOR") || rol.includes("CESIONARIO") ||
-            rol.includes("DONATARIO") || rol.includes("TITULAR");
-    });
+    const ROLES_TRANSMITENTE = ["VENDEDOR", "TRANSMITENTE", "DONANTE", "CEDENTE", "FIDUCIANTE", "TITULAR", "CONDOMINO"];
+    const ROLES_ADQUIRENTE = ["COMPRADOR", "ADQUIRENTE", "DONATARIO", "CESIONARIO", "MUTUARIO", "FIDEICOMISARIO"];
 
-    const adquirente = participantes.find(
-        (p: any) => p.rol?.toUpperCase() === "ADQUIRENTE"
+    const transmitente = participantes.find((p: any) =>
+        ROLES_TRANSMITENTE.includes(p.rol?.toUpperCase() || "")
+    );
+
+    const adquirente = participantes.find((p: any) =>
+        ROLES_ADQUIRENTE.includes(p.rol?.toUpperCase() || "")
     );
 
     const apellidoTransmitente = extractApellido(transmitente?.persona?.nombre_completo);
@@ -164,7 +163,7 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }:
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-1.5 min-w-0 flex-1">
                     <p className={`text-xs font-medium tracking-wider uppercase ${
-                        subtipo === "ACTO A DEFINIR"
+                        subtipo === "ACTO POR SELECCIONAR"
                             ? "text-muted-foreground/50 italic"
                             : "text-muted-foreground"
                     }`}>
