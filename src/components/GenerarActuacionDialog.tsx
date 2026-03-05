@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2, FileText } from "lucide-react";
 import { SUPPORTED_ACT_TYPES } from "@/app/actions/modelos-types";
-import { categoriaForActType } from "@/app/actions/actuaciones-types";
+import { categoriaForActType, ACTOS_OCULTOS } from "@/app/actions/actuaciones-types";
 
 interface GenerarActuacionDialogProps {
     open: boolean;
@@ -47,29 +47,30 @@ export default function GenerarActuacionDialog({
         }
     }, [open]);
 
-    // Filter options: show all SUPPORTED_ACT_TYPES, optionally filtered by active models
+    // Filter options: only show types matching this modal's category + ambiguos
+    // HIDDEN types never show. No "Otros tipos" cross-category leak.
     const options = SUPPORTED_ACT_TYPES.filter((t) => {
+        const cat = categoriaForActType(t.value);
+        // Never show hidden acts
+        if (cat === "HIDDEN") return false;
         // If we have a list of active models, only show those
         if (activeModelTypes && activeModelTypes.length > 0) {
-            return activeModelTypes.includes(t.value);
+            if (!activeModelTypes.includes(t.value)) return false;
         }
-        return true;
+        // Ambiguos appear in both modals
+        if (cat === "AMBIGUO") return true;
+        // Otherwise only show matching category
+        return cat === defaultCategoria;
     });
-
-    // Group by matching category
-    const filteredByCategory = options.filter(
-        (t) => categoriaForActType(t.value) === defaultCategoria
-    );
-    const otherCategory = options.filter(
-        (t) => categoriaForActType(t.value) !== defaultCategoria
-    );
 
     const handleConfirm = async () => {
         if (!selectedActType) return;
         setIsGenerating(true);
         try {
             const cat = categoriaForActType(selectedActType);
-            await onConfirm(selectedActType, cat);
+            // Ambiguos adopt the category of the modal they were picked from
+            const finalCat = cat === "AMBIGUO" ? defaultCategoria : cat;
+            await onConfirm(selectedActType, finalCat as "PRIVADO" | "PROTOCOLAR");
             onOpenChange(false);
         } catch {
             // Error handled by parent
@@ -96,27 +97,11 @@ export default function GenerarActuacionDialog({
                                 <SelectValue placeholder="Seleccione el tipo de acto..." />
                             </SelectTrigger>
                             <SelectContent>
-                                {filteredByCategory.length > 0 && (
-                                    <>
-                                        {filteredByCategory.map((t) => (
-                                            <SelectItem key={t.value} value={t.value}>
-                                                {t.label}
-                                            </SelectItem>
-                                        ))}
-                                    </>
-                                )}
-                                {otherCategory.length > 0 && (
-                                    <>
-                                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground border-t mt-1 pt-2">
-                                            Otros tipos
-                                        </div>
-                                        {otherCategory.map((t) => (
-                                            <SelectItem key={t.value} value={t.value}>
-                                                {t.label}
-                                            </SelectItem>
-                                        ))}
-                                    </>
-                                )}
+                                {options.map((t) => (
+                                    <SelectItem key={t.value} value={t.value}>
+                                        {t.label}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>

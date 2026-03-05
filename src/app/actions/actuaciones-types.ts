@@ -30,7 +30,22 @@ export const ACTOS_PRIVADOS: string[] = [
     "certificacion_firmas",
 ];
 
+/** Actos que pueden ser privados O protocolares según el caso */
+export const ACTOS_AMBIGUOS: string[] = [
+    "cesion_derechos",
+    "cesion_derecho_uso",
+    "autorizacion_conducir",
+];
+
+/** Actos ocultos / en desarrollo — no se muestran en la UI */
+export const ACTOS_OCULTOS: string[] = [];
+
+export type CategoriaActo = "PRIVADO" | "PROTOCOLAR" | "AMBIGUO" | "HIDDEN";
+
 /** Determina la categoría de un act_type */
-export function categoriaForActType(actType: string): "PRIVADO" | "PROTOCOLAR" {
-    return ACTOS_PRIVADOS.includes(actType) ? "PRIVADO" : "PROTOCOLAR";
+export function categoriaForActType(actType: string): CategoriaActo {
+    if (ACTOS_OCULTOS.includes(actType)) return "HIDDEN";
+    if (ACTOS_PRIVADOS.includes(actType)) return "PRIVADO";
+    if (ACTOS_AMBIGUOS.includes(actType)) return "AMBIGUO";
+    return "PROTOCOLAR";
 }
