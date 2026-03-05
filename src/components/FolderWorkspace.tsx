@@ -16,6 +16,7 @@ import { CrossCheckService, ValidationState } from "@/lib/agent/CrossCheckServic
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { formatCUIT, formatPersonName } from "@/lib/utils/normalization";
 import {
@@ -142,6 +143,7 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
     const [activeOpId, setActiveOpId] = useState<string | null>(null);
     const [showTranscriptionDialog, setShowTranscriptionDialog] = useState(false);
     const [editingDeed, setEditingDeed] = useState<any>(null);
+    const [breakGlassConfirmed, setBreakGlassConfirmed] = useState(false);
     const [viewingDocument, setViewingDocument] = useState<string | null>(null);
     const [viewerWidth, setViewerWidth] = useState(95); // Default 95vw
 
@@ -364,21 +366,6 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                         currentEscritura={currentEscritura}
                         activeDeedId={activeDeedId}
                         carpeta={carpeta}
-                        onTipoActoChange={(val) => {
-                            setCarpeta((prev: any) => {
-                                const updated = { ...prev };
-                                if (updated.escrituras?.[0]?.operaciones?.[0]) {
-                                    updated.escrituras = [...updated.escrituras];
-                                    updated.escrituras[0] = { ...updated.escrituras[0] };
-                                    updated.escrituras[0].operaciones = [...updated.escrituras[0].operaciones];
-                                    updated.escrituras[0].operaciones[0] = {
-                                        ...updated.escrituras[0].operaciones[0],
-                                        tipo_acto: val,
-                                    };
-                                }
-                                return updated;
-                            });
-                        }}
                     />
                 </TabsContent>
 
@@ -535,12 +522,12 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
             </Dialog>
 
             {/* Edit Deed Metadata Dialog */}
-            <Dialog open={!!editingDeed} onOpenChange={() => setEditingDeed(null)}>
+            <Dialog open={!!editingDeed} onOpenChange={() => { setEditingDeed(null); setBreakGlassConfirmed(false); }}>
                 <DialogContent className="sm:max-w-[600px]">
                     <DialogHeader>
-                        <DialogTitle>Editar Datos del Documento</DialogTitle>
+                        <DialogTitle>Corrección excepcional de datos del antecedente</DialogTitle>
                         <DialogDescription>
-                            Modifica los metadatos extraídos por IA. Los cambios se guardarán en la base de datos.
+                            Estos datos provienen del documento antecedente procesado por IA. Solo deben corregirse si el OCR interpretó mal un valor (ej. fecha ilegible, código incorrecto). Para cambios operativos usá Mesa de Trabajo.
                         </DialogDescription>
                     </DialogHeader>
                     {editingDeed && (
@@ -622,7 +609,7 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="codigo">Código</Label>
+                                        <Label htmlFor="codigo">Código (antecedente)</Label>
                                         <Input
                                             id="codigo"
                                             name="codigo"
@@ -677,16 +664,27 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                                 </div>
                             </div>
 
-                            <div className="flex justify-end gap-2 pt-4">
+                            <div className="flex items-start gap-2 pt-3 border-t">
+                                <Checkbox
+                                    id="break-glass-confirm"
+                                    checked={breakGlassConfirmed}
+                                    onCheckedChange={(v) => setBreakGlassConfirmed(v === true)}
+                                />
+                                <label htmlFor="break-glass-confirm" className="text-xs text-muted-foreground leading-tight cursor-pointer">
+                                    Confirmo que esta corrección es excepcional (OCR/ilegible)
+                                </label>
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2">
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    onClick={() => setEditingDeed(null)}
+                                    onClick={() => { setEditingDeed(null); setBreakGlassConfirmed(false); }}
                                 >
                                     Cancelar
                                 </Button>
-                                <Button type="submit">
-                                    Guardar Cambios
+                                <Button type="submit" disabled={!breakGlassConfirmed}>
+                                    Guardar corrección
                                 </Button>
                             </div>
                         </form>
