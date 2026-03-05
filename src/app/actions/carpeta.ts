@@ -66,6 +66,19 @@ export async function addOperationToDeed(escrituraId: string, tipoActo: string, 
 export async function linkPersonToOperation(operacionId: string, personaId: string, rol: string, porcentaje?: number) {
     try {
         const supabase = await createClient();
+
+        // Guardrail: verificar que la operación pertenece a escritura TRAMITE
+        const { data: op } = await supabase
+            .from('operaciones')
+            .select('id, escritura:escrituras!inner(source)')
+            .eq('id', operacionId)
+            .single();
+
+        if (op?.escritura && (op.escritura as any).source !== 'TRAMITE') {
+            console.error(`[GUARDRAIL] linkPersonToOperation: operación ${operacionId} pertenece a escritura ${(op.escritura as any).source}, no TRAMITE. Rechazando.`);
+            return { success: false, error: "Solo se pueden agregar participantes a la operación del trámite activo, no al antecedente." };
+        }
+
         const { data, error } = await supabase
             .from('participantes_operacion')
             .insert([{

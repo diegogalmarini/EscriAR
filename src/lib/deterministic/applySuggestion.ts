@@ -68,20 +68,53 @@ export async function applySuggestion(
 
 // ─── Helpers ──────────────────────────────────────────────
 
-async function getFirstOperacion(supabase: SupabaseClient, carpetaId: string) {
-    const { data: escritura, error: escErr } = await supabase
+/**
+ * Obtiene la operación de la escritura TRAMITE (operación activa del trámite).
+ * NUNCA retorna operaciones de escrituras INGESTA (antecedente).
+ * Si no hay TRAMITE, crea una automáticamente.
+ */
+async function getTramiteOperacion(supabase: SupabaseClient, carpetaId: string) {
+    // 1. Buscar escritura TRAMITE
+    let { data: escritura, error: escErr } = await supabase
         .from("escrituras")
-        .select("id")
+        .select("id, source")
         .eq("carpeta_id", carpetaId)
-        .order("created_at", { ascending: true })
+        .eq("source", "TRAMITE")
         .limit(1)
-        .single();
+        .maybeSingle();
 
-    if (escErr || !escritura) {
-        console.log(`[ET5] getFirstOperacion: no escritura para carpeta ${carpetaId}`, escErr?.message);
+    // 2. Si no existe TRAMITE, crearla (carpetas legacy pre-044)
+    if (!escritura) {
+        console.log(`[ET5] getTramiteOperacion: no hay TRAMITE para carpeta ${carpetaId}, creando...`);
+        const { data: nueva, error: createErr } = await supabase
+            .from("escrituras")
+            .insert({ carpeta_id: carpetaId, source: "TRAMITE" })
+            .select("id, source")
+            .single();
+
+        if (createErr || !nueva) {
+            console.error(`[ET5] getTramiteOperacion: error creando TRAMITE`, createErr?.message);
+            return null;
+        }
+        escritura = nueva;
+
+        // Crear operación vacía
+        const { error: opCreateErr } = await supabase
+            .from("operaciones")
+            .insert({ escritura_id: escritura.id, tipo_acto: "POR_DEFINIR" });
+
+        if (opCreateErr) {
+            console.error(`[ET5] getTramiteOperacion: error creando operación`, opCreateErr.message);
+        }
+    }
+
+    // Guardrail: verificar que es TRAMITE
+    if (escritura.source !== "TRAMITE") {
+        console.error(`[ET5] GUARDRAIL: escritura ${escritura.id} tiene source=${escritura.source}, NO es TRAMITE. Rechazando.`);
         return null;
     }
 
+    // 3. Obtener operación de la escritura TRAMITE
     const { data: operacion, error: opErr } = await supabase
         .from("operaciones")
         .select("id, monto_operacion, tipo_acto, codigo")
@@ -91,11 +124,11 @@ async function getFirstOperacion(supabase: SupabaseClient, carpetaId: string) {
         .single();
 
     if (opErr || !operacion) {
-        console.log(`[ET5] getFirstOperacion: no operación para escritura ${escritura.id}`, opErr?.message);
+        console.log(`[ET5] getTramiteOperacion: no operación para escritura TRAMITE ${escritura.id}`, opErr?.message);
         return null;
     }
 
-    console.log(`[ET5] getFirstOperacion: operacion_id=${operacion.id}`);
+    console.log(`[ET5] getTramiteOperacion: operacion_id=${operacion.id} (source=TRAMITE)`);
     return operacion;
 }
 
@@ -205,10 +238,10 @@ async function handleAgregarPersona(
         }
     }
 
-    // 2. Obtener operación activa
-    const operacion = await getFirstOperacion(supabase, ctx.carpetaId);
+    // 2. Obtener operación activa (SOLO TRAMITE — nunca antecedente)
+    const operacion = await getTramiteOperacion(supabase, ctx.carpetaId);
     if (!operacion) {
-        return { success: false, applied_changes: null, error: "No se encontró operación activa en la carpeta" };
+        return { success: false, applied_changes: null, error: "[ET5] GUARDRAIL: No se encontró operación TRAMITE en la carpeta. No se aplicará sobre antecedente." };
     }
 
     // 3. Idempotencia: verificar si ya está vinculado
@@ -293,7 +326,7 @@ async function handleCompletarDatos(
     const dbColumn = camposOperacion[campoNorm];
 
     if (dbColumn) {
-        const operacion = await getFirstOperacion(supabase, ctx.carpetaId);
+        const operacion = await getTramiteOperacion(supabase, ctx.carpetaId);
         if (!operacion) {
             return { success: false, applied_changes: null, error: "Sin operación en carpeta" };
         }

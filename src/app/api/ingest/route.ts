@@ -770,11 +770,13 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
     const registro = aiData.registro ? String(aiData.registro) : null;
 
     if (nroProtocolo && registro) {
+        // Dedup: solo buscar en escrituras INGESTA (antecedentes), nunca en TRAMITE
         const { data: existing } = await supabaseAdmin
             .from('escrituras')
             .select('*, operaciones(id)')
             .eq('nro_protocolo', nroProtocolo)
             .eq('registro', registro)
+            .eq('source', 'INGESTA')
             .maybeSingle();
 
         if (existing) {

@@ -181,7 +181,6 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
     // Transmitente: quien vende/dona/cede/transmite en esta operación
     const ROLES_TRANSMITENTE = [
         'VENDEDOR', 'TRANSMITENTE', 'DONANTE', 'CEDENTE', 'FIDUCIANTE',
-        // Roles del antecedente: el comprador/donatario previo es el titular actual
         'TITULAR', 'CONDOMINO',
     ];
     const titulares = allParticipants.filter((p: any) => {
@@ -329,7 +328,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                                 Parte Transmitente
                             </h3>
                             <Badge variant="outline" className="text-[10px] px-2 py-0.5 text-muted-foreground">
-                                Origen: Antecedente
+                                Vende / Transmite
                             </Badge>
                         </div>
 
@@ -368,7 +367,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                             </div>
                         ) : (
                             <p className="text-sm text-muted-foreground py-4 text-center">
-                                Sin titulares en el antecedente
+                                Sin transmitentes agregados
                             </p>
                         )}
                     </div>
