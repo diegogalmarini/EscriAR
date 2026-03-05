@@ -219,16 +219,24 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta, onTipoA
         (op: any) => op.participantes_operacion || []
     ) || [];
 
-    // Transmitentes: roles del antecedente (COMPRADOR, DONATARIO, TITULAR, etc.)
+    // Transmitente: quien vende/dona/cede/transmite en esta operación
+    const ROLES_TRANSMITENTE = [
+        'VENDEDOR', 'TRANSMITENTE', 'DONANTE', 'CEDENTE', 'FIDUCIANTE',
+        // Roles del antecedente: el comprador/donatario previo es el titular actual
+        'TITULAR', 'CONDOMINO',
+    ];
     const titulares = allParticipants.filter((p: any) => {
         const rol = p.rol?.toUpperCase() || "";
-        return rol.includes("COMPRADOR") || rol.includes("CESIONARIO") ||
-            rol.includes("DONATARIO") || rol.includes("TITULAR");
+        return ROLES_TRANSMITENTE.includes(rol);
     });
 
-    // Adquirentes: rol "ADQUIRENTE" (agregados manualmente desde Mesa de Trabajo)
+    // Adquirente: quien compra/recibe/adquiere
+    const ROLES_ADQUIRENTE = [
+        'ADQUIRENTE', 'COMPRADOR', 'DONATARIO', 'CESIONARIO',
+        'MUTUARIO', 'FIDEICOMISARIO',
+    ];
     const adquirentesFromDB = allParticipants
-        .filter((p: any) => p.rol?.toUpperCase() === 'ADQUIRENTE')
+        .filter((p: any) => ROLES_ADQUIRENTE.includes(p.rol?.toUpperCase() || ""))
         .map((p: any) => {
             const persona = p.persona || p.personas;
             return persona ? { ...persona, _participanteId: p.id } : null;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -142,6 +143,7 @@ function formatRelativeTime(dateStr: string): string {
 }
 
 export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
+    const router = useRouter();
     const [contenido, setContenido] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [apuntes, setApuntes] = useState<any[]>([]);
@@ -225,6 +227,8 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                     : "";
             toast.success(`Sugerencia aplicada${detail}`);
             fetchData();
+            // Refrescar data principal de la carpeta (participantes, certificados, etc.)
+            router.refresh();
         } else {
             toast.error(result.error || "Error al aplicar sugerencia", { duration: 6000 });
             fetchData();
