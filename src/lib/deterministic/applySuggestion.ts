@@ -15,6 +15,7 @@
  */
 
 import { SupabaseClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { SUPPORTED_ACT_TYPES } from "@/app/actions/modelos-types";
 
 export interface ApplyContext {
@@ -70,12 +71,23 @@ export async function applySuggestion(
 
 /**
  * Obtiene la operación de la escritura TRAMITE (operación activa del trámite).
+ * USA supabaseAdmin para bypasear RLS y garantizar acceso.
  * NUNCA retorna operaciones de escrituras INGESTA (antecedente).
  * Si no hay TRAMITE, crea una automáticamente.
  */
-async function getTramiteOperacion(supabase: SupabaseClient, carpetaId: string) {
+async function getTramiteOperacion(_supabase: SupabaseClient, carpetaId: string) {
+    // Usar ADMIN client para bypasear RLS — crítico para que funcione siempre
+    const admin = supabaseAdmin;
+
+    // 0. Debug: listar TODAS las escrituras de la carpeta
+    const { data: allEscrituras } = await admin
+        .from("escrituras")
+        .select("id, source, created_at")
+        .eq("carpeta_id", carpetaId);
+    console.log(`[ET5] getTramiteOperacion: carpeta=${carpetaId}, escrituras=${JSON.stringify(allEscrituras)}`);
+
     // 1. Buscar escritura TRAMITE
-    let { data: escritura, error: escErr } = await supabase
+    const { data: escritura, error: escErr } = await admin
         .from("escrituras")
         .select("id, source")
         .eq("carpeta_id", carpetaId)
@@ -83,52 +95,68 @@ async function getTramiteOperacion(supabase: SupabaseClient, carpetaId: string) 
         .limit(1)
         .maybeSingle();
 
-    // 2. Si no existe TRAMITE, crearla (carpetas legacy pre-044)
-    if (!escritura) {
-        console.log(`[ET5] getTramiteOperacion: no hay TRAMITE para carpeta ${carpetaId}, creando...`);
-        const { data: nueva, error: createErr } = await supabase
+    if (escErr) {
+        console.error(`[ET5] getTramiteOperacion: ERROR buscando TRAMITE`, escErr.message);
+    }
+
+    // 2. Si no existe TRAMITE, crearla
+    let tramiteEscritura = escritura;
+    if (!tramiteEscritura) {
+        console.log(`[ET5] getTramiteOperacion: NO HAY TRAMITE para carpeta ${carpetaId}, creando con admin...`);
+        const { data: nueva, error: createErr } = await admin
             .from("escrituras")
             .insert({ carpeta_id: carpetaId, source: "TRAMITE" })
             .select("id, source")
             .single();
 
         if (createErr || !nueva) {
-            console.error(`[ET5] getTramiteOperacion: error creando TRAMITE`, createErr?.message);
+            console.error(`[ET5] getTramiteOperacion: ERROR creando TRAMITE`, createErr?.message);
             return null;
         }
-        escritura = nueva;
+        tramiteEscritura = nueva;
 
-        // Crear operación vacía
-        const { error: opCreateErr } = await supabase
+        const { error: opCreateErr } = await admin
             .from("operaciones")
-            .insert({ escritura_id: escritura.id, tipo_acto: "POR_DEFINIR" });
+            .insert({ escritura_id: tramiteEscritura.id, tipo_acto: "POR_DEFINIR" });
 
         if (opCreateErr) {
-            console.error(`[ET5] getTramiteOperacion: error creando operación`, opCreateErr.message);
+            console.error(`[ET5] getTramiteOperacion: ERROR creando operación`, opCreateErr.message);
         }
     }
 
-    // Guardrail: verificar que es TRAMITE
-    if (escritura.source !== "TRAMITE") {
-        console.error(`[ET5] GUARDRAIL: escritura ${escritura.id} tiene source=${escritura.source}, NO es TRAMITE. Rechazando.`);
+    // Guardrail HARD: verificar source
+    if (tramiteEscritura.source !== "TRAMITE") {
+        console.error(`[ET5] ❌ GUARDRAIL HARD: escritura ${tramiteEscritura.id} source=${tramiteEscritura.source} ≠ TRAMITE. RECHAZANDO.`);
         return null;
     }
 
     // 3. Obtener operación de la escritura TRAMITE
-    const { data: operacion, error: opErr } = await supabase
+    const { data: operacion, error: opErr } = await admin
         .from("operaciones")
-        .select("id, monto_operacion, tipo_acto, codigo")
-        .eq("escritura_id", escritura.id)
+        .select("id, monto_operacion, tipo_acto, codigo, escritura_id")
+        .eq("escritura_id", tramiteEscritura.id)
         .order("created_at", { ascending: true })
         .limit(1)
         .single();
 
     if (opErr || !operacion) {
-        console.log(`[ET5] getTramiteOperacion: no operación para escritura TRAMITE ${escritura.id}`, opErr?.message);
+        console.error(`[ET5] getTramiteOperacion: no operación para TRAMITE ${tramiteEscritura.id}`, opErr?.message);
         return null;
     }
 
-    console.log(`[ET5] getTramiteOperacion: operacion_id=${operacion.id} (source=TRAMITE)`);
+    // Guardrail DOUBLE CHECK: verificar que la operación realmente pertenece a TRAMITE
+    const { data: checkEsc } = await admin
+        .from("escrituras")
+        .select("source")
+        .eq("id", operacion.escritura_id)
+        .single();
+
+    if (checkEsc?.source !== "TRAMITE") {
+        console.error(`[ET5] ❌ DOUBLE CHECK FAILED: operacion ${operacion.id} → escritura ${operacion.escritura_id} → source=${checkEsc?.source}`);
+        return null;
+    }
+
+    console.log(`[ET5] ✅ getTramiteOperacion: operacion_id=${operacion.id}, escritura_id=${tramiteEscritura.id} (source=TRAMITE)`);
     return operacion;
 }
 
@@ -244,8 +272,8 @@ async function handleAgregarPersona(
         return { success: false, applied_changes: null, error: "[ET5] GUARDRAIL: No se encontró operación TRAMITE en la carpeta. No se aplicará sobre antecedente." };
     }
 
-    // 3. Idempotencia: verificar si ya está vinculado
-    const { data: existingLink } = await supabase
+    // 3. Idempotencia: verificar si ya está vinculado (usar admin)
+    const { data: existingLink } = await supabaseAdmin
         .from("participantes_operacion")
         .select("id")
         .eq("operacion_id", operacion.id)
@@ -253,6 +281,7 @@ async function handleAgregarPersona(
         .maybeSingle();
 
     if (existingLink) {
+        console.log(`[ET5] AGREGAR_PERSONA: ya vinculado, operacion_id=${operacion.id}, dni=${dni}`);
         return {
             success: true,
             applied_changes: {
@@ -265,8 +294,9 @@ async function handleAgregarPersona(
         };
     }
 
-    // 4. Vincular participante
-    const { data: linkData, error: linkErr } = await supabase
+    // 4. Vincular participante (usar admin para bypasear RLS)
+    console.log(`[ET5] AGREGAR_PERSONA: INSERTANDO en operacion_id=${operacion.id} (TRAMITE), dni=${dni}, rol=${rol}`);
+    const { data: linkData, error: linkErr } = await supabaseAdmin
         .from("participantes_operacion")
         .insert({ operacion_id: operacion.id, persona_id: dni, rol })
         .select("id")
@@ -346,7 +376,8 @@ async function handleCompletarDatos(
         const updateData: Record<string, any> = {};
         updateData[dbColumn] = dbColumn === "monto_operacion" ? parseFloat(valor) : valor;
 
-        const { error } = await supabase
+        console.log(`[ET5] COMPLETAR_DATOS: actualizando operacion_id=${operacion.id} (TRAMITE), ${dbColumn}=${updateData[dbColumn]}`);
+        const { error } = await supabaseAdmin
             .from("operaciones")
             .update(updateData)
             .eq("id", operacion.id);
