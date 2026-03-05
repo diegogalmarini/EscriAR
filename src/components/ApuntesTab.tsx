@@ -757,12 +757,16 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
 function renderPayload(payload: any): React.ReactNode {
     if (!payload) return null;
 
-    // v2: AGREGAR_PERSONA con datos estructurados
-    if (payload.nombre && payload.rol) {
+    // v3: AGREGAR_PERSONA con nombre + apellido separados
+    // v2 fallback: payload.nombre era nombre completo
+    if ((payload.nombre || payload.apellido) && payload.rol) {
+        const displayName = payload.apellido
+            ? `${payload.nombre || ""} ${payload.apellido}`.trim()
+            : payload.nombre;
         return (
             <div className="space-y-0.5">
                 <p>
-                    <span className="font-medium">{payload.nombre}</span>
+                    <span className="font-medium">{displayName}</span>
                     {payload.dni && <span className="text-muted-foreground"> (DNI {payload.dni})</span>}
                     {" \u2192 "}
                     <span className="font-medium text-blue-600">{payload.rol}</span>

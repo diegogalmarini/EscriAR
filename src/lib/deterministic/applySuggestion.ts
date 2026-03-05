@@ -113,9 +113,14 @@ async function handleAgregarPersona(
     payload: any,
     ctx: ApplyContext
 ): Promise<ApplyResult> {
-    // v2: payload.nombre, payload.dni, payload.rol (del schema estructurado)
-    // v1 fallback: payload.valor, payload.campo, parseo de descripcion/evidencia
-    const nombre = payload.nombre || payload.valor || null;
+    // v3: payload.nombre (pila), payload.apellido, payload.dni, payload.rol
+    // v2 fallback: payload.nombre era nombre completo
+    const apellido = payload.apellido || null;
+    const nombrePila = payload.nombre || payload.valor || null;
+    // Formato DB: "APELLIDO, Nombre" si tenemos ambos, sino nombre completo
+    const nombre = apellido && nombrePila
+        ? `${apellido.toUpperCase()}, ${nombrePila}`
+        : nombrePila;
     const rol = payload.rol || "PARTE";
 
     // DNI: primero del payload estructurado, luego parsear de evidencia/descripcion
