@@ -1,16 +1,15 @@
 "use server";
 
-import { createClient } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildTemplateContext } from "@/lib/templates/buildTemplateContext";
-
-// @ts-ignore — no types for docxtemplater / pizzip / angular-expressions
-import Docxtemplater from "docxtemplater";
-// @ts-ignore
-import PizZip from "pizzip";
-// @ts-ignore
-import expressionParser from "docxtemplater/expressions.js";
-import mammoth from "mammoth";
+import {
+    getActiveTemplate,
+    downloadTemplate,
+    renderDocx,
+    generateHtmlPreview,
+    uploadDocxToStorage,
+    createSignedUrl,
+} from "@/lib/templates/docxRenderer";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -27,130 +26,6 @@ export interface RenderResult {
     /** Context JSON que se usó (para debug) */
     context?: Record<string, unknown>;
     error?: string;
-}
-
-// ---------------------------------------------------------------------------
-// getActiveTemplate — busca el template activo para un act_type
-// ---------------------------------------------------------------------------
-
-async function getActiveTemplate(actType: string) {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from("modelos_actos")
-        .select("*")
-        .eq("act_type", actType)
-        .eq("is_active", true)
-        .order("version", { ascending: false })
-        .limit(1)
-        .single();
-
-    if (error || !data) {
-        throw new Error(`No hay template activo para act_type="${actType}": ${error?.message}`);
-    }
-    return data;
-}
-
-// ---------------------------------------------------------------------------
-// downloadTemplate — baja el .docx de storage como Buffer
-// ---------------------------------------------------------------------------
-
-async function downloadTemplate(docxPath: string): Promise<Buffer> {
-    const { data, error } = await supabaseAdmin.storage
-        .from("escrituras")
-        .download(docxPath);
-
-    if (error || !data) {
-        throw new Error(`No se pudo descargar template "${docxPath}": ${error?.message}`);
-    }
-
-    return Buffer.from(await data.arrayBuffer());
-}
-
-// ---------------------------------------------------------------------------
-// renderDocx — renderiza DOCX con docxtemplater (JS, sin Python)
-// ---------------------------------------------------------------------------
-
-function renderDocx(templateBuffer: Buffer, context: Record<string, unknown>): Buffer {
-    const zip = new PizZip(templateBuffer);
-
-    const doc = new Docxtemplater(zip, {
-        paragraphLoop: true,
-        linebreaks: true,
-        delimiters: { start: "{{", end: "}}" },
-        parser: expressionParser,
-        // No lanzar error por tags sin datos — dejar string vacío
-        nullGetter() {
-            return "";
-        },
-    });
-
-    doc.render(context);
-
-    const rawBuffer = Buffer.from(
-        doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" })
-    );
-
-    // Strip font colors from the rendered DOCX
-    return stripColorsFromDocx(rawBuffer);
-}
-
-// ---------------------------------------------------------------------------
-// stripColorsFromDocx — remove <w:color> and <w:highlight> from document XML
-// so the generated DOCX has uniform black text instead of coloured placeholders
-// ---------------------------------------------------------------------------
-
-function stripColorsFromDocx(docxBuffer: Buffer): Buffer {
-    const zip = new PizZip(docxBuffer);
-
-    // Process all document XML parts (main doc + headers/footers)
-    const xmlParts = [
-        "word/document.xml",
-        "word/header1.xml", "word/header2.xml", "word/header3.xml",
-        "word/footer1.xml", "word/footer2.xml", "word/footer3.xml",
-    ];
-
-    for (const partName of xmlParts) {
-        const file = zip.file(partName);
-        if (!file) continue;
-        let xml = file.asText();
-
-        // Remove <w:color w:val="XXXXXX"/> elements (any colour)
-        xml = xml.replace(/<w:color\s+[^/]*\/>/gi, "");
-        // Remove <w:color ...>...</w:color> (shouldn't exist, but just in case)
-        xml = xml.replace(/<w:color\b[^>]*>[\s\S]*?<\/w:color>/gi, "");
-
-        // Remove <w:highlight w:val="..."/> (coloured background)
-        xml = xml.replace(/<w:highlight\s+[^/]*\/>/gi, "");
-
-        // Remove <w:shd> with colour on run-level (character shading)
-        // Keep paragraph-level shading (<w:pPr><w:shd>) intact
-        xml = xml.replace(/(<w:rPr[^>]*>)((?:(?!<\/w:rPr>)[\s\S])*?)(<w:shd\s+[^/]*\/>)/gi, "$1$2");
-
-        zip.file(partName, xml);
-    }
-
-    return Buffer.from(zip.generate({ type: "nodebuffer", compression: "DEFLATE" }));
-}
-
-// ---------------------------------------------------------------------------
-// uploadRendered — sube el DOCX generado a storage
-// ---------------------------------------------------------------------------
-
-async function uploadRendered(docxBuffer: Buffer, carpetaId: string, actType: string): Promise<string> {
-    const storagePath = `carpetas/${carpetaId}/escritura_${actType}_${Date.now()}.docx`;
-
-    const { error } = await supabaseAdmin.storage
-        .from("escrituras")
-        .upload(storagePath, docxBuffer, {
-            contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            upsert: true,
-        });
-
-    if (error) {
-        throw new Error(`Error subiendo DOCX a storage: ${error.message}`);
-    }
-
-    return storagePath;
 }
 
 // ---------------------------------------------------------------------------
@@ -195,34 +70,18 @@ export async function renderTemplate(
         const renderedBuffer = renderDocx(templateBuffer, context);
 
         // 6. Convertir a HTML para preview en el navegador
-        let htmlPreview = "";
-        try {
-            const mammothResult = await mammoth.convertToHtml(
-                { buffer: renderedBuffer },
-                {
-                    styleMap: [
-                        "b => strong",
-                        "i => em",
-                        "u => u",
-                    ],
-                }
-            );
-            htmlPreview = mammothResult.value;
-        } catch (e) {
-            console.warn("[renderTemplate] mammoth preview failed:", e);
-        }
+        const htmlPreview = await generateHtmlPreview(renderedBuffer);
 
         // 7. Subir a storage
-        const storagePath = await uploadRendered(renderedBuffer, carpetaId, actType);
+        const storagePath = `carpetas/${carpetaId}/escritura_${actType}_${Date.now()}.docx`;
+        await uploadDocxToStorage(renderedBuffer, storagePath);
 
         // 8. Generar URL firmada (1 hora)
-        const { data: signedUrl } = await supabaseAdmin.storage
-            .from("escrituras")
-            .createSignedUrl(storagePath, 3600);
+        const downloadUrl = await createSignedUrl(storagePath);
 
         return {
             success: true,
-            downloadUrl: signedUrl?.signedUrl || undefined,
+            downloadUrl: downloadUrl || undefined,
             storagePath,
             htmlPreview,
             context,
@@ -296,25 +155,12 @@ export async function loadRenderedDocument(
         }
 
         const docxBuffer = Buffer.from(await blob.arrayBuffer());
-
-        let htmlPreview = "";
-        try {
-            const mammothResult = await mammoth.convertToHtml(
-                { buffer: docxBuffer },
-                { styleMap: ["b => strong", "i => em", "u => u"] }
-            );
-            htmlPreview = mammothResult.value;
-        } catch (e) {
-            console.warn("[loadRenderedDocument] mammoth failed:", e);
-        }
-
-        const { data: signedUrl } = await supabaseAdmin.storage
-            .from("escrituras")
-            .createSignedUrl(storagePath, 3600);
+        const htmlPreview = await generateHtmlPreview(docxBuffer);
+        const downloadUrl = await createSignedUrl(storagePath);
 
         return {
             success: true,
-            downloadUrl: signedUrl?.signedUrl || undefined,
+            downloadUrl: downloadUrl || undefined,
             storagePath,
             htmlPreview,
         };

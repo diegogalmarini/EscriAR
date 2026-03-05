@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/select";
 import {
     FileSignature, ClipboardCheck, DollarSign, Users,
-    Search, UserPlus, Send, Briefcase, ArrowRight, X, Upload, Loader2,
-    FileText, Download, Pencil
+    Search, UserPlus, Send, Briefcase, X, Upload, Loader2,
+    FileText, Download
 } from "lucide-react";
 import {
     Dialog,
@@ -25,7 +25,6 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";  // ADDED
-import DeedRichEditor from "./DeedRichEditor";
 import { MinutaGenerator } from "./MinutaGenerator";
 import { AMLCompliance } from "./AMLCompliance";
 import { InscriptionTracker } from "./InscriptionTracker";
@@ -35,8 +34,8 @@ import { PersonSearch } from "./PersonSearch";
 import { CertificadosPanel } from "./CertificadosPanel";
 import { supabase } from "@/lib/supabaseClient";
 import { linkPersonToOperation, removePersonFromOperation } from "@/app/actions/carpeta";
-import { renderTemplate, loadRenderedDocument } from "@/app/actions/template-render";
 import { toast } from "sonner";
+import ActuacionesPanel from "./ActuacionesPanel";
 
 import { EstudioDominioPanel } from "./EstudioDominioPanel";
 import { EditarClienteDialog } from "./EditarClienteDialog";
@@ -164,30 +163,6 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta, onTipoA
     )?.value || existingTipoActo;
     const [tipoActo, setTipoActo] = useState<string>(matchedValue);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
-    const [isRendering, setIsRendering] = useState(false);
-    const [renderResult, setRenderResult] = useState<{ url: string; path: string; html: string } | null>(null);
-    const [showEditor, setShowEditor] = useState(false);
-    const [isLoadingPrevious, setIsLoadingPrevious] = useState(false);
-
-    // Load previously-rendered document from Storage on mount
-    useEffect(() => {
-        if (!carpeta?.id || !tipoActo || renderResult) return;
-        let cancelled = false;
-        setIsLoadingPrevious(true);
-        loadRenderedDocument(carpeta.id, tipoActo).then((res) => {
-            if (cancelled) return;
-            if (res.success && res.downloadUrl) {
-                setRenderResult({
-                    url: res.downloadUrl,
-                    path: res.storagePath || "",
-                    html: res.htmlPreview || "",
-                });
-            }
-        }).catch(() => {}).finally(() => {
-            if (!cancelled) setIsLoadingPrevious(false);
-        });
-        return () => { cancelled = true; };
-    }, [carpeta?.id, tipoActo]);
 
     // Estado para gestionar los apoderados mapeados por DNI del adquirente (persona jurídica)
     // Guardamos la persona y un objeto con los datos del poder
@@ -357,7 +332,6 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta, onTipoA
         }
     };
 
-    const canGenerate = !!tipoActo && !!activeDeedId && adquirentes.length > 0;
 
     return (
         <>
@@ -599,107 +573,13 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta, onTipoA
                 </div>
 
 
-                {/* ── Generación desde Template ── */}
-                <div className="border border-primary/20 rounded-lg bg-primary/5 p-6 space-y-4">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <FileText className="h-8 w-8 text-primary shrink-0" />
-                            <div>
-                                <h3 className="text-base font-semibold text-foreground">Generar Escritura desde Modelo</h3>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                    {!tipoActo && "Seleccione un tipo de acto"}
-                                    {tipoActo && adquirentes.length === 0 && "Agregue al menos un participante"}
-                                    {tipoActo && adquirentes.length > 0 && !renderResult && !isLoadingPrevious && (
-                                        `Modelo: ${modelosEscritura.find(m => m.value === tipoActo)?.label || tipoActo}`
-                                    )}
-                                    {isLoadingPrevious && !renderResult && "Cargando documento anterior…"}
-                                    {renderResult && "✓ Documento generado — revise abajo"}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex gap-2">
-                            <Button
-                                size="lg"
-                                disabled={!canGenerate || isRendering}
-                                onClick={async () => {
-                                    if (!carpeta?.id || !tipoActo) return;
-                                    setIsRendering(true);
-                                    setRenderResult(null);
-                                    try {
-                                        const result = await renderTemplate(carpeta.id, tipoActo);
-                                        if (result.success && result.downloadUrl) {
-                                            setRenderResult({
-                                                url: result.downloadUrl,
-                                                path: result.storagePath || "",
-                                                html: result.htmlPreview || "",
-                                            });
-                                            toast.success("Escritura generada correctamente");
-                                        } else {
-                                            toast.error(result.error || "Error al generar la escritura");
-                                        }
-                                    } catch (err: any) {
-                                        toast.error(err.message || "Error inesperado");
-                                    } finally {
-                                        setIsRendering(false);
-                                    }
-                                }}
-                            >
-                                {isRendering ? (
-                                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando...</>
-                                ) : (
-                                    <><FileText className="h-4 w-4 mr-2" /> {renderResult ? "Regenerar" : "Generar desde Modelo"}<ArrowRight className="h-4 w-4 ml-2" /></>
-                                )}
-                            </Button>
-                            {renderResult && (
-                                <Button size="lg" variant="outline" onClick={() => setShowEditor(true)}>
-                                    <Pencil className="h-4 w-4 mr-2" /> Editar
-                                </Button>
-                            )}
-                            {renderResult && (
-                                <Button size="lg" variant="outline" asChild>
-                                    <a href={renderResult.url} download>
-                                        <Download className="h-4 w-4 mr-2" /> Descargar
-                                    </a>
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* ── Loading previous render ── */}
-                    {isLoadingPrevious && !renderResult && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                            Buscando documento generado anteriormente…
-                        </div>
-                    )}
-
-                    {/* ── Preview inline del documento generado ── */}
-                    {renderResult?.html && (
-                        <div className="border border-border rounded-lg bg-white">
-                            <div className="flex items-center px-4 py-2 bg-muted/50 border-b border-border rounded-t-lg">
-                                <span className="text-xs font-medium text-muted-foreground">
-                                    Vista previa del documento
-                                </span>
-                            </div>
-                            <div
-                                className="p-6 max-h-[500px] overflow-y-auto prose prose-sm max-w-none
-                                    prose-headings:mb-2 prose-headings:mt-4 prose-p:mb-1 prose-p:mt-0
-                                    text-[13px] leading-relaxed"
-                                dangerouslySetInnerHTML={{ __html: renderResult.html }}
-                            />
-                        </div>
-                    )}
-                </div>
-
-                {/* ── Editor fullscreen ── */}
-                {showEditor && renderResult?.html && (
-                    <DeedRichEditor
-                        html={renderResult.html}
-                        title={modelosEscritura.find(m => m.value === tipoActo)?.label || tipoActo}
-                        onSave={(html) => setRenderResult(prev => prev ? { ...prev, html } : prev)}
-                        onClose={() => setShowEditor(false)}
-                    />
-                )}
+                {/* ── Actuaciones (Actos Privados + Protocolares) ── */}
+                <ActuacionesPanel
+                    carpetaId={carpeta.id}
+                    orgId={carpeta.org_id}
+                    operacionId={operacionId || null}
+                    activeModelTypes={modelosEscritura.map(m => m.value)}
+                />
             </div>
 
             {/* Modal de Ficha de Poder */}

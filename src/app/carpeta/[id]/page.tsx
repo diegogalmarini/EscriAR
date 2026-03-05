@@ -32,7 +32,8 @@ export default async function CarpetaDetailPage({ params }: { params: Promise<{ 
                         persona:personas (*)
                     )
                 )
-            )
+            ),
+            actuaciones (*)
         `)
         .eq("id", id)
         .single();

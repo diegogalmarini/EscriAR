@@ -105,6 +105,16 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                 },
                 debouncedRefresh
             )
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'actuaciones',
+                    filter: `carpeta_id=eq.${carpeta.id}`
+                },
+                debouncedRefresh
+            )
             .subscribe();
 
         return () => {
