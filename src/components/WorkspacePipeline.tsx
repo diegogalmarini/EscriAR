@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import {
     FileSignature, ClipboardCheck, DollarSign, Users,
     Search, UserPlus, Send, Briefcase, X, Upload, Loader2,
-    FileText, Download
+    FileText, Download, AlertTriangle, ShieldAlert
 } from "lucide-react";
 import {
     Dialog,
@@ -215,6 +215,86 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
     const inmuebleLabel = inmueble
         ? [inmueble.partido_id, inmueble.nro_partida ? `Partida ${inmueble.nro_partida}` : null].filter(Boolean).join(" · ")
         : null;
+
+    // ── Cross-check titularidad: vendedor TRAMITE vs titular INGESTA ──
+    const titularidadAlerts = useMemo(() => {
+        const alerts: { tipo: "vendedor_no_titular" | "titular_falta"; mensaje: string; detalle: string }[] = [];
+
+        // Extraer titulares del antecedente (INGESTA)
+        // En el antecedente, el COMPRADOR/ADQUIRENTE es el actual propietario
+        const ingestaEsc = (carpeta.escrituras || []).find((e: any) => e.source === "INGESTA");
+        if (!ingestaEsc) return alerts;
+
+        const ingestaParticipants = ingestaEsc.operaciones?.flatMap(
+            (op: any) => op.participantes_operacion || []
+        ) || [];
+
+        const ROLES_TITULAR_ANTECEDENTE = ["COMPRADOR", "ADQUIRENTE", "DONATARIO", "CESIONARIO", "FIDEICOMISARIO"];
+        const titularesAntecedente = ingestaParticipants
+            .filter((p: any) => ROLES_TITULAR_ANTECEDENTE.includes(p.rol?.toUpperCase() || ""))
+            .map((p: any) => {
+                const persona = p.persona || p.personas;
+                return persona ? { dni: persona.dni, nombre: persona.nombre_completo } : null;
+            })
+            .filter(Boolean);
+
+        if (titularesAntecedente.length === 0) return alerts;
+
+        // Extraer apellidos de titulares antecedente para comparación flexible
+        const apellidosTitular = titularesAntecedente.map((t: any) => {
+            const name = (t.nombre || "").toUpperCase();
+            return name.includes(",") ? name.split(",")[0].trim() : name.split(/\s+/).pop()?.trim() || "";
+        }).filter(Boolean);
+
+        // Verificar cada vendedor del TRAMITE
+        for (const tit of titulares) {
+            const persona = tit.persona || tit.personas;
+            if (!persona) continue;
+            const vendedorNombre = (persona.nombre_completo || "").toUpperCase();
+            const vendedorApellido = vendedorNombre.includes(",")
+                ? vendedorNombre.split(",")[0].trim()
+                : vendedorNombre.split(/\s+/).pop()?.trim() || "";
+
+            // ¿El vendedor coincide con algún titular del antecedente?
+            const coincide = titularesAntecedente.some((t: any) =>
+                t.dni === persona.dni ||
+                apellidosTitular.some((ap: string) => ap === vendedorApellido)
+            );
+
+            if (!coincide && vendedorApellido) {
+                alerts.push({
+                    tipo: "vendedor_no_titular",
+                    mensaje: `${persona.nombre_completo} figura como vendedor pero NO es titular según el antecedente`,
+                    detalle: `Titulares en antecedente: ${titularesAntecedente.map((t: any) => t.nombre).join(", ")}`,
+                });
+            }
+        }
+
+        // ¿Hay titular del antecedente que no aparece como vendedor en TRAMITE?
+        if (titulares.length > 0) {
+            for (const tit of titularesAntecedente) {
+                const titApellido = (tit.nombre || "").toUpperCase().includes(",")
+                    ? (tit.nombre || "").toUpperCase().split(",")[0].trim()
+                    : (tit.nombre || "").toUpperCase().split(/\s+/).pop()?.trim() || "";
+
+                const figuraComo = titulares.some((v: any) => {
+                    const p = v.persona || v.personas;
+                    if (!p) return false;
+                    return p.dni === tit.dni || (p.nombre_completo || "").toUpperCase().includes(titApellido);
+                });
+
+                if (!figuraComo && titApellido) {
+                    alerts.push({
+                        tipo: "titular_falta",
+                        mensaje: `${tit.nombre} es titular según el antecedente pero no aparece como vendedor`,
+                        detalle: "Verifique si el antecedente es correcto o si falta agregar al vendedor.",
+                    });
+                }
+            }
+        }
+
+        return alerts;
+    }, [carpeta.escrituras, titulares]);
 
     const removeAdquirente = async (dni: string) => {
         // Optimistic remove
@@ -527,6 +607,30 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                         />
                     </div>
                 </div>
+
+                {/* ── Alerta de titularidad (cross-check INGESTA vs TRAMITE) ── */}
+                {titularidadAlerts.length > 0 && (
+                    <div className="border border-amber-300 bg-amber-50 rounded-lg p-4 space-y-2">
+                        <div className="flex items-center gap-2">
+                            <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0" />
+                            <h4 className="text-sm font-semibold text-amber-800">
+                                Discrepancia de titularidad
+                            </h4>
+                        </div>
+                        {titularidadAlerts.map((alert, i) => (
+                            <div key={i} className="pl-6 space-y-0.5">
+                                <p className="text-sm text-amber-800 flex items-start gap-1.5">
+                                    <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                                    {alert.mensaje}
+                                </p>
+                                <p className="text-xs text-amber-600 pl-5">{alert.detalle}</p>
+                            </div>
+                        ))}
+                        <p className="text-[10px] text-amber-500 pl-6 pt-1">
+                            Verifique que el documento del antecedente sea correcto o que los participantes estén bien asignados.
+                        </p>
+                    </div>
+                )}
 
                 {/* ── Actuaciones (Actos Privados + Protocolares) ── */}
                 <ActuacionesPanel

@@ -225,6 +225,106 @@ async function findPersonInAntecedente(carpetaId: string, nombre: string): Promi
     return null;
 }
 
+/**
+ * Cross-check: cuando se agrega un VENDEDOR en TRAMITE, verificar si coincide
+ * con el titular (COMPRADOR/ADQUIRENTE) del antecedente INGESTA.
+ * Si no coincide, crea una sugerencia VERIFICAR_DATO automática.
+ */
+async function crossCheckTitularidad(
+    carpetaId: string,
+    orgId: string,
+    vendedorDni: string,
+    vendedorNombre: string
+): Promise<void> {
+    try {
+        // Buscar titulares en INGESTA (el COMPRADOR del antecedente = actual propietario)
+        const { data: ingestaEscs } = await supabaseAdmin
+            .from("escrituras")
+            .select(`
+                operaciones (
+                    participantes_operacion (
+                        rol,
+                        persona_id,
+                        personas:persona_id ( dni, nombre_completo )
+                    )
+                )
+            `)
+            .eq("carpeta_id", carpetaId)
+            .eq("source", "INGESTA");
+
+        if (!ingestaEscs || ingestaEscs.length === 0) return;
+
+        const ROLES_TITULAR = ["COMPRADOR", "ADQUIRENTE", "DONATARIO", "CESIONARIO"];
+        const titulares: { dni: string; nombre: string }[] = [];
+
+        for (const esc of ingestaEscs) {
+            for (const op of (esc as any).operaciones || []) {
+                for (const po of op.participantes_operacion || []) {
+                    if (ROLES_TITULAR.includes(po.rol?.toUpperCase() || "") && po.personas?.dni) {
+                        titulares.push({ dni: po.personas.dni, nombre: po.personas.nombre_completo || "" });
+                    }
+                }
+            }
+        }
+
+        if (titulares.length === 0) return;
+
+        // ¿El vendedor coincide con algún titular?
+        const vendedorApellido = vendedorNombre.toUpperCase().includes(",")
+            ? vendedorNombre.toUpperCase().split(",")[0].trim()
+            : (vendedorNombre.toUpperCase().split(/\s+/).pop() || "");
+
+        const coincide = titulares.some(t =>
+            t.dni === vendedorDni ||
+            t.nombre.toUpperCase().includes(vendedorApellido) ||
+            vendedorApellido.length > 2 && vendedorNombre.toUpperCase().includes(
+                t.nombre.toUpperCase().includes(",") ? t.nombre.toUpperCase().split(",")[0].trim() : ""
+            )
+        );
+
+        if (coincide) {
+            console.log(`[ET5] Cross-check: vendedor "${vendedorNombre}" coincide con titular del antecedente ✅`);
+            return;
+        }
+
+        // No coincide → crear sugerencia VERIFICAR_DATO
+        const titularesStr = titulares.map(t => t.nombre).join(", ");
+        console.log(`[ET5] ⚠️ Cross-check: vendedor "${vendedorNombre}" NO coincide con titulares [${titularesStr}]`);
+
+        // Verificar que no exista ya una sugerencia similar
+        const { data: existingSug } = await supabaseAdmin
+            .from("sugerencias")
+            .select("id")
+            .eq("carpeta_id", carpetaId)
+            .eq("tipo", "VERIFICAR_DATO")
+            .ilike("payload->>descripcion", `%titularidad%${vendedorApellido}%`)
+            .limit(1);
+
+        if (existingSug && existingSug.length > 0) return; // Ya existe
+
+        await supabaseAdmin.from("sugerencias").insert({
+            org_id: orgId,
+            carpeta_id: carpetaId,
+            tipo: "VERIFICAR_DATO",
+            estado: "PROPOSED",
+            confianza: 0.95,
+            payload: {
+                descripcion: `Discrepancia de titularidad: ${vendedorNombre} figura como vendedor pero el titular según el antecedente es ${titularesStr}. Verifique que el antecedente sea correcto o que el vendedor sea quien corresponde.`,
+                campo: "titularidad",
+                vendedor: vendedorNombre,
+                vendedor_dni: vendedorDni,
+                titulares_antecedente: titulares,
+            },
+            evidencia_texto: `Vendedor: ${vendedorNombre} (DNI ${vendedorDni}). Titulares antecedente: ${titularesStr}.`,
+        });
+
+        console.log(`[ET5] ✅ Sugerencia VERIFICAR_DATO creada para discrepancia de titularidad`);
+    } catch (err: any) {
+        console.error(`[ET5] Error en crossCheckTitularidad:`, err.message);
+        // No bloquear la operación principal por un error de cross-check
+    }
+}
+
 // ─── AGREGAR_PERSONA ──────────────────────────────────────
 async function handleAgregarPersona(
     supabase: SupabaseClient,
@@ -419,6 +519,13 @@ async function handleAgregarPersona(
     }
 
     console.log(`[ET5] AGREGAR_PERSONA: vinculado OK id=${linkData.id}`);
+
+    // 5. Cross-check titularidad: si es VENDEDOR, verificar contra antecedente
+    const ROLES_VENDEDOR = ["VENDEDOR", "TRANSMITENTE", "DONANTE", "CEDENTE"];
+    if (ROLES_VENDEDOR.includes(rol.toUpperCase())) {
+        await crossCheckTitularidad(ctx.carpetaId, ctx.orgId, dni, nombre || existing?.nombre_completo || "");
+    }
+
     return {
         success: true,
         applied_changes: {
