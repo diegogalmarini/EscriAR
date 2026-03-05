@@ -207,7 +207,7 @@ NotiAR/
 ```
 carpetas (1)
     │
-    ├── escrituras (N)           ← PDFs subidos a una carpeta
+    ├── escrituras (N)           ← source: INGESTA (antecedente PDF) o TRAMITE (operación activa)
     │       │
     │       ├── operaciones (N)  ← actos jurídicos en cada escritura
     │       │       │
@@ -225,7 +225,7 @@ carpetas (1)
 | Tabla | Columnas Clave | Notas |
 |---|---|---|
 | `carpetas` | `id`, `caratula`, `estado` (BORRADOR/EN_CURSO/FIRMADA/INSCRIPTA), `ingesta_estado`, `ingesta_paso`, `resumen_ia` | Carpeta = caso notarial. Es el contenedor principal. |
-| `escrituras` | `id`, `carpeta_id` FK, `nro_protocolo`, `fecha_escritura`, `registro`, `notario_interviniente`, `inmueble_princ_id` FK, `pdf_url`, `analysis_metadata` JSONB, `contenido_borrador` TEXT, `fecha_firma_real`, `fecha_vencimiento_inscripcion`, `estado_inscripcion` | Cada PDF subido genera una escritura. `analysis_metadata` contiene el resultado crudo de la AI. |
+| `escrituras` | `id`, `carpeta_id` FK, `source` (INGESTA/TRAMITE), `nro_protocolo`, `fecha_escritura`, `registro`, `notario_interviniente`, `inmueble_princ_id` FK, `pdf_url`, `analysis_metadata` JSONB, `contenido_borrador` TEXT, `fecha_firma_real`, `fecha_vencimiento_inscripcion`, `estado_inscripcion` | Cada PDF subido crea escritura INGESTA (antecedente). La operación activa vive en escritura TRAMITE. `source` separa fuentes de verdad. |
 | `operaciones` | `id`, `escritura_id` FK, `tipo_acto`, `monto_operacion`, `codigo` (CESBA), `precio_construccion`, `precio_cesion`, `moneda_cesion`, campos fideicomiso/cesión | Un acto jurídico dentro de una escritura (compraventa, hipoteca, etc.). |
 | `participantes_operacion` | `id`, `operacion_id` FK, `persona_id` FK, `rol`, `porcentaje`, `datos_representacion` JSONB | Vincula persona ↔ operación. `datos_representacion`: `{representa_a, caracter, poder_detalle}`. UNIQUE(operacion_id, persona_id). |
 | `personas` | `id` UUID, `dni` (string, PK lógica para FISICA), `cuit`, `nombre_completo`, `tipo_persona` (FISICA/JURIDICA/FIDEICOMISO), `nacionalidad`, `fecha_nacimiento`, `estado_civil_detalle`, `domicilio_real` JSONB, `nombres_padres`, `conyuge_nombre`, `conyuge_dni`, `direccion_completa` | Registro único por DNI (físicas) o CUIT (jurídicas). |
@@ -241,7 +241,7 @@ carpetas (1)
 
 | Función | Qué hace |
 |---|---|
-| `search_carpetas(search_term, user_uuid)` | Busca carpetas con full-text. Devuelve estructura plana con `parties[]` JSONB y `escrituras[]` JSONB. Usada por `CarpetasTable`. |
+| `search_carpetas(search_term, p_limit, p_offset)` | Busca carpetas con full-text. Devuelve estructura plana con `parties[]` JSONB y `escrituras[]` JSONB. **Parties y escrituras SOLO de source=TRAMITE**. Búsqueda sí incluye INGESTA. Usada por `CarpetasTable`. |
 | `match_knowledge(query_embedding, match_threshold, match_count, filter_category)` | Cosine similarity search sobre `knowledge_base`. Devuelve los N chunks más similares. |
 
 ### Constraints y Dedup
@@ -744,6 +744,9 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 | 039 | Fix recursión infinita RLS con SECURITY DEFINER | ✅ Ejecutada |
 | 040 | Tablas apuntes + sugerencias, RLS por org, triggers updated_at | ✅ Ejecutada |
 | 041 | Extender ingestion_jobs: job_type, payload, entity_ref, org_id para NOTE_ANALYSIS | ⚠️ **PENDIENTE** |
+| 044 | Columna `source` en escrituras (INGESTA/TRAMITE) + crear escrituras TRAMITE | ✅ Ejecutada |
+| 045 | search_carpetas: parties y escrituras SOLO de TRAMITE | ✅ Ejecutada |
+| 046 | Mover participantes huérfanos de INGESTA a TRAMITE (cleanup) | ✅ Ejecutada |
 
 **Nota**: las migraciones se ejecutan MANUAL en Supabase SQL Editor. No hay sistema de migración automático.
 
@@ -1119,6 +1122,44 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 - `src/components/ApuntesTab.tsx` — spinner, error states, disabled buttons
 - `RUN_MIGRATIONS.md` — actualizado con migración 042
 
+### 2026-03-05 (Claude Opus) — Separación INGESTA/TRAMITE: Fuente de verdad
+
+#### Decisión arquitectónica: columna `source` en `escrituras`
+- **Problema**: Mesa de Trabajo mostraba participantes del antecedente (PDF original) mezclados con los del trámite activo. `applySuggestion` insertaba personas en la escritura INGESTA en vez de TRAMITE. `CarpetasTable` y `search_carpetas` mostraban datos del antecedente como si fueran del trámite.
+- **Solución**: Nueva columna `source VARCHAR(20)` con CHECK (INGESTA/TRAMITE). Cada carpeta tiene DOS escrituras: INGESTA (datos extraídos del PDF) y TRAMITE (operación activa editable).
+- **Regla de oro**: Mesa de Trabajo y sugerencias SIEMPRE operan sobre TRAMITE. Antecedentes SIEMPRE muestra INGESTA. Nunca se mezclan.
+
+#### Migración 044: Columna `source` + creación de TRAMITE
+- Agrega `source` a `escrituras` con CHECK constraint
+- Marca escrituras existentes con pdf_url/analysis_metadata como INGESTA
+- Crea escritura TRAMITE + operación para cada carpeta que no tenga una
+- Copia tipo_acto, código y monto de INGESTA a TRAMITE
+
+#### Migración 045: search_carpetas filtra por TRAMITE
+- RPC `search_carpetas` muestra parties y escrituras SOLO de `source='TRAMITE'`
+- La búsqueda sigue buscando en TODAS las escrituras (antecedente es searchable)
+
+#### Migración 046: Mover participantes huérfanos
+- Mueve participantes manuales (no IA_OCR) de operaciones INGESTA a TRAMITE
+- ON CONFLICT DO NOTHING para idempotencia
+- Limpia INGESTA después de copiar
+
+#### applySuggestion: supabaseAdmin + getTramiteOperacion
+- `getFirstOperacion()` reemplazado por `getTramiteOperacion()` que filtra por `source='TRAMITE'`
+- Usa `supabaseAdmin` (bypassa RLS) para TODAS las queries — fix crítico porque escrituras creadas por migración admin no eran visibles al cliente con RLS
+- Auto-crea TRAMITE si no existe (con logging extensivo)
+- Guardrails: verifica `source === 'TRAMITE'` antes de insertar participantes
+
+#### Componentes modificados
+- **FolderWorkspace.tsx**: `activeDeedId` = TRAMITE; Antecedentes recibe solo INGESTA; break-glass modal con checkbox para edición excepcional del antecedente
+- **CarpetaHero.tsx**: carátula, subtipo e inmueble desde TRAMITE; removido badge de código
+- **CarpetasTable.tsx**: `getActo()` y `getCodigo()` buscan TRAMITE primero
+- **WorkspacePipeline.tsx**: removida card "Tipo de Acto" (redundante); badges "Vende / Transmite"
+- **buildTemplateContext.ts**: contexto de template desde TRAMITE
+- **ingest route.ts**: escritura de ingesta marcada `source='INGESTA'`; dedup solo busca INGESTA
+- **carpeta.ts**: `createFolder` crea con `source='TRAMITE'`; guardrail en `linkPersonToOperation`
+- **escritura.ts**: nueva `ensureTramiteEscritura()` server action
+
 ---
 
 ## 18. Pendientes Conocidos
@@ -1158,4 +1199,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-03-04 — Claude Opus — ETAPA 5: Motor determinístico, audit trail, applySuggestion dispatcher
+> **Última actualización**: 2026-03-05 — Claude Opus — Separación INGESTA/TRAMITE, migraciones 044-046, supabaseAdmin en applySuggestion

@@ -534,6 +534,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                     orgId={carpeta.org_id}
                     operacionId={operacionId || null}
                     activeModelTypes={modelosEscritura.map(m => m.value)}
+                    tipoActo={currentEscritura?.operaciones?.[0]?.tipo_acto}
                 />
             </div>
 

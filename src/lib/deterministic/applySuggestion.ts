@@ -17,6 +17,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { SUPPORTED_ACT_TYPES } from "@/app/actions/modelos-types";
+import { categoriaForActType } from "@/app/actions/actuaciones-types";
 
 export interface ApplyContext {
     carpetaId: string;
@@ -386,6 +387,45 @@ async function handleCompletarDatos(
             return { success: false, applied_changes: null, error: `Error actualizando operación: ${error.message}` };
         }
 
+        // Auto-crear actuación cuando se setea tipo_acto
+        let actuacion_creada: string | null = null;
+        if (dbColumn === "tipo_acto" && valor) {
+            const catRaw = categoriaForActType(valor);
+            const categoria = (catRaw === "AMBIGUO" || catRaw === "HIDDEN") ? "PROTOCOLAR" : catRaw;
+            // Verificar que no exista ya una actuación con este act_type
+            const { data: existing } = await supabaseAdmin
+                .from("actuaciones")
+                .select("id")
+                .eq("carpeta_id", ctx.carpetaId)
+                .eq("act_type", valor)
+                .limit(1);
+
+            if (!existing || existing.length === 0) {
+                const { data: newAct, error: actErr } = await supabaseAdmin
+                    .from("actuaciones")
+                    .insert({
+                        org_id: ctx.orgId,
+                        carpeta_id: ctx.carpetaId,
+                        operacion_id: operacion.id,
+                        categoria,
+                        act_type: valor,
+                        status: "DRAFT",
+                        created_by: ctx.userId,
+                    })
+                    .select("id")
+                    .single();
+
+                if (actErr) {
+                    console.error(`[ET5] Error auto-creando actuación: ${actErr.message}`);
+                } else {
+                    actuacion_creada = newAct.id;
+                    console.log(`[ET5] ✅ Auto-creada actuación ${categoria} "${valor}" id=${newAct.id}`);
+                }
+            } else {
+                console.log(`[ET5] Actuación "${valor}" ya existe para carpeta, skip auto-creación`);
+            }
+        }
+
         return {
             success: true,
             applied_changes: {
@@ -394,6 +434,7 @@ async function handleCompletarDatos(
                 campo: dbColumn,
                 valor_nuevo: updateData[dbColumn],
                 valor_anterior: (operacion as any)[dbColumn],
+                ...(actuacion_creada ? { actuacion_creada, actuacion_categoria: categoriaForActType(valor) } : {}),
             },
         };
     }
