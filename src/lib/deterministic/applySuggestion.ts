@@ -115,8 +115,23 @@ async function handleAgregarPersona(
 ): Promise<ApplyResult> {
     // v3: payload.nombre (pila), payload.apellido, payload.dni, payload.rol
     // v2 fallback: payload.nombre era nombre completo
-    const apellido = payload.apellido || null;
-    const nombrePila = payload.nombre || payload.valor || null;
+    let apellido = payload.apellido || null;
+    let nombrePila = payload.nombre || payload.valor || null;
+
+    // Fallback: si no viene apellido separado, intentar extraerlo de descripcion
+    // Formato típico: "Agregar a Jose Carlos Perez Gonzales como vendedor."
+    if (!apellido && nombrePila && payload.descripcion) {
+        const match = payload.descripcion.match(/[Aa]gregar\s+a\s+(.+?)\s+como\s+/i);
+        if (match) {
+            const fullName = match[1].trim();
+            // Si la descripción tiene más palabras que el nombre de pila, la diferencia es el apellido
+            if (fullName.toLowerCase().startsWith(nombrePila.toLowerCase()) && fullName.length > nombrePila.length + 1) {
+                apellido = fullName.substring(nombrePila.length).trim();
+                console.log(`[ET5] AGREGAR_PERSONA: apellido extraído de descripcion: "${apellido}"`);
+            }
+        }
+    }
+
     // Formato DB: "APELLIDO, Nombre" si tenemos ambos, sino nombre completo
     const nombre = apellido && nombrePila
         ? `${apellido.toUpperCase()}, ${nombrePila}`

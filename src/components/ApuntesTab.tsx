@@ -760,9 +760,14 @@ function renderPayload(payload: any): React.ReactNode {
     // v3: AGREGAR_PERSONA con nombre + apellido separados
     // v2 fallback: payload.nombre era nombre completo
     if ((payload.nombre || payload.apellido) && payload.rol) {
-        const displayName = payload.apellido
+        let displayName = payload.apellido
             ? `${payload.nombre || ""} ${payload.apellido}`.trim()
             : payload.nombre;
+        // Fallback: si no hay apellido, intentar extraer nombre completo de descripcion
+        if (!payload.apellido && payload.descripcion) {
+            const match = payload.descripcion.match(/[Aa]gregar\s+a\s+(.+?)\s+como\s+/i);
+            if (match) displayName = match[1].trim();
+        }
         return (
             <div className="space-y-0.5">
                 <p>
