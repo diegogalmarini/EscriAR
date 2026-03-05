@@ -104,6 +104,13 @@ export default function GenerarActuacionDialog({
                                 ))}
                             </SelectContent>
                         </Select>
+                        {selectedActType && categoriaForActType(selectedActType) === "AMBIGUO" && (
+                            <p className="text-xs text-muted-foreground mt-1.5">
+                                Se guardará como: {defaultCategoria === "PRIVADO"
+                                    ? "Privado (no impacta Protocolo)"
+                                    : "Protocolar (impacta Protocolo)"}
+                            </p>
+                        )}
                     </div>
 
                     <div className="flex justify-end gap-2 pt-2">
