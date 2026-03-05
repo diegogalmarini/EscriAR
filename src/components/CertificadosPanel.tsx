@@ -6,6 +6,16 @@ import { Plus, Edit2, Trash2 } from "lucide-react";
 import { Certificado, getCertificadosPorCarpeta, deleteCertificado } from "@/app/actions/certificados";
 import { CertificadoDialog } from "./CertificadoDialog";
 import { Badge } from "@/components/ui/badge";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface CertificadosPanelProps {
     carpetaId: string;
@@ -16,6 +26,7 @@ export function CertificadosPanel({ carpetaId }: CertificadosPanelProps) {
     const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedCert, setSelectedCert] = useState<Certificado | undefined>(undefined);
+    const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
     const loadCertificados = async () => {
         setLoading(true);
@@ -35,11 +46,11 @@ export function CertificadosPanel({ carpetaId }: CertificadosPanelProps) {
         }
     }, [carpetaId]);
 
-    const handleDelete = async (id: string) => {
-        if (confirm("¿Estás seguro que deseas eliminar este certificado?")) {
-            await deleteCertificado(id);
-            await loadCertificados();
-        }
+    const handleDelete = async () => {
+        if (!deleteTarget) return;
+        await deleteCertificado(deleteTarget);
+        setDeleteTarget(null);
+        await loadCertificados();
     };
 
     const getEstadoBadge = (estado: string, vto: string | null) => {
@@ -97,7 +108,7 @@ export function CertificadosPanel({ carpetaId }: CertificadosPanelProps) {
                                 <Button variant="ghost" size="icon" onClick={() => { setSelectedCert(cert); setIsDialogOpen(true); }}>
                                     <Edit2 className="h-4 w-4 text-slate-500" />
                                 </Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleDelete(cert.id)}>
+                                <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(cert.id)}>
                                     <Trash2 className="h-4 w-4 text-red-500" />
                                 </Button>
                             </div>
@@ -113,6 +124,23 @@ export function CertificadosPanel({ carpetaId }: CertificadosPanelProps) {
                 certificado={selectedCert}
                 onSuccess={loadCertificados}
             />
+
+            <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Eliminar certificado</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            ¿Estás seguro que deseas eliminar este certificado? Esta acción no se puede deshacer.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Eliminar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

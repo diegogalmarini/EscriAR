@@ -53,10 +53,22 @@ export function CarpetasTable({ data, onCarpetaDeleted }: CarpetasTableProps) {
         return "";
     };
 
+    const TIPO_ACTO_CODIGO: Record<string, string> = {
+        compraventa: "100-00", venta_anexion: "100-10", hipoteca: "300-00",
+        cancelacion_hipoteca: "311-00", donacion: "200-30", donacion_dineraria: "200-31",
+        donacion_usufructo: "200-32", donacion_reversion_usufructo: "200-32",
+        cesion_derechos: "100-51", distracto_condominio: "100-20",
+    };
+
     const getCodigo = (carpeta: any) => {
         const tramite = carpeta.escrituras?.find((e: any) => e.source === 'TRAMITE') || carpeta.escrituras?.[0];
         const op = tramite?.operaciones?.[0];
-        return op?.codigo || "—";
+        if (op?.codigo) return op.codigo;
+        // Derivar desde tipo_acto si no hay código explícito
+        if (op?.tipo_acto && op.tipo_acto !== 'POR_DEFINIR') {
+            return TIPO_ACTO_CODIGO[op.tipo_acto] || "—";
+        }
+        return "—";
     };
 
     // 2. Get Partes from RPC's flat parties array

@@ -87,9 +87,9 @@ export default function ActuacionesPanel({
     const [actuaciones, setActuaciones] = useState<Actuacion[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Collapsible state
-    const [privadosOpen, setPrivadosOpen] = useState(true);
-    const [protocolaresOpen, setProtocolaresOpen] = useState(true);
+    // Collapsible state — collapsed by default, open when has items
+    const [privadosOpen, setPrivadosOpen] = useState(false);
+    const [protocolaresOpen, setProtocolaresOpen] = useState(false);
 
     // Expanded preview
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -123,6 +123,12 @@ export default function ActuacionesPanel({
     // ── Grouped ──
     const privados = actuaciones.filter((a) => a.categoria === "PRIVADO");
     const protocolares = actuaciones.filter((a) => a.categoria === "PROTOCOLAR");
+
+    // Auto-abrir secciones que tienen contenido
+    useEffect(() => {
+        if (protocolares.length > 0) setProtocolaresOpen(true);
+        if (privados.length > 0) setPrivadosOpen(true);
+    }, [protocolares.length, privados.length]);
 
     // ── Handlers ──
 
