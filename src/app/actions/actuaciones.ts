@@ -189,10 +189,10 @@ export async function deleteActuacion(
     actuacionId: string
 ): Promise<{ success: boolean; error?: string }> {
     try {
-        const supabase = await createClient();
+        await requireOrgMembership();
 
         // Obtener docx_path para limpiar storage
-        const { data: actuacion } = await supabase
+        const { data: actuacion } = await supabaseAdmin
             .from("actuaciones")
             .select("docx_path")
             .eq("id", actuacionId)
@@ -207,7 +207,8 @@ export async function deleteActuacion(
             }
         }
 
-        const { error } = await supabase
+        // Usar admin para bypasear RLS (actuaciones creadas por admin no son visibles al user client)
+        const { error } = await supabaseAdmin
             .from("actuaciones")
             .delete()
             .eq("id", actuacionId);

@@ -169,6 +169,62 @@ function extractDni(text: string): string | null {
     return digits ? digits[1] : null;
 }
 
+/**
+ * Buscar persona en participantes del antecedente (INGESTA) por coincidencia de nombre.
+ * Si el apunte menciona "CIMINELLI" y en el antecedente hay "CIMINELLI, Jorge Gustavo"
+ * con DNI completo, reutilizamos ese DNI en vez de crear persona fantasma.
+ */
+async function findPersonInAntecedente(carpetaId: string, nombre: string): Promise<string | null> {
+    // Extraer apellido para búsqueda flexible
+    const nameUpper = nombre.toUpperCase();
+    const apellidoPart = nombre.includes(",")
+        ? nombre.split(",")[0].trim().toUpperCase()
+        : (nombre.split(/\s+/).pop() || "").toUpperCase();
+
+    if (apellidoPart.length < 3) return null;
+
+    // Buscar participantes en escrituras INGESTA de esta carpeta
+    const { data: ingestaParticipants } = await supabaseAdmin
+        .from("escrituras")
+        .select(`
+            operaciones (
+                participantes_operacion (
+                    persona_id,
+                    personas:persona_id ( dni, nombre_completo )
+                )
+            )
+        `)
+        .eq("carpeta_id", carpetaId)
+        .eq("source", "INGESTA");
+
+    if (!ingestaParticipants) return null;
+
+    // Flatten nested structure
+    const personas: { dni: string; nombre_completo: string }[] = [];
+    for (const esc of ingestaParticipants) {
+        for (const op of (esc as any).operaciones || []) {
+            for (const po of op.participantes_operacion || []) {
+                if (po.personas?.dni && po.personas?.nombre_completo) {
+                    personas.push(po.personas);
+                }
+            }
+        }
+    }
+
+    // Buscar match por apellido
+    const match = personas.find(p => {
+        const pName = p.nombre_completo.toUpperCase();
+        return pName.includes(apellidoPart) || nameUpper.includes(pName.split(",")[0]?.trim() || "___");
+    });
+
+    if (match && !match.dni.startsWith("TEMP_") && !match.dni.startsWith("SIN_DNI")) {
+        console.log(`[ET5] findPersonInAntecedente: match "${nombre}" → "${match.nombre_completo}" (DNI ${match.dni})`);
+        return match.dni;
+    }
+
+    return null;
+}
+
 // ─── AGREGAR_PERSONA ──────────────────────────────────────
 async function handleAgregarPersona(
     supabase: SupabaseClient,
@@ -208,7 +264,50 @@ async function handleAgregarPersona(
     // Limpiar DNI: quitar puntos y espacios
     if (dni) dni = dni.replace(/[.\s-]/g, "");
 
-    // Sin DNI → generar temporal para crear borrador
+    // Sin DNI → buscar en antecedente (INGESTA) por coincidencia de nombre
+    if (!dni && nombre) {
+        const foundDni = await findPersonInAntecedente(ctx.carpetaId, nombre);
+        if (foundDni) {
+            dni = foundDni;
+            console.log(`[ET5] AGREGAR_PERSONA: DNI encontrado en antecedente="${dni}" para "${nombre}"`);
+        }
+    }
+
+    // Sin DNI → buscar en tabla personas global por nombre
+    if (!dni && nombre) {
+        const nameUpper = nombre.toUpperCase();
+        // Buscar por apellido (primera palabra antes de coma, o última palabra)
+        const apellidoBuscar = nombre.includes(",")
+            ? nombre.split(",")[0].trim().toUpperCase()
+            : (apellido || nombre.split(/\s+/).pop() || "").toUpperCase();
+
+        if (apellidoBuscar.length > 2) {
+            const { data: candidates } = await supabaseAdmin
+                .from("personas")
+                .select("dni, nombre_completo")
+                .ilike("nombre_completo", `%${apellidoBuscar}%`)
+                .limit(5);
+
+            if (candidates && candidates.length === 1) {
+                // Match único por apellido → usar ese DNI
+                dni = candidates[0].dni;
+                console.log(`[ET5] AGREGAR_PERSONA: match único global por apellido "${apellidoBuscar}" → dni=${dni} (${candidates[0].nombre_completo})`);
+            } else if (candidates && candidates.length > 1) {
+                // Multiples matches → intentar match exacto
+                const exact = candidates.find(c =>
+                    c.nombre_completo?.toUpperCase() === nameUpper ||
+                    c.nombre_completo?.toUpperCase().includes(nameUpper) ||
+                    nameUpper.includes(c.nombre_completo?.toUpperCase() || "")
+                );
+                if (exact) {
+                    dni = exact.dni;
+                    console.log(`[ET5] AGREGAR_PERSONA: match exacto global "${nombre}" → dni=${dni}`);
+                }
+            }
+        }
+    }
+
+    // Sin DNI → generar temporal como último recurso
     if (!dni) {
         dni = `TEMP_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
         console.log(`[ET5] AGREGAR_PERSONA: sin DNI, generando temporal="${dni}" para "${nombre}"`);
