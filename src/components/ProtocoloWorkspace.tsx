@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PaginationControls } from "@/components/PaginationControls";
 import { IndiceProtocolo } from "@/components/IndiceProtocolo";
+import { getSignedUrl } from "@/app/actions/storageSync";
 
 interface ProtocoloRegistro {
     id?: string;
@@ -438,9 +439,14 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                     {/* Action buttons: PDF + Carpeta + Delete */}
                                     <div className="w-[72px] shrink-0 flex items-center justify-center gap-0.5">
                                         <button
-                                            onClick={() => {
+                                            onClick={async () => {
                                                 if (row.pdf_storage_path) {
-                                                    window.open(`/api/protocolo-pdf/${row.id}`, "_blank");
+                                                    const result = await getSignedUrl("protocolo", row.pdf_storage_path);
+                                                    if (result.success && result.url) {
+                                                        window.open(result.url, "_blank");
+                                                    } else {
+                                                        toast.error("Error al obtener el PDF");
+                                                    }
                                                 }
                                             }}
                                             disabled={!row.pdf_storage_path}
