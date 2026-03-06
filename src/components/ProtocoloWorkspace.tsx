@@ -257,18 +257,36 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                                         col.align === "text-center" && "justify-center",
                                                         isErrose && col.key === "tipo_acto" && "text-amber-700 font-semibold italic"
                                                     )}>
-                                                        {displayValue}
-                                                        {(col.key === "vendedor_acreedor" || col.key === "comprador_deudor") && displayValue && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    window.open(`/clientes?q=${encodeURIComponent(String(displayValue).trim())}`, "_blank");
-                                                                }}
-                                                                className="ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-indigo-50 text-indigo-400 hover:text-indigo-600"
-                                                                title="Buscar en Clientes"
-                                                            >
-                                                                <ExternalLink className="h-3 w-3" />
-                                                            </button>
+                                                        {(col.key === "vendedor_acreedor" || col.key === "comprador_deudor") && displayValue ? (
+                                                            <span className="inline">
+                                                                {String(displayValue).split(/\s+y\s+/i).map((name, i, arr) => (
+                                                                    <span key={i}>
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                window.open(`/clientes?q=${encodeURIComponent(name.trim())}`, "_blank");
+                                                                            }}
+                                                                            className="text-left hover:underline hover:text-indigo-600 transition-colors cursor-pointer"
+                                                                            title={`Buscar "${name.trim()}" en Clientes`}
+                                                                        >
+                                                                            {name.trim()}
+                                                                        </button>
+                                                                        {i < arr.length - 1 && <span className="text-slate-400"> y </span>}
+                                                                    </span>
+                                                                ))}
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        window.open(`/clientes?q=${encodeURIComponent(String(displayValue).trim())}`, "_blank");
+                                                                    }}
+                                                                    className="ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-indigo-50 text-indigo-400 hover:text-indigo-600"
+                                                                    title="Buscar todos en Clientes"
+                                                                >
+                                                                    <ExternalLink className="h-3 w-3" />
+                                                                </button>
+                                                            </span>
+                                                        ) : (
+                                                            displayValue
                                                         )}
                                                     </span>
                                                 </div>
