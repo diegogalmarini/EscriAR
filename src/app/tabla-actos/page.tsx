@@ -63,20 +63,30 @@ export default function TablaActosPage() {
 
     return (
         <div className="min-h-screen bg-slate-50/50 p-6 md:p-8 flex flex-col space-y-6">
-            {/* Header */}
+            {/* Header & Search */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                            <FileSpreadsheet className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-slate-900">Tabla de Actos 01/2026</h1>
-                            <p className="text-sm text-slate-500">CESBA - Colegio de Escribanos de Buenos Aires</p>
-                        </div>
+                <div className="flex items-center gap-3 shrink-0">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                        <FileSpreadsheet className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-900">Tabla de Actos 01/2026</h1>
+                        <p className="text-sm text-slate-500">CESBA - Colegio de Escribanos de Buenos Aires</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
+
+                <div className="flex-1 max-w-2xl relative w-full">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                        type="text"
+                        placeholder="Buscar por código (ej: 100-00) o descripción (ej: COMPRAVENTA)..."
+                        value={searchTerm}
+                        onChange={handleSearch}
+                        className="pl-10 h-10 w-full bg-white transition-shadow focus-visible:ring-1 focus-visible:ring-slate-300 border-slate-200"
+                    />
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0">
                     <Button variant="outline" size="sm" asChild>
                         <a href="/Tabla_Actos_Notariales_2026.pdf" target="_blank" rel="noopener noreferrer">
                             <Download className="mr-2 h-4 w-4" />
@@ -84,40 +94,17 @@ export default function TablaActosPage() {
                         </a>
                     </Button>
                     <Badge variant="outline" className="text-xs">
-                        {actsArray.length} actos registrados
+                        {filteredActs.length} actos registrados
                     </Badge>
                 </div>
             </div>
-
-            {/* Search */}
-            <Card className="border-slate-200 shadow-sm">
-                <CardContent className="pt-6">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <Input
-                            type="text"
-                            placeholder="Buscar por código (ej: 100-00) o descripción (ej: COMPRAVENTA)..."
-                            value={searchTerm}
-                            onChange={handleSearch}
-                            className="pl-10 h-12 text-base"
-                        />
-                    </div>
-                    <p className="text-xs text-slate-400 mt-2">
-                        {filteredActs.length} {filteredActs.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
-                    </p>
-                </CardContent>
-            </Card>
 
             {/* Table */}
             <Card className="border-slate-200 shadow-sm flex-1 flex flex-col min-h-0 overflow-hidden">
                 <div className="overflow-auto flex-1">
                     <table className="w-full text-sm min-w-[1200px]">
                         <thead className="bg-slate-100 sticky top-0 z-10 shadow-sm">
-                            <tr className="border-b border-slate-200">
-                                <th colSpan={10} className="px-4 py-3 text-left font-bold text-slate-900 text-lg bg-white">
-                                    Caja de Seguridad Social para Escribanos de la Provincia de Buenos Aires
-                                </th>
-                            </tr>
+
                             <tr className="border-b border-slate-200 text-[10px] uppercase text-slate-600 font-semibold tracking-wider text-center divide-x divide-slate-200 bg-slate-50">
                                 <th colSpan={2} className="px-4 py-2">
                                     NOTARIOS DE EXTRAÑA JURISDICCIÓN<br />
