@@ -1,7 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabaseClient";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,15 +10,24 @@ import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
 import { NuevoClienteDialog } from "@/components/NuevoClienteDialog";
 import { ClientesTable } from "@/components/ClientesTable";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PaginationControls } from "@/components/PaginationControls";
 import { useDebounce } from "use-debounce";
 
 export default function ClientesPage() {
+    return (
+        <Suspense>
+            <ClientesContent />
+        </Suspense>
+    );
+}
+
+function ClientesContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [personas, setPersonas] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm] = useState(searchParams.get("q") ?? "");
     const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
 
     // Pagination State

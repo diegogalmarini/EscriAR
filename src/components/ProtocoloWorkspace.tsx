@@ -9,7 +9,7 @@ import {
     Plus, Save, Trash2, ClipboardList, BookOpen,
     AlertTriangle, Check, Loader2, Search,
     ArrowUpDown, ArrowUp, ArrowDown,
-    Eye, FolderOpen
+    Eye, FolderOpen, ExternalLink
 } from "lucide-react";
 
 import {
@@ -430,6 +430,18 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                                         isErrose && col.key === "tipo_acto" && "text-amber-700 font-semibold italic"
                                                     )}>
                                                         {displayValue}
+                                                        {(col.key === "vendedor_acreedor" || col.key === "comprador_deudor") && displayValue && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    window.open(`/clientes?q=${encodeURIComponent(String(displayValue).trim())}`, "_blank");
+                                                                }}
+                                                                className="ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-indigo-50 text-indigo-400 hover:text-indigo-600"
+                                                                title="Buscar en Clientes"
+                                                            >
+                                                                <ExternalLink className="h-3 w-3" />
+                                                            </button>
+                                                        )}
                                                     </span>
                                                 )}
                                             </div>
@@ -461,6 +473,11 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                             <Eye className="h-3.5 w-3.5" />
                                         </button>
                                         <button
+                                            onClick={() => {
+                                                if (row.carpeta_id) {
+                                                    window.open(`/carpeta/${row.carpeta_id}`, "_blank");
+                                                }
+                                            }}
                                             disabled={!row.carpeta_id}
                                             className={cn(
                                                 "p-1 rounded transition-all",
