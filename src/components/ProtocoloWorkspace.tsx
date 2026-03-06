@@ -12,6 +12,11 @@ import {
     Eye, FolderOpen
 } from "lucide-react";
 
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel,
+    AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+    AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -87,6 +92,7 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
     const [sortCol, setSortCol] = useState<string>("folios");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
     const [searchQuery, setSearchQuery] = useState("");
+    const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
 
     // ── Sort handler ──
     const handleSort = useCallback((key: string) => {
@@ -174,9 +180,10 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
         });
     }, []);
 
-    // ── Eliminar fila ──
-    const deleteRow = useCallback(async (index: number) => {
-        const row = registros[index];
+    // ── Eliminar fila (con confirmación obligatoria) ──
+    const confirmDelete = useCallback(async () => {
+        if (pendingDeleteIndex === null) return;
+        const row = registros[pendingDeleteIndex];
         if (row.id) {
             const { error } = await supabase
                 .from("protocolo_registros")
@@ -184,12 +191,14 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                 .eq("id", row.id);
             if (error) {
                 toast.error("Error al eliminar: " + error.message);
+                setPendingDeleteIndex(null);
                 return;
             }
         }
-        setRegistros(prev => prev.filter((_, i) => i !== index));
-        toast.success(`Escritura ${row.nro_escritura} eliminada`);
-    }, [registros]);
+        setRegistros(prev => prev.filter((_, i) => i !== pendingDeleteIndex));
+        toast.success(`Escritura ${row.nro_escritura ?? "errose"} eliminada`);
+        setPendingDeleteIndex(null);
+    }, [registros, pendingDeleteIndex]);
 
     // ── Guardar todo ──
     const saveAll = useCallback(async () => {
@@ -267,6 +276,7 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
     };
 
     return (
+        <>
         <Tabs defaultValue="seguimiento" className="space-y-4">
             <TabsList className="bg-slate-100">
                 <TabsTrigger value="seguimiento" className="gap-2">
@@ -457,7 +467,7 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                             <FolderOpen className="h-3.5 w-3.5" />
                                         </button>
                                         <button
-                                            onClick={() => deleteRow(realIndex)}
+                                            onClick={() => setPendingDeleteIndex(realIndex)}
                                             className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-50 text-red-400 hover:text-red-600"
                                             title="Eliminar fila"
                                         >
@@ -486,5 +496,38 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                 <IndiceProtocolo registros={registros} anio={anio} />
             </TabsContent>
         </Tabs>
+
+            {/* ── Modal de confirmación de borrado ── */}
+            <AlertDialog open={pendingDeleteIndex !== null} onOpenChange={(open) => { if (!open) setPendingDeleteIndex(null); }}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar este registro?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {pendingDeleteIndex !== null && registros[pendingDeleteIndex] && (
+                                <>
+                                    Estás por eliminar{" "}
+                                    <strong>
+                                        {registros[pendingDeleteIndex].es_errose
+                                            ? `Errose (folios ${registros[pendingDeleteIndex].folios})`
+                                            : `Escritura ${registros[pendingDeleteIndex].nro_escritura} — ${registros[pendingDeleteIndex].tipo_acto || "sin tipo"}`
+                                        }
+                                    </strong>.
+                                    Esta acción no se puede deshacer.
+                                </>
+                            )}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmDelete}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                            Eliminar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 }
