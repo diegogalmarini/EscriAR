@@ -12,6 +12,11 @@ Cada archivo incluye PRECHECKS / APPLY / POSTCHECKS / ROLLBACK.
 | 040 | `supabase_migrations/040_etapa_3__apuntes_sugerencias.sql` | Tablas apuntes + sugerencias, RLS por org, triggers updated_at | Ejecutada |
 | 041 | `supabase_migrations/041_etapa_4__note_analysis_jobs.sql` | Extender ingestion_jobs: job_type, payload, entity_ref, org_id | **Pendiente** |
 | 042 | `supabase_migrations/042_etapa_5__sugerencias_audit.sql` | Audit columns en sugerencias: applied_at, applied_by, apply_error, applied_changes | **Pendiente** |
+| 043 | `supabase_migrations/043_etapa_6__actuaciones.sql` | Tabla actuaciones + tipos + generación documentos | Ejecutada |
+| 044 | `supabase_migrations/044_escrituras_source_column.sql` | Columna source en escrituras (INGESTA/TRAMITE) | Ejecutada |
+| 045 | `supabase_migrations/045_search_carpetas_tramite_only.sql` | search_carpetas filtra solo TRAMITE | Ejecutada |
+| 046 | `supabase_migrations/046_fix_move_participants_to_tramite.sql` | Fix mover participantes a TRAMITE | Ejecutada |
+| 047 | `supabase_migrations/047_etapa_7__cert_extraction.sql` | ET7: Extender certificados con extraction_data, extraction_evidence, extraction_status, confirmed_by/at | **Pendiente** |
 
 ## Instrucciones
 

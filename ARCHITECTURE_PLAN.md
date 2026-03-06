@@ -1,5 +1,5 @@
 # NotiAR — Carpeta AI-First (Cerebro Híbrido) — Architecture & Implementation Plan
-Fecha: 2026-03-04 (actualizado 2026-03-05)  
+Fecha: 2026-03-04 (actualizado 2026-03-06)  
 Owner: Diego  
 Implementador: Agente  
 Scope: Rediseño completo de Carpeta + IA proactiva + Jobs + Seguridad completa (multi-tenant por Organización + RLS)
@@ -30,13 +30,13 @@ Implementar la Carpeta notarial con:
 | ET5 — Motor determinístico | ✅ COMPLETADA | 042 | `applySuggestion.ts` (467 LOC), 5 handlers, audit trail. |
 | ET6 — Actuaciones Privado/Protocolar | ✅ COMPLETADA | 043, 044 | `ActuacionesPanel`, `GenerarActuacionDialog`, taxonomía PRIVADO/AMBIGUO/PROTOCOLAR/HIDDEN, microcopy. |
 | ET6.1 — Código de Acto | ✅ COMPLETADA | 021-023, 045 | `search_carpetas` filtra por TRAMITE. `CarpetasTable` muestra código+acto. Código CESBA derivado. |
-| ET7 — Pre-escriturario AI | 🔜 NEXT | — | Scaffolding existente: `CertificadosPanel.tsx`, `notary-rpi-reader.ts`, tabla `certificados`. |
+| ET7 — Pre-escriturario AI | � EN PROGRESO | 047 | Upload PDF + extracción IA (Gemini Pro) + confirmación humana + chips vencimientos en header. |
 | ET8 — Header sticky final | ⏳ PENDIENTE | — | `CarpetaHero.tsx` ya es sticky con badge. Falta: chips accionables, colapsado, menú seguro. |
 | ET9 — Auditoría | ⏳ PENDIENTE | — | No iniciada. |
 | ET10 — Notificaciones | ⏳ PENDIENTE | — | Nueva etapa. |
 | ET11 — Export carpeta | ⏳ PENDIENTE | — | Nueva etapa. |
 
-Total: **45 migraciones SQL**, **14+ componentes principales**, **6 etapas completadas**.
+Total: **47 migraciones SQL**, **14+ componentes principales**, **6 etapas completadas**, **1 en progreso**.
 
 ---
 
@@ -193,31 +193,55 @@ Logros:
 
 ---
 
-### ETAPA 7 — Pre-escriturario AI: OCR/extracción verificable + bloqueos (NEXT)
+### 🔧 ETAPA 7 — Pre-escriturario AI: OCR/extracción verificable + bloqueos (EN TESTING)
 Objetivo: semáforo confiable con evidencia y confirmación humana.
 
-> **Scaffolding existente:** la tabla `certificados` (mig. 031), `CertificadosPanel.tsx`, `CertificadoDialog.tsx`, y `notary-rpi-reader.ts` ya existen. El plumbing de jobs (`ingestion_jobs` con `job_type`) ya soporta `CERT_EXTRACT`. Esta etapa conecta las piezas.
+> **Estado 2026-03-06:** Código completo. Migración 047 aplicada. Bucket Storage "certificados" creado. Deploy worker en curso. Pendiente: test funcional end-to-end.
 
-Tareas DB:
-- Extender `certificados` con:
-  - `extraction_data` (jsonb) — campos extraídos por IA.
-  - `extraction_evidence` (jsonb) — fragmentos/coordenadas del PDF fuente.
-  - `extraction_status` (PENDIENTE/PROCESANDO/COMPLETADO/ERROR).
-  - `confirmed_by` (uuid), `confirmed_at` (timestamp) — confirmación humana.
-- Job `CERT_EXTRACT` en `ingestion_jobs` (el esquema ya lo soporta, solo crear el flujo).
+#### Archivos creados/modificados en ET7
 
-Tareas Worker:
-- Procesar `CERT_EXTRACT` con `notary-rpi-reader` usando `gemini-2.5-pro`.
-- Guardar extracción + evidencia en `certificados`.
+| Archivo | Tipo | Descripción |
+|---------|------|-------------|
+| `supabase_migrations/047_etapa_7__cert_extraction.sql` | Migración | Agrega a `certificados`: `storage_path`, `extraction_status`, `extraction_data` (jsonb), `extraction_evidence` (jsonb), `extraction_error`, `confirmed_by`, `confirmed_at` |
+| `worker/src/certExtractor.ts` | **NUEVO** | Extractor IA con Gemini 2.5 Pro. Prompts específicos por tipo de certificado (DOMINIO, INHIBICION, CATASTRAL, deudas, AFIP, ANOTACIONES_PERSONALES). Schema Zod con `datos` + `evidencia` (campo, texto, confianza). |
+| `worker/src/index.ts` | Modificado | `CERT_EXTRACT` agregado al polling de jobs. Nuevo handler `processCertExtraction()`: descarga PDF → detecta nativo/escaneado → extrae con Gemini Pro → guarda en `certificados` → auto-rellena campos canónicos solo si vacíos. |
+| `src/app/actions/certificados.ts` | Modificado | Nuevos tipos: `ExtractionData`, `ExtractionEvidence`, `ExtractionStatus`. Nuevas acciones: `uploadCertificadoPdf()` (sube a Storage + crea job), `confirmCertificadoExtraction()` (human-in-the-loop), `retryCertExtraction()`, `getCertificadoSignedUrl()`. Todas protegidas por `requireOrgMembership()`. |
+| `src/components/CertificadoDialog.tsx` | Modificado | Reemplazado campo "PDF URL" manual por zona de drag & drop para subir PDF/imagen. Al guardar, sube a Storage y dispara job `CERT_EXTRACT` automáticamente. |
+| `src/components/CertificadosPanel.tsx` | Modificado | Nuevo componente interno `ExtractionCard`: muestra estados (Analizando.../Extraído/Error), datos extraídos en grid, gravámenes e inhibiciones listados, evidencia expandible con confianza, botones Confirmar/Re-analizar. Polling automático cada 5s para extracciones en progreso. |
+| `src/components/CarpetaHero.tsx` | Modificado | Sección "Certificados" con chips en vivo: vencidos (rojo), por vencer (amber), vigentes (verde), pendientes (gris), sin confirmar (azul). Fetch client-side de certificados por carpeta. |
 
-Tareas UI (Pre-escriturario):
-- Mostrar campos extraídos + evidencia (fragmento del PDF).
-- Confirmar/corregir: solo confirmado impacta `fecha_vencimiento`/estado.
-- Bloqueos determinísticos visibles en header (si vencido/bloqueante → chip rojo en CarpetaHero).
+#### Flujo completo implementado
+```
+Escribano crea certificado + sube PDF
+  → Supabase Storage bucket "certificados" (path: orgId/carpetaId/certId.ext)
+  → ingestion_jobs.insert({job_type: 'CERT_EXTRACT', entity_ref: {certificado_id, tipo}})
+  → Worker poll → lock → descarga PDF
+  → Detecta PDF nativo (pdf-parse >200 chars) o escaneado (convertPdfToImages)
+  → Gemini 2.5 Pro con prompt específico por tipo → schema {datos, evidencia}
+  → certificados.update({extraction_status: 'COMPLETADO', extraction_data, extraction_evidence})
+  → Auto-rellena fecha_vencimiento/nro_certificado/organismo SOLO si campo vacío
+  → UI polling detecta cambio → ExtractionCard muestra datos
+  → Escribano revisa evidencia → click "Confirmar extracción"
+  → confirmed_by/confirmed_at + estado → 'RECIBIDO'
+  → CarpetaHero re-fetch → chips actualizados
+```
+
+#### Infraestructura aplicada
+- [x] Migración 047 ejecutada en Supabase SQL Editor (2026-03-06)
+- [x] Bucket Storage "certificados" creado con RLS (2026-03-06)
+- [ ] Deploy worker a Railway (en curso)
+- [ ] Test funcional end-to-end
+
+#### Decisiones de diseño
+- **Gemini 2.5 Pro** (no Flash) para certificados: mejor comprensión de documentos escaneados con sellos/manchas.
+- **Human-in-the-loop**: la extracción IA no cambia el estado del certificado hasta confirmación explícita.
+- **Auto-fill conservador**: el worker solo pre-rellena campos canónicos si están vacíos, nunca sobreescribe datos manuales.
+- **Prompts por tipo**: cada tipo de certificado (DOMINIO, INHIBICION, CATASTRAL, etc.) tiene un prompt especializado que guía la extracción.
+- **Evidencia con confianza**: cada dato extraído incluye un fragmento textual del PDF + nivel HIGH/MED/LOW.
 
 Hito ET7:
-- PR
 - Subir certificado → extracción → confirmación → semáforo/chips actualizados.
+- `npm run build` OK (verificado 2026-03-06).
 - Bloqueo determinístico funciona.
 
 Rollback:

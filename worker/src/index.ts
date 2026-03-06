@@ -10,6 +10,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import actsData from './acts_taxonomy_2026.json';
 import { analyzeNote, NoteAnalysisOutputSchema } from './noteAnalyzer';
+import { extractCertificate } from './certExtractor';
 const pdfParse = require('pdf-parse');
 
 dotenv.config();
@@ -213,7 +214,7 @@ async function workerLoop() {
                 .from('ingestion_jobs')
                 .select('*')
                 .eq('status', 'pending')
-                .in('job_type', ['INGEST', 'NOTE_ANALYSIS'])
+                .in('job_type', ['INGEST', 'NOTE_ANALYSIS', 'CERT_EXTRACT'])
                 .order('created_at', { ascending: true })
                 .limit(1);
 
@@ -242,6 +243,12 @@ async function workerLoop() {
             // ── NOTE_ANALYSIS: procesar con Gemini Flash ──
             if (job.job_type === 'NOTE_ANALYSIS') {
                 await processNoteAnalysis(job);
+                continue;
+            }
+
+            // ── CERT_EXTRACT: extraer datos de certificado con Gemini Pro ──
+            if (job.job_type === 'CERT_EXTRACT') {
+                await processCertExtraction(job);
                 continue;
             }
 
@@ -702,6 +709,125 @@ async function processNoteAnalysis(job: any) {
         }).eq('id', apunteId);
 
         // Marcar job como failed
+        await supabase.from('ingestion_jobs').update({
+            status: 'failed',
+            error_message: error.message || 'Error desconocido',
+            finished_at: new Date().toISOString(),
+        }).eq('id', job.id);
+    }
+}
+
+// ── CERT_EXTRACT: Extracción de certificados notariales ──
+
+async function processCertExtraction(job: any) {
+    const certId = job.entity_ref?.certificado_id;
+    const tipoCert = job.entity_ref?.tipo || 'OTRO';
+
+    if (!certId) {
+        console.error(`[WORKER] CERT_EXTRACT job ${job.id}: sin certificado_id en entity_ref`);
+        await supabase.from('ingestion_jobs').update({
+            status: 'failed',
+            error_message: 'entity_ref.certificado_id faltante',
+            finished_at: new Date().toISOString(),
+        }).eq('id', job.id);
+        return;
+    }
+
+    console.log(`[WORKER] CERT_EXTRACT: Procesando certificado ${certId} (tipo: ${tipoCert})`);
+
+    try {
+        // 1. Marcar certificado como PROCESANDO
+        await supabase.from('certificados').update({
+            extraction_status: 'PROCESANDO',
+            extraction_error: null,
+        }).eq('id', certId);
+
+        // 2. Descargar archivo del storage
+        const bucket = job.file_path?.includes('/') ? 'certificados' : 'escrituras';
+        console.log(`[WORKER] CERT_EXTRACT: Descargando de ${bucket}: ${job.file_path}`);
+
+        const { data: fileBlob, error: dlErr } = await supabase.storage
+            .from(bucket)
+            .download(job.file_path);
+
+        if (dlErr) throw new Error(`Error descargando archivo: ${dlErr.message}`);
+        const fileBuffer = Buffer.from(await fileBlob.arrayBuffer());
+
+        // 3. Determinar si es PDF nativo o escaneado
+        let textContent: string | null = null;
+        let imageBuffers: Buffer[] | null = null;
+
+        const isPdf = job.file_path?.toLowerCase().endsWith('.pdf') ||
+                       job.original_filename?.toLowerCase().endsWith('.pdf');
+
+        if (isPdf) {
+            const pdfParse = require('pdf-parse');
+            try {
+                const parsed = await pdfParse(fileBuffer);
+                textContent = parsed.text || '';
+            } catch {
+                textContent = '';
+            }
+
+            // Si poco texto, convertir a imágenes
+            if (!textContent || textContent.trim().length < 200) {
+                console.log(`[WORKER] CERT_EXTRACT: PDF escaneado, convirtiendo a imágenes...`);
+                textContent = null;
+                imageBuffers = await convertPdfToImages(fileBuffer, 5);
+            }
+        } else {
+            // Es imagen directa (PNG/JPG)
+            imageBuffers = [fileBuffer];
+        }
+
+        // 4. Extraer con Gemini Pro
+        const geminiKey = process.env.GEMINI_API_KEY!;
+        const result = await extractCertificate(textContent, imageBuffers, tipoCert, geminiKey);
+
+        console.log(`[WORKER] CERT_EXTRACT: Extracción exitosa. Campos: ${Object.keys(result.datos).filter(k => (result.datos as any)[k] !== null).join(', ')}`);
+
+        // 5. Guardar resultados en certificado
+        const updateData: Record<string, any> = {
+            extraction_status: 'COMPLETADO',
+            extraction_data: result.datos,
+            extraction_evidence: { fragmentos: result.evidencia },
+            extraction_error: null,
+        };
+
+        // Auto-rellenar campos canónicos SOLO si están vacíos (no sobreescribir datos manuales)
+        const { data: currentCert } = await supabase.from('certificados')
+            .select('fecha_vencimiento, nro_certificado, organismo')
+            .eq('id', certId).single();
+
+        if (!currentCert?.fecha_vencimiento && result.datos.fecha_vencimiento) {
+            updateData.fecha_vencimiento = result.datos.fecha_vencimiento;
+        }
+        if (!currentCert?.nro_certificado && result.datos.numero_certificado) {
+            updateData.nro_certificado = result.datos.numero_certificado;
+        }
+        if (!currentCert?.organismo && result.datos.organismo) {
+            updateData.organismo = result.datos.organismo;
+        }
+
+        await supabase.from('certificados').update(updateData).eq('id', certId);
+
+        // 6. Marcar job como completed
+        await supabase.from('ingestion_jobs').update({
+            status: 'completed',
+            result_data: { campos_extraidos: Object.keys(result.datos).filter(k => (result.datos as any)[k] !== null).length },
+            finished_at: new Date().toISOString(),
+        }).eq('id', job.id);
+
+        console.log(`[WORKER] CERT_EXTRACT job ${job.id} COMPLETADO`);
+
+    } catch (error: any) {
+        console.error(`[WORKER] CERT_EXTRACT job ${job.id} FAILED:`, error.message);
+
+        await supabase.from('certificados').update({
+            extraction_status: 'ERROR',
+            extraction_error: error.message?.substring(0, 500) || 'Error desconocido',
+        }).eq('id', certId);
+
         await supabase.from('ingestion_jobs').update({
             status: 'failed',
             error_message: error.message || 'Error desconocido',

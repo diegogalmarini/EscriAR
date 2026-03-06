@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +21,12 @@ import {
     Hash,
     Hourglass,
     Trash2,
+    ShieldCheck,
+    ShieldAlert,
+    ShieldX,
+    Clock,
 } from "lucide-react";
+import { Certificado, getCertificadosPorCarpeta } from "@/app/actions/certificados";
 
 // --- Types ---
 interface CarpetaHeroProps {
@@ -133,6 +138,41 @@ function formatDate(dateStr: string): string {
 // --- Component ---
 export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }: CarpetaHeroProps) {
     const { titulo, subtipo } = useMemo(() => generarCaratula(carpeta), [carpeta]);
+    const [certificados, setCertificados] = useState<Certificado[]>([]);
+
+    // Fetch certificados para los chips de vencimiento
+    useEffect(() => {
+        if (carpeta?.id) {
+            getCertificadosPorCarpeta(carpeta.id)
+                .then(setCertificados)
+                .catch(() => setCertificados([]));
+        }
+    }, [carpeta?.id, carpeta]);
+
+    // Calcular resumen de certificados
+    const certResumen = useMemo(() => {
+        const now = new Date();
+        let vencidos = 0, porVencer = 0, vigentes = 0, pendientes = 0, sinConfirmar = 0;
+
+        for (const c of certificados) {
+            if (c.estado === "PENDIENTE" || c.estado === "SOLICITADO") {
+                pendientes++;
+                continue;
+            }
+            if (c.estado === "VENCIDO") { vencidos++; continue; }
+            if (c.estado === "RECIBIDO" && c.fecha_vencimiento) {
+                const days = Math.ceil((new Date(c.fecha_vencimiento).getTime() - now.getTime()) / (1000 * 3600 * 24));
+                if (days < 0) vencidos++;
+                else if (days <= 3) porVencer++;
+                else vigentes++;
+            } else if (c.estado === "RECIBIDO") {
+                vigentes++;
+            }
+            if (c.extraction_status === "COMPLETADO" && !c.confirmed_at) sinConfirmar++;
+        }
+
+        return { total: certificados.length, vencidos, porVencer, vigentes, pendientes, sinConfirmar };
+    }, [certificados]);
 
     const estadoKey = useMemo(() => {
         const tramite = carpeta.escrituras?.find((e: any) => e.source === 'TRAMITE') || carpeta.escrituras?.[0];
@@ -249,12 +289,46 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }:
                 <div className="flex items-center gap-2 mb-2.5">
                     <Hourglass className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        Vencimientos
+                        Certificados
                     </span>
                 </div>
-                <p className="text-xs text-muted-foreground px-1 py-2">
-                    Sin certificados cargados en Pre-Escriturario
-                </p>
+                {certResumen.total === 0 ? (
+                    <p className="text-xs text-muted-foreground px-1 py-2">
+                        Sin certificados cargados en Pre-Escriturario
+                    </p>
+                ) : (
+                    <div className="flex flex-wrap gap-2">
+                        {certResumen.vencidos > 0 && (
+                            <Badge variant="destructive" className="gap-1.5 text-xs">
+                                <ShieldX className="h-3 w-3" />
+                                {certResumen.vencidos} vencido{certResumen.vencidos !== 1 ? "s" : ""}
+                            </Badge>
+                        )}
+                        {certResumen.porVencer > 0 && (
+                            <Badge variant="outline" className="gap-1.5 text-xs text-amber-600 border-amber-200 bg-amber-50">
+                                <Clock className="h-3 w-3" />
+                                {certResumen.porVencer} por vencer
+                            </Badge>
+                        )}
+                        {certResumen.vigentes > 0 && (
+                            <Badge variant="outline" className="gap-1.5 text-xs text-green-600 border-green-200 bg-green-50">
+                                <ShieldCheck className="h-3 w-3" />
+                                {certResumen.vigentes} vigente{certResumen.vigentes !== 1 ? "s" : ""}
+                            </Badge>
+                        )}
+                        {certResumen.pendientes > 0 && (
+                            <Badge variant="secondary" className="gap-1.5 text-xs">
+                                {certResumen.pendientes} pendiente{certResumen.pendientes !== 1 ? "s" : ""}
+                            </Badge>
+                        )}
+                        {certResumen.sinConfirmar > 0 && (
+                            <Badge variant="outline" className="gap-1.5 text-xs text-blue-600 border-blue-200 bg-blue-50">
+                                <ShieldAlert className="h-3 w-3" />
+                                {certResumen.sinConfirmar} sin confirmar
+                            </Badge>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* === Tabs navigation === */}

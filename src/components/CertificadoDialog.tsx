@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Certificado, CertificadoInsert, TipoCertificado, EstadoCertificado, createCertificado, updateCertificado } from "@/app/actions/certificados";
+import { Certificado, CertificadoInsert, TipoCertificado, EstadoCertificado, createCertificado, updateCertificado, uploadCertificadoPdf } from "@/app/actions/certificados";
 import { Textarea } from "@/components/ui/textarea";
+import { Upload, FileText, X } from "lucide-react";
 
 interface CertificadoDialogProps {
     open: boolean;
@@ -19,6 +20,8 @@ interface CertificadoDialogProps {
 
 export function CertificadoDialog({ open, onOpenChange, carpetaId, certificado, onSuccess }: CertificadoDialogProps) {
     const [loading, setLoading] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [formData, setFormData] = useState<Partial<CertificadoInsert>>({
         carpeta_id: carpetaId,
         tipo: "DOMINIO",
@@ -49,6 +52,7 @@ export function CertificadoDialog({ open, onOpenChange, carpetaId, certificado, 
                 pdf_url: ""
             });
         }
+        setSelectedFile(null);
     }, [certificado, carpetaId, open]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -70,11 +74,20 @@ export function CertificadoDialog({ open, onOpenChange, carpetaId, certificado, 
             if (!dataToSave.fecha_recepcion) dataToSave.fecha_recepcion = null;
             if (!dataToSave.fecha_vencimiento) dataToSave.fecha_vencimiento = null;
 
+            let savedCert: Certificado;
             if (certificado?.id) {
-                await updateCertificado({ ...dataToSave, id: certificado.id });
+                savedCert = await updateCertificado({ ...dataToSave, id: certificado.id });
             } else {
-                await createCertificado(dataToSave);
+                savedCert = await createCertificado(dataToSave);
             }
+
+            // Si hay archivo seleccionado, subirlo y disparar extracción IA
+            if (selectedFile && savedCert.id) {
+                const fd = new FormData();
+                fd.append("file", selectedFile);
+                await uploadCertificadoPdf(savedCert.id, fd);
+            }
+
             onSuccess();
             onOpenChange(false);
         } catch (error) {
@@ -83,6 +96,17 @@ export function CertificadoDialog({ open, onOpenChange, carpetaId, certificado, 
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleFileDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files?.[0];
+        if (file) setSelectedFile(file);
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) setSelectedFile(file);
     };
 
     return (
@@ -190,14 +214,52 @@ export function CertificadoDialog({ open, onOpenChange, carpetaId, certificado, 
                     </div>
 
                     <div className="space-y-2">
-                        <Label>PDF URL</Label>
-                        <Input
-                            name="pdf_url"
-                            type="url"
-                            placeholder="Enlace al documento..."
-                            value={formData.pdf_url || ""}
-                            onChange={handleChange}
-                        />
+                        <Label>Documento (PDF o imagen)</Label>
+                        {certificado?.storage_path && !selectedFile && (
+                            <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 px-3 py-2 rounded-md border border-green-200">
+                                <FileText className="h-3.5 w-3.5" />
+                                <span>Archivo subido</span>
+                            </div>
+                        )}
+                        <div
+                            className="relative border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 hover:bg-slate-50 transition-colors"
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={handleFileDrop}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".pdf,image/png,image/jpeg,image/webp"
+                                className="hidden"
+                                onChange={handleFileSelect}
+                            />
+                            {selectedFile ? (
+                                <div className="flex items-center justify-center gap-2">
+                                    <FileText className="h-4 w-4 text-primary" />
+                                    <span className="text-sm font-medium">{selectedFile.name}</span>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-5 w-5"
+                                        onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="space-y-1">
+                                    <Upload className="h-6 w-6 mx-auto text-muted-foreground" />
+                                    <p className="text-xs text-muted-foreground">
+                                        Arrastrá un PDF o imagen, o hacé clic para seleccionar
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">
+                            La IA analizará el documento y extraerá datos automáticamente.
+                        </p>
                     </div>
 
                     <div className="space-y-2">
