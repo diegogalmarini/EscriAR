@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import {
     Plus, Save, Trash2, ClipboardList, BookOpen,
     AlertTriangle, Check, Loader2, Search,
-    ArrowUpDown, ArrowUp, ArrowDown
+    ArrowUpDown, ArrowUp, ArrowDown,
+    Eye, FolderOpen
 } from "lucide-react";
+
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -31,6 +33,8 @@ interface ProtocoloRegistro {
     monto_ars: number | null;
     codigo_acto: string;
     notas: string;
+    pdf_storage_path?: string | null;
+    carpeta_id?: string | null;
     // UI state
     _isNew?: boolean;
     _isDirty?: boolean;
@@ -49,8 +53,6 @@ const COLUMN_HEADERS = [
     { key: "tipo_acto", label: "Acto", width: "w-[160px]", align: "text-left" },
     { key: "vendedor_acreedor", label: "Vendedor / Acreedor / Poderdante", width: "min-w-[200px] flex-1", align: "text-left" },
     { key: "comprador_deudor", label: "Comprador / Deudor / Apoderado", width: "min-w-[200px] flex-1", align: "text-left" },
-    { key: "monto_usd", label: "USD", width: "w-[120px]", align: "text-right" },
-    { key: "monto_ars", label: "$", width: "w-[140px]", align: "text-right" },
     { key: "codigo_acto", label: "Código Acto", width: "w-[120px]", align: "text-center" },
 ];
 
@@ -82,7 +84,7 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
     const [editingCell, setEditingCell] = useState<{ row: number; col: string } | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
-    const [sortCol, setSortCol] = useState<string>("nro_escritura");
+    const [sortCol, setSortCol] = useState<string>("folios");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -343,7 +345,8 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                     )}
                                 </div>
                             ))}
-                            <div className="w-[40px] shrink-0 px-1 py-2.5" />
+                            {/* Action column headers */}
+                            <div className="w-[72px] shrink-0 px-1 py-2.5 border-r border-[#ccc] text-center" />
                         </div>
 
                         {/* Data rows */}
@@ -376,9 +379,7 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                     {COLUMN_HEADERS.map(col => {
                                         const isEditing = editingCell?.row === realIndex && editingCell?.col === col.key;
                                         const rawValue = (row as any)[col.key];
-                                        const displayValue = (col.key === "monto_usd" || col.key === "monto_ars")
-                                            ? fmtMoney(rawValue)
-                                            : rawValue ?? "";
+                                        const displayValue = rawValue ?? "";
 
                                         return (
                                             <div
@@ -392,12 +393,12 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                                 {isEditing ? (
                                                     <input
                                                         autoFocus
-                                                        type={["nro_escritura", "dia", "mes", "monto_usd", "monto_ars"].includes(col.key) ? "number" : "text"}
+                                                        type={["nro_escritura", "dia", "mes"].includes(col.key) ? "number" : "text"}
                                                         className="w-full h-7 px-1 text-xs border border-blue-400 rounded bg-white outline-none focus:ring-1 focus:ring-blue-400"
                                                         defaultValue={rawValue ?? ""}
                                                         onBlur={(e) => {
                                                             const val = e.target.value;
-                                                            const numFields = ["nro_escritura", "dia", "mes", "monto_usd", "monto_ars"];
+                                                            const numFields = ["nro_escritura", "dia", "mes"];
                                                             updateCell(
                                                                 realIndex,
                                                                 col.key,
@@ -424,8 +425,37 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                         );
                                     })}
 
-                                    {/* Delete button */}
-                                    <div className="w-[40px] shrink-0 flex items-center justify-center">
+                                    {/* Action buttons: PDF + Carpeta + Delete */}
+                                    <div className="w-[72px] shrink-0 flex items-center justify-center gap-0.5">
+                                        <button
+                                            onClick={() => {
+                                                if (row.pdf_storage_path) {
+                                                    window.open(`/api/protocolo-pdf/${row.id}`, "_blank");
+                                                }
+                                            }}
+                                            disabled={!row.pdf_storage_path}
+                                            className={cn(
+                                                "p-1 rounded transition-all",
+                                                row.pdf_storage_path
+                                                    ? "text-blue-500 hover:text-blue-700 hover:bg-blue-50 cursor-pointer"
+                                                    : "text-slate-300 cursor-not-allowed"
+                                            )}
+                                            title={row.pdf_storage_path ? "Ver PDF" : "Sin PDF cargado"}
+                                        >
+                                            <Eye className="h-3.5 w-3.5" />
+                                        </button>
+                                        <button
+                                            disabled={!row.carpeta_id}
+                                            className={cn(
+                                                "p-1 rounded transition-all",
+                                                row.carpeta_id
+                                                    ? "text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 cursor-pointer"
+                                                    : "text-slate-300 cursor-not-allowed"
+                                            )}
+                                            title={row.carpeta_id ? "Ir a carpeta" : "Sin carpeta vinculada"}
+                                        >
+                                            <FolderOpen className="h-3.5 w-3.5" />
+                                        </button>
                                         <button
                                             onClick={() => deleteRow(realIndex)}
                                             className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-50 text-red-400 hover:text-red-600"
