@@ -1,0 +1,1070 @@
+{
+  "metadata": {
+    "titulo": "Guía de Trámites Notariales — PBA y CABA",
+    "fuente": "Base de Conocimiento de Trámites Notariales (notary-procedures-catalog/source_data.md)",
+    "actualizacion": "2026-03-06",
+    "valores_desde": "2026-02-01",
+    "nota": "Valores y URLs actualizados a normativa 2026. Los costos pueden variar; usar como referencia."
+  },
+  "categorias": [
+    {
+      "id": "insumos",
+      "nombre": "Insumos y Materiales Notariales",
+      "icono": "📦",
+      "fase": "PREVIO",
+      "orden": 1
+    },
+    {
+      "id": "pre_escriturario",
+      "nombre": "Certificados Pre-Escriturarios",
+      "icono": "📑",
+      "fase": "PRE",
+      "orden": 2
+    },
+    {
+      "id": "plazos",
+      "nombre": "Plazos de Vigencia y Bloqueo Registral",
+      "icono": "⏳",
+      "fase": "PRE",
+      "orden": 3
+    },
+    {
+      "id": "escriturario",
+      "nombre": "Retenciones, Impuestos y Aportes (Firma)",
+      "icono": "💰",
+      "fase": "ESCRITURARIO",
+      "orden": 4
+    },
+    {
+      "id": "post_escriturario",
+      "nombre": "Inscripción y Cierre Post-Escriturario",
+      "icono": "✅",
+      "fase": "POST",
+      "orden": 5
+    },
+    {
+      "id": "estudio_titulos",
+      "nombre": "Estudio de Títulos y Publicidad Registral",
+      "icono": "🔍",
+      "fase": "PRE",
+      "orden": 6
+    },
+    {
+      "id": "registros_colegio",
+      "nombre": "Registros Especiales del Colegio",
+      "icono": "🏛️",
+      "fase": "PRE",
+      "orden": 7
+    },
+    {
+      "id": "catastro_valuacion",
+      "nombre": "Catastro y Valuación",
+      "icono": "🗺️",
+      "fase": "PRE",
+      "orden": 8
+    },
+    {
+      "id": "uif_compliance",
+      "nombre": "UIF / Lavado de Activos / Compliance",
+      "icono": "🛡️",
+      "fase": "PRE",
+      "orden": 9
+    },
+    {
+      "id": "legalizaciones",
+      "nombre": "Legalizaciones, Apostilla e Internacional",
+      "icono": "🌐",
+      "fase": "POST",
+      "orden": 10
+    },
+    {
+      "id": "archivo_copias",
+      "nombre": "Archivo, Copias y Testimonios",
+      "icono": "📂",
+      "fase": "POST",
+      "orden": 11
+    },
+    {
+      "id": "hipotecario_bapro",
+      "nombre": "Créditos Hipotecarios (BAPRO)",
+      "icono": "🏦",
+      "fase": "ESCRITURARIO",
+      "orden": 12
+    },
+    {
+      "id": "instrumentos_privados",
+      "nombre": "Instrumentos Privados (Boletos, Sellos)",
+      "icono": "📝",
+      "fase": "PRE",
+      "orden": 13
+    },
+    {
+      "id": "extraprotocolar",
+      "nombre": "Actos Extraprotocolares y Certificaciones",
+      "icono": "✍️",
+      "fase": "ESCRITURARIO",
+      "orden": 14
+    },
+    {
+      "id": "familia_sucesiones",
+      "nombre": "Derecho de Familia y Sucesiones",
+      "icono": "👨‍👩‍👧‍👦",
+      "fase": "ESCRITURARIO",
+      "orden": 15
+    },
+    {
+      "id": "derechos_reales",
+      "nombre": "Derechos Reales Desmembrados y Garantías",
+      "icono": "🏗️",
+      "fase": "ESCRITURARIO",
+      "orden": 16
+    },
+    {
+      "id": "societario",
+      "nombre": "Actos Societarios y Comerciales",
+      "icono": "🏢",
+      "fase": "ESCRITURARIO",
+      "orden": 17
+    },
+    {
+      "id": "automotor",
+      "nombre": "Registro del Automotor (DNRPA)",
+      "icono": "🚗",
+      "fase": "ESCRITURARIO",
+      "orden": 18
+    },
+    {
+      "id": "derogados",
+      "nombre": "Costos Derogados (NO incluir en 2026)",
+      "icono": "🚫",
+      "fase": "INFO",
+      "orden": 99
+    }
+  ],
+  "tramites": [
+    {
+      "id": "fojas_protocolo",
+      "categoria": "insumos",
+      "nombre": "Fojas de Protocolo y Actuación",
+      "descripcion": "Papel de seguridad rubricado para escritura matriz y testimonios (copias para cliente y registro).",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal",
+      "url_label": "Autogestión CESCBA",
+      "costo_2026": null,
+      "nota": "Se adquieren mediante sistema de Autogestión del Colegio."
+    },
+    {
+      "id": "fojas_protocolo_caba",
+      "categoria": "insumos",
+      "nombre": "Fojas de Protocolo y Actuación (CABA)",
+      "descripcion": "Papel de seguridad rubricado para escritura matriz y testimonios.",
+      "jurisdiccion": "CABA",
+      "url": "https://www.colegio-escribanos.org.ar",
+      "url_label": "Colegio CABA",
+      "costo_2026": null,
+      "nota": "Se adquieren mediante sistema de Autogestión del Colegio CABA."
+    },
+    {
+      "id": "sellos_legalizacion",
+      "categoria": "insumos",
+      "nombre": "Sellos de Legalización y Apostilla",
+      "descripcion": "Obleas con código QR para validez internacional o interjurisdiccional (Apostilla de La Haya).",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal/tasas",
+      "url_label": "Tasas CESCBA",
+      "costo_2026": null,
+      "nota": "Autogestión del Colegio de Escribanos."
+    },
+    {
+      "id": "cert_dominio",
+      "categoria": "pre_escriturario",
+      "nombre": "Certificado de Dominio",
+      "descripcion": "Informa titular actual, embargos e hipotecas. Genera reserva de prioridad (bloqueo registral).",
+      "jurisdiccion": "PBA",
+      "url": "https://www.rpba.gov.ar",
+      "url_label": "Ventanilla Virtual RPBA",
+      "costo_2026": null,
+      "nota": "Vigencia: 15/25/30 días según distancia del asiento notarial."
+    },
+    {
+      "id": "cert_dominio_caba",
+      "categoria": "pre_escriturario",
+      "nombre": "Certificado de Dominio (CABA)",
+      "descripcion": "Informa titular actual, embargos e hipotecas. Genera reserva de prioridad.",
+      "jurisdiccion": "CABA",
+      "url": "https://www.dnrpi.jus.gov.ar",
+      "url_label": "RPI CABA",
+      "costo_2026": null,
+      "nota": "Vigencia: 15/25/30 días según distancia del asiento notarial."
+    },
+    {
+      "id": "cert_inhibicion",
+      "categoria": "pre_escriturario",
+      "nombre": "Certificado de Anotaciones Personales (Inhibición)",
+      "descripcion": "Verifica que los vendedores no estén inhibidos judicialmente para disponer de bienes.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.rpba.gov.ar",
+      "url_label": "Ventanilla Virtual RPBA",
+      "costo_2026": null,
+      "nota": "Se solicita junto con el certificado de dominio."
+    },
+    {
+      "id": "cert_inhibicion_caba",
+      "categoria": "pre_escriturario",
+      "nombre": "Certificado de Anotaciones Personales (CABA)",
+      "descripcion": "Verifica que los vendedores no estén inhibidos judicialmente para disponer de bienes.",
+      "jurisdiccion": "CABA",
+      "url": "https://www.dnrpi.jus.gov.ar",
+      "url_label": "RPI CABA",
+      "costo_2026": null,
+      "nota": "Se solicita junto con el certificado de dominio."
+    },
+    {
+      "id": "cert_catastral",
+      "categoria": "pre_escriturario",
+      "nombre": "Certificado Catastral / Estado Parcelario",
+      "descripcion": "Estado físico del inmueble (mensura) y valuación fiscal vigente.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.arba.gov.ar",
+      "url_label": "ARBA",
+      "costo_2026": null,
+      "nota": "Vigencia varía de 2 a 12 años según última mensura (Art. 14 Ley 10.707)."
+    },
+    {
+      "id": "cert_catastral_caba",
+      "categoria": "pre_escriturario",
+      "nombre": "Certificado Catastral / Estado Parcelario (CABA)",
+      "descripcion": "Estado físico del inmueble. Desde 2026, DGROC exige intervención notarial para certificar titularidad.",
+      "jurisdiccion": "CABA",
+      "url": "https://tramitesadistancia.buenosaires.gob.ar",
+      "url_label": "TAD - CABA",
+      "costo_2026": null,
+      "nota": "Desde 01/01/2026, obligatoria intervención notarial ante DGROC antes de cierto tipo de mensuras."
+    },
+    {
+      "id": "libre_deuda_arba",
+      "categoria": "pre_escriturario",
+      "nombre": "Libre Deuda Inmobiliario (ARBA)",
+      "descripcion": "Verifica que no exista deuda de Impuesto Inmobiliario Provincial.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.arba.gov.ar",
+      "url_label": "ARBA",
+      "costo_2026": null,
+      "nota": "Retención provincial clave."
+    },
+    {
+      "id": "libre_deuda_agip",
+      "categoria": "pre_escriturario",
+      "nombre": "Libre Deuda Inmobiliario (AGIP)",
+      "descripcion": "Verifica que no exista deuda de impuestos inmobiliarios en CABA.",
+      "jurisdiccion": "CABA",
+      "url": "https://www.agip.gob.ar",
+      "url_label": "AGIP",
+      "costo_2026": null,
+      "nota": "Impuesto inmobiliario y ABL."
+    },
+    {
+      "id": "libre_deuda_municipal",
+      "categoria": "pre_escriturario",
+      "nombre": "Libre Deuda Tasa Municipal (ABL/TSG)",
+      "descripcion": "Libre deuda de tasas municipales (Alumbrado, Barrido y Limpieza o Tasa de Servicios Generales).",
+      "jurisdiccion": "PBA",
+      "url": null,
+      "url_label": "Municipio correspondiente",
+      "costo_2026": null,
+      "nota": "Cada municipio tiene su propio portal. Consultar la web del municipio del inmueble."
+    },
+    {
+      "id": "libre_deuda_absa",
+      "categoria": "pre_escriturario",
+      "nombre": "Libre Deuda ABSA (Agua - PBA)",
+      "descripcion": "Certificado de deuda del servicio de agua potable y cloacas de ABSA.",
+      "jurisdiccion": "PBA",
+      "url": null,
+      "url_label": "Por email",
+      "costo_2026": null,
+      "nota": "Desde 2026 se solicita OBLIGATORIAMENTE por correo a escribanos@aguasbonaerenses.com.ar"
+    },
+    {
+      "id": "libre_deuda_aysa",
+      "categoria": "pre_escriturario",
+      "nombre": "Libre Deuda AySA (Agua - CABA/GBA)",
+      "descripcion": "Certificado de deuda del servicio de agua y saneamiento de AySA.",
+      "jurisdiccion": "AMBAS",
+      "url": "https://www.aysa.com.ar",
+      "url_label": "AySA",
+      "costo_2026": null,
+      "nota": "Sistema web de gestión de certificados de deuda."
+    },
+    {
+      "id": "control_repet",
+      "categoria": "pre_escriturario",
+      "nombre": "Control UIF - RePET (Terrorismo)",
+      "descripcion": "Constatación de que los clientes no figuren en listas de terrorismo o financiamiento de armas de destrucción masiva.",
+      "jurisdiccion": "AMBAS",
+      "url": "https://repet.jus.gob.ar/",
+      "url_label": "RePET",
+      "costo_2026": null,
+      "nota": "Obligatorio antes de escriturar. Consultar ambas listas (RePET + ONU)."
+    },
+    {
+      "id": "control_onu",
+      "categoria": "pre_escriturario",
+      "nombre": "Control UIF - Listas ONU",
+      "descripcion": "Verificación contra listas de sanciones del Consejo de Seguridad de la ONU.",
+      "jurisdiccion": "AMBAS",
+      "url": "https://main.un.org/securitycouncil/es",
+      "url_label": "ONU - Consejo de Seguridad",
+      "costo_2026": null,
+      "nota": "Consultar consolidado de sanciones."
+    },
+    {
+      "id": "partidas_registro_civil",
+      "categoria": "pre_escriturario",
+      "nombre": "Gestión de Partidas (Registro Civil)",
+      "descripcion": "Actas de Nacimiento, Defunción o Matrimonio para acreditar vínculos o estados civiles.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.gba.gob.ar/registrodelaspersonas",
+      "url_label": "Registro Personas PBA",
+      "costo_2026": null,
+      "nota": "Para ventas con poder, entre familiares o sucesiones."
+    },
+    {
+      "id": "partidas_registro_civil_caba",
+      "categoria": "pre_escriturario",
+      "nombre": "Gestión de Partidas - Registro Civil (CABA)",
+      "descripcion": "Actas de Nacimiento, Defunción o Matrimonio.",
+      "jurisdiccion": "CABA",
+      "url": "https://tramitesadistancia.buenosaires.gob.ar",
+      "url_label": "TAD - CABA",
+      "costo_2026": null,
+      "nota": "Gestión vía Trámites a Distancia."
+    },
+    {
+      "id": "vigencia_cert_15",
+      "categoria": "plazos",
+      "nombre": "Vigencia Dominio/Inhibición — 15 días",
+      "descripcion": "Escribano con asiento en la misma ciudad del Registro pertinente.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": "La firma SIEMPRE debe caer dentro de este plazo."
+    },
+    {
+      "id": "vigencia_cert_25",
+      "categoria": "plazos",
+      "nombre": "Vigencia Dominio/Inhibición — 25 días",
+      "descripcion": "Escribano con asiento en distinta ciudad pero misma Provincia que el Registro.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": "Aplica cuando Registro y escribano en misma Provincia pero distintas ciudades."
+    },
+    {
+      "id": "vigencia_cert_30",
+      "categoria": "plazos",
+      "nombre": "Vigencia Dominio/Inhibición — 30 días",
+      "descripcion": "Escribano con asiento en Provincia distinta a la del Registro de origen.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": "Ej: Escribano de PBA escriturando inmueble inscripto en CABA."
+    },
+    {
+      "id": "plazo_inscripcion_45",
+      "categoria": "plazos",
+      "nombre": "Plazo de Inscripción Post-Firma — 45 días",
+      "descripcion": "Plazo para inscribir la matrícula en el Registro conservando retroactividad al momento de la firma.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": "Los 45 días corren desde la firma de la escritura."
+    },
+    {
+      "id": "vigencia_estado_parcelario",
+      "categoria": "plazos",
+      "nombre": "Vigencia Estado Parcelario (PBA)",
+      "descripcion": "Varía de 2 a 12 años según tipo de inmueble. Verificar fecha de última mensura.",
+      "jurisdiccion": "PBA",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": "Art. 14 Ley 10.707."
+    },
+    {
+      "id": "imp_sellos_pba",
+      "categoria": "escriturario",
+      "nombre": "Impuesto de Sellos (PBA)",
+      "descripcion": "Tributo provincial que grava actos onerosos. El escribano liquida y retiene.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.arba.gov.ar",
+      "url_label": "SIESBA - ARBA",
+      "costo_2026": "2%",
+      "nota": "Exenciones para Vivienda Única. Liquidar vía SIESBA."
+    },
+    {
+      "id": "imp_sellos_caba",
+      "categoria": "escriturario",
+      "nombre": "Impuesto de Sellos (CABA)",
+      "descripcion": "Tributo que grava actos onerosos en CABA.",
+      "jurisdiccion": "CABA",
+      "url": "https://www.agip.gob.ar",
+      "url_label": "SIE - AGIP",
+      "costo_2026": "2,7% a 3,5%",
+      "nota": "Según tipo de acto y monto. Sistema SIE de CABA."
+    },
+    {
+      "id": "imp_ganancias_sicore",
+      "categoria": "escriturario",
+      "nombre": "Retención Ganancias (SICORE)",
+      "descripcion": "Retención del 3% para sujetos colectivos o casos especiales. El ITI fue derogado en 2024.",
+      "jurisdiccion": "AMBAS",
+      "url": "https://www.arca.gob.ar",
+      "url_label": "ARCA (ex AFIP)",
+      "costo_2026": "3%",
+      "nota": "Aplicativo SICORE v9.0 Release 22."
+    },
+    {
+      "id": "imp_itgb",
+      "categoria": "escriturario",
+      "nombre": "ITGB — Transmisión Gratuita de Bienes",
+      "descripcion": "Impuesto provincial exclusivo PBA sobre donaciones y herencias.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.arba.gov.ar",
+      "url_label": "ARBA - DDJJ Web",
+      "costo_2026": "Variable según monto",
+      "nota": "Solo PBA. Declaración Jurada web en ARBA."
+    },
+    {
+      "id": "aportes_notariales",
+      "categoria": "escriturario",
+      "nombre": "Aportes Notariales (Caja Previsión Social)",
+      "descripcion": "Aportes obligatorios sobre honorarios para sistema jubilatorio del escribano.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal",
+      "url_label": "Autogestión CESCBA",
+      "costo_2026": null,
+      "nota": "Vía SIESBA (PBA) o Boleta Ley 404 (CABA)."
+    },
+    {
+      "id": "tasa_registracion",
+      "categoria": "post_escriturario",
+      "nombre": "Tasa de Registración Inmobiliaria",
+      "descripcion": "Pago por inscripción de la escritura en el Registro de la Propiedad.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.rpba.gov.ar",
+      "url_label": "Ventanilla Virtual RPBA",
+      "costo_2026": "2‰ (mín. $42.000)",
+      "nota": "Se abona junto con la rogatoria."
+    },
+    {
+      "id": "tasa_registracion_caba",
+      "categoria": "post_escriturario",
+      "nombre": "Tasa de Registración Inmobiliaria (CABA)",
+      "descripcion": "Pago por inscripción de la escritura en el RPI CABA.",
+      "jurisdiccion": "CABA",
+      "url": "https://www.dnrpi.jus.gov.ar",
+      "url_label": "RPI CABA",
+      "costo_2026": null,
+      "nota": "Consultar aranceles vigentes en RPI CABA."
+    },
+    {
+      "id": "minuta_rogatoria",
+      "categoria": "post_escriturario",
+      "nombre": "Minuta de Inscripción Rogatoria",
+      "descripcion": "Formulario digital con datos del adquirente, transmitente e inmueble para solicitar inscripción.",
+      "jurisdiccion": "AMBAS",
+      "url": "https://www.rpba.gov.ar",
+      "url_label": "SICOIN/SICOIT / Ventanilla Virtual",
+      "costo_2026": null,
+      "nota": "Sistemas SICOIN (PBA) o Ventanilla Virtual (CABA)."
+    },
+    {
+      "id": "ddjj_beneficiario_final",
+      "categoria": "post_escriturario",
+      "nombre": "DDJJ de Beneficiario Final (UIF)",
+      "descripcion": "Requisito al inscribir transferencias de personas jurídicas (Res. UIF 112/2021).",
+      "jurisdiccion": "AMBAS",
+      "url": "https://www.rpba.gov.ar",
+      "url_label": "Ventanilla Virtual",
+      "costo_2026": null,
+      "nota": "RPI CABA permite integración 100% digital en la minuta."
+    },
+    {
+      "id": "reporte_rsm_ros",
+      "categoria": "post_escriturario",
+      "nombre": "Reportes UIF (RSM / ROS)",
+      "descripcion": "RSM: compraventas en efectivo >750 SMVM. ROS: si hay indicios de lavado de activos.",
+      "jurisdiccion": "AMBAS",
+      "url": "https://www.argentina.gob.ar/uif",
+      "url_label": "SRO - UIF",
+      "costo_2026": null,
+      "nota": "Plataforma SRO (Sistema de Reporte de Operaciones)."
+    },
+    {
+      "id": "archivo_encuadernacion",
+      "categoria": "post_escriturario",
+      "nombre": "Archivo y Encuadernación de Protocolos",
+      "descripcion": "Encuadernar matrices y remitir tomos al Archivo de Actuaciones Notariales del Colegio al finalizar el año.",
+      "jurisdiccion": "AMBAS",
+      "url": "https://www.colescba.org.ar/portal",
+      "url_label": "Autogestión CESCBA",
+      "costo_2026": null,
+      "nota": "Trámite interno presencial o por Autogestión."
+    },
+    {
+      "id": "informe_historico_inhibicion",
+      "categoria": "estudio_titulos",
+      "nombre": "Informe Histórico de Anotaciones Personales",
+      "descripcion": "Historial de inhibiciones de los vendedores para estudio de títulos.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.rpba.gov.ar",
+      "url_label": "Ventanilla Virtual RPBA",
+      "costo_2026": "$44.600",
+      "nota": "Costo simple. Usar para verificar tracto."
+    },
+    {
+      "id": "copia_asientos_viejos",
+      "categoria": "estudio_titulos",
+      "nombre": "Copia de Asientos Registrales / Años Viejos",
+      "descripcion": "Copias de inscripciones antiguas o planos archivados para verificar tracto sucesivo.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.rpba.gov.ar",
+      "url_label": "Ventanilla Virtual RPBA",
+      "costo_2026": "$20.400 simple / $52.200 urgente / $114.300 en el día",
+      "nota": "Para libros físicos antiguos."
+    },
+    {
+      "id": "prorroga_inscripcion_provisional",
+      "categoria": "estudio_titulos",
+      "nombre": "Prórroga de Inscripción Provisional",
+      "descripcion": "Si el Registro observa la escritura, se inscribe provisionalmente. Pedir prórroga para mantener bloqueo.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.rpba.gov.ar",
+      "url_label": "Sistema rogación RPBA",
+      "costo_2026": "$91.000",
+      "nota": "Costo fijo 2026 PBA."
+    },
+    {
+      "id": "minuta_tracto_abreviado",
+      "categoria": "estudio_titulos",
+      "nombre": "Minuta para Tracto Abreviado",
+      "descripcion": "Cuando el vendedor heredero no tiene el inmueble inscripto a su nombre. Se liquida tracto + venta.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.arba.gov.ar",
+      "url_label": "SIESBA / CESCBA",
+      "costo_2026": null,
+      "nota": "Liquidación en SIESBA y rogatoria en el Registro."
+    },
+    {
+      "id": "indice_titulares_dominio",
+      "categoria": "estudio_titulos",
+      "nombre": "Índice de Titulares de Dominio",
+      "descripcion": "Averigua qué propiedades tiene una persona a su nombre.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.rpba.gov.ar",
+      "url_label": "Ventanilla Virtual RPBA",
+      "costo_2026": "$20.400 por persona",
+      "nota": "Consulta por titular."
+    },
+    {
+      "id": "consulta_antecedentes_publicidad",
+      "categoria": "estudio_titulos",
+      "nombre": "Consulta de Antecedentes de Publicidad Registral",
+      "descripcion": "Informe web sin firma digital (informativo).",
+      "jurisdiccion": "PBA",
+      "url": "https://www.rpba.gov.ar",
+      "url_label": "Ventanilla Virtual RPBA",
+      "costo_2026": "$20.400",
+      "nota": "Solo informativo, sin firma digital."
+    },
+    {
+      "id": "reg_testamentos",
+      "categoria": "registros_colegio",
+      "nombre": "Registro de Testamentos",
+      "descripcion": "Inscripción obligatoria al redactar testamento por acto público.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal",
+      "url_label": "Autogestión CESCBA",
+      "costo_2026": "Inscripción $13.920 / Informe $32.950",
+      "nota": "Registro administrado por el Colegio de Escribanos."
+    },
+    {
+      "id": "reg_autoproteccion",
+      "categoria": "registros_colegio",
+      "nombre": "Registro de Actos de Autoprotección",
+      "descripcion": "Directivas anticipadas sobre salud o administración de bienes.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal",
+      "url_label": "Autogestión CESCBA",
+      "costo_2026": "Inscripción $13.920 / Informe $7.075",
+      "nota": "Para directivas anticipadas."
+    },
+    {
+      "id": "reg_rubrica_consorcios",
+      "categoria": "registros_colegio",
+      "nombre": "Rúbrica de Libros de Consorcios PH",
+      "descripcion": "Matriculación, inscripción por libro y certificado para consorcios de propiedad horizontal.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal",
+      "url_label": "Autogestión CESCBA",
+      "costo_2026": "$13.370 cada trámite",
+      "nota": null
+    },
+    {
+      "id": "vir_caba",
+      "categoria": "catastro_valuacion",
+      "nombre": "VIR — Valor Inmobiliario de Referencia (CABA)",
+      "descripcion": "Documento obligatorio de AGIP. El VIR o precio de venta (el mayor) es la base imponible.",
+      "jurisdiccion": "CABA",
+      "url": "https://www.agip.gob.ar",
+      "url_label": "AGIP",
+      "costo_2026": null,
+      "nota": "Base para honorarios e Impuesto de Sellos en CABA."
+    },
+    {
+      "id": "dgroc_notarial",
+      "categoria": "catastro_valuacion",
+      "nombre": "Acreditación Notarial para Estado Parcelario (DGROC)",
+      "descripcion": "Desde 01/01/2026, intervención notarial obligatoria para certificar titularidad ante DGROC.",
+      "jurisdiccion": "CABA",
+      "url": "https://tramitesadistancia.buenosaires.gob.ar",
+      "url_label": "TAD - CABA",
+      "costo_2026": null,
+      "nota": "Necesario para hipotecas, usufructos, etc. Plataforma TAD."
+    },
+    {
+      "id": "copias_planos_geodesia",
+      "categoria": "catastro_valuacion",
+      "nombre": "Copias de Planos de Geodesia (Catastro)",
+      "descripcion": "Copias oficiales de planos aprobados, vía Archivo del Colegio.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal",
+      "url_label": "Archivo CESCBA",
+      "costo_2026": "$23.200 (chico) / $32.400 (grande)",
+      "nota": null
+    },
+    {
+      "id": "uif_congelamiento",
+      "categoria": "uif_compliance",
+      "nombre": "Reporte de Orden de Congelamiento Administrativo",
+      "descripcion": "Si al controlar RePET/ONU aparece positivo o la UIF notifica congelamiento: detener escritura en 24hs.",
+      "jurisdiccion": "AMBAS",
+      "url": "https://www.argentina.gob.ar/uif",
+      "url_label": "SRO - UIF",
+      "costo_2026": null,
+      "nota": "24 horas para detener, retener fondos y reportar."
+    },
+    {
+      "id": "ddjj_origen_licitud",
+      "categoria": "uif_compliance",
+      "nombre": "DDJJ de Origen y Licitud de Fondos",
+      "descripcion": "Para operaciones en efectivo >40 SMVM. Anexar al perfil del cliente.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": "Formulario interno",
+      "costo_2026": null,
+      "nota": "Exigido por Res. UIF 78/2025."
+    },
+    {
+      "id": "ddjj_pep",
+      "categoria": "uif_compliance",
+      "nombre": "DDJJ Personas Políticamente Expuestas (PEP)",
+      "descripcion": "Obligatorio (Res. UIF 35/2023) al constituir fideicomisos, sociedades o transferir inmuebles.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": "Formulario interno",
+      "costo_2026": null,
+      "nota": "Exigido por Res. UIF 35/2023."
+    },
+    {
+      "id": "legalizacion_sello",
+      "categoria": "legalizaciones",
+      "nombre": "Sello de Legalización + Código QR",
+      "descripcion": "Certifica autenticidad de firma del escribano y que está en ejercicio.",
+      "jurisdiccion": "AMBAS",
+      "url": "https://www.colescba.org.ar/portal/tasas",
+      "url_label": "Autogestión CESCBA",
+      "costo_2026": "$21.000 por unidad",
+      "nota": "Desde 01/02/2026."
+    },
+    {
+      "id": "apostilla_haya",
+      "categoria": "legalizaciones",
+      "nombre": "Apostilla de La Haya",
+      "descripcion": "Certificación internacional para documentos con validez en países del convenio.",
+      "jurisdiccion": "AMBAS",
+      "url": "https://www.colescba.org.ar/portal/tasas",
+      "url_label": "Autogestión CESCBA",
+      "costo_2026": "$28.000 por unidad",
+      "nota": "Desde 01/02/2026."
+    },
+    {
+      "id": "copia_virtual",
+      "categoria": "archivo_copias",
+      "nombre": "Copia Virtual (hasta 25 fojas)",
+      "descripcion": "Reproducción digital de escritura antigua.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal/tasas",
+      "url_label": "Archivo CESCBA",
+      "costo_2026": "$23.000",
+      "nota": null
+    },
+    {
+      "id": "testimonio_normal",
+      "categoria": "archivo_copias",
+      "nombre": "Testimonio Particular (Normal)",
+      "descripcion": "Copia oficial de escritura, 1 a 5 fojas.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal/tasas",
+      "url_label": "Archivo CESCBA",
+      "costo_2026": "$113.850 (1-5 fojas) + $13.090/foja extra",
+      "nota": null
+    },
+    {
+      "id": "testimonio_urgente",
+      "categoria": "archivo_copias",
+      "nombre": "Testimonio Particular (Urgente)",
+      "descripcion": "Copia oficial de escritura urgente, 1 a 5 fojas.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal/tasas",
+      "url_label": "Archivo CESCBA",
+      "costo_2026": "$228.800 (1-5 fojas) + $25.100/foja extra",
+      "nota": null
+    },
+    {
+      "id": "copia_simple",
+      "categoria": "archivo_copias",
+      "nombre": "Copia Simple Particular",
+      "descripcion": "Copia no oficial de escritura.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal/tasas",
+      "url_label": "Archivo CESCBA",
+      "costo_2026": "$35.400 normal / $68.850 urgente (1-5 fojas)",
+      "nota": null
+    },
+    {
+      "id": "anotacion_marginal",
+      "categoria": "archivo_copias",
+      "nombre": "Anotación Marginal",
+      "descripcion": "Nota al margen de escritura vieja (ej: indicar que el inmueble fue vendido).",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal/tasas",
+      "url_label": "Archivo CESCBA",
+      "costo_2026": "$45.970 normal / $91.950 urgente",
+      "nota": null
+    },
+    {
+      "id": "busqueda_indice",
+      "categoria": "archivo_copias",
+      "nombre": "Búsqueda por Índice",
+      "descripcion": "Para localizar una escritura sin datos exactos.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal/tasas",
+      "url_label": "Archivo CESCBA",
+      "costo_2026": "$9.780",
+      "nota": null
+    },
+    {
+      "id": "exhibicion_protocolo",
+      "categoria": "archivo_copias",
+      "nombre": "Exhibición de Protocolo",
+      "descripcion": "Ver el libro matriz original.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal/tasas",
+      "url_label": "Archivo CESCBA",
+      "costo_2026": "$11.770",
+      "nota": null
+    },
+    {
+      "id": "bapro_compraventa",
+      "categoria": "hipotecario_bapro",
+      "nombre": "Honorario Compraventa (BAPRO)",
+      "descripcion": "Arancel especial reducido para compraventas con préstamo Banco Provincia.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.bancoprovincia.com.ar",
+      "url_label": "Banco Provincia",
+      "costo_2026": "1,00% del monto (mín. $368.400)",
+      "nota": "Arancel topeado para proteger al comprador."
+    },
+    {
+      "id": "bapro_hipoteca",
+      "categoria": "hipotecario_bapro",
+      "nombre": "Honorario Hipoteca (BAPRO)",
+      "descripcion": "Arancel especial para constitución de hipoteca con Banco Provincia.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.bancoprovincia.com.ar",
+      "url_label": "Banco Provincia",
+      "costo_2026": "0,75% hasta $426.741.000 / 0,50% excedente / Tope $3.474.000",
+      "nota": null
+    },
+    {
+      "id": "bapro_cancelacion",
+      "categoria": "hipotecario_bapro",
+      "nombre": "Cancelación de Hipoteca (BAPRO)",
+      "descripcion": "Arancel para cancelación de hipoteca del Banco Provincia.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.bancoprovincia.com.ar",
+      "url_label": "Banco Provincia",
+      "costo_2026": "3‰ sobre obligación (mín. $368.400)",
+      "nota": null
+    },
+    {
+      "id": "sellos_instrumento_privado",
+      "categoria": "instrumentos_privados",
+      "nombre": "DDJJ Instrumento Privado — Sellos (ARBA)",
+      "descripcion": "Liquidar impuesto de sellos sobre boleto de compraventa dentro de 15 días de la firma.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.arba.gov.ar",
+      "url_label": "ARBA - Sellos - DDJJ Instr. Privados",
+      "costo_2026": null,
+      "nota": "Se requiere Clave de Identificación Tributaria (CIT)."
+    },
+    {
+      "id": "cert_firmas",
+      "categoria": "extraprotocolar",
+      "nombre": "Certificación de Firmas e Impresiones Digitales",
+      "descripcion": "Autenticación de firmas en boletos, formularios automotores o contratos privados.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": "Libro Requerimientos Digital (SDF 2.0)",
+      "costo_2026": null,
+      "nota": "Se registran en fojas Serie 'D'."
+    },
+    {
+      "id": "cert_supervivencia",
+      "categoria": "extraprotocolar",
+      "nombre": "Certificado de Supervivencia / Existencia",
+      "descripcion": "Constatación de que una persona física o jurídica existe y está vigente.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": "Solicitado por bancos o ANSES."
+    },
+    {
+      "id": "cert_copias_fotos",
+      "categoria": "extraprotocolar",
+      "nombre": "Certificación de Copias y Fotografías",
+      "descripcion": "Autenticación de que una fotocopia o reproducción es fiel al original.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": null
+    },
+    {
+      "id": "actas_constatacion",
+      "categoria": "extraprotocolar",
+      "nombre": "Actas Notariales de Constatación",
+      "descripcion": "Comprobar hechos, presencia, sorteos, asambleas, notificaciones o intimaciones.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": null
+    },
+    {
+      "id": "convenciones_matrimoniales",
+      "categoria": "familia_sucesiones",
+      "nombre": "Convenciones Matrimoniales y Cambio de Régimen",
+      "descripcion": "Escritura para elegir separación de bienes antes o durante el matrimonio.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": null
+    },
+    {
+      "id": "pactos_convivencia",
+      "categoria": "familia_sucesiones",
+      "nombre": "Pactos de Convivencia",
+      "descripcion": "Regular aspectos patrimoniales de uniones convivenciales.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": null
+    },
+    {
+      "id": "cesion_hereditaria",
+      "categoria": "familia_sucesiones",
+      "nombre": "Cesión de Acciones y Derechos Hereditarios",
+      "descripcion": "Heredero cede derechos sobre sucesión a otro heredero o tercero.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": "Con o sin inmuebles."
+    },
+    {
+      "id": "protocolizacion_testamentos",
+      "categoria": "familia_sucesiones",
+      "nombre": "Protocolización de Testamentos y Declaratorias",
+      "descripcion": "Agregar al protocolo un testamento ológrafo o declaratoria de herederos para inscripción registral.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": null
+    },
+    {
+      "id": "usufructo_uso_habitacion",
+      "categoria": "derechos_reales",
+      "nombre": "Constitución de Usufructo, Uso y Habitación",
+      "descripcion": "Derecho a usar inmueble y percibir frutos, reteniendo titular solo nuda propiedad.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": null
+    },
+    {
+      "id": "derecho_superficie",
+      "categoria": "derechos_reales",
+      "nombre": "Derecho de Superficie",
+      "descripcion": "Derecho real a edificar, plantar o forestar sobre inmueble ajeno.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": null
+    },
+    {
+      "id": "prenda_mutuo",
+      "categoria": "derechos_reales",
+      "nombre": "Mutuo con Garantía Prendaria",
+      "descripcion": "Préstamo de dinero garantizado con bienes muebles (prenda).",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": null
+    },
+    {
+      "id": "constitucion_sociedad",
+      "categoria": "societario",
+      "nombre": "Constitución, Fusión y Escisión de Sociedades",
+      "descripcion": "Crear, unir o dividir empresas. Tributan e inscriben en RPI y DPPJ cuando incluyen inmuebles.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": "Inscripción en RPI + Dirección Provincial de Personas Jurídicas."
+    },
+    {
+      "id": "aporte_capital_inmueble",
+      "categoria": "societario",
+      "nombre": "Aporte de Capital Inmueble a Sociedad",
+      "descripcion": "Transferencia de inmueble de socio a empresa para integrar capital.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": null
+    },
+    {
+      "id": "fondo_comercio",
+      "categoria": "societario",
+      "nombre": "Transferencia de Fondo de Comercio",
+      "descripcion": "Venta de titularidad de un negocio o industria.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": null
+    },
+    {
+      "id": "automotor_f08",
+      "categoria": "automotor",
+      "nombre": "Certificación de Firmas — Formulario 08",
+      "descripcion": "Certificación de firma del vendedor y comprador para transferencia de automotores.",
+      "jurisdiccion": "AMBAS",
+      "url": "https://www.dnrpa.gov.ar",
+      "url_label": "DNRPA",
+      "costo_2026": null,
+      "nota": "Las valuaciones y aranceles se consultan en la web de DNRPA."
+    },
+    {
+      "id": "afectacion_vivienda",
+      "categoria": "post_escriturario",
+      "nombre": "Afectación / Desafectación al Régimen de Vivienda",
+      "descripcion": "Protege el inmueble contra embargos (ex Bien de Familia).",
+      "jurisdiccion": "PBA",
+      "url": "https://www.rpba.gov.ar",
+      "url_label": "Ventanilla Virtual RPBA",
+      "costo_2026": "$42.000 simple / $131.500 urgente",
+      "nota": null
+    },
+    {
+      "id": "afectacion_ph",
+      "categoria": "post_escriturario",
+      "nombre": "Afectación a Propiedad Horizontal (PH)",
+      "descripcion": "Subdivisión de lote o edificio al régimen PH / Conjuntos Inmobiliarios.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.rpba.gov.ar",
+      "url_label": "Ventanilla Virtual RPBA",
+      "costo_2026": "$42.000 simple / $131.500 urgente",
+      "nota": null
+    },
+    {
+      "id": "constitucion_hipoteca_reg",
+      "categoria": "post_escriturario",
+      "nombre": "Registración de Hipoteca",
+      "descripcion": "Inscripción de constitución de hipoteca en el Registro.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.rpba.gov.ar",
+      "url_label": "Ventanilla Virtual RPBA",
+      "costo_2026": "$42.000 fija + 2‰ variable",
+      "nota": null
+    },
+    {
+      "id": "desarchivo_expedientes",
+      "categoria": "archivo_copias",
+      "nombre": "Desarchivo de Expedientes (RPBA)",
+      "descripcion": "Recuperar trámite registral paralizado o archivado.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.rpba.gov.ar",
+      "url_label": "Ventanilla Virtual RPBA",
+      "costo_2026": "$35.800",
+      "nota": null
+    },
+    {
+      "id": "franqueo_notarial",
+      "categoria": "archivo_copias",
+      "nombre": "Franqueo Notarial",
+      "descripcion": "Tasa interna por envíos de documentación oficial.",
+      "jurisdiccion": "PBA",
+      "url": "https://www.colescba.org.ar/portal",
+      "url_label": "Autogestión CESCBA",
+      "costo_2026": "$13.920",
+      "nota": null
+    },
+    {
+      "id": "iti_derogado",
+      "categoria": "derogados",
+      "nombre": "ITI (1,5%) — DEROGADO",
+      "descripcion": "Derogado por Ley 27.743 (julio 2024). Ya NO se retiene ni se piden certificados de no retención.",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": "ELIMINADO. No incluir en presupuestos 2026."
+    },
+    {
+      "id": "citi_coti_derogado",
+      "categoria": "derogados",
+      "nombre": "CITI Escribanos / COTI — DEROGADO",
+      "descripcion": "AFIP (ARCA) derogó el COTI y régimen CITI a partir de mediados de 2025 (RG 5697/25 y 5698/25).",
+      "jurisdiccion": "AMBAS",
+      "url": null,
+      "url_label": null,
+      "costo_2026": null,
+      "nota": "ELIMINADO. No incluir en presupuestos 2026."
+    }
+  ]
+}
