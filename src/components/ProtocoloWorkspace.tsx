@@ -35,9 +35,9 @@ const COLUMN_HEADERS = [
     { key: "folios", label: "Folios", width: "w-[100px]", align: "text-center" },
     { key: "dia", label: "Día", width: "w-[55px]", align: "text-center" },
     { key: "mes", label: "Mes", width: "w-[55px]", align: "text-center" },
-    { key: "tipo_acto", label: "Acto", width: "w-[160px]", align: "text-left" },
-    { key: "vendedor_acreedor", label: "Vendedor / Acreedor / Poderdante", width: "min-w-[200px] flex-1", align: "text-left" },
-    { key: "comprador_deudor", label: "Comprador / Deudor / Apoderado", width: "min-w-[200px] flex-1", align: "text-left" },
+    { key: "tipo_acto", label: "Acto", width: "w-[180px]", align: "text-left" },
+    { key: "vendedor_acreedor", label: "Vendedor / Acreedor / Poderdante", width: "min-w-[220px] flex-1", align: "text-left" },
+    { key: "comprador_deudor", label: "Comprador / Deudor / Apoderado", width: "min-w-[220px] flex-1", align: "text-left" },
     { key: "codigo_acto", label: "Código Acto", width: "w-[120px]", align: "text-center" },
 ];
 
@@ -146,212 +146,212 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
 
     return (
         <>
-        <Tabs defaultValue="seguimiento" className="space-y-4">
-            <TabsList className="bg-slate-100">
-                <TabsTrigger value="seguimiento" className="gap-2">
-                    <ClipboardList className="h-4 w-4" />
-                    Seguimiento de Escrituras
-                </TabsTrigger>
-                <TabsTrigger value="indice" className="gap-2">
-                    <BookOpen className="h-4 w-4" />
-                    Índice del Protocolo {anio}
-                </TabsTrigger>
-            </TabsList>
+            <Tabs defaultValue="seguimiento" className="space-y-4">
+                <TabsList className="bg-slate-100">
+                    <TabsTrigger value="seguimiento" className="gap-2">
+                        <ClipboardList className="h-4 w-4" />
+                        Seguimiento de Escrituras
+                    </TabsTrigger>
+                    <TabsTrigger value="indice" className="gap-2">
+                        <BookOpen className="h-4 w-4" />
+                        Índice del Protocolo {anio}
+                    </TabsTrigger>
+                </TabsList>
 
-            {/* ── TAB 1: Seguimiento ── */}
-            <TabsContent value="seguimiento" className="space-y-4">
-                {/* Toolbar */}
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <div className="flex items-center gap-2">
-                        <Button onClick={openNewDialog} size="sm" variant="outline" className="gap-1.5">
-                            <Plus className="h-4 w-4" /> Nueva Escritura
-                        </Button>
-                        <div className="relative ml-2">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Buscar..."
-                                value={searchQuery}
-                                onChange={(e) => {
-                                    setSearchQuery(e.target.value);
-                                    setCurrentPage(1);
-                                }}
-                                className="pl-8 h-9 w-[220px]"
-                            />
-                        </div>
-                    </div>
-                    <Badge variant="secondary" className="text-xs text-slate-500">
-                        {registros.length} registros
-                    </Badge>
-                </div>
-
-                {/* Spreadsheet (read-only) */}
-                <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
-                    <div className="overflow-x-auto">
-                        {/* Header row */}
-                        <div className="flex bg-[#e1e1e1] text-black text-[11px] font-semibold tracking-wide min-w-fit sticky top-0 z-10">
-                            {COLUMN_HEADERS.map(col => (
-                                <div
-                                    key={col.key}
-                                    className={cn(
-                                        "px-2 py-2.5 border-r border-[#ccc] shrink-0 cursor-pointer select-none hover:bg-[#d5d5d5] transition-colors flex items-center gap-1",
-                                        col.width, col.align
-                                    )}
-                                    onClick={() => handleSort(col.key)}
-                                >
-                                    <span>{col.label}</span>
-                                    {sortCol === col.key ? (
-                                        sortDir === "asc"
-                                            ? <ArrowUp className="h-3 w-3 shrink-0" />
-                                            : <ArrowDown className="h-3 w-3 shrink-0" />
-                                    ) : (
-                                        <ArrowUpDown className="h-3 w-3 shrink-0 opacity-30" />
-                                    )}
-                                </div>
-                            ))}
-                            {/* Action column header */}
-                            <div className="w-[90px] shrink-0 px-1 py-2.5 border-r border-[#ccc] text-center" />
-                        </div>
-
-                        {/* Empty state */}
-                        {registros.length === 0 && (
-                            <div className="py-16 text-center text-muted-foreground text-sm">
-                                <ClipboardList className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-                                <p>No hay escrituras registradas en el protocolo {anio}.</p>
-                                <p className="text-xs mt-1">Presione &quot;Nueva Escritura&quot; para agregar la primera.</p>
+                {/* ── TAB 1: Seguimiento ── */}
+                <TabsContent value="seguimiento" className="space-y-4">
+                    {/* Toolbar */}
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex items-center gap-2">
+                            <Button onClick={openNewDialog} size="sm" variant="outline" className="gap-1.5">
+                                <Plus className="h-4 w-4" /> Nueva Escritura
+                            </Button>
+                            <div className="relative ml-2">
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Buscar..."
+                                    value={searchQuery}
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    className="pl-8 h-9 w-[220px]"
+                                />
                             </div>
-                        )}
-
-                        {/* Data rows (read-only) */}
-                        {paginatedRegistros.map((row, localIndex) => {
-                            const realIndex = (row as any)._originalIndex;
-                            const isErrose = row.es_errose || row.tipo_acto?.toLowerCase().includes("errose");
-                            const isEven = localIndex % 2 === 0;
-
-                            return (
-                                <div
-                                    key={row.id || `row-${realIndex}`}
-                                    className={cn(
-                                        "flex min-w-fit border-b border-slate-100 group",
-                                        isErrose
-                                            ? "bg-amber-50/70"
-                                            : isEven
-                                                ? "bg-white"
-                                                : "bg-slate-50/50"
-                                    )}
-                                >
-                                    {COLUMN_HEADERS.map(col => {
-                                        const rawValue = (row as any)[col.key];
-                                        const displayValue = rawValue ?? "";
-
-                                        return (
-                                            <div
-                                                key={col.key}
-                                                className={cn(
-                                                    "px-1 py-0.5 border-r border-slate-100 shrink-0 flex items-center",
-                                                    col.width, col.align
-                                                )}
-                                            >
-                                                <span className={cn(
-                                                    "w-full text-xs truncate px-1 py-1 rounded min-h-[28px] flex items-center",
-                                                    col.align === "text-right" && "justify-end",
-                                                    col.align === "text-center" && "justify-center",
-                                                    isErrose && col.key === "tipo_acto" && "text-amber-700 font-semibold italic"
-                                                )}>
-                                                    {displayValue}
-                                                    {(col.key === "vendedor_acreedor" || col.key === "comprador_deudor") && displayValue && (
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                window.open(`/clientes?q=${encodeURIComponent(String(displayValue).trim())}`, "_blank");
-                                                            }}
-                                                            className="ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-indigo-50 text-indigo-400 hover:text-indigo-600"
-                                                            title="Buscar en Clientes"
-                                                        >
-                                                            <ExternalLink className="h-3 w-3" />
-                                                        </button>
-                                                    )}
-                                                </span>
-                                            </div>
-                                        );
-                                    })}
-
-                                    {/* Action buttons: Edit + PDF + Carpeta + Delete */}
-                                    <div className="w-[90px] shrink-0 flex items-center justify-center gap-0.5">
-                                        <button
-                                            onClick={() => openEditDialog(row)}
-                                            className="p-1 rounded transition-all text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
-                                            title="Editar"
-                                        >
-                                            <Pencil className="h-3.5 w-3.5" />
-                                        </button>
-                                        <button
-                                            onClick={async () => {
-                                                if (row.pdf_storage_path) {
-                                                    const result = await getSignedUrl("protocolo", row.pdf_storage_path);
-                                                    if (result.success && result.url) {
-                                                        window.open(result.url, "_blank");
-                                                    } else {
-                                                        toast.error("Error al obtener el PDF");
-                                                    }
-                                                }
-                                            }}
-                                            disabled={!row.pdf_storage_path}
-                                            className={cn(
-                                                "p-1 rounded transition-all",
-                                                row.pdf_storage_path
-                                                    ? "text-blue-500 hover:text-blue-700 hover:bg-blue-50 cursor-pointer"
-                                                    : "text-slate-300 cursor-not-allowed"
-                                            )}
-                                            title={row.pdf_storage_path ? "Ver PDF" : "Sin PDF cargado"}
-                                        >
-                                            <Eye className="h-3.5 w-3.5" />
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                if (row.carpeta_id) {
-                                                    window.open(`/carpeta/${row.carpeta_id}`, "_blank");
-                                                }
-                                            }}
-                                            disabled={!row.carpeta_id}
-                                            className={cn(
-                                                "p-1 rounded transition-all",
-                                                row.carpeta_id
-                                                    ? "text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 cursor-pointer"
-                                                    : "text-slate-300 cursor-not-allowed"
-                                            )}
-                                            title={row.carpeta_id ? "Ir a carpeta" : "Sin carpeta vinculada"}
-                                        >
-                                            <FolderOpen className="h-3.5 w-3.5" />
-                                        </button>
-                                        <button
-                                            onClick={() => setPendingDeleteIndex(realIndex)}
-                                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-50 text-red-400 hover:text-red-600"
-                                            title="Eliminar"
-                                        >
-                                            <Trash2 className="h-3.5 w-3.5" />
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                        </div>
+                        <Badge variant="secondary" className="text-xs text-slate-500">
+                            {registros.length} registros
+                        </Badge>
                     </div>
-                </div>
 
-                <PaginationControls
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    totalItems={processedData.length}
-                    pageSize={pageSize}
-                    onPageChange={setCurrentPage}
-                    onPageSizeChange={setPageSize}
-                />
-            </TabsContent>
+                    {/* Spreadsheet (read-only) */}
+                    <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                        <div className="overflow-x-auto">
+                            {/* Header row */}
+                            <div className="flex bg-[#e1e1e1] text-black text-[11px] font-semibold tracking-wide min-w-fit sticky top-0 z-10">
+                                {COLUMN_HEADERS.map(col => (
+                                    <div
+                                        key={col.key}
+                                        className={cn(
+                                            "px-2 py-2.5 border-r border-[#ccc] shrink-0 cursor-pointer select-none hover:bg-[#d5d5d5] transition-colors flex items-center gap-1",
+                                            col.width, col.align
+                                        )}
+                                        onClick={() => handleSort(col.key)}
+                                    >
+                                        <span>{col.label}</span>
+                                        {sortCol === col.key ? (
+                                            sortDir === "asc"
+                                                ? <ArrowUp className="h-3 w-3 shrink-0" />
+                                                : <ArrowDown className="h-3 w-3 shrink-0" />
+                                        ) : (
+                                            <ArrowUpDown className="h-3 w-3 shrink-0 opacity-30" />
+                                        )}
+                                    </div>
+                                ))}
+                                {/* Action column header */}
+                                <div className="w-[90px] shrink-0 px-1 py-2.5 border-r border-[#ccc] text-center" />
+                            </div>
 
-            {/* ── TAB 2: Índice ── */}
-            <TabsContent value="indice">
-                <IndiceProtocolo registros={registros} anio={anio} />
-            </TabsContent>
-        </Tabs>
+                            {/* Empty state */}
+                            {registros.length === 0 && (
+                                <div className="py-16 text-center text-muted-foreground text-sm">
+                                    <ClipboardList className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+                                    <p>No hay escrituras registradas en el protocolo {anio}.</p>
+                                    <p className="text-xs mt-1">Presione &quot;Nueva Escritura&quot; para agregar la primera.</p>
+                                </div>
+                            )}
+
+                            {/* Data rows (read-only) */}
+                            {paginatedRegistros.map((row, localIndex) => {
+                                const realIndex = (row as any)._originalIndex;
+                                const isErrose = row.es_errose || row.tipo_acto?.toLowerCase().includes("errose");
+                                const isEven = localIndex % 2 === 0;
+
+                                return (
+                                    <div
+                                        key={row.id || `row-${realIndex}`}
+                                        className={cn(
+                                            "flex min-w-fit border-b border-slate-100 group",
+                                            isErrose
+                                                ? "bg-amber-50/70"
+                                                : isEven
+                                                    ? "bg-white"
+                                                    : "bg-slate-50/50"
+                                        )}
+                                    >
+                                        {COLUMN_HEADERS.map(col => {
+                                            const rawValue = (row as any)[col.key];
+                                            const displayValue = rawValue ?? "";
+
+                                            return (
+                                                <div
+                                                    key={col.key}
+                                                    className={cn(
+                                                        "px-1 py-0.5 border-r border-slate-100 shrink-0 flex items-start",
+                                                        col.width, col.align
+                                                    )}
+                                                >
+                                                    <span className={cn(
+                                                        "w-full text-xs break-words px-1 py-1 rounded min-h-[28px] flex items-start",
+                                                        col.align === "text-right" && "justify-end",
+                                                        col.align === "text-center" && "justify-center",
+                                                        isErrose && col.key === "tipo_acto" && "text-amber-700 font-semibold italic"
+                                                    )}>
+                                                        {displayValue}
+                                                        {(col.key === "vendedor_acreedor" || col.key === "comprador_deudor") && displayValue && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    window.open(`/clientes?q=${encodeURIComponent(String(displayValue).trim())}`, "_blank");
+                                                                }}
+                                                                className="ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-indigo-50 text-indigo-400 hover:text-indigo-600"
+                                                                title="Buscar en Clientes"
+                                                            >
+                                                                <ExternalLink className="h-3 w-3" />
+                                                            </button>
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+
+                                        {/* Action buttons: Edit + PDF + Carpeta + Delete */}
+                                        <div className="w-[90px] shrink-0 flex items-center justify-center gap-0.5">
+                                            <button
+                                                onClick={() => openEditDialog(row)}
+                                                className="p-1 rounded transition-all text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                                                title="Editar"
+                                            >
+                                                <Pencil className="h-3.5 w-3.5" />
+                                            </button>
+                                            <button
+                                                onClick={async () => {
+                                                    if (row.pdf_storage_path) {
+                                                        const result = await getSignedUrl("protocolo", row.pdf_storage_path);
+                                                        if (result.success && result.url) {
+                                                            window.open(result.url, "_blank");
+                                                        } else {
+                                                            toast.error("Error al obtener el PDF");
+                                                        }
+                                                    }
+                                                }}
+                                                disabled={!row.pdf_storage_path}
+                                                className={cn(
+                                                    "p-1 rounded transition-all",
+                                                    row.pdf_storage_path
+                                                        ? "text-blue-500 hover:text-blue-700 hover:bg-blue-50 cursor-pointer"
+                                                        : "text-slate-300 cursor-not-allowed"
+                                                )}
+                                                title={row.pdf_storage_path ? "Ver PDF" : "Sin PDF cargado"}
+                                            >
+                                                <Eye className="h-3.5 w-3.5" />
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    if (row.carpeta_id) {
+                                                        window.open(`/carpeta/${row.carpeta_id}`, "_blank");
+                                                    }
+                                                }}
+                                                disabled={!row.carpeta_id}
+                                                className={cn(
+                                                    "p-1 rounded transition-all",
+                                                    row.carpeta_id
+                                                        ? "text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 cursor-pointer"
+                                                        : "text-slate-300 cursor-not-allowed"
+                                                )}
+                                                title={row.carpeta_id ? "Ir a carpeta" : "Sin carpeta vinculada"}
+                                            >
+                                                <FolderOpen className="h-3.5 w-3.5" />
+                                            </button>
+                                            <button
+                                                onClick={() => setPendingDeleteIndex(realIndex)}
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-50 text-red-400 hover:text-red-600"
+                                                title="Eliminar"
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <PaginationControls
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={processedData.length}
+                        pageSize={pageSize}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                    />
+                </TabsContent>
+
+                {/* ── TAB 2: Índice ── */}
+                <TabsContent value="indice">
+                    <IndiceProtocolo registros={registros} anio={anio} />
+                </TabsContent>
+            </Tabs>
 
             {/* ── Escritura Dialog (Create / Edit) ── */}
             <EscrituraDialog
