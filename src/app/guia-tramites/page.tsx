@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, ClipboardList, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -100,52 +100,38 @@ export default function GuiaTramitesPage() {
     const jurisdicciones = [...new Set(tramites.map((t) => t.jurisdiccion))];
 
     return (
-        <div className="min-h-screen bg-slate-50/50 p-6 md:p-8 space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-emerald-100 rounded-lg">
-                        <ClipboardList className="h-6 w-6 text-emerald-600" />
+        <div className="min-h-screen bg-slate-50/50 flex flex-col">
+            {/* Sticky Header: Title + Search + Filters */}
+            <div className="sticky top-0 z-20 bg-slate-50 border-b border-slate-200 px-6 md:px-8 pt-5 pb-4 shadow-sm">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 shrink-0">
+                        <div className="p-2 bg-emerald-100 rounded-lg">
+                            <ClipboardList className="h-6 w-6 text-emerald-600" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-slate-900">Guía de Trámites Notariales</h1>
+                            <p className="text-sm text-slate-500">
+                                PBA y CABA — Valores desde {catalogData.metadata.valores_desde}
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900">Guía de Trámites Notariales</h1>
-                        <p className="text-sm text-slate-500">
-                            PBA y CABA — Valores desde {catalogData.metadata.valores_desde}
-                        </p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">
-                        {filteredTramites.length} de {tramites.length} trámites
-                    </Badge>
-                    <button onClick={expandAll} className="text-xs text-blue-600 hover:underline">
-                        Expandir todo
-                    </button>
-                    <span className="text-slate-300">|</span>
-                    <button onClick={collapseAll} className="text-xs text-blue-600 hover:underline">
-                        Colapsar todo
-                    </button>
-                </div>
-            </div>
 
-            {/* Search + Filters */}
-            <Card className="border-slate-200 shadow-sm">
-                <CardContent className="pt-6 space-y-3">
-                    <div className="relative">
+                    <div className="flex-1 max-w-xl relative w-full">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <Input
                             type="text"
                             placeholder="Buscar trámite, certificado u organismo..."
                             value={searchTerm}
                             onChange={(e) => { setSearchTerm(e.target.value); setExpandedCats(new Set(sortedCategories.map((c) => c.id))); }}
-                            className="pl-10 h-11 text-base"
+                            className="pl-10 h-9 w-full bg-white border-slate-200 text-sm"
                         />
                     </div>
-                    <div className="flex flex-wrap gap-3">
-                        <div className="flex items-center gap-2">
+
+                    <div className="flex items-center gap-3 flex-wrap shrink-0">
+                        <div className="flex items-center gap-1.5">
                             <span className="text-xs text-slate-500 font-medium">Jurisdicción:</span>
                             <Select value={jurisdiccionFilter} onValueChange={setJurisdiccionFilter}>
-                                <SelectTrigger className="h-8 w-[130px] text-xs">
+                                <SelectTrigger className="h-8 w-[110px] text-xs">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -156,10 +142,10 @@ export default function GuiaTramitesPage() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                             <span className="text-xs text-slate-500 font-medium">Fase:</span>
                             <Select value={faseFilter} onValueChange={setFaseFilter}>
-                                <SelectTrigger className="h-8 w-[170px] text-xs">
+                                <SelectTrigger className="h-8 w-[150px] text-xs">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -170,16 +156,22 @@ export default function GuiaTramitesPage() {
                                 </SelectContent>
                             </Select>
                         </div>
+                        <Badge variant="outline" className="text-xs">
+                            {filteredTramites.length} de {tramites.length} trámites
+                        </Badge>
+                        <button onClick={expandAll} className="text-xs text-blue-600 hover:underline">
+                            Expandir todo
+                        </button>
+                        <span className="text-slate-300">|</span>
+                        <button onClick={collapseAll} className="text-xs text-blue-600 hover:underline">
+                            Colapsar todo
+                        </button>
                     </div>
-                    <p className="text-xs text-slate-400">
-                        {filteredTramites.length} {filteredTramites.length === 1 ? "resultado" : "resultados"}
-                        {searchTerm && ` para "${searchTerm}"`}
-                    </p>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             {/* Categories accordion */}
-            <div className="space-y-2">
+            <div className="flex-1 overflow-y-auto px-6 md:px-8 py-4 space-y-1.5">
                 {sortedCategories.map((cat) => {
                     const isExpanded = expandedCats.has(cat.id);
                     const catTramites = groupedByCategory[cat.id] || [];
@@ -189,7 +181,7 @@ export default function GuiaTramitesPage() {
                         <Card key={cat.id} className="border-slate-200 shadow-sm overflow-hidden">
                             <button
                                 onClick={() => toggleCat(cat.id)}
-                                className="w-full flex items-center gap-2 px-4 py-2 hover:bg-slate-50 transition-colors text-left"
+                                className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 transition-colors text-left"
                             >
                                 {isExpanded ? (
                                     <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
@@ -206,11 +198,11 @@ export default function GuiaTramitesPage() {
                             {isExpanded && (
                                 <div className="border-t divide-y divide-slate-100">
                                     {catTramites.map((t) => (
-                                        <div key={t.id} className="px-5 py-4 hover:bg-slate-50/50 transition-colors">
+                                        <div key={t.id} className="px-4 py-2.5 hover:bg-slate-50/50 transition-colors">
                                             <div className="flex flex-col sm:flex-row sm:items-start gap-2">
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 flex-wrap">
-                                                        <span className="font-medium text-slate-800">{t.nombre}</span>
+                                                        <span className="font-medium text-slate-800 text-sm">{t.nombre}</span>
                                                         <Badge
                                                             variant="outline"
                                                             className={`text-[10px] ${JURISDICCION_COLORS[t.jurisdiccion] || ""}`}
@@ -225,9 +217,9 @@ export default function GuiaTramitesPage() {
                                                             </Badge>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-slate-500 mt-1">{t.descripcion}</p>
+                                                    <p className="text-xs text-slate-500 mt-0.5">{t.descripcion}</p>
                                                     {t.nota && (
-                                                        <p className="text-xs text-slate-400 italic mt-1">{t.nota}</p>
+                                                        <p className="text-[11px] text-slate-400 italic mt-0.5">{t.nota}</p>
                                                     )}
                                                 </div>
                                                 {t.url && (
@@ -235,7 +227,7 @@ export default function GuiaTramitesPage() {
                                                         href={t.url}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline bg-blue-50 px-3 py-1.5 rounded-md transition-colors"
+                                                        className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline bg-blue-50 px-2.5 py-1 rounded-md transition-colors"
                                                     >
                                                         <ExternalLink className="h-3.5 w-3.5" />
                                                         {t.url_label}
@@ -249,19 +241,14 @@ export default function GuiaTramitesPage() {
                         </Card>
                     );
                 })}
+
+                {filteredTramites.length === 0 && (
+                    <div className="text-center py-12 text-slate-400">
+                        <ClipboardList className="mx-auto h-10 w-10 opacity-30 mb-3" />
+                        <p>No se encontraron trámites con ese criterio.</p>
+                    </div>
+                )}
             </div>
-
-            {filteredTramites.length === 0 && (
-                <div className="text-center py-12 text-slate-400">
-                    <ClipboardList className="mx-auto h-10 w-10 opacity-30 mb-3" />
-                    <p>No se encontraron trámites con ese criterio.</p>
-                </div>
-            )}
-
-            {/* Footer */}
-            <p className="text-xs text-slate-400 text-center">
-                {catalogData.metadata.nota}
-            </p>
         </div>
     );
 }

@@ -274,10 +274,6 @@ export default function TablaActosPage() {
                 </div>
             )}
 
-            {/* Footer Note */}
-            <p className="text-xs text-slate-400 text-center py-3 shrink-0">
-                Fuente: Tabla de Actos Notariales General - Extensión Jur. 01/01/2026 • CESBA
-            </p>
         </div>
     );
 }
