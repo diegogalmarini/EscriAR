@@ -11,6 +11,7 @@ import {
     Calendar,
     BookOpen,
     FileSpreadsheet,
+    ClipboardList,
     Settings,
     LogOut,
     Menu,
@@ -31,6 +32,7 @@ const baseMenuItems = [
     { name: "Agenda", href: "/agenda", icon: Calendar },
     { name: "Protocolo", href: "/protocolo", icon: BookOpen },
     { name: "Tabla de Actos", href: "/tabla-actos", icon: FileSpreadsheet },
+    { name: "Guía de Trámites", href: "/guia-tramites", icon: ClipboardList },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
