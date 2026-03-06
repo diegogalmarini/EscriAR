@@ -179,7 +179,7 @@ export default function GuiaTramitesPage() {
             </Card>
 
             {/* Categories accordion */}
-            <div className="space-y-3">
+            <div className="space-y-2">
                 {sortedCategories.map((cat) => {
                     const isExpanded = expandedCats.has(cat.id);
                     const catTramites = groupedByCategory[cat.id] || [];
@@ -189,19 +189,18 @@ export default function GuiaTramitesPage() {
                         <Card key={cat.id} className="border-slate-200 shadow-sm overflow-hidden">
                             <button
                                 onClick={() => toggleCat(cat.id)}
-                                className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 transition-colors text-left"
+                                className="w-full flex items-center gap-2 px-4 py-2 hover:bg-slate-50 transition-colors text-left"
                             >
                                 {isExpanded ? (
                                     <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
                                 ) : (
                                     <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
                                 )}
-                                <span className="text-lg">{cat.icono}</span>
-                                <span className="font-semibold text-slate-800 flex-1">{cat.nombre}</span>
-                                <Badge variant="secondary" className={`text-[10px] ${faseStyle.color}`}>
+                                <span className="text-sm font-medium text-slate-800 flex-1">{cat.nombre}</span>
+                                <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 ${faseStyle.color}`}>
                                     {faseStyle.label}
                                 </Badge>
-                                <span className="text-xs text-slate-400">{catTramites.length}</span>
+                                <span className="text-xs font-medium text-slate-400 w-6 text-right">{catTramites.length}</span>
                             </button>
 
                             {isExpanded && (
