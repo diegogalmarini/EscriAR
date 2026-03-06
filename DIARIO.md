@@ -179,15 +179,18 @@ NotiAR/
 │   │       └── formatters.ts         # formatNotaryMoney, formatNotaryDate, etc.
 │   │
 │   └── data/
-│       └── acts_taxonomy_2026.json   # Taxonomía CESBA (200+ códigos verificados)
+│       ├── acts_taxonomy_2026.json   # Taxonomía CESBA (200+ códigos verificados)
+│       └── catalogo_tramites_notariales.json # Catálogo de 84 trámites, 19 categorías (PBA/CABA)
 │
 ├── worker/                           # Worker Railway (servicio independiente)
 │   ├── src/index.ts                  # Pipeline async completo
+│   ├── src/noteAnalyzer.ts           # Análisis de apuntes con Gemini Flash (NOTE_ANALYSIS + TRAMITE_REQUERIDO)
+│   ├── src/certExtractor.ts          # Extractor de certificados con Gemini 2.5 Pro (ET7)
 │   ├── src/acts_taxonomy_2026.json   # Copia de taxonomía para worker standalone
 │   ├── Dockerfile                    # Build Docker para Railway
 │   └── package.json                  # Dependencias propias del worker
 │
-├── supabase_migrations/              # Migraciones SQL (001-030)
+├── supabase_migrations/              # Migraciones SQL (001-047)
 │   └── *.sql                         # Se ejecutan MANUAL en Supabase SQL Editor
 │
 ├── .agent/skills/                    # Definiciones de skills (SKILL.md + prompts)
@@ -624,11 +627,15 @@ Todas las acciones del servidor están en `src/app/actions/`. Son funciones `"us
 
 | Componente | Qué hace |
 |---|---|
+| `AppShell.tsx` | Layout global: sidebar con navegación (incluye "Guía de Trámites" con icono ClipboardList), topbar, responsive. |
 | `FolderWorkspace.tsx` | **Orquestador.** State, handlers, realtime subscriptions, dialogs. Renderiza CarpetaHero + Tabs (4 pestañas: Mesa de Trabajo, Antecedentes, Pre-Escriturario, Post-Firma). |
 | `WorkspaceRadiography.tsx` | **Pestaña Antecedentes** (full width). Datos extraídos read-only: Documento, Inmueble, Partes, Archivos. Sin `<details>`, DNI/CUIT siempre visible, line-clamp-4 con "Ver más". |
 | `WorkspacePipeline.tsx` | Exporta 3 componentes: `FasePreEscritura` (Certificados + Tax + Liquidación), `FaseRedaccion` (Borrador IA + Editor), `FasePostEscritura` (Minuta + Compliance + Inscripción). |
-| `CarpetaHero.tsx` | Header de carpeta: carátula, badge estado, botón eliminar con AlertDialog. Props: `onDelete`, `isDeleting`. |
+| `CarpetaHero.tsx` | Header de carpeta: carátula, badge estado, chips de certificados en vivo (vencidos/por vencer/vigentes/pendientes/sin confirmar), botón eliminar con AlertDialog. |
 | `CarpetasTable.tsx` | Tabla de carpetas con búsqueda. Consume RPC `search_carpetas` (estructura plana con `parties[]` y `escrituras[]`). |
+| `ApuntesTab.tsx` | Tab de apuntes con análisis AI: renderiza sugerencias tipo TRAMITE_REQUERIDO con links clickeables a organismos, badges de jurisdicción (PBA/CABA) y costos. Polling automático, retry, skeletons. |
+| `CertificadoDialog.tsx` | Modal alta/edición de certificados con drag & drop para subir PDF (reemplazó campo URL manual). Auto-trigger de extracción AI al subir. |
+| `CertificadosPanel.tsx` | Panel de certificados con ExtractionCard: estados de extracción AI, evidencia expandible, botones Confirmar/Re-analizar. Semáforo Vigente/Por Vencer/Vencido. |
 | `MagicDropzone.tsx` | Upload de PDFs con drag & drop. Detecta tamaño y enruta a sync o async. |
 | `PersonForm.tsx` | Formulario completo de persona: nombre, DNI, CUIT, estado civil, cónyuge, domicilio, filiación. |
 | `PersonSearch.tsx` | Búsqueda de personas existentes para vincular a una operación. |
@@ -677,7 +684,7 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 - Storage bucket: **`escrituras`** (NO `documents`).
 - `pdf_url`: el pipeline frontend guarda URL pública completa, el worker guarda path crudo. `resolveDocumentUrl()` maneja ambos.
 - `personas` PK lógica: `dni` para FISICA, `cuit` para JURIDICA. `id` es UUID interno.
-- Migraciones SQL: en `supabase_migrations/`, numeradas 001-030. Se ejecutan **MANUAL** en Supabase SQL Editor.
+- Migraciones SQL: en `supabase_migrations/`, numeradas 001-047. Se ejecutan **MANUAL** en Supabase SQL Editor.
 - **Normalización**: `normalizePartido()` (Title Case sin tildes), `normalizePartida()` (sin puntos decorativos), `splitMultiplePartidas()` (separa "X / Y").
 
 ### Códigos CESBA (campo `codigo` en `operaciones`)
@@ -739,17 +746,23 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 | 026 | UNIQUE constraints anti-duplicados (participantes, inmuebles, escrituras) | ✅ Ejecutada |
 | 027 | Normalizar partido (Title Case) y partida (sin puntos) | ✅ Ejecutada |
 | 028 | Normalizar tildes en partido + merge duplicados con FK remap | ✅ Ejecutada |
-| 029 | Dedup personas jurídicas por CUIT (merge canónico) | ⚠️ **PENDIENTE** |
+| 029 | Dedup personas jurídicas por CUIT (merge canónico) | ✅ Ejecutada |
 | 030 | Agregar telefono/email a escribanos + A_CARGO enum + datos Galmarini | ✅ Ejecutada |
+| 031 | Tabla certificados | ✅ Ejecutada |
+| 032 | Tabla gravámenes con FK a carpetas, inmuebles, personas, certificados | ✅ Ejecutada |
+| 033 | Campos profesion, regimen_patrimonial, nro_documento_conyugal en personas | ✅ Ejecutada |
 | 035 | Tabla modelos_actos — Templates DOCX para actos notariales | ✅ Ejecutada |
 | 037 | Columna rendered_docx_path en tabla escrituras para Documentos Generados | ✅ Ejecutada |
 | 038 | Organizaciones, org_users, RLS multi-tenant, search_carpetas | ✅ Ejecutada |
 | 039 | Fix recursión infinita RLS con SECURITY DEFINER | ✅ Ejecutada |
 | 040 | Tablas apuntes + sugerencias, RLS por org, triggers updated_at | ✅ Ejecutada |
-| 041 | Extender ingestion_jobs: job_type, payload, entity_ref, org_id para NOTE_ANALYSIS | ⚠️ **PENDIENTE** |
+| 041 | Extender ingestion_jobs: job_type, payload, entity_ref, org_id para NOTE_ANALYSIS | ✅ Ejecutada |
+| 042 | Audit columns en sugerencias: applied_at, applied_by, apply_error, applied_changes | ✅ Ejecutada |
+| 043 | Tabla actuaciones | ✅ Ejecutada |
 | 044 | Columna `source` en escrituras (INGESTA/TRAMITE) + crear escrituras TRAMITE | ✅ Ejecutada |
 | 045 | search_carpetas: parties y escrituras SOLO de TRAMITE | ✅ Ejecutada |
 | 046 | Mover participantes huérfanos de INGESTA a TRAMITE (cleanup) | ✅ Ejecutada |
+| 047 | Extracción AI de certificados (ET7): job_type CERT_EXTRACT, campos extraction en certificados | ✅ Ejecutada |
 
 **Nota**: las migraciones se ejecutan MANUAL en Supabase SQL Editor. No hay sistema de migración automático.
 
@@ -790,6 +803,16 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 
 27. **Rollback a Tabs** — 4 pestañas (Mesa de Trabajo, Antecedentes, Pre-Escriturario, Post-Firma) por decisión PO
 28. **Card Liquidación y Honorarios** — inputs Precio Real + Honorarios en pestaña Pre-Escriturario
+
+### Marzo 2026
+29. **ET1-ET7 completadas** — Todas las etapas del ARCHITECTURE_PLAN cerradas (ver ARCHITECTURE_PLAN.md)
+30. **Integración Template Builder** — 34 modelos DOCX procesados y subidos a Supabase, dropdown dinámico, pipeline render completo
+31. **Skill `notary-procedures-catalog`** — Con `source_data.md` (21 secciones de conocimiento notarial 2026, curado desde NotebookLM)
+32. **Página Guía de Trámites** — 84 trámites en 19 categorías (PBA/CABA) con buscador, filtros, acordeones
+33. **TRAMITE_REQUERIDO** — Nuevo tipo de sugerencia AI que propone links a organismos cuando el escribano escribe un apunte
+34. **Worker Railway deployado** — NOTE_ANALYSIS enriquecido + CERT_EXTRACT + TRAMITE_REQUERIDO activos en producción
+35. **Extracción AI de certificados (ET7)** — `certExtractor.ts` con Gemini 2.5 Pro, drag & drop en CertificadoDialog, ExtractionCard con Confirmar/Re-analizar
+36. **CarpetaHero con chips de certificados** — Indicadores en vivo: vencidos/por vencer/vigentes/pendientes/sin confirmar
 
 ### ✅ Etapa 1 CERRADA: Ingesta y Estudio de Títulos
 Pipeline dual (frontend sync + worker async Railway) 100% funcional y estabilizado. Gemini File API sin límite de páginas, taxonomía CESBA unificada, seguridad de archivos, estado de carpeta sincronizado. Testeado con PDFs complejos (escrituras multipartitas, documentos escaneados 30+ páginas).
@@ -1051,6 +1074,15 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 - Padding reducido: `py-1.5` en headers colapsados, `py-2.5` en items expandidos.
 - **Bug fix**: crash `TypeError: Cannot read properties of null (reading 'toLowerCase')` en búsqueda — campos `descripcion` y `url_label` pueden ser null, agregadas guardas `(field || '').toLowerCase()`.
 
+#### Fixes UI generales
+- **AlertDialog centering**: fix del bug `translate-x` en `alert-dialog.tsx` que descentraba modales.
+- **Modal "Conflicto de datos"**: footer de `ApuntesTab.tsx` apilado vertical para nombres largos que rompían layout.
+
+#### Worker: TRAMITE_REQUERIDO (nuevo tipo de sugerencia)
+- `worker/src/noteAnalyzer.ts`: nuevo tipo `TRAMITE_REQUERIDO` en Zod schema + prompt enriquecido con 17 organismos/URLs, jurisdicción auto-detectada (PBA/CABA), deadlines estimados, costos actualizados 2026.
+- `src/lib/deterministic/applySuggestion.ts`: handler `TRAMITE_REQUERIDO` (informacional — solo registra aceptación).
+- `src/components/ApuntesTab.tsx`: `renderPayload()` para TRAMITE_REQUERIDO con `ExternalLink` clickeables, badges de jurisdicción y costo.
+
 #### Commits
 - `d4344ea` — feat: Add Guía de Trámites page + sidebar item
 - `9d5a3af` — style: Sticky header with search + remove horizontal scroll (Tabla de Actos)
@@ -1200,15 +1232,8 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 
 ## 18. Pendientes Conocidos
 
-### Urgentes (hacer antes de seguir con ROADMAP)
-- [ ] **Ejecutar migración 029** en Supabase SQL Editor (dedup personas jurídicas por CUIT)
-- [ ] **Ejecutar migración 031** en Supabase SQL Editor (tabla certificados)
-- [ ] **Ejecutar migración 032** en Supabase SQL Editor (tabla gravámenes)
-- [ ] **Ejecutar migración 033** en Supabase SQL Editor (campos profesion, regimen_patrimonial, nro_documento_conyugal en personas)
+### Verificación pendiente
 - [ ] **Verificar `poder_detalle`** funciona tras redeploy Railway (subir un PDF con apoderado)
-- [ ] **Redeploy Worker** en Railway para activar: File API + taxonomía CESBA + ingesta_estado fix + NOTE_ANALYSIS
-- [ ] **Ejecutar migración 041** en Supabase SQL Editor (extender ingestion_jobs para NOTE_ANALYSIS)
-- [ ] **Ejecutar migración 042** en Supabase SQL Editor (audit columns en sugerencias)
 
 ### Integración Template Builder
 - [ ] Test end-to-end real (crear carpeta con datos → generar DOCX → verificar output)
@@ -1217,13 +1242,19 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 
 ### Deuda técnica
 - [ ] Integración con Resend para emails transaccionales
-- [ ] Pipeline OCR real para certificados RPI (actualmente mocked)
-- [ ] Botón "Analizar Certificado" en la UI de certificados
 
-### Roadmap
+### Próximas Etapas (ARCHITECTURE_PLAN)
+- [ ] **ET8**: Header sticky final — CarpetaHero con chips accionables, colapsado, menú seguro
+- [ ] **ET9**: Auditoría — tabla `audit_events` + helper `logAuditEvent` + UI Logs
+- [ ] **ET10**: Notificaciones/Dashboard — badge global + carpetas que necesitan atención
+- [ ] **ET11**: Export de carpeta completa (ZIP)
+
+### Roadmap (Hitos funcionales)
 - **Ver `ROADMAP.md`** para el plan completo de desarrollo en 3 etapas
+- **ET completadas**: ET1-ET7 (ver ARCHITECTURE_PLAN.md)
 - **Hitos completados**: 1.1 (Certificados), 1.2 (Lector RPI + Inhibiciones), 1.3 (Ficha Comprador)
-- **Próximos hitos**: 1.4 Determinación Automática del Acto, 1.5 Liquidación Impositiva
+- [ ] **Hito 1.4**: Determinación automática del acto (subcódigos CESBA)
+- [ ] **Hito 1.5**: Liquidación impositiva completa (ARBA, RPI, arancel CANN, ITI/Ganancias)
 
 ---
 
@@ -1235,4 +1266,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-03-06 — Antigravity — Skill `notary-procedures-catalog`, página Guía de Trámites, UI refinements en Tabla de Actos y Guía de Trámites
+> **Última actualización**: 2026-03-06 — Antigravity — Actualización completa de estado: ET1-ET7 cerradas, migraciones 029-047 ejecutadas, worker deployado, TRAMITE_REQUERIDO activo, Guía de Trámites live.
