@@ -145,6 +145,7 @@ NotiAR/
 │   │   ├── ficha/[token]/            # Formulario público para clientes
 │   │   ├── inmuebles/                # Lista + detalle de inmuebles
 │   │   ├── tabla-actos/              # Tabla de taxonomía CESBA
+│   │   ├── guia-tramites/            # Guía de trámites notariales (PBA/CABA)
 │   │   └── login/ signup/ ...        # Auth pages
 │   │
 │   ├── components/                   # ~30 componentes React
@@ -190,7 +191,7 @@ NotiAR/
 │   └── *.sql                         # Se ejecutan MANUAL en Supabase SQL Editor
 │
 ├── .agent/skills/                    # Definiciones de skills (SKILL.md + prompts)
-│   ├── notary-*/                     # 18 skills notariales
+│   ├── notary-*/                     # 19 skills notariales
 │   └── skill-creator/                # Meta-skill para crear nuevos skills
 │
 ├── DIARIO.md                         # ← ESTE ARCHIVO (la Biblia)
@@ -352,6 +353,7 @@ Estos se ejecutan enviando el prompt del skill + el documento a Gemini:
 | `notary-mortgage-reader` | `notary-mortgage-reader/` | ✅ Implementado | Extrae términos financieros de hipotecas: capital, UVA, TNA, sistema amortización (Francés), letra hipotecaria. |
 | `notary-property-extractor` | `notary-property-extractor/` | ✅ Implementado (cubierto por entity-extractor) | Extrae transcripción literal completa del inmueble sin cortes en saltos de página. |
 | `notary-act-coder` | `notary-act-coder/` | ✅ Implementado | Convierte descripción de acto en código CESBA 2026 con alícuota impositiva. |
+| `notary-procedures-catalog` | `notary-procedures-catalog/` | ✅ Implementado | Catálogo exhaustivo de certificados, impuestos, registros y actos administrativos para escrituras PBA/CABA (2026). Lee `resources/source_data.md` como fuente de conocimiento curada desde NotebookLM. |
 | `notary-deed-drafter` | `notary-deed-drafter/` | ✅ Prompt definido | Instrucciones de redacción de escritura (complementa el TS generator). Art. 306 CCyC, num2words, asentimiento conyugal. |
 | `notary-style-formatter` | `notary-style-formatter/` | 📋 Solo prompt | Normaliza datos al formato notarial: montos en letras, fechas completas, DNI con puntos. |
 | `notary-certificate-manager` | `notary-certificate-manager/` | 📋 Solo prompt | Gestión de certificados registrales: vencimientos según Ley 17.801, semáforo de plazos, reserva de prioridad. |
@@ -559,7 +561,8 @@ Cuando el escribano sube un PDF de una hipoteca UVA:
 | `/inmuebles/[id]` | Inmueble | Detalle: transcripción, datos catastrales, escrituras vinculadas |
 | `/ficha/[token]` | Ficha Pública | Formulario que el cliente completa con sus datos (no requiere auth) |
 | `/agenda` | Agenda | Calendario de firmas y eventos |
-| `/tabla-actos` | Tabla de Actos | Taxonomía CESBA 2026 completa con búsqueda |
+| `/tabla-actos` | Tabla de Actos | Taxonomía CESBA 2026 completa con búsqueda, header fijo, sin scroll horizontal |
+| `/guia-tramites` | Guía de Trámites | Catálogo de 84 trámites notariales (PBA/CABA) con buscador, filtros por jurisdicción/fase, acordeones por categoría |
 | `/admin/users` | Admin | Gestión de usuarios, escribanos, base de conocimiento RAG |
 
 ### Layout de FolderWorkspace (dentro de `/carpeta/[id]`)
@@ -1022,6 +1025,39 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 #### Migración 035 confirmada ejecutada
 - La tabla `modelos_actos` ya existía en producción. Se subieron 2 modelos: Compraventa (30 vars) y Autorización Vehicular (24 vars).
 
+### 2026-03-06 (Antigravity) — Skill `notary-procedures-catalog` + Guía de Trámites + UI refinements
+
+#### Nuevo Skill: `notary-procedures-catalog`
+- Creado `.agent/skills/notary-procedures-catalog/SKILL.md` — especialista en listado exhaustivo de certificados, impuestos, registros y actos administrativos para escrituras en PBA y CABA (2026).
+- Lee siempre `resources/source_data.md` como fuente de conocimiento curada desde NotebookLM antes de responder.
+- Responsabilidades: consulta de requisitos, identificación de impuestos, validación jurisdiccional, mantenimiento del conocimiento.
+
+#### Nueva Página: Guía de Trámites (`/guia-tramites`)
+- Creado `src/app/guia-tramites/page.tsx` — página completa con buscador, filtros por jurisdicción (PBA/CABA) y fase (Previo, Pre-escriturario, Escriturario, Post-escriturario), acordeones por categoría con expand/collapse.
+- Creado `src/data/catalogo_tramites_notariales.json` — catálogo de 84 trámites en 19 categorías con costos 2026, links a organismos externos, y metadata.
+- Agregado item "Guía de Trámites" al sidebar en `src/components/AppShell.tsx` con icono `ClipboardList`.
+
+#### Tabla de Actos — UI Refinements
+- Header fijo (sticky) con título, buscador y botón "Ver PDF Oficial" — queda pegado al hacer scroll.
+- Eliminado scroll horizontal: columnas con anchos porcentuales y `table-fixed`.
+- Eliminado texto redundante "X resultados encontrados" (ya visible en header).
+- Eliminada fila de "Caja de Seguridad Social..." (irrelevante).
+- Eliminado footer note verde ("Fuente: Tabla de Actos...").
+
+#### Guía de Trámites — UI Refinements
+- Header sticky de 3 filas: título + badge, buscador full-width, filtros (Jurisdicción + Fase) + Expandir/Colapsar.
+- Eliminado texto redundante "84 resultados" debajo del buscador.
+- Tarjetas de acordeón más compactas: `!py-0` override scoped (no afecta resto del SaaS) para eliminar el `py-6` default del componente Card.
+- Padding reducido: `py-1.5` en headers colapsados, `py-2.5` en items expandidos.
+- **Bug fix**: crash `TypeError: Cannot read properties of null (reading 'toLowerCase')` en búsqueda — campos `descripcion` y `url_label` pueden ser null, agregadas guardas `(field || '').toLowerCase()`.
+
+#### Commits
+- `d4344ea` — feat: Add Guía de Trámites page + sidebar item
+- `9d5a3af` — style: Sticky header with search + remove horizontal scroll (Tabla de Actos)
+- `070a603` — style: Remove tabla-actos footer, sticky header + compact cards for guia-tramites
+- `5b51179` — fix: Null safety in search + two-line header for guia-tramites
+- `1a005b7` — fix: Filters below search bar + compact cards with !py-0 override
+
 ### 2026-03-04 — Normalización tipo de acto en CarpetaHero
 
 - **CarpetaHero.tsx**: el subtítulo superior ahora normaliza el `tipo_acto` de la BD contra una lista de actos conocidos (COMPRAVENTA, HIPOTECA, DONACIÓN, etc.), eliminando sufijos espurios como "COMPLETA" que la ingesta AI a veces agrega.
@@ -1199,4 +1235,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-03-05 — Claude Opus — Separación INGESTA/TRAMITE, migraciones 044-046, supabaseAdmin en applySuggestion
+> **Última actualización**: 2026-03-06 — Antigravity — Skill `notary-procedures-catalog`, página Guía de Trámites, UI refinements en Tabla de Actos y Guía de Trámites
