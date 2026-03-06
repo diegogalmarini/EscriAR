@@ -698,27 +698,28 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                             </div>
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-                        <AlertDialogCancel disabled={isForcing} onClick={() => setConflicto(null)}>
-                            Cancelar
-                        </AlertDialogCancel>
-                        <Button
-                            variant="outline"
-                            disabled={isForcing}
-                            onClick={() => handleConflictResolve("keep")}
-                        >
-                            {isForcing ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : null}
-                            Mantener &ldquo;{conflicto?.nombreExistente}&rdquo;
-                        </Button>
+                    <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
                         <Button
                             variant="default"
                             disabled={isForcing}
                             onClick={() => handleConflictResolve("update")}
-                            className="bg-amber-600 hover:bg-amber-700 text-white"
+                            className="bg-amber-600 hover:bg-amber-700 text-white w-full truncate"
                         >
                             {isForcing ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : null}
                             Actualizar a &ldquo;{conflicto?.nombreApunte}&rdquo;
                         </Button>
+                        <Button
+                            variant="outline"
+                            disabled={isForcing}
+                            onClick={() => handleConflictResolve("keep")}
+                            className="w-full truncate"
+                        >
+                            {isForcing ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : null}
+                            Mantener &ldquo;{conflicto?.nombreExistente}&rdquo;
+                        </Button>
+                        <AlertDialogCancel disabled={isForcing} onClick={() => setConflicto(null)} className="w-full">
+                            Cancelar
+                        </AlertDialogCancel>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
