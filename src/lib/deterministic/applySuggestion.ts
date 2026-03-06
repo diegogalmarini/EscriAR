@@ -10,6 +10,7 @@
  *   COMPLETAR_DATOS:     { descripcion, campo, valor }
  *   VERIFICAR_DATO:      { descripcion }
  *   ACCION_REQUERIDA:    { descripcion }
+ *   TRAMITE_REQUERIDO:   { descripcion, tramite_url?, tramite_url_label?, tramite_jurisdiccion?, tramite_costo? }
  *
  * También soporta el formato v1 legacy (campo/valor genérico) con fallback.
  */
@@ -49,6 +50,7 @@ const handlers: Record<string, Handler> = {
     AGREGAR_CERTIFICADO: handleAgregarCertificado,
     VERIFICAR_DATO: handleInformational,
     ACCION_REQUERIDA: handleInformational,
+    TRAMITE_REQUERIDO: handleInformational,
 };
 
 export async function applySuggestion(

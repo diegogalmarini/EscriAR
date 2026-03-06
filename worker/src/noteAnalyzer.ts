@@ -13,6 +13,7 @@ const SugerenciaSchema = z.object({
         'COMPLETAR_DATOS',
         'VERIFICAR_DATO',
         'ACCION_REQUERIDA',
+        'TRAMITE_REQUERIDO',
     ]).describe('Tipo de sugerencia'),
 
     payload: z.object({
@@ -30,6 +31,12 @@ const SugerenciaSchema = z.object({
         // Campos para COMPLETAR_DATOS
         campo: z.string().optional().describe('Campo a completar: monto_operacion, tipo_acto, etc. (solo para COMPLETAR_DATOS)'),
         valor: z.string().optional().describe('Valor a asignar (solo para COMPLETAR_DATOS)'),
+
+        // Campos para TRAMITE_REQUERIDO
+        tramite_url: z.string().optional().describe('URL del organismo donde se realiza el trámite (solo para TRAMITE_REQUERIDO)'),
+        tramite_url_label: z.string().optional().describe('Nombre del organismo o sitio web (solo para TRAMITE_REQUERIDO)'),
+        tramite_jurisdiccion: z.string().optional().describe('PBA, CABA o AMBAS (solo para TRAMITE_REQUERIDO)'),
+        tramite_costo: z.string().optional().describe('Costo estimado 2026 si se conoce (solo para TRAMITE_REQUERIDO)'),
     }).describe('Datos de la sugerencia según su tipo'),
 
     evidencia_texto: z.string().describe('Fragmento exacto del apunte que origina esta sugerencia'),
@@ -39,8 +46,8 @@ const SugerenciaSchema = z.object({
 export const NoteAnalysisOutputSchema = z.object({
     sugerencias: z.array(SugerenciaSchema)
         .min(0)
-        .max(10)
-        .describe('Lista de sugerencias extraídas del apunte (máximo 10)'),
+        .max(15)
+        .describe('Lista de sugerencias extraídas del apunte (máximo 15)'),
 });
 
 export type NoteAnalysisOutput = z.infer<typeof NoteAnalysisOutputSchema>;
@@ -94,8 +101,14 @@ TIPOS DE SUGERENCIAS y campos requeridos en payload:
 5. ACCION_REQUERIDA — Tarea pendiente del escribano.
    Solo campo descripcion.
 
+6. TRAMITE_REQUERIDO — Trámite específico que el escribano debe gestionar ante un organismo externo.
+   Campos OBLIGATORIOS: descripcion, tramite_url_label.
+   Campos OPCIONALES: tramite_url (URL del organismo), tramite_jurisdiccion (PBA, CABA o AMBAS), tramite_costo (costo estimado 2026).
+   Usa este tipo para orientar al escribano sobre DÓNDE y CÓMO realizar cada gestión.
+   Ejemplo: "Solicitar libre deuda ARBA" → tramite_url:"https://www.arba.gov.ar", tramite_url_label:"ARBA", tramite_jurisdiccion:"PBA"
+
 CERTIFICADOS OBLIGATORIOS POR TIPO DE ACTO:
-Si el apunte menciona o implica un tipo de acto con inmueble (compraventa, hipoteca, donacion, cesion_derechos, permuta, fideicomiso, afectacion_vivienda, division_condominio, distracto_condominio, usufructo, dacion_en_pago, venta_anexion), SIEMPRE sugiere estos certificados:
+Si el apunte menciona o implica un tipo de acto con inmueble (compraventa, hipoteca, donacion, cesion_derechos, permuta, fideicomiso, afectacion_vivienda, division_condominio, distracto_condominio, usufructo, dacion_en_pago, venta_anexion), SIEMPRE sugiere estos certificados como AGREGAR_CERTIFICADO:
 - DOMINIO (estudio de título / certificado de dominio)
 - INHIBICION (informe de inhibición de las partes)
 - CATASTRAL (estado parcelario / plancheta catastral)
@@ -105,13 +118,52 @@ Si el apunte menciona o implica un tipo de acto con inmueble (compraventa, hipot
 - ANOTACIONES_PERSONALES (informe de anotaciones personales)
 Si el acto es un poder, acta, o cancelación, NO sugieras certificados de inmueble.
 
+Además de los AGREGAR_CERTIFICADO, genera TRAMITE_REQUERIDO con los enlaces y organismos específicos donde tramitarlos:
+
+ORGANISMOS Y URLS POR JURISDICCIÓN:
+- Cert. Dominio/Inhibición PBA → Ventanilla Virtual RPBA (https://www.rpba.gov.ar)
+- Cert. Dominio/Inhibición CABA → RPI CABA (https://www.dnrpi.jus.gov.ar)
+- Catastral/Estado Parcelario PBA → ARBA (https://www.arba.gov.ar)
+- Catastral/Estado Parcelario CABA → TAD CABA (https://tramitesadistancia.buenosaires.gob.ar)
+- Libre Deuda Inmobiliario PBA → ARBA (https://www.arba.gov.ar)
+- Libre Deuda Inmobiliario CABA → AGIP (https://www.agip.gob.ar)
+- Libre Deuda ABSA (Agua PBA) → Por email a escribanos@aguasbonaerenses.com.ar
+- Libre Deuda AySA (CABA/GBA) → AySA (https://www.aysa.com.ar)
+- Control UIF RePET → RePET (https://repet.jus.gob.ar/)
+- Control UIF Listas ONU → ONU (https://main.un.org/securitycouncil/es)
+- Impuesto Sellos PBA → SIESBA/ARBA (https://www.arba.gov.ar) — 2% (exención Vivienda Única)
+- Impuesto Sellos CABA → SIE/AGIP (https://www.agip.gob.ar) — 2,7% a 3,5%
+- Retención Ganancias SICORE → ARCA (https://www.arca.gob.ar) — 3%
+- Tasa Registración PBA → RPBA (https://www.rpba.gov.ar) — 2‰ (mín. $42.000)
+- Minuta Rogatoria → SICOIN/Ventanilla Virtual del Registro
+- VIR (CABA) → AGIP (https://www.agip.gob.ar) — obligatorio como base imponible
+- DGROC Notarial (CABA desde 2026) → TAD (https://tramitesadistancia.buenosaires.gob.ar)
+
+PLAZOS DE VIGENCIA (para TRAMITE_REQUERIDO o ACCION_REQUERIDA):
+- Cert. Dominio/Inhibición: 15 días (misma ciudad), 25 días (misma provincia), 30 días (otra provincia)
+- Plazo inscripción post-firma: 45 días
+- Estado Parcelario PBA: 2 a 12 años según última mensura
+- Si detectas una fecha estimada de firma, advierte sobre cuándo pedir los certificados.
+
+COSTOS DEROGADOS (NO MENCIONAR):
+- ITI (1,5%) → DEROGADO por Ley 27.743 (julio 2024). NO sugerir.
+- CITI/COTI → DEROGADO (RG 5697/25 y 5698/25). NO sugerir.
+
+DETECCIÓN DE JURISDICCIÓN:
+- Si el apunte menciona "CABA", "Capital Federal", "Ciudad de Buenos Aires" o barrios de CABA (Palermo, Belgrano, Recoleta, etc.) → jurisdicción CABA.
+- Si menciona "Provincia", "PBA", "Buenos Aires" (sin "Ciudad"), o partidos del GBA (San Isidro, Tigre, Pilar, La Plata, etc.) → jurisdicción PBA.
+- Si no hay pistas de jurisdicción → usar AMBAS.
+- Genera TRAMITE_REQUERIDO con la URL y organismo correcto según la jurisdicción detectada.
+
 REGLAS:
-- 0 a 10 sugerencias. Lista vacía si el apunte es trivial.
+- 0 a 15 sugerencias. Lista vacía si el apunte es trivial.
 - evidencia_texto = fragmento exacto del apunte (puede repetirse si varias sugerencias surgen del mismo fragmento).
 - descripcion = resumen conciso para el escribano.
 - NO inventes datos que no estén en el apunte.
 - DNI siempre sin puntos ni espacios.
 - Si no tienes el DNI de una persona, IGUAL genera AGREGAR_PERSONA sin el campo dni. El sistema creará un borrador.
+- Para cada AGREGAR_CERTIFICADO de inmueble, genera también el TRAMITE_REQUERIDO correspondiente con URL y organismo.
+- Para impuestos y retenciones, usa TRAMITE_REQUERIDO (no AGREGAR_CERTIFICADO).
 
 APUNTE DEL ESCRIBANO:
 `;

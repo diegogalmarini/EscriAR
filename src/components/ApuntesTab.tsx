@@ -18,7 +18,7 @@ import {
 import {
     StickyNote, Send, Loader2, CheckCircle2, XCircle,
     Clock, AlertTriangle, Sparkles, ThumbsUp, ThumbsDown,
-    Trash2, Mic, MicOff, Lightbulb, ArrowRight, RefreshCw
+    Trash2, Mic, MicOff, Lightbulb, ArrowRight, RefreshCw, ExternalLink
 } from "lucide-react";
 import { createApunte, listApuntes, deleteApunte, retryNoteAnalysis } from "@/app/actions/apuntes";
 import { listSugerencias, acceptSuggestion, acceptSuggestionForced, rejectSuggestion } from "@/app/actions/sugerencias";
@@ -787,6 +787,46 @@ function renderPayload(payload: any): React.ReactNode {
             <div className="space-y-0.5">
                 <p>Certificado: <span className="font-medium text-blue-600">{payload.tipo_certificado}</span></p>
                 {payload.descripcion && <p className="text-xs text-muted-foreground">{payload.descripcion}</p>}
+            </div>
+        );
+    }
+
+    // TRAMITE_REQUERIDO con enlace al organismo
+    if (payload.tramite_url_label || payload.tramite_url) {
+        return (
+            <div className="space-y-1">
+                {payload.descripcion && <p className="text-sm">{payload.descripcion}</p>}
+                <div className="flex flex-wrap items-center gap-2">
+                    {payload.tramite_url ? (
+                        <a
+                            href={payload.tramite_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md px-2.5 py-1 transition-colors"
+                        >
+                            <ExternalLink className="h-3 w-3" />
+                            {payload.tramite_url_label || "Abrir sitio"}
+                        </a>
+                    ) : payload.tramite_url_label ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 rounded-md px-2 py-1">
+                            📍 {payload.tramite_url_label}
+                        </span>
+                    ) : null}
+                    {payload.tramite_jurisdiccion && (
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                            payload.tramite_jurisdiccion === "PBA" ? "bg-violet-50 text-violet-700" :
+                            payload.tramite_jurisdiccion === "CABA" ? "bg-sky-50 text-sky-700" :
+                            "bg-gray-50 text-gray-600"
+                        }`}>
+                            {payload.tramite_jurisdiccion}
+                        </span>
+                    )}
+                    {payload.tramite_costo && (
+                        <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                            💰 {payload.tramite_costo}
+                        </span>
+                    )}
+                </div>
             </div>
         );
     }
