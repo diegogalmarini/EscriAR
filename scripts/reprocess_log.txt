@@ -1,0 +1,925 @@
+[dotenv@17.3.1] injecting env (8) from .env.local -- tip: ÔÜÖ´©Å  override existing env vars with { override: true }
+ÔòöÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòù
+Ôòæ  REPROCESAMIENTO PROTOCOLO 2026 ÔÇö NotiAr    Ôòæ
+ÔòÜÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòØ
+
+­ƒôï 56 escrituras a procesar
+
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 1 (COMPRAVENTA)
+   PDF: protocolo_2026/1.pdf
+   Ô£ô Descargado (214 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 4
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 198714, 198715, 198723, 198724
+   ­ƒæñ ­ƒæñ ROTH, Ver├│nica Patricia (VENDEDOR) ÔåÆ DNI: 20485209
+   ­ƒæñ ­ƒæñ LAVAYEN, Walter Daniel (COMPRADOR) ÔåÆ DNI: 26699449
+   ­ƒæñ ­ƒæñ BROGGI, Marina M├│nica (COMPRADOR) ÔåÆ DNI: 27112207
+   ­ƒæñ ­ƒæñ ALVAREZ, Claudio Fabi├ín (CONYUGE DEL VENDEDOR) ÔåÆ DNI: 17280050
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 198714, 198715, 198723, 198724 ÔåÆ 44d452ac
+   Ô£ô Registro actualizado: "COMPRAVENTA" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 2 (COMPRAVENTA)
+   PDF: protocolo_2026/2.pdf
+   Ô£ô Descargado (153 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Bah├¡a Blanca (007) - Partida 141931
+   ­ƒæñ ­ƒæñ JUAN, Ana Cecilia (VENDEDOR) ÔåÆ DNI: 20035645
+   ­ƒæñ ­ƒæñ JUAN, Marcos Alfredo (VENDEDOR) ÔåÆ DNI: 21973655
+   ­ƒæñ ­ƒæñ CASTILLO MARACAY, Rams├®s Antonio (COMPRADOR) ÔåÆ DNI: 19123391
+   ­ƒÅá Inmueble: Bah├¡a Blanca (007) - 141931 ÔåÆ e716aa8b
+   Ô£ô Registro actualizado: "COMPRAVENTA" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 3 (CONTRATO DE CR├ëDITO CON GARANT├ìA HIPOTECARIA)
+   PDF: protocolo_2026/3.pdf
+   Ô£ô Descargado (356 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: CONTRATO DE CR├ëDITO CON GARANT├ìA HIPOTECARIA
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 141931
+   ­ƒæñ ­ƒæñ CASTILLO MARACAY, Rams├®s Antonio (DEUDOR) ÔåÆ DNI: 19123391
+   ­ƒæñ ­ƒÅó BANCO DE LA NACION ARGENTINA (ACREEDOR) ÔåÆ DNI: 30500010912
+   ­ƒæñ ­ƒæñ GEBEL, Marcos Fabricio (APODERADO) ÔåÆ DNI: 35019369
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 141931 ÔåÆ 2fae6e75
+   Ô£ô Registro actualizado: "CONTRATO DE CR├ëDITO CON GARANT├ìA HIPOTECARIA" ÔåÆ "CONTRATO DE CR├ëDITO CON GARANT├ìA HIPOTECARIA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 4 (CESI├ôN DE DERECHOS HEREDITARIOS)
+   PDF: protocolo_2026/4.pdf
+   Ô£ô Descargado (133 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: CESION DE DERECHOS HEREDITARIOS
+   Ô£ô Personas: 4
+   ­ƒæñ ­ƒæñ QUEVEDO, Anah├¡ Ayel├®n (CEDENTE) ÔåÆ DNI: 44883000
+   ­ƒæñ ­ƒæñ QUEVEDO, Fabiana Lorena (CESIONARIO) ÔåÆ DNI: 28296917
+   ­ƒæñ ­ƒæñ QUEVEDO, Jesica Bel├®n (CESIONARIO) ÔåÆ DNI: 32716697
+   ­ƒæñ ­ƒæñ QUEVEDO, Gabriel An├¡bal (CESIONARIO) ÔåÆ DNI: 30191647
+   Ô£ô Registro actualizado: "CESI├ôN DE DERECHOS HEREDITARIOS" ÔåÆ "CESION DE DERECHOS HEREDITARIOS"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 5 (CESION DE DERECHOS HEREDITARIOS)
+   PDF: protocolo_2026/5.pdf
+   Ô£ô Descargado (136 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: CESION DE DERECHOS HEREDITARIOS
+   Ô£ô Personas: 5
+   ­ƒæñ ­ƒæñ SCHNEIDER, Silvia In├®s (CEDENTE) ÔåÆ DNI: 12971349
+   ­ƒæñ ­ƒæñ QUEVEDO, Fabiana Lorena (CEDENTE) ÔåÆ DNI: 28296917
+   ­ƒæñ ­ƒæñ QUEVEDO, Jesica Bel├®n (CEDENTE) ÔåÆ DNI: 32716697
+   ­ƒæñ ­ƒæñ QUEVEDO, Gabriel An├¡bal (CEDENTE) ÔåÆ DNI: 30191647
+   ­ƒæñ ­ƒæñ QUEVEDO, Anah├¡ Ayelen (CESIONARIO) ÔåÆ DNI: 44883000
+   Ô£ô Registro actualizado: "CESION DE DERECHOS HEREDITARIOS" ÔåÆ "CESION DE DERECHOS HEREDITARIOS"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 6 (cont de cred c/hip)
+   PDF: protocolo_2026/6.pdf
+   Ô£ô Descargado (353 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: CONTRATO DE CR├ëDITO CON GARANT├ìA HIPOTECARIA
+   Ô£ô Personas: 4
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 21616
+   ­ƒæñ ­ƒÅó BANCO DE LA NACION ARGENTINA (ACREEDOR) ÔåÆ DNI: 30500010912
+   ­ƒæñ ­ƒæñ DAMIANI, Victoria (DEUDOR) ÔåÆ DNI: 29510341
+   ­ƒæñ ­ƒæñ DAMIANI, Gustavo Manuel (CODEUDOR) ÔåÆ DNI: 11825626
+   ­ƒæñ ­ƒæñ GEBEL, Marcos Fabricio (APODERADO) ÔåÆ DNI: 35019369
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 21616 ÔåÆ 732221f8
+   Ô£ô Registro actualizado: "cont de cred c/hip" ÔåÆ "CONTRATO DE CR├ëDITO CON GARANT├ìA HIPOTECARIA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 7 (venta)
+   PDF: protocolo_2026/7.pdf
+   Ô£ô Descargado (198 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 188864
+   ­ƒæñ ­ƒæñ HERNANDEZ, Laura Ana (VENDEDOR) ÔåÆ DNI: 17235078
+   ­ƒæñ ­ƒæñ FREIJE, Fernando Ra├║l (APODERADO) ÔåÆ DNI: 17837745
+   ­ƒæñ ­ƒæñ MARTINEZ, Soraya Noem├¡ (COMPRADOR) ÔåÆ DNI: 20903082
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 188864 ÔåÆ 103e33bf
+   Ô£ô Registro actualizado: "venta" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 8 (cont de cred c/hip)
+   PDF: protocolo_2026/8.pdf
+   Ô£ô Descargado (308 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: CONTRATO DE CR├ëDITO CON GARANT├ìA HIPOTECARIA
+   Ô£ô Personas: 4
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 007182692
+   ­ƒæñ ­ƒæñ GEBEL, Marcos Fabricio (APODERADO) ÔåÆ DNI: 35019369
+   ­ƒæñ ­ƒæñ ARRUIZ, Aitor (DEUDOR) ÔåÆ DNI: 33369801
+   ­ƒæñ ­ƒæñ MACIEL, Gabriela Luj├ín (DEUDOR) ÔåÆ DNI: 33348925
+   ­ƒæñ ­ƒÅó BANCO DE LA NACION ARGENTINA (ACREEDOR) ÔåÆ DNI: 30500010912
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 007182692 ÔåÆ bea994ac
+   Ô£ô Registro actualizado: "cont de cred c/hip" ÔåÆ "CONTRATO DE CR├ëDITO CON GARANT├ìA HIPOTECARIA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 9 (poder escrit)
+   PDF: protocolo_2026/9.pdf
+   Ô£ô Descargado (99 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: PODER ESPECIAL
+   Ô£ô Personas: 9
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 30331
+   ­ƒæñ ­ƒæñ MARTINEZ, Osvaldo Manuel (PODERDANTE Y REPRESENTANTE) ÔåÆ DNI: 5493299
+   ­ƒæñ ­ƒæñ MARTINEZ, Ariel Santiago (PODERDANTE) ÔåÆ DNI: 23574079
+   ­ƒæñ ­ƒæñ GALLARDO, Mar├¡a Delia (PODERDANTE) ÔåÆ DNI: 4552557
+   ­ƒæñ ­ƒæñ BARONIO, Valeria Paola (PODERDANTE) ÔåÆ DNI: 20989167
+   ­ƒæñ ­ƒæñ BARONIO, Christian Carlos (PODERDANTE) ÔåÆ DNI: 22053316
+   ­ƒæñ ­ƒæñ BARONIO, Mar├¡a Evangelina (PODERDANTE) ÔåÆ DNI: 29301000
+   ­ƒæñ ­ƒæñ MARTINEZ, Mar├¡a Paula (PODERDANTE) ÔåÆ DNI: 21152026
+   ­ƒæñ ­ƒæñ SEBASTIAN, Fernando Diego (APODERADO) ÔåÆ DNI: 20485297
+   ­ƒæñ ­ƒæñ MAHON, Gabriel Mario (APODERADO) ÔåÆ DNI: 18277080
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 30331 ÔåÆ 435b2cdd
+   Ô£ô Registro actualizado: "poder escrit" ÔåÆ "PODER ESPECIAL"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 10 (venta - t.a.)
+   PDF: protocolo_2026/10.pdf
+   Ô£ô Descargado (260 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA - TRACTO ABREVIADO
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 60040
+   ­ƒæñ ­ƒæñ LOPEZ, Oscar Horacio (VENDEDOR) ÔåÆ DNI: 11775508
+   ­ƒæñ ­ƒæñ AMBROGI, Adri├ín Jos├® (COMPRADOR) ÔåÆ DNI: 18277654
+   ­ƒæñ ­ƒæñ FERNANDEZ, Luis Osvaldo (COMPRADOR) ÔåÆ DNI: 12963939
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 60040 ÔåÆ 7091dcea
+   Ô£ô Registro actualizado: "venta - t.a." ÔåÆ "COMPRAVENTA - TRACTO ABREVIADO"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 11 (transf a benef)
+   PDF: protocolo_2026/11.pdf
+   Ô£ô Descargado (205 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: TRANSFERENCIA DE DOMINIO FIDUCIARIO
+   Ô£ô Personas: 4
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 207174
+   ­ƒæñ ­ƒæñ FIDEICOMISO ARES (FIDUCIARIO TRANSMITENTE) ÔåÆ DNI: 33714437629
+   ­ƒæñ ­ƒÅó DUBAI Sociedad An├│nima (ADMINISTRADOR FIDUCIARIO) ÔåÆ DNI: 30713761601
+   ­ƒæñ ­ƒæñ TOLOSA, Rodrigo Ariel (APODERADO) ÔåÆ DNI: 27747559
+   ­ƒæñ ­ƒæñ DE LUCA, Roc├¡o Ayl├®n (ADQUIRENTE FIDUCIARIO) ÔåÆ DNI: 39483458
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 207174 ÔåÆ bef8eeb7
+   Ô£ô Registro actualizado: "transf a benef" ÔåÆ "TRANSFERENCIA DE DOMINIO FIDUCIARIO"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 12 (poder escrit)
+   PDF: protocolo_2026/12.pdf
+   Ô£ô Descargado (90 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: PODER ESPECIAL DE ESCRITURACION
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Villarino - Partida 1448
+   ­ƒæñ ­ƒæñ PALLOTTA, Emidio o Emigdio (PODERDANTE) ÔåÆ DNI: 93622278
+   ­ƒæñ ­ƒæñ PALLOTTA, Adri├ín Marcelo (APODERADO) ÔåÆ DNI: 20243366799
+   ­ƒæñ ­ƒæñ PALLOTTA, Yannina Paola (APODERADO) ÔåÆ DNI: 25576755
+   ­ƒÅá Inmueble: Villarino - 1448 ÔåÆ c677cb44
+   Ô£ô Registro actualizado: "poder escrit" ÔåÆ "PODER ESPECIAL DE ESCRITURACION"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 13 (transf a benef - rectif)
+   PDF: protocolo_2026/13.pdf
+   Ô£ô Descargado (247 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: TRANSFERENCIA DE DOMINIO A BENEFICIARIO DE FIDEICOMISO
+   Ô£ô Personas: 4
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 208522
+   ­ƒæñ ­ƒæñ LAURA, Pablo Alejandro (REPRESENTANTE LEGAL) ÔåÆ DNI: 92631310
+   ­ƒæñ ­ƒæñ MASELLI, Elsa Lujan (ADQUIRENTE) ÔåÆ DNI: 12620191
+   ­ƒæñ ­ƒÅó "SOMAJOFA" Sociedad An├│nima (ADMINISTRADOR FIDUCIARIO) ÔåÆ DNI: 30711184275
+   ­ƒæñ ­ƒæñ "FIDEICOMISO V8" (TRANSMITENTE) ÔåÆ DNI: 30715505041
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 208522 ÔåÆ 05e244e7
+   Ô£ô Registro actualizado: "transf a benef - rectif" ÔåÆ "TRANSFERENCIA DE DOMINIO A BENEFICIARIO DE FIDEICOMISO"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 14 (poder recp venta)
+   PDF: protocolo_2026/14.pdf
+   Ô£ô Descargado (96 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: PODER ESPECIAL
+   Ô£ô Personas: 4
+   Ô£ô Inmueble: Monte Hermoso - Partida 1260075450
+   ­ƒæñ ­ƒæñ MOSCARDI, Juan Mart├¡n (PODERDANTE Y APODERADO) ÔåÆ DNI: 13744302
+   ­ƒæñ ­ƒæñ MOSCARDI, Juan Esteban (PODERDANTE Y APODERADO) ÔåÆ DNI: 16170973
+   ­ƒæñ ­ƒæñ MOSCARDI, Osvaldo N├®stor (PODERDANTE Y APODERADO) ÔåÆ DNI: 12474151
+   ­ƒæñ ­ƒæñ MOSCARDI, Juan Pedro (PODERDANTE Y APODERADO) ÔåÆ DNI: 17673789
+   ­ƒÅá Inmueble: Monte Hermoso - 1260075450 ÔåÆ ac9a7952
+   Ô£ô Registro actualizado: "poder recp venta" ÔåÆ "PODER ESPECIAL"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 15 (acta)
+   PDF: protocolo_2026/15.pdf
+   Ô£ô Descargado (77 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: ACTA NOTARIAL
+   Ô£ô Personas: 3
+   ­ƒæñ ­ƒæñ STICKAR, Francisco Mat├¡as (REQUIRENTE) ÔåÆ DNI: 29631094
+   ­ƒæñ ­ƒæñ MERLINI, Carla (NOTIFICADA) ÔåÆ DNI: 31611249
+   ­ƒæñ ­ƒæñ GALMARINI, Alejandro Atilio (ESCRIBANO) ÔåÆ DNI: SIN_DNI_1772833125768_861
+   Ô£ô Registro actualizado: "acta" ÔåÆ "ACTA NOTARIAL"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 16 (constitucion sociedad)
+   PDF: protocolo_2026/16.pdf
+   Ô£ô Descargado (114 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: CONSTITUCION DE SOCIEDAD
+   Ô£ô Personas: 7
+   ­ƒæñ ­ƒæñ PAZZI, Marcos (ACCIONISTA FUNDADOR Y PRESIDENTE) ÔåÆ DNI: 26794131
+   ­ƒæñ ­ƒæñ DE SANTIS, Marcelo (ACCIONISTA FUNDADOR Y DIRECTOR SUPLENTE) ÔåÆ DNI: 27058492
+   ­ƒæñ ­ƒæñ KHOURY, Alejo (ACCIONISTA FUNDADOR) ÔåÆ DNI: 27832155
+   ­ƒæñ ­ƒÅó QUATTRO INGENIERIA Y CONSTRUCCIONES S.A. (SOCIEDAD CONSTITUIDA) ÔåÆ DNI: SIN_DNI_1772833165409_608
+   ­ƒæñ ­ƒæñ VILELLA, Valeria Ruth (AUTORIZADO) ÔåÆ DNI: 21483697
+   ­ƒæñ ­ƒæñ CABRERA, Marilen Soledad (AUTORIZADO) ÔåÆ DNI: 32716230
+   ­ƒæñ ­ƒæñ GONZALEZ, Douglas Federico (AUTORIZADO) ÔåÆ DNI: 41212086
+   Ô£ô Registro actualizado: "constitucion sociedad" ÔåÆ "CONSTITUCION DE SOCIEDAD"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 17 (venta)
+   PDF: protocolo_2026/17.pdf
+   Ô£ô Descargado (143 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Bah├¡a Blanca (7) - Partida 109937
+   ­ƒæñ ­ƒæñ MELNIC, Sonia (VENDEDOR) ÔåÆ DNI: 12839142
+   ­ƒæñ ­ƒæñ TROBIANI MAURIZI, Alejandro Ernesto (COMPRADOR) ÔåÆ DNI: 29776810
+   ­ƒæñ ­ƒæñ PETRUF, Laura In├®s (COMPRADOR) ÔåÆ DNI: 30423114
+   ­ƒÅá Inmueble: Bah├¡a Blanca (7) - 109937 ÔåÆ d8e6b772
+   Ô£ô Registro actualizado: "venta" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 18 (cont de cred c/hip)
+   PDF: protocolo_2026/18.pdf
+   Ô£ô Descargado (111 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: ACTA NOTARIAL
+   Ô£ô Personas: 0
+   Ô£ô Inmueble: null - Partida 109937
+  ÔÜá Error inserting inmueble (null 109937): null value in column "partido_id" of relation "inmuebles" violates not-null constraint
+   Ô£ô Registro actualizado: "cont de cred c/hip" ÔåÆ "ACTA NOTARIAL"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 19 (renuncia usufructo)
+   PDF: protocolo_2026/19.pdf
+   Ô£ô Descargado (207 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: RENUNCIA DE USUFRUCTO
+   Ô£ô Personas: 2
+   Ô£ô Inmueble: Bah├¡a Blanca (007) - Partida 4333
+   ­ƒæñ ­ƒæñ BERARDI, Mar├¡a P├¡a (APODERADO) ÔåÆ DNI: 16206500
+   ­ƒæñ ­ƒæñ ROBIOLIO, Mar├¡a Sara (RENUNCIANTE) ÔåÆ DNI: 1442906
+   ­ƒÅá Inmueble: Bah├¡a Blanca (007) - 4333 ÔåÆ 144a9d23
+   Ô£ô Registro actualizado: "renuncia usufructo" ÔåÆ "RENUNCIA DE USUFRUCTO"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 20 (venta)
+   PDF: protocolo_2026/20.pdf
+   Ô£ô Descargado (148 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 7
+   Ô£ô Inmueble: Monte Hermoso - Partida 1260075450
+   ­ƒæñ ­ƒæñ MOSCARDI, Juan Esteban (VENDEDOR Y APODERADO) ÔåÆ DNI: 16170973
+   ­ƒæñ ­ƒæñ JALIL, Guillermo Alejandro (COMPRADOR) ÔåÆ DNI: 14533649
+   ­ƒæñ ­ƒæñ VOLPE, Mar├¡a Alicia (COMPRADOR) ÔåÆ DNI: 14591546
+   ­ƒæñ ­ƒæñ MOSCARDI, Juan Mart├¡n (VENDEDOR) ÔåÆ DNI: 13744302
+   ­ƒæñ ­ƒæñ MOSCARDI, Osvaldo N├®stor (VENDEDOR) ÔåÆ DNI: 12474151
+   ­ƒæñ ­ƒæñ MOSCARDI, Juan Pedro (VENDEDOR) ÔåÆ DNI: 17673789
+   ­ƒæñ ­ƒæñ RODR├ìGUEZ MENDOZA, Mariana Beatriz (ASENTIMIENTO CONYUGAL) ÔåÆ DNI: 20045476
+   ­ƒÅá Inmueble: Monte Hermoso - 1260075450 ÔåÆ ac9a7952
+   Ô£ô Registro actualizado: "venta" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 21 (complementaria)
+   PDF: protocolo_2026/21.pdf
+   Ô£ô Descargado (71 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: ESCRITURA COMPLEMENTARIA
+   Ô£ô Personas: 3
+   ­ƒæñ ­ƒÅó GARANTIZAR S.G.R. (ACREEDOR) ÔåÆ DNI: 30688331761
+   ­ƒæñ ­ƒÅó AGRO DE SOUZA S.A. (DEUDOR) ÔåÆ DNI: SIN_DNI_1772833358276_114
+   ­ƒæñ ­ƒæñ VIVOT, Josefina (AUTORIZADO) ÔåÆ DNI: SIN_DNI_1772833359367_415
+   Ô£ô Registro actualizado: "complementaria" ÔåÆ "ESCRITURA COMPLEMENTARIA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 22 (venta)
+   PDF: protocolo_2026/22.pdf
+   Ô£ô Descargado (201 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 4
+   Ô£ô Inmueble: Monte Hermoso - Partida 1260215937
+   ­ƒæñ ­ƒæñ NANTES, Esteban Alberto (VENDEDOR) ÔåÆ DNI: 26794573
+   ­ƒæñ ­ƒæñ RODRIGUEZ, Mar├¡a Eugenia (VENDEDOR) ÔåÆ DNI: 27537921
+   ­ƒæñ ­ƒæñ VALERO, Joaqu├¡n (COMPRADOR) ÔåÆ DNI: 30565328
+   ­ƒæñ ­ƒæñ DELIEUTRAZ, Gisele (COMPRADOR) ÔåÆ DNI: 32274119
+   ­ƒÅá Inmueble: Monte Hermoso - 1260215937 ÔåÆ b48bcff7
+   Ô£ô Registro actualizado: "venta" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 23 (venta t.a.)
+   PDF: protocolo_2026/23.pdf
+   Ô£ô Descargado (211 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA - TRACTO ABREVIADO
+   Ô£ô Personas: 5
+   ­ƒæñ ­ƒæñ MELONI, Osvaldo Omar (VENDEDOR) ÔåÆ DNI: 8188674
+   ­ƒæñ ­ƒæñ MELONI FORTUNATI, Juan Carlos (VENDEDOR) ÔåÆ DNI: 24104592
+   ­ƒæñ ­ƒæñ MIGUEL, Leonardo Marcelo (APODERADO) ÔåÆ DNI: 20529553
+   ­ƒæñ ­ƒæñ HINDING, Ra├║l Alberto (COMPRADOR) ÔåÆ DNI: 8002871
+   ­ƒæñ ­ƒæñ FORTUNATI, Laura Margarita (CAUSANTE) ÔåÆ DNI: 6245125
+   Ô£ô Registro actualizado: "venta t.a." ÔåÆ "COMPRAVENTA - TRACTO ABREVIADO"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 24 (Acta)
+   PDF: protocolo_2026/24.pdf
+   Ô£ô Descargado (102 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: ACTA NOTARIAL
+   Ô£ô Personas: 3
+   ­ƒæñ ­ƒæñ BENEDETTI, Hugo Gustavo (REQUIRENTE) ÔåÆ DNI: 11794508
+   ­ƒæñ ­ƒÅó FRIGORIFICO ANSELMO S.A. (CAUSANTE) ÔåÆ DNI: SIN_DNI_1772833462549_930
+   ­ƒæñ ­ƒæñ ESCUR, Esteban (PRESENTE) ÔåÆ DNI: 17341799
+   Ô£ô Registro actualizado: "Acta" ÔåÆ "ACTA NOTARIAL"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 25 (venta)
+   PDF: protocolo_2026/25.pdf
+   Ô£ô Descargado (141 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Bah├¡a Blanca (007) - Partida 59851
+   ­ƒæñ ­ƒÅó DON FERNANDO S.A. (VENDEDOR) ÔåÆ DNI: 33125879999
+   ­ƒæñ ­ƒæñ MATTANO, Mar├¡a Magdalena (REPRESENTANTE) ÔåÆ DNI: SIN_DNI_1772833496051_857
+   ­ƒæñ ­ƒæñ AZPIROZ, Mart├¡n Ignacio (COMPRADOR) ÔåÆ DNI: 18128622
+   ­ƒÅá Inmueble: Bah├¡a Blanca (007) - 59851 ÔåÆ e5c5a858
+   Ô£ô Registro actualizado: "venta" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 26 (bonificacion)
+   PDF: protocolo_2026/26.pdf
+   Ô£ô Descargado (139 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: CESION DE DERECHOS
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Bah├¡a Blanca (007) - Partida 59851
+   ­ƒæñ ­ƒæñ MATTANO, Mar├¡a Magdalena (REPRESENTANTE LEGAL) ÔåÆ DNI: 5255990
+   ­ƒæñ ­ƒæñ AZPIROZ, Mart├¡n Ignacio (CESIONARIO) ÔåÆ DNI: 18128622
+   ­ƒæñ ­ƒÅó Don Fernando S.A. (CEDENTE) ÔåÆ DNI: 33125879999
+   ­ƒÅá Inmueble: Bah├¡a Blanca (007) - 59851 ÔåÆ e5c5a858
+   Ô£ô Registro actualizado: "bonificacion" ÔåÆ "CESION DE DERECHOS"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 27 (venta t.a.)
+   PDF: protocolo_2026/27.pdf
+   Ô£ô Descargado (389 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA - TRACTO ABREVIADO
+   Ô£ô Personas: 8
+   Ô£ô Inmueble: Bah├¡a Blanca (007) - Partida 24788
+   ­ƒæñ ­ƒæñ HAAG, Orlando Fabian (VENDEDOR) ÔåÆ DNI: 16926978
+   ­ƒæñ ­ƒæñ HAAG, Dario H├®ctor (VENDEDOR) ÔåÆ DNI: 17568981
+   ­ƒæñ ­ƒæñ HAAG, Carmelo Rodolfo (VENDEDOR) ÔåÆ DNI: 18481098
+   ­ƒæñ ­ƒæñ HAAG, Mar├¡a Isabel (VENDEDOR) ÔåÆ DNI: 22478091
+   ­ƒæñ ­ƒæñ HAAG, Luciana Gabriela (VENDEDOR) ÔåÆ DNI: 24889681
+   ­ƒæñ ­ƒæñ ROSSETTI, Fausto (COMPRADOR) ÔåÆ DNI: 45423467
+   ­ƒæñ ­ƒæñ HAAG, H├®ctor Carlos (CAUSANTE) ÔåÆ DNI: 5478838
+   ­ƒæñ ­ƒæñ MELINGER, Isabel Marta (CAUSANTE) ÔåÆ DNI: 6841383
+   ­ƒÅá Inmueble: Bah├¡a Blanca (007) - 24788 ÔåÆ 25e3a163
+   Ô£ô Registro actualizado: "venta t.a." ÔåÆ "COMPRAVENTA - TRACTO ABREVIADO"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 28 (pod gral adm y disp)
+   PDF: protocolo_2026/28.pdf
+   Ô£ô Descargado (93 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: PODER GENERAL DE ADMINISTRACI├ôN Y DISPOSICI├ôN
+   Ô£ô Personas: 2
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 191853
+   ­ƒæñ ­ƒæñ BATISTA, Lucas Mart├¡n (PODERDANTE) ÔåÆ DNI: 39483009
+   ­ƒæñ ­ƒæñ ROMANO, Viviana Elizabeth (APODERADO) ÔåÆ DNI: 13165457
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 191853 ÔåÆ 7ebe0c62
+   Ô£ô Registro actualizado: "pod gral adm y disp" ÔåÆ "PODER GENERAL DE ADMINISTRACI├ôN Y DISPOSICI├ôN"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 29 (desaf, vivienda)
+   PDF: protocolo_2026/29.pdf
+   Ô£ô Descargado (195 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: DESAFECTACION DE VIVIENDA
+   Ô£ô Personas: 4
+   Ô£ô Inmueble: Bah├¡a Blanca (007) - Partida 53455
+   ­ƒæñ ­ƒæñ GULLINI, Omar Alcides (TITULAR REGISTRADO Y HEREDERO) ÔåÆ DNI: 5491513
+   ­ƒæñ ­ƒæñ GULLINI, Bruno Omar (HEREDERO) ÔåÆ DNI: 23121071
+   ­ƒæñ ­ƒæñ GULLINI, Renata (HEREDERA) ÔåÆ DNI: 26385861
+   ­ƒæñ ­ƒæñ GULLINI, Omar Alcides (APODERADO) ÔåÆ DNI: 5491513
+   ­ƒÅá Inmueble: Bah├¡a Blanca (007) - 53455 ÔåÆ 86c8b7cb
+   Ô£ô Registro actualizado: "desaf, vivienda" ÔåÆ "DESAFECTACION DE VIVIENDA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 30 (venta t.a.)
+   PDF: protocolo_2026/30.pdf
+   Ô£ô Descargado (214 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA - TRACTO ABREVIADO
+   Ô£ô Personas: 6
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 53455
+   ­ƒæñ ­ƒæñ GULLINI, Omar Alcides (VENDEDOR) ÔåÆ DNI: 5491513
+   ­ƒæñ ­ƒæñ GULLINI, Bruno Omar (VENDEDOR) ÔåÆ DNI: 23121071
+   ­ƒæñ ­ƒæñ GULLINI, Renata (VENDEDOR) ÔåÆ DNI: 26385861
+   ­ƒæñ ­ƒæñ CALDUBEHERE, Juan Pedro (COMPRADOR) ÔåÆ DNI: 5507523
+   ­ƒæñ ­ƒæñ CARPINETTI, Alicia Leonor (COMPRADOR) ÔåÆ DNI: 6716030
+   ­ƒæñ ­ƒæñ CASTELL, Raquel Trinidad (CAUSANTE) ÔåÆ DNI: 4846868
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 53455 ÔåÆ f31fb1cb
+   Ô£ô Registro actualizado: "venta t.a." ÔåÆ "COMPRAVENTA - TRACTO ABREVIADO"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 31 (venta pte ind)
+   PDF: protocolo_2026/31.pdf
+   Ô£ô Descargado (196 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Monte Hermoso - Partida 20537
+   ­ƒæñ ­ƒæñ PEREZ, Alberto Ceferino (VENDEDOR) ÔåÆ DNI: 23574109
+   ­ƒæñ ­ƒæñ PEREZ, Mar├¡a Asunci├│n (COMPRADORA) ÔåÆ DNI: 24765209
+   ­ƒæñ ­ƒæñ RONCORONI, Carolina (C├ôNYUGE ASCENTIMIENTO) ÔåÆ DNI: 24765292
+   ­ƒÅá Inmueble: Monte Hermoso - 20537 ÔåÆ 09f3e1ac
+   Ô£ô Registro actualizado: "venta pte ind" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 32 (pod gral amplio)
+   PDF: protocolo_2026/32.pdf
+   Ô£ô Descargado (110 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: PODER GENERAL DE ADMINISTRACI├ôN Y DISPOSICI├ôN
+   Ô£ô Personas: 3
+   ­ƒæñ ­ƒÅó Finca Ocho Cerros S.A. (PODERDANTE) ÔåÆ DNI: 30709355453
+   ­ƒæñ ­ƒæñ RUEDA, Pablo Alejandro (REPRESENTANTE) ÔåÆ DNI: 22325482
+   ­ƒæñ ­ƒæñ RUEDA, Manuel Alejandro (APODERADO) ÔåÆ DNI: 42418881
+   Ô£ô Registro actualizado: "pod gral amplio" ÔåÆ "PODER GENERAL DE ADMINISTRACI├ôN Y DISPOSICI├ôN"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 33 (venta)
+   PDF: protocolo_2026/33.pdf
+   Ô£ô Descargado (187 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 4
+   Ô£ô Inmueble: Bah├¡a Blanca (007) - Partida 167658
+   ­ƒæñ ­ƒæñ HIRSCHMANN, Ingrid Elvira (VENDEDOR) ÔåÆ DNI: 13348581
+   ­ƒæñ ­ƒæñ BICCICONTI, Sebasti├ín Ra├║l (COMPRADOR) ÔåÆ DNI: 29300031
+   ­ƒæñ ­ƒæñ PELLON MAISON, Dar├¡o Heriberto (COMPRADOR) ÔåÆ DNI: 21828224
+   ­ƒæñ ­ƒæñ ├üLVAREZ, Joaqu├¡n (CONYUGE ASCENDIENTE) ÔåÆ DNI: 11980671
+   ­ƒÅá Inmueble: Bah├¡a Blanca (007) - 167658 ÔåÆ b724d352
+   Ô£ô Registro actualizado: "venta" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 34 (cancel. Hipot.)
+   PDF: protocolo_2026/34.pdf
+   Ô£ô Descargado (138 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: CANCELACION DE HIPOTECA
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Tres Arroyos - Partida 2306
+   ­ƒæñ ­ƒæñ CHINESTRA, Laura Beatriz (APODERADO) ÔåÆ DNI: 26172222
+   ­ƒæñ ­ƒÅó GARANTIZAR S.G.R. (ACREEDOR) ÔåÆ DNI: 30688331761
+   ­ƒæñ ­ƒæñ BLACKER, Alejandro (DEUDOR) ÔåÆ DNI: 14069405
+   ­ƒÅá Inmueble: Tres Arroyos - 2306 ÔåÆ fb6ba629
+   Ô£ô Registro actualizado: "cancel. Hipot." ÔåÆ "CANCELACION DE HIPOTECA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 35 (venta - lev. Inembarg)
+   PDF: protocolo_2026/35.pdf
+   Ô£ô Descargado (146 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 4
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 34061
+   ­ƒæñ ­ƒæñ CAMPOS, Victoria (APODERADA) ÔåÆ DNI: 27643751
+   ­ƒæñ ­ƒæñ ARDITTI, Eugenia (COMPRADORA) ÔåÆ DNI: 33799016
+   ­ƒæñ ­ƒæñ CAMPOS, Miguel Angel (VENDEDOR) ÔåÆ DNI: 8569497
+   ­ƒæñ ­ƒæñ ZALBA, Marta Susana (VENDEDORA) ÔåÆ DNI: 5906658
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 34061 ÔåÆ 16f86c45
+   Ô£ô Registro actualizado: "venta - lev. Inembarg" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 36 (complementaria)
+   PDF: protocolo_2026/36.pdf
+   Ô£ô Descargado (111 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: ESCRITURA COMPLEMENTARIA
+   Ô£ô Personas: 3
+   ­ƒæñ ­ƒæñ BACHMANN C├ôRDOVA, Pablo Adri├ín (COMPARECIENTE) ÔåÆ DNI: 29510384
+   ­ƒæñ ­ƒæñ KUHN, Viviana Leticia (COMPARECIENTE) ÔåÆ DNI: 28501429
+   ­ƒæñ ­ƒÅó SOMESUR S.A. (PARTE) ÔåÆ DNI: SIN_DNI_1772833968321_972
+   Ô£ô Registro actualizado: "complementaria" ÔåÆ "ESCRITURA COMPLEMENTARIA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 37 (venta)
+   PDF: protocolo_2026/37.pdf
+   Ô£ô Descargado (181 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Bah├¡a Blanca (007) - Partida 12837
+   ­ƒæñ ­ƒæñ VOGEL, Daniel Ra├║l (VENDEDOR) ÔåÆ DNI: 12278910
+   ­ƒæñ ­ƒæñ DONNARI, Marisa Elsa (VENDEDOR) ÔåÆ DNI: 12971823
+   ­ƒæñ ­ƒæñ TRELLINI, Mar├¡a Bel├®n (COMPRADOR) ÔåÆ DNI: 28777114
+   ­ƒÅá Inmueble: Bah├¡a Blanca (007) - 12837 ÔåÆ 5a559460
+   Ô£ô Registro actualizado: "venta" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 38 (acta desvinc)
+   PDF: protocolo_2026/38.pdf
+   Ô£ô Descargado (106 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: ACTA NOTARIAL
+   Ô£ô Personas: 6
+   ­ƒæñ ­ƒæñ DE CUNTO, Sergio Alejandro (DESVINCULADO) ÔåÆ DNI: 16250685
+   ­ƒæñ ­ƒÅó TELECOM ARGENTINA S.A. (EMPLEADOR) ÔåÆ DNI: 30639453738
+   ­ƒæñ ­ƒæñ FARINA, Adriana Cristina (APODERADO) ÔåÆ DNI: 20561803
+   ­ƒæñ ­ƒæñ CRUCIANI, Silvina (BENEFICIARIO) ÔåÆ DNI: 18518362
+   ­ƒæñ ­ƒæñ DE CUNTO CRUCIANI, Tamara Ines (FAMILIAR A CARGO) ÔåÆ DNI: 51339987
+   ­ƒæñ ­ƒæñ DE CUNTO CRUCIANI, Noemi Tatiana (FAMILIAR A CARGO) ÔåÆ DNI: 54135175
+   Ô£ô Registro actualizado: "acta desvinc" ÔåÆ "ACTA NOTARIAL"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 39 (acta desvinc)
+   PDF: protocolo_2026/39.pdf
+   Ô£ô Descargado (107 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: CONVENIO DE DESVINCULACION
+   Ô£ô Personas: 4
+   ­ƒæñ ­ƒæñ STREITENBERGER, Claudia Hayd├®e (EMPLEADO) ÔåÆ DNI: 20576812
+   ­ƒæñ ­ƒÅó TELECOM ARGENTINA S.A. (EMPLEADOR) ÔåÆ DNI: 30639453738
+   ­ƒæñ ­ƒæñ FARINA, Adriana Cristina (APODERADO) ÔåÆ DNI: 20561803
+   ­ƒæñ ­ƒæñ BRANDONI, Carlos Ricardo (BENEFICIARIO) ÔåÆ DNI: 18429848
+   Ô£ô Registro actualizado: "acta desvinc" ÔåÆ "CONVENIO DE DESVINCULACION"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 40 (acta 2 folios reservados)
+   PDF: protocolo_2026/40.pdf
+   Ô£ô Descargado (127 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: ACTA NOTARIAL
+   Ô£ô Personas: 3
+   ­ƒæñ ­ƒæñ GENTILI, Roberto Osvaldo (REQUIRENTE) ÔåÆ DNI: 12862805
+   ­ƒæñ ­ƒÅó IACA Laboratorios (INTERESADO) ÔåÆ DNI: SIN_DNI_1772834128663_627
+   ­ƒæñ ­ƒæñ VALENCIA, Alberto (TERCERO MENCIONADO) ÔåÆ DNI: SIN_DNI_1772834129757_950
+   Ô£ô Registro actualizado: "acta 2 folios reservados" ÔåÆ "ACTA NOTARIAL"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 41 (protocol ad por disol)
+   PDF: protocolo_2026/41.pdf
+   Ô£ô Descargado (195 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: PROTOCOLIZACION DE ADJUDICACION POR DISOLUCION DE SOCIEDAD CONYUGAL
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 165348
+   ­ƒæñ ­ƒæñ GENCO, Cecilia Andrea (ADJUDICATARIA) ÔåÆ DNI: 25994673
+   ­ƒæñ ­ƒæñ ULER, Gabriel Horacio (EX-CONYUGE) ÔåÆ DNI: SIN_DNI_1772834166383_568
+   ­ƒæñ ­ƒæñ LEGNINI, Lorena Mariel (ANTECESOR DOMINIAL (VENDEDOR)) ÔåÆ DNI: SIN_DNI_1772834167222_906
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 165348 ÔåÆ 9a8498c9
+   Ô£ô Registro actualizado: "protocol ad por disol" ÔåÆ "PROTOCOLIZACION DE ADJUDICACION POR DISOLUCION DE SOCIEDAD CONYUGAL"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 42 (cancel. Hipot.)
+   PDF: protocolo_2026/42.pdf
+   Ô£ô Descargado (137 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: CANCELACION DE HIPOTECA
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Bah├¡a Blanca (007) - Partida 62639
+   ­ƒæñ ­ƒæñ SEPULVEDA, Rodrigo (APODERADO) ÔåÆ DNI: 24765871
+   ­ƒæñ ­ƒÅó BANCO DE LA PROVINCIA DE BUENOS AIRES (ACREEDOR) ÔåÆ DNI: 33999242109
+   ­ƒæñ ­ƒæñ BUDASSI, Nadia (DEUDOR) ÔåÆ DNI: 21739417
+   ­ƒÅá Inmueble: Bah├¡a Blanca (007) - 62639 ÔåÆ 5ba0900a
+   Ô£ô Registro actualizado: "cancel. Hipot." ÔåÆ "CANCELACION DE HIPOTECA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 43 (venta)
+   PDF: protocolo_2026/43.pdf
+   Ô£ô Descargado (180 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Bah├¡a Blanca (007) - Partida 46912
+   ­ƒæñ ­ƒæñ CABRERA, Nilda Marcela (VENDEDORA) ÔåÆ DNI: 22440817
+   ­ƒæñ ­ƒæñ GIMENEZ, Natalia Isabel (COMPRADORA) ÔåÆ DNI: 30351343
+   ­ƒæñ ­ƒæñ MANZOTTI, Silvio Javier (COMPRADOR) ÔåÆ DNI: 25468911
+   ­ƒÅá Inmueble: Bah├¡a Blanca (007) - 46912 ÔåÆ 3bed7de6
+   Ô£ô Registro actualizado: "venta" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 44 (acta acuerdo 241)
+   PDF: protocolo_2026/44.pdf
+   Ô£ô Descargado (104 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: ACTA NOTARIAL
+   Ô£ô Personas: 3
+   ­ƒæñ ­ƒæñ RUANO, Agust├¡n Tomas (EMPLEADO) ÔåÆ DNI: 37005989
+   ­ƒæñ ­ƒæñ ARMENI, Mar├¡a Bel├®n (APODERADO) ÔåÆ DNI: 31561326
+   ­ƒæñ ­ƒÅó PBBPOLISUR SOCIEDAD DE RESPONSABILIDAD LIMITADA (EMPRESA) ÔåÆ DNI: 30560254195
+   Ô£ô Registro actualizado: "acta acuerdo 241" ÔåÆ "ACTA NOTARIAL"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 45 (venta t.a.)
+   PDF: protocolo_2026/45.pdf
+   Ô£ô Descargado (212 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA - TRACTO ABREVIADO
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Monte Hermoso - Partida 35231
+   ­ƒæñ ­ƒæñ URANGA, Fernando Javier (VENDEDOR) ÔåÆ DNI: 17647284
+   ­ƒæñ ­ƒæñ FERMANI, Adriana Rosa (COMPRADOR) ÔåÆ DNI: 13461293
+   ­ƒæñ ­ƒæñ PIERANGELINI, Gladys Antonia (CAUSANTE) ÔåÆ DNI: 1187817
+   ­ƒÅá Inmueble: Monte Hermoso - 35231 ÔåÆ 9c534a8c
+   Ô£ô Registro actualizado: "venta t.a." ÔåÆ "COMPRAVENTA - TRACTO ABREVIADO"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 46 (desembolso)
+   PDF: protocolo_2026/46.pdf
+   Ô£ô Descargado (125 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: RECIBO
+   Ô£ô Personas: 4
+   ­ƒæñ ­ƒæñ BENUSSI, Pablo Dami├ín (DEUDOR) ÔåÆ DNI: 26345890
+   ­ƒæñ ­ƒæñ GARCIA, Ver├│nica Vanesa (DEUDOR) ÔåÆ DNI: 25134552
+   ­ƒæñ ­ƒÅó BANCO DE LA NACION ARGENTINA (ACREEDOR) ÔåÆ DNI: 30500010912
+   ­ƒæñ ­ƒæñ GEBEL, Marcos Fabricio (APODERADO) ÔåÆ DNI: 35019369
+   Ô£ô Registro actualizado: "desembolso" ÔåÆ "RECIBO"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 48 (complementaria)
+   PDF: protocolo_2026/48.pdf
+   Ô£ô Descargado (108 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: ESCRITURA COMPLEMENTARIA
+   Ô£ô Personas: 2
+   ­ƒæñ ­ƒÅó Club Villa Mitre (VENDEDOR) ÔåÆ DNI: SIN_DNI_1772834356413_389
+   ­ƒæñ ­ƒÅó COMPANIA DE DESARROLLOS URBANISTICOS CODESUR Sociedad Anonima (COMPRADOR) ÔåÆ DNI: SIN_DNI_1772834357358_450
+   Ô£ô Registro actualizado: "complementaria" ÔåÆ "ESCRITURA COMPLEMENTARIA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 49 (adj x disol soc cony)
+   PDF: protocolo_2026/49.pdf
+   Ô£ô Descargado (210 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: ADJUDICACION POR DISOLUCION DE SOCIEDAD CONYUGAL
+   Ô£ô Personas: 2
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 166252
+   ­ƒæñ ­ƒæñ MOLINARI, Luis Danilo (ADJUDICANTE) ÔåÆ DNI: 20789216
+   ­ƒæñ ­ƒæñ WELSH, Analia (ADJUDICATARIA) ÔåÆ DNI: 20049397
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 166252 ÔåÆ b0548164
+   Ô£ô Registro actualizado: "adj x disol soc cony" ÔåÆ "ADJUDICACION POR DISOLUCION DE SOCIEDAD CONYUGAL"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 50 (donac)
+   PDF: protocolo_2026/50.pdf
+   Ô£ô Descargado (181 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: DONACI├ôN
+   Ô£ô Personas: 4
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 62639
+   ­ƒæñ ­ƒæñ BUDASSI, Nadia (DONANTE) ÔåÆ DNI: 21739417
+   ­ƒæñ ­ƒæñ GHERZI BUDASSI, Uriel (DONATARIO) ÔåÆ DNI: 44881809
+   ­ƒæñ ­ƒæñ GHERZI BUDASSI, Jano (DONATARIO) ÔåÆ DNI: 44881810
+   ­ƒæñ ­ƒæñ GHERZI BUDASSI, Lara (DONATARIO) ÔåÆ DNI: 47013891
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 62639 ÔåÆ d31e5b38
+   Ô£ô Registro actualizado: "donac" ÔåÆ "DONACI├ôN"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 51 (venta t.a.)
+   PDF: protocolo_2026/51.pdf
+   Ô£ô Descargado (239 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA - TRACTO ABREVIADO
+   Ô£ô Personas: 8
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 55271
+   ­ƒæñ ­ƒæñ VILLANUEVA, Adelma Neli (VENDEDOR) ÔåÆ DNI: 1442758
+   ­ƒæñ ­ƒæñ ZABALETA, Sonia Mariela (VENDEDOR) ÔåÆ DNI: 17594178
+   ­ƒæñ ­ƒæñ ZABALETA, Sandra Elizabet (VENDEDOR) ÔåÆ DNI: 16170583
+   ­ƒæñ ­ƒæñ ZABALETA, Mar├¡a Fernanda (VENDEDOR) ÔåÆ DNI: 23489542
+   ­ƒæñ ­ƒæñ JIMENEZ, Macarena Selene (COMPRADOR) ÔåÆ DNI: 37389767
+   ­ƒæñ ­ƒæñ VILLANUEVA, N├®stor Mario (CAUSANTE) ÔåÆ DNI: 5482312
+   ­ƒæñ ­ƒæñ VILLANUEVA, Betty (CAUSANTE) ÔåÆ DNI: 3637286
+   ­ƒæñ ­ƒæñ ZABALETA, Reynaldo Hugo (CAUSANTE) ÔåÆ DNI: SIN_DNI_1772834510786_542
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 55271 ÔåÆ ec3026e7
+   Ô£ô Registro actualizado: "venta t.a." ÔåÆ "COMPRAVENTA - TRACTO ABREVIADO"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 52 (cont cred c/hipot)
+   PDF: protocolo_2026/52.pdf
+   Ô£ô Descargado (350 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: CONTRATO DE CR├ëDITO CON GARANT├ìA HIPOTECARIA
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 55271
+   ­ƒæñ ­ƒæñ JIMENEZ, Macarena Selene (DEUDOR) ÔåÆ DNI: 37389767
+   ­ƒæñ ­ƒÅó BANCO DE LA NACION ARGENTINA (ACREEDOR) ÔåÆ DNI: 30500010912
+   ­ƒæñ ­ƒæñ BALLESTER, Marcelo Luis (APODERADO) ÔåÆ DNI: 22697426
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 55271 ÔåÆ ec3026e7
+   Ô£ô Registro actualizado: "cont cred c/hipot" ÔåÆ "CONTRATO DE CR├ëDITO CON GARANT├ìA HIPOTECARIA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 53 (venta)
+   PDF: protocolo_2026/53.pdf
+   Ô£ô Descargado (203 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 4
+   Ô£ô Inmueble: Bah├¡a Blanca (007) - Partida 184744
+   ­ƒæñ ­ƒæñ GARCIA, Rodolfo Jos├® (VENDEDOR) ÔåÆ DNI: 8460101
+   ­ƒæñ ­ƒæñ MARTINEZ, Irma Matilde (VENDEDOR) ÔåÆ DNI: 12536954
+   ­ƒæñ ­ƒæñ BOU, Ileana Daniela (COMPRADOR) ÔåÆ DNI: 25283574
+   ­ƒæñ ­ƒæñ BOU, Dami├ín Alejandro (COMPRADOR) ÔåÆ DNI: 23525546
+   ­ƒÅá Inmueble: Bah├¡a Blanca (007) - 184744 ÔåÆ 12e8c9de
+   Ô£ô Registro actualizado: "venta" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 55 (venta)
+   PDF: protocolo_2026/55.pdf
+   Ô£ô Descargado (142 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 3
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 107910
+   ­ƒæñ ­ƒæñ HOULMANN, Ana Mar├¡a (VENDEDOR) ÔåÆ DNI: 16302734
+   ­ƒæñ ­ƒæñ FERNANDEZ, Juan Jos├® (COMPRADOR) ÔåÆ DNI: 34575135
+   ­ƒæñ ­ƒæñ PIGNOTTI, Anabela Soledad (COMPRADOR) ÔåÆ DNI: 36906664
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 107910 ÔåÆ df6cb8bc
+   Ô£ô Registro actualizado: "venta" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 56 (cont cred c/hipot)
+   PDF: protocolo_2026/56.pdf
+   Ô£ô Descargado (386 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: CONTRATO DE CR├ëDITO CON GARANT├ìA HIPOTECARIA
+   Ô£ô Personas: 4
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 107910
+   ­ƒæñ ­ƒæñ MAGLIARO, Fernando Adri├ín (APODERADO) ÔåÆ DNI: 32026863
+   ­ƒæñ ­ƒæñ FERNANDEZ, Juan Jos├® (DEUDOR) ÔåÆ DNI: 34575135
+   ­ƒæñ ­ƒæñ PIGNOTTI, Anabela Soledad (DEUDOR) ÔåÆ DNI: 36906664
+   ­ƒæñ ­ƒÅó BANCO DE LA NACION ARGENTINA (ACREEDOR) ÔåÆ DNI: 30500010912
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 107910 ÔåÆ df6cb8bc
+   Ô£ô Registro actualizado: "cont cred c/hipot" ÔåÆ "CONTRATO DE CR├ëDITO CON GARANT├ìA HIPOTECARIA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 57 (venta)
+   PDF: protocolo_2026/57.pdf
+   Ô£ô Descargado (199 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: COMPRAVENTA
+   Ô£ô Personas: 4
+   Ô£ô Inmueble: Bah├¡a Blanca - Partida 188885
+   ­ƒæñ ­ƒæñ HERNANDEZ, Laura Ana (VENDEDOR) ÔåÆ DNI: 17235078
+   ­ƒæñ ­ƒæñ FREIJE, Fernando Ra├║l (APODERADO) ÔåÆ DNI: 17837745
+   ­ƒæñ ­ƒæñ MENDIETA, Leandro Ezequiel (COMPRADOR) ÔåÆ DNI: 33254233
+   ­ƒæñ ­ƒæñ COLLADO, Josefina (COMPRADOR) ÔåÆ DNI: 37235020
+   ­ƒÅá Inmueble: Bah├¡a Blanca - 188885 ÔåÆ 660d093d
+   Ô£ô Registro actualizado: "venta" ÔåÆ "COMPRAVENTA"
+   ÔÅ© Pausa 3s (rate limit)...
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+­ƒôä Escritura N┬░ 58 (poder gral)
+   PDF: protocolo_2026/58.pdf
+   Ô£ô Descargado (99 KB)
+   ÔÅ│ Extrayendo con Gemini 2.5 Pro...
+   ­ƒôØ Texto extra├¡do: 0 chars (PDF-native path)
+   Ô£ô Tipo acto: PODER GENERAL DE ADMINISTRACI├ôN Y DISPOSICI├ôN
+   Ô£ô Personas: 6
+   ­ƒæñ ­ƒæñ LA ROCCA, Bruno Humberto (PODERDANTE) ÔåÆ DNI: 38550906
+   ­ƒæñ ­ƒæñ LA ROCCA, Franco (PODERDANTE) ÔåÆ DNI: 39482964
+   ­ƒæñ ­ƒæñ LA ROCCA, Juan Jos├® (PODERDANTE) ÔåÆ DNI: 16024073
+   ­ƒæñ ­ƒÅó BUTAL TOKI S.A. (PODERDANTE) ÔåÆ DNI: 30709147672
+   ­ƒæñ ­ƒæñ LA ROCCA, Juan Jos├® (REPRESENTANTE LEGAL) ÔåÆ DNI: 16024073
+   ­ƒæñ ­ƒæñ LLORENTE MART├ìN, Rosendo (APODERADO) ÔåÆ DNI: 2852477V
+   Ô£ô Registro actualizado: "poder gral" ÔåÆ "PODER GENERAL DE ADMINISTRACI├ôN Y DISPOSICI├ôN"
+
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+RESUMEN:
+  Ô£ô Procesadas: 56
+  Ô£ù Fallidas: 0
+  ­ƒæñ Personas creadas: 0
+  ­ƒÅá Inmuebles creados: 0
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
