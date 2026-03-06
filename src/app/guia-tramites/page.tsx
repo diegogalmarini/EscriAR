@@ -102,10 +102,10 @@ export default function GuiaTramitesPage() {
     return (
         <div className="min-h-screen bg-slate-50/50 flex flex-col">
             {/* Sticky Header */}
-            <div className="sticky top-0 z-20 bg-slate-50 border-b border-slate-200 px-6 md:px-8 pt-5 pb-3 shadow-sm">
-                {/* Line 1: Title + Search + Badge */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 shrink-0">
+            <div className="sticky top-0 z-20 bg-slate-50 border-b border-slate-200 px-6 md:px-8 pt-5 pb-3 shadow-sm space-y-2">
+                {/* Row 1: Title + Badge */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
                         <div className="p-2 bg-emerald-100 rounded-lg">
                             <ClipboardList className="h-6 w-6 text-emerald-600" />
                         </div>
@@ -116,25 +116,25 @@ export default function GuiaTramitesPage() {
                             </p>
                         </div>
                     </div>
-
-                    <div className="flex-1 max-w-xl relative w-full">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <Input
-                            type="text"
-                            placeholder="Buscar trámite, certificado u organismo..."
-                            value={searchTerm}
-                            onChange={(e) => { setSearchTerm(e.target.value); setExpandedCats(new Set(sortedCategories.map((c) => c.id))); }}
-                            className="pl-10 h-9 w-full bg-white border-slate-200 text-sm"
-                        />
-                    </div>
-
                     <Badge variant="outline" className="text-xs shrink-0">
                         {filteredTramites.length} de {tramites.length} trámites
                     </Badge>
                 </div>
 
-                {/* Line 2: Filters + Expand/Collapse */}
-                <div className="flex items-center justify-between mt-2">
+                {/* Row 2: Search bar */}
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                        type="text"
+                        placeholder="Buscar trámite, certificado u organismo..."
+                        value={searchTerm}
+                        onChange={(e) => { setSearchTerm(e.target.value); setExpandedCats(new Set(sortedCategories.map((c) => c.id))); }}
+                        className="pl-10 h-9 w-full bg-white border-slate-200 text-sm"
+                    />
+                </div>
+
+                {/* Row 3: Filters + Expand/Collapse */}
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1.5">
                             <span className="text-xs text-slate-500 font-medium">Jurisdicción:</span>
@@ -185,7 +185,7 @@ export default function GuiaTramitesPage() {
                     const faseStyle = FASE_LABELS[cat.fase] || FASE_LABELS.INFO;
 
                     return (
-                        <Card key={cat.id} className="border-slate-200 shadow-sm overflow-hidden">
+                        <Card key={cat.id} className="border-slate-200 shadow-sm overflow-hidden !py-0">
                             <button
                                 onClick={() => toggleCat(cat.id)}
                                 className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 transition-colors text-left"
