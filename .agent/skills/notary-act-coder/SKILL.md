@@ -80,63 +80,71 @@ interface ActIntent {
 }
 ```
 
----
+## Matriz de Reglas de Negocio y Cálculo Algorítmico (CESBA 2026)
 
-## Reglas de Negocio 2026
+Esta tabla no es un simple directorio, es una **matriz relacional**. A continuación, las instrucciones exactas para procesarla:
 
-### 1. Códigos de Vivienda Única
-Si `is_family_home = true` Y la valuación fiscal está bajo el tope de exención (~$251M):
-- Usar código `-51` (Exención total de Sellos)
-- Ejemplo: `100-00` → `100-51`
+### 1. Estructura de Datos (Mapeo de Columnas del PDF)
+El Agente debe comprender que los datos provienen del arreglo `raw_row` mapeado exactamente a las 10 columnas del PDF oficial:
+- **`raw_row[1]`**: CÓDIGO (Ej: `100-00`)
+- **`raw_row[2]`**: TIPO DE ACTO (Descripción legal)
+- **`raw_row[3]`**: BASE IMPONIBLE (Qué valor se usa para calcular Sellos)
+- **`raw_row[4]`**: Impuesto o Tasa (Alícuota de ARBA, ej: `2%`, `1,2%`, `EXENTO`)
+- **`raw_row[5]`**: Artículo Número (Referencia a la Ley Impositiva)
+- **`raw_row[6]`**: BASE DE CÁLCULO (Arancel Ley 6925)
+- **`raw_row[7]`**: Honorario Mínimo (Valor piso del Arancel en pesos)
+- **`raw_row[8]`**: BASE DE CÁLCULO (Aporte Notarial Ley 6983)
+- **`raw_row[10]`**: Coeficiente (Para multiplicar por la Base y obtener el Aporte, ej: `0,004`)
+- **`raw_row[11]`**: Aporte Mínimo (Valor piso del Aporte en pesos)
 
-### 2. Partes Exentas (Subcódigos)
-| Subcódigo | Significado |
-|-----------|-------------|
-| `-00` | Ambas partes pagan todo |
-| `-01` | Paga sellos, 1 parte exenta aportes |
-| `-10` | 1 parte exenta sellos |
-| `-11` | 1 parte exenta sellos Y aportes |
-| `-20` | Exenta de sellos |
-| `-21` | Exenta sellos, 1 parte exenta aportes |
-| `-22` | Exenta sellos Y aportes |
-| `-32` | No gravada sellos, exenta aportes |
-| `-51` | Vivienda única - exención total |
+### 2. Lógica Relacional de Códigos y Subcódigos
+El código matriz siempre termina en `-00` (Ej: `100-00` Compraventa). Los sufijos indican distribuciones de cargas fiscales entre las partes (Comprador/Vendedor, Mutuante/Mutuario):
+*   **`-00`**: Acto general (Ambas partes tributan sin exenciones).
+*   **`-01`**: Acto gravado con Sellos, pero una parte está exenta de Aportes.
+*   **`-10`**: Una parte exenta de Sellos, tributan Aportes.
+*   **`-11`**: Una parte exenta de Sellos Y exenta de Aportes.
+*   **`-20`**: Acto totalmente Exento de Sellos.
+*   **`-21`**: Acto Exento de Sellos, y una parte exenta de Aportes.
+*   **`-22`**: Acto Exento de Sellos Y exento de Aportes.
+*   **`-51`**: **Vivienda Única** (Exención total de Sellos por fin social).
 
-### 3. Tasas Suspendidas 2026
-Algunos actos tienen la "Tasa Retributiva de Servicios" (4‰) suspendida.
-El JSON marca estos con `suspended_rate_2026: true`.
+**Regla de Oro:** El Agente debe analizar las condiciones de las partes en la descripción del acto para inferir el subcódigo correcto.
+
+### 3. Fórmulas de Cálculo
+Cuando el Agente deba proyectar costos (Liquidación), aplicará estas fórmulas utilizando el JSON:
+1.  **Impuesto de Sellos (ARBA):** 
+    *   Fórmula: `Base Imponible` × `Impuesto o Tasa`.
+    *   *Si la Tasa es "EXENTO" o "NO GRAV.", el resultado es $0.*
+2.  **Honorario (Arancel Ley 6925):**
+    *   Fórmula teórica: Extraer cálculo ad/hoc, pero en la tabla se expresa el **Honorario Mínimo** (`raw_row[7]`).
+3.  **Aporte Notarial de Terceros (Ley 6983):**
+    *   Fórmula: `MAX( Aporte Mínimo (raw_row[11]), Base de Cálculo × Coeficiente (raw_row[10]) )`.
+
+### 4. Reglas Especiales de Suspensión de Tasas (2026)
+Durante 2026, la Provincia de Buenos Aires tiene ciertas tasas suspendidas.
+*   En el JSON, estos actos están marcados con el flag booleano `suspended_rate_2026: true`.
+*   El Agente debe comunicar al usuario que este rubro se encuentra **"Exento por Suspensión 2026"** y no sumarlo al total general de gastos.
 
 ---
 
 ## Flujo de Trabajo
 
 ### Paso 1: Recibir Descripción
-El usuario proporciona el texto de la escritura o una descripción del acto.
+El usuario proporciona el texto de la escritura o una descripción del acto, detallando los roles, el tipo de inmueble y el destino.
 
-### Paso 2: Extraer Intent
-Analiza el texto y genera el `ActIntent` object.
+### Paso 2: Extraer Intent e Inferir Subcódigo
+Analiza el texto y genera el `ActIntent` object verificando si encuadra en Vivienda Única (`-51`) o exenciones cruzadas.
 
-### Paso 3: Buscar Código
-Usa el `TaxonomyService` para encontrar el código correcto:
+### Paso 3: Buscar Código Exacto
+Usa el `TaxonomyService` para encontrar el código exacto en `acts_taxonomy_2026.json`.
 
-```typescript
-const intent: ActIntent = {
-  operation_type: "COMPRAVENTA",
-  is_family_home: true,
-  exemption_flags: { ... }
-};
-
-const result = taxonomyService.findActByIntent(intent);
-// Returns: { code: "100-51", description: "COMPRAVENTA VIVIENDA ÚNICA...", ... }
-```
-
-### Paso 4: Devolver Resultado
+### Paso 4: Devolver Resultado y Liquidación
 Responde con:
-- **Código**: `100-51`
-- **Descripción**: COMPRAVENTA VIVIENDA ÚNICA - EXENCIÓN TOTAL SELLOS
-- **Impuesto de Sellos**: EXENTO
-- **Tasa Retributiva**: $ 891.000
-- **Aporte Terceros**: $ 25.000
+- **Código Encontrado**: `100-51`
+- **Descripción Exacta**: COMPRAVENTA VIVIENDA ÚNICA...
+- **Impuesto de Sellos**: EXENTO (o cálculo si aplica)
+- **Honorario Mínimo**: Extraído de `raw_row[7]`
+- **Aporte Terceros**: Calculado con la fórmula `MAX(Aporte Min, Base * Coeficiente)` o extraído del mínimo `raw_row[11]`.
 
 ---
 

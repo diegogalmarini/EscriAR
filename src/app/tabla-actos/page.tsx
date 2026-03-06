@@ -61,15 +61,8 @@ export default function TablaActosPage() {
         setCurrentPage(1);
     };
 
-    // Extract stamp duty from raw_row if available
-    const getStampDuty = (act: ActEntry & { code: string }) => {
-        const raw = act.raw_row || [];
-        const stampIndex = raw.findIndex(v => v && (v.includes('%') || v === 'EXENTO' || v === 'NO GRAV.'));
-        return stampIndex >= 0 ? raw[stampIndex] : '-';
-    };
-
     return (
-        <div className="min-h-screen bg-slate-50/50 p-6 md:p-8 space-y-6">
+        <div className="min-h-screen bg-slate-50/50 p-6 md:p-8 flex flex-col space-y-6">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -116,48 +109,88 @@ export default function TablaActosPage() {
             </Card>
 
             {/* Table */}
-            <Card className="border-slate-200 shadow-sm relative">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead className="bg-slate-100 border-b">
-                            <tr>
-                                <th className="px-4 py-3 text-left font-semibold text-slate-700 w-24">Código</th>
-                                <th className="px-4 py-3 text-left font-semibold text-slate-700">Descripción</th>
-                                <th className="px-4 py-3 text-center font-semibold text-slate-700 w-24">Sellos</th>
-                                <th className="px-4 py-3 text-right font-semibold text-slate-700 w-32">Honorario Mín.</th>
-                                <th className="px-4 py-3 text-right font-semibold text-slate-700 w-28">Aporte 3ros</th>
+            <Card className="border-slate-200 shadow-sm flex-1 flex flex-col min-h-0 overflow-hidden">
+                <div className="overflow-auto flex-1">
+                    <table className="w-full text-sm min-w-[1200px]">
+                        <thead className="bg-slate-100 sticky top-0 z-10 shadow-sm">
+                            <tr className="border-b border-slate-200">
+                                <th colSpan={10} className="px-4 py-3 text-left font-bold text-slate-900 text-lg bg-white">
+                                    Caja de Seguridad Social para Escribanos de la Provincia de Buenos Aires
+                                </th>
+                            </tr>
+                            <tr className="border-b border-slate-200 text-[10px] uppercase text-slate-600 font-semibold tracking-wider text-center divide-x divide-slate-200 bg-slate-50">
+                                <th colSpan={2} className="px-4 py-2">
+                                    NOTARIOS DE EXTRAÑA JURISDICCIÓN<br />
+                                    TABLA CON TODOS LOS ACTOS<br />
+                                    AGRUPADOS CORRELATIVAMENTE POR CÓDIGO
+                                </th>
+                                <th colSpan={3} className="px-4 py-2">
+                                    OBLIGACIÓN FISCAL
+                                </th>
+                                <th colSpan={2} className="px-4 py-2">
+                                    ARANCEL<br />
+                                    LEY 6925 PCIA. DE BUENOS AIRES
+                                </th>
+                                <th colSpan={3} className="px-4 py-2">
+                                    APORTE NOTARIAL<br />
+                                    Ley 6983 (Modif. por Ley 12172)
+                                </th>
+                            </tr>
+                            <tr className="text-[10px] uppercase text-slate-700 font-bold text-center divide-x divide-slate-200 bg-slate-100 border-b border-slate-300">
+                                <th className="px-2 py-2 w-20">CÓDIGO</th>
+                                <th className="px-4 py-2 text-left min-w-[300px]">TIPO DE ACTO</th>
+                                <th className="px-4 py-2 w-48">BASE IMPONIBLE</th>
+                                <th className="px-2 py-2 w-16 leading-tight">Impuesto<br />o Tasa</th>
+                                <th className="px-2 py-2 w-16 leading-tight">Artículo<br />Número</th>
+                                <th className="px-4 py-2 w-48">BASE DE CÁLCULO</th>
+                                <th className="px-2 py-2 w-24 leading-tight">Honorario<br />Mínimo</th>
+                                <th className="px-4 py-2 w-48">BASE DE CÁLCULO</th>
+                                <th className="px-2 py-2 w-20">Coeficiente</th>
+                                <th className="px-2 py-2 w-24 leading-tight">Aporte<br />Mínimo</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {paginatedActs.map((act) => (
-                                <tr key={act.code} className="hover:bg-slate-50 transition-colors">
-                                    <td className="px-4 py-3">
-                                        <code className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-mono text-xs">
-                                            {act.code}
-                                        </code>
-                                    </td>
-                                    <td className="px-4 py-3 text-slate-700">
-                                        {act.description}
-                                        {act.suspended_rate_2026 && (
-                                            <Badge variant="secondary" className="ml-2 text-[10px]">EXENTO</Badge>
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-3 text-center">
-                                        <span className={`text-xs font-medium ${getStampDuty(act) === 'EXENTO' || getStampDuty(act) === 'NO GRAV.'
-                                            ? 'text-green-600'
-                                            : 'text-slate-600'
-                                            }`}>
-                                            {getStampDuty(act)}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-right font-mono text-xs text-slate-600">
-                                        {act.tax_variables.fees_extracted?.[0] ? `$ ${new Intl.NumberFormat('es-AR').format(Number(act.tax_variables.fees_extracted[0]))}` : '-'}
-                                    </td>
-                                    <td className="px-4 py-3 text-right font-mono text-xs text-slate-600">
-                                        {act.tax_variables.fees_extracted?.[1] ? `$ ${new Intl.NumberFormat('es-AR').format(Number(act.tax_variables.fees_extracted[1]))}` : '-'}
-                                    </td>
-                                </tr>
-                            ))}
+                        <tbody className="divide-y divide-slate-100 bg-white">
+                            {paginatedActs.map((act) => {
+                                const row = act.raw_row || [];
+                                const codigo = row[1] || act.code;
+                                const tipoActo = row[2] || act.description;
+                                const baseImponible = row[3] || '-';
+                                const impuestoTasa = row[4] || '-';
+                                const articuloNumero = row[5] || '-';
+                                const baseCalculoArancel = row[6] || '-';
+                                const honorarioMinimo = row[7] || '-';
+                                const baseCalculoAporte = row[8] || '-';
+                                const coeficiente = row[10] || '-';
+                                const aporteMinimo = row[11] || '-';
+
+                                return (
+                                    <tr key={act.code} className="hover:bg-slate-50 transition-colors divide-x divide-slate-100 text-xs">
+                                        <td className="px-2 py-3 text-center align-top">
+                                            <code className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-mono text-[11px] whitespace-nowrap">
+                                                {codigo}
+                                            </code>
+                                        </td>
+                                        <td className="px-4 py-3 text-slate-800 font-medium align-top">
+                                            {tipoActo}
+                                            {act.suspended_rate_2026 && (
+                                                <Badge variant="secondary" className="ml-2 text-[9px] px-1 py-0 float-right mt-0.5">SUSP. 2026</Badge>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3 text-slate-600 text-[10px] align-top">{baseImponible}</td>
+                                        <td className="px-2 py-3 text-center align-top">
+                                            <span className={`font-bold ${impuestoTasa.includes('EXENT') || impuestoTasa.includes('NO GRAV') ? 'text-emerald-600' : 'text-slate-700'}`}>
+                                                {impuestoTasa}
+                                            </span>
+                                        </td>
+                                        <td className="px-2 py-3 text-center text-slate-500 text-[11px] align-top">{articuloNumero}</td>
+                                        <td className="px-4 py-3 text-slate-600 text-[10px] align-top">{baseCalculoArancel}</td>
+                                        <td className="px-2 py-3 text-right font-mono text-slate-800 whitespace-nowrap align-top">{honorarioMinimo}</td>
+                                        <td className="px-4 py-3 text-slate-600 text-[10px] align-top">{baseCalculoAporte}</td>
+                                        <td className="px-2 py-3 text-center font-mono text-slate-800 text-[11px] whitespace-nowrap align-top">{coeficiente}</td>
+                                        <td className="px-2 py-3 text-right font-mono text-slate-800 whitespace-nowrap align-top">{aporteMinimo}</td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
