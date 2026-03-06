@@ -11,6 +11,7 @@ import * as path from 'path';
 import actsData from './acts_taxonomy_2026.json';
 import { analyzeNote, NoteAnalysisOutputSchema } from './noteAnalyzer';
 import { extractCertificate } from './certExtractor';
+import { extractEscritura } from './escrituraExtractor';
 const pdfParse = require('pdf-parse');
 
 dotenv.config();
@@ -214,7 +215,7 @@ async function workerLoop() {
                 .from('ingestion_jobs')
                 .select('*')
                 .eq('status', 'pending')
-                .in('job_type', ['INGEST', 'NOTE_ANALYSIS', 'CERT_EXTRACT'])
+                .in('job_type', ['INGEST', 'NOTE_ANALYSIS', 'CERT_EXTRACT', 'ESCRITURA_EXTRACT'])
                 .order('created_at', { ascending: true })
                 .limit(1);
 
@@ -249,6 +250,12 @@ async function workerLoop() {
             // ── CERT_EXTRACT: extraer datos de certificado con Gemini Pro ──
             if (job.job_type === 'CERT_EXTRACT') {
                 await processCertExtraction(job);
+                continue;
+            }
+
+            // ── ESCRITURA_EXTRACT: extraer datos de escritura del protocolo ──
+            if (job.job_type === 'ESCRITURA_EXTRACT') {
+                await processEscrituraExtraction(job);
                 continue;
             }
 
@@ -827,6 +834,129 @@ async function processCertExtraction(job: any) {
             extraction_status: 'ERROR',
             extraction_error: error.message?.substring(0, 500) || 'Error desconocido',
         }).eq('id', certId);
+
+        await supabase.from('ingestion_jobs').update({
+            status: 'failed',
+            error_message: error.message || 'Error desconocido',
+            finished_at: new Date().toISOString(),
+        }).eq('id', job.id);
+    }
+}
+
+// ── ESCRITURA_EXTRACT: Extracción de escrituras del protocolo ──
+
+async function processEscrituraExtraction(job: any) {
+    const registroId = job.entity_ref?.registro_id;
+
+    if (!registroId) {
+        console.error(`[WORKER] ESCRITURA_EXTRACT job ${job.id}: sin registro_id en entity_ref`);
+        await supabase.from('ingestion_jobs').update({
+            status: 'failed',
+            error_message: 'entity_ref.registro_id faltante',
+            finished_at: new Date().toISOString(),
+        }).eq('id', job.id);
+        return;
+    }
+
+    console.log(`[WORKER] ESCRITURA_EXTRACT: Procesando registro ${registroId}`);
+
+    try {
+        // 1. Marcar registro como PROCESANDO
+        await supabase.from('protocolo_registros').update({
+            extraction_status: 'PROCESANDO',
+            extraction_error: null,
+        }).eq('id', registroId);
+
+        // 2. Descargar archivo del storage
+        console.log(`[WORKER] ESCRITURA_EXTRACT: Descargando de protocolo: ${job.file_path}`);
+
+        const { data: fileBlob, error: dlErr } = await supabase.storage
+            .from('protocolo')
+            .download(job.file_path);
+
+        if (dlErr) throw new Error(`Error descargando archivo: ${dlErr.message}`);
+        const fileBuffer = Buffer.from(await fileBlob.arrayBuffer());
+
+        // 3. Determinar si es PDF nativo o escaneado
+        let textContent: string | null = null;
+        let imageBuffers: Buffer[] | null = null;
+
+        const isPdf = job.file_path?.toLowerCase().endsWith('.pdf') ||
+                       job.original_filename?.toLowerCase().endsWith('.pdf');
+
+        if (isPdf) {
+            try {
+                const parsed = await pdfParse(fileBuffer);
+                textContent = parsed.text || '';
+            } catch {
+                textContent = '';
+            }
+
+            if (!textContent || textContent.trim().length < 200) {
+                console.log(`[WORKER] ESCRITURA_EXTRACT: PDF escaneado, convirtiendo a imágenes...`);
+                textContent = null;
+                imageBuffers = await convertPdfToImages(fileBuffer, 10); // Escrituras pueden ser más largas
+            }
+        } else {
+            imageBuffers = [fileBuffer];
+        }
+
+        // 4. Extraer con Gemini Pro
+        const geminiKey = process.env.GEMINI_API_KEY!;
+        const result = await extractEscritura(textContent, imageBuffers, geminiKey);
+
+        console.log(`[WORKER] ESCRITURA_EXTRACT: Extracción exitosa. Campos: ${Object.keys(result.datos).filter(k => (result.datos as any)[k] !== null).join(', ')}`);
+
+        // 5. Guardar resultados en protocolo_registros
+        const updateData: Record<string, any> = {
+            extraction_status: 'COMPLETADO',
+            extraction_data: result.datos,
+            extraction_evidence: { fragmentos: result.evidencia },
+            extraction_error: null,
+        };
+
+        // Auto-rellenar campos canónicos SOLO si están vacíos
+        const { data: currentReg } = await supabase.from('protocolo_registros')
+            .select('tipo_acto, vendedor_acreedor, comprador_deudor, codigo_acto, monto_ars, monto_usd')
+            .eq('id', registroId).single();
+
+        if (!currentReg?.tipo_acto && result.datos.tipo_acto) {
+            updateData.tipo_acto = result.datos.tipo_acto;
+        }
+        if (!currentReg?.vendedor_acreedor && result.datos.vendedor_acreedor) {
+            updateData.vendedor_acreedor = result.datos.vendedor_acreedor;
+        }
+        if (!currentReg?.comprador_deudor && result.datos.comprador_deudor) {
+            updateData.comprador_deudor = result.datos.comprador_deudor;
+        }
+        if (!currentReg?.codigo_acto && result.datos.codigo_acto) {
+            updateData.codigo_acto = result.datos.codigo_acto;
+        }
+        if (!currentReg?.monto_ars && result.datos.monto_ars) {
+            updateData.monto_ars = result.datos.monto_ars;
+        }
+        if (!currentReg?.monto_usd && result.datos.monto_usd) {
+            updateData.monto_usd = result.datos.monto_usd;
+        }
+
+        await supabase.from('protocolo_registros').update(updateData).eq('id', registroId);
+
+        // 6. Marcar job como completed
+        await supabase.from('ingestion_jobs').update({
+            status: 'completed',
+            result_data: { campos_extraidos: Object.keys(result.datos).filter(k => (result.datos as any)[k] !== null).length },
+            finished_at: new Date().toISOString(),
+        }).eq('id', job.id);
+
+        console.log(`[WORKER] ESCRITURA_EXTRACT job ${job.id} COMPLETADO`);
+
+    } catch (error: any) {
+        console.error(`[WORKER] ESCRITURA_EXTRACT job ${job.id} FAILED:`, error.message);
+
+        await supabase.from('protocolo_registros').update({
+            extraction_status: 'ERROR',
+            extraction_error: error.message?.substring(0, 500) || 'Error desconocido',
+        }).eq('id', registroId);
 
         await supabase.from('ingestion_jobs').update({
             status: 'failed',

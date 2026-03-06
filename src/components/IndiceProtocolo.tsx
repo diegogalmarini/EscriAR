@@ -10,17 +10,17 @@ import { PaginationControls } from "@/components/PaginationControls";
 interface ProtocoloRegistro {
     id?: string;
     nro_escritura: number | null;
-    folios: string;
+    folios: string | null;
     dia: number | null;
     mes: number | null;
     anio: number;
-    tipo_acto: string;
+    tipo_acto: string | null;
     es_errose: boolean;
-    vendedor_acreedor: string;
-    comprador_deudor: string;
+    vendedor_acreedor: string | null;
+    comprador_deudor: string | null;
     monto_usd: number | null;
     monto_ars: number | null;
-    codigo_acto: string;
+    codigo_acto: string | null;
 }
 
 interface IndiceEntry {
@@ -40,7 +40,7 @@ interface Props {
 
 // ── Helpers ──
 
-function extractFirstFolio(folios: string): number | null {
+function extractFirstFolio(folios: string | null): number | null {
     if (!folios) return null;
     const match = folios.match(/^(\d+)/);
     return match ? parseInt(match[1], 10) : null;
