@@ -60,9 +60,9 @@ export default function GuiaTramitesPage() {
             if (searchTerm.trim()) {
                 const term = searchTerm.toLowerCase();
                 return (
-                    t.nombre.toLowerCase().includes(term) ||
-                    t.descripcion.toLowerCase().includes(term) ||
-                    t.url_label.toLowerCase().includes(term)
+                    (t.nombre || '').toLowerCase().includes(term) ||
+                    (t.descripcion || '').toLowerCase().includes(term) ||
+                    (t.url_label || '').toLowerCase().includes(term)
                 );
             }
             return true;
@@ -101,8 +101,9 @@ export default function GuiaTramitesPage() {
 
     return (
         <div className="min-h-screen bg-slate-50/50 flex flex-col">
-            {/* Sticky Header: Title + Search + Filters */}
-            <div className="sticky top-0 z-20 bg-slate-50 border-b border-slate-200 px-6 md:px-8 pt-5 pb-4 shadow-sm">
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-20 bg-slate-50 border-b border-slate-200 px-6 md:px-8 pt-5 pb-3 shadow-sm">
+                {/* Line 1: Title + Search + Badge */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div className="flex items-center gap-3 shrink-0">
                         <div className="p-2 bg-emerald-100 rounded-lg">
@@ -127,11 +128,18 @@ export default function GuiaTramitesPage() {
                         />
                     </div>
 
-                    <div className="flex items-center gap-3 flex-wrap shrink-0">
+                    <Badge variant="outline" className="text-xs shrink-0">
+                        {filteredTramites.length} de {tramites.length} trámites
+                    </Badge>
+                </div>
+
+                {/* Line 2: Filters + Expand/Collapse */}
+                <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1.5">
                             <span className="text-xs text-slate-500 font-medium">Jurisdicción:</span>
                             <Select value={jurisdiccionFilter} onValueChange={setJurisdiccionFilter}>
-                                <SelectTrigger className="h-8 w-[110px] text-xs">
+                                <SelectTrigger className="h-7 w-[110px] text-xs">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -145,7 +153,7 @@ export default function GuiaTramitesPage() {
                         <div className="flex items-center gap-1.5">
                             <span className="text-xs text-slate-500 font-medium">Fase:</span>
                             <Select value={faseFilter} onValueChange={setFaseFilter}>
-                                <SelectTrigger className="h-8 w-[150px] text-xs">
+                                <SelectTrigger className="h-7 w-[150px] text-xs">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -156,9 +164,8 @@ export default function GuiaTramitesPage() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <Badge variant="outline" className="text-xs">
-                            {filteredTramites.length} de {tramites.length} trámites
-                        </Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
                         <button onClick={expandAll} className="text-xs text-blue-600 hover:underline">
                             Expandir todo
                         </button>
