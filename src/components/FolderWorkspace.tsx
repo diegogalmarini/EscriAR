@@ -376,10 +376,12 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
     const isBlockedBySecurity = crossCheckResult?.state === ValidationState.CRITICAL_DISCREPANCY;
 
 
+    const [activeTab, setActiveTab] = useState("apuntes");
+
     return (
         <div className="px-6 md:px-10 pb-10">
-            <Tabs defaultValue="apuntes" className="w-full">
-            <CarpetaHero carpeta={carpeta} onDelete={handleDeleteFolder} isDeleting={isDeleting}>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <CarpetaHero carpeta={carpeta} onDelete={handleDeleteFolder} isDeleting={isDeleting} onNavigateTab={setActiveTab}>
                 <TabsList>
                     <TabsTrigger value="apuntes">Apuntes</TabsTrigger>
                     <TabsTrigger value="mesa-trabajo">Mesa de Trabajo</TabsTrigger>

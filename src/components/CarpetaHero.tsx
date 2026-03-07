@@ -34,6 +34,7 @@ interface CarpetaHeroProps {
     carpeta: any;
     onDelete?: () => void;
     isDeleting?: boolean;
+    onNavigateTab?: (tab: string) => void;
     children?: React.ReactNode;
 }
 
@@ -137,7 +138,7 @@ function formatDate(dateStr: string): string {
 }
 
 // --- Component ---
-export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }: CarpetaHeroProps) {
+export default function CarpetaHero({ carpeta, onDelete, isDeleting, onNavigateTab, children }: CarpetaHeroProps) {
     const { titulo, subtipo } = useMemo(() => generarCaratula(carpeta), [carpeta]);
     const [certificados, setCertificados] = useState<Certificado[]>([]);
 
@@ -289,12 +290,7 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }:
             <div className="border border-border rounded-lg bg-background p-3">
                 <button
                     type="button"
-                    onClick={() => {
-                        // Find Pre-Escriturario tab by text content (Radix renders value as data attribute)
-                        const tabs = document.querySelectorAll<HTMLButtonElement>('[role="tab"]');
-                        const tab = Array.from(tabs).find(t => t.textContent?.trim() === "Pre-Escriturario");
-                        if (tab) { tab.click(); tab.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
-                    }}
+                    onClick={() => onNavigateTab?.("pre-escritura")}
                     className="flex items-center gap-2 mb-1 group cursor-pointer"
                 >
                     <Hourglass className="h-3.5 w-3.5 text-muted-foreground" />
