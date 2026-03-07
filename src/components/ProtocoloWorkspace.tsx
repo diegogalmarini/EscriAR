@@ -44,7 +44,7 @@ const COLUMN_HEADERS = [
 export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props) {
     const [registros, setRegistros] = useState<ProtocoloRegistro[]>(initialRegistros);
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+    const [pageSize, setPageSize] = useState(20);
     const [sortCol, setSortCol] = useState<string>("folios");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
     const [searchQuery, setSearchQuery] = useState("");
