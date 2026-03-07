@@ -124,7 +124,7 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
                         <TableCell className="py-2 align-top" title={inmueble.nro_partida} onClick={(e) => e.stopPropagation()}>
                             <div className="font-mono text-xs font-medium space-y-0.5">
                                 {(inmueble.nro_partida || 'N/A')
-                                    .split(/[;]/)
+                                    .split(/[;]|\s*\/\s*/)
                                     .map((p: string, idx: number) => {
                                         const trimmed = p.trim();
                                         const formatted = trimmed.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
