@@ -342,7 +342,7 @@ export function IndiceProtocolo({ registros, anio, userName = "GONZALO" }: Props
             <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
                 <div className="overflow-x-auto">
                     {/* Header */}
-                    <div className="bg-[#e1e1e1] text-black text-[11px] font-semibold tracking-wide grid grid-cols-[1fr_260px_100px_60px_70px]">
+                    <div className="bg-[#e1e1e1] text-black text-[11px] font-semibold tracking-wide grid grid-cols-[1fr_340px_100px_60px_70px]">
                         {([
                             { key: "interviniente" as keyof IndiceEntry, label: "Intervinientes", align: "text-left" },
                             { key: "operacion" as keyof IndiceEntry, label: "Operación", align: "text-center" },
@@ -385,7 +385,7 @@ export function IndiceProtocolo({ registros, anio, userName = "GONZALO" }: Props
                         <div
                             key={`${entry.sortKey}-${entry.esc}-${i}`}
                             className={cn(
-                                "grid grid-cols-[1fr_260px_100px_60px_70px] border-b border-slate-100",
+                                "grid grid-cols-[1fr_340px_100px_60px_70px] border-b border-slate-100",
                                 i % 2 === 0 ? "bg-white" : "bg-slate-50/50"
                             )}
                         >
