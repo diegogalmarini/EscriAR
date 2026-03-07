@@ -1144,6 +1144,36 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 - `785faa9` — fix: split partida on '/' separator in InmueblesTable
 - `591bfca` — fix: widen Operacion column to 340px in Indice Protocolo
 
+### 2026-03-07 (tarde) — ET7.1 Protocolo Inteligente: extracción completa + upsert personas/inmuebles
+
+#### Worker ESCRITURA_EXTRACT enriquecido
+- **Schema Gemini ampliado**: ahora extrae arrays estructurados de `personas` (nombre, DNI, CUIT, rol, tipo_persona, estado_civil, domicilio, nacionalidad) e `inmuebles` (partido, partida, nomenclatura, dirección, descripción) además de los campos planos existentes.
+- **Nuevo campo `folios`** en schema de extracción (rango ej: "001/005").
+- **Upsert personas**: al completar ESCRITURA_EXTRACT, el worker hace upsert en tabla `personas` con dedup por DNI (misma lógica que INGEST). origen_dato = 'IA_PROTOCOLO'.
+- **Upsert inmuebles**: upsert en tabla `inmuebles` con dedup por partido_id + nro_partida. Soporta partidas múltiples separadas por coma.
+- **Fix modelo Gemini**: `gemini-2.5-pro-preview-06-05` → `gemini-2.5-pro` (nombre estable).
+
+#### Frontend
+- **EscrituraDialog**: auto-fill `folios` desde extraction data. Eliminada nota "Ingresá manualmente (no se extrae del PDF)".
+- **protocolo.ts**: tipo `EscrituraExtractionData` ampliado con campo `folios`.
+
+#### ARCHITECTURE_PLAN.md
+- ET7 marcada ✅ COMPLETADA (deploy Railway confirmado).
+- Nueva **ET7.1 — Protocolo Inteligente** agregada con dos fases:
+  - Fase actual (pre-producción): worker upsert personas/inmuebles + folios/montos.
+  - Fase producción: `publishToProtocolo(carpetaId)` al cerrar carpeta.
+
+#### Archivos modificados
+- `worker/src/escrituraExtractor.ts` — schema enriquecido + prompt + fix modelo
+- `worker/src/index.ts` — upsert personas/inmuebles en processEscrituraExtraction()
+- `src/app/actions/protocolo.ts` — tipo EscrituraExtractionData + folios
+- `src/components/EscrituraDialog.tsx` — auto-fill folios
+- `ARCHITECTURE_PLAN.md` — ET7 completada + ET7.1 agregada
+
+#### Build
+- `npm run build` ✅
+- `npx tsc --noEmit` (worker) ✅
+
 ### 2026-03-04 — Normalización tipo de acto en CarpetaHero
 
 - **CarpetaHero.tsx**: el subtítulo superior ahora normaliza el `tipo_acto` de la BD contra una lista de actos conocidos (COMPRAVENTA, HIPOTECA, DONACIÓN, etc.), eliminando sufijos espurios como "COMPLETA" que la ingesta AI a veces agrega.
@@ -1320,4 +1350,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-03-07 — Antigravity — Protocolo CRUD completo (Fases 1-3), migraciones 048-049, reprocesamiento masivo 56 PDFs, 237 personas, 53 inmuebles, UI fixes en tablas.
+> **Última actualización**: 2026-03-07 — Antigravity — Protocolo CRUD completo (Fases 1-3), ET7.1 Protocolo Inteligente (upsert personas/inmuebles), migraciones 048-049, reprocesamiento masivo 56 PDFs, UI fixes en tablas.
