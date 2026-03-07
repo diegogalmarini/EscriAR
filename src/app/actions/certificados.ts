@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabaseServer";
 import { requireOrgMembership } from "@/lib/auth/getOrg";
+import { logAuditEvent } from "@/lib/logger";
 
 export type TipoCertificado =
     | "DOMINIO"
@@ -100,6 +101,15 @@ export async function createCertificado(data: CertificadoInsert): Promise<Certif
         throw new Error(error.message);
     }
 
+    logAuditEvent({
+        action: "CERT_UPLOADED",
+        entityType: "certificado",
+        entityId: result.id,
+        carpetaId: data.carpeta_id,
+        summary: `Agregó certificado ${data.tipo}`,
+        metadata: { tipo: data.tipo },
+    });
+
     return result as Certificado;
 }
 
@@ -128,6 +138,14 @@ export async function updateCertificado({ id, ...data }: CertificadoUpdate): Pro
  */
 export async function deleteCertificado(id: string): Promise<void> {
     const supabase = await createClient();
+
+    // Get carpeta_id before deleting
+    const { data: cert } = await supabase
+        .from("certificados")
+        .select("carpeta_id, tipo")
+        .eq("id", id)
+        .single();
+
     const { error } = await supabase
         .from("certificados")
         .delete()
@@ -137,6 +155,14 @@ export async function deleteCertificado(id: string): Promise<void> {
         console.error("Error deleting certificado:", error);
         throw new Error(error.message);
     }
+
+    logAuditEvent({
+        action: "CERT_DELETED",
+        entityType: "certificado",
+        entityId: id,
+        carpetaId: cert?.carpeta_id || null,
+        summary: `Eliminó certificado${cert?.tipo ? ` ${cert.tipo}` : ""}`,
+    });
 }
 
 /**
@@ -249,6 +275,15 @@ export async function confirmCertificadoExtraction(
         .single();
 
     if (error) throw new Error(error.message);
+
+    logAuditEvent({
+        action: "CERT_CONFIRMED",
+        entityType: "certificado",
+        entityId: certificadoId,
+        carpetaId: (data as any).carpeta_id || null,
+        summary: `Confirmó extracción de certificado`,
+    });
+
     return data as Certificado;
 }
 

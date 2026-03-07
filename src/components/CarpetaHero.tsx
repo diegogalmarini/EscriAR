@@ -27,6 +27,7 @@ import {
     Clock,
 } from "lucide-react";
 import { Certificado, getCertificadosPorCarpeta } from "@/app/actions/certificados";
+import CarpetaInfoPopover from "@/components/CarpetaInfoPopover";
 
 // --- Types ---
 interface CarpetaHeroProps {
@@ -244,7 +245,7 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }:
                     </div>
                 </div>
 
-                {/* Badge + Delete */}
+                {/* Badge + Info + Delete */}
                 <div className="flex items-center gap-2 shrink-0">
                     <Badge variant="outline" className="text-sm px-3 py-1.5 gap-2 text-muted-foreground">
                         {isProcessing ? (
@@ -254,6 +255,7 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }:
                         )}
                         {estadoCfg.label}
                     </Badge>
+                    <CarpetaInfoPopover carpetaId={carpeta.id} createdAt={carpeta.created_at} />
                     {onDelete && (
                         <AlertDialog>
                             <AlertDialogTrigger asChild>

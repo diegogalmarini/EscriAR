@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabaseServer";
 import { revalidatePath } from "next/cache";
-import { logAction } from "@/lib/logger";
+import { logAction, logAuditEvent } from "@/lib/logger";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getUserOrgId } from "@/lib/auth/getOrg";
 
@@ -38,6 +38,14 @@ export async function createFolder(caratula?: string) {
             .single();
 
         if (operacionError) throw operacionError;
+
+        logAuditEvent({
+            action: "FOLDER_CREATED",
+            entityType: "carpeta",
+            entityId: carpeta.id,
+            carpetaId: carpeta.id,
+            summary: `Creó carpeta${caratula ? ` "${caratula}"` : ""}`,
+        });
 
         revalidatePath('/dashboard');
         return { success: true, carpetaId: carpeta.id };
@@ -170,6 +178,16 @@ export async function updateFolderStatus(folderId: string, newStatus: string) {
             .single();
 
         if (error) throw error;
+
+        logAuditEvent({
+            action: "FOLDER_STATE_CHANGED",
+            entityType: "carpeta",
+            entityId: folderId,
+            carpetaId: folderId,
+            summary: `Cambió estado a ${newStatus}`,
+            metadata: { nuevo_estado: newStatus },
+        });
+
         revalidatePath('/dashboard');
         revalidatePath(`/carpeta/${folderId}`);
         return { success: true, data };
@@ -234,9 +252,12 @@ export async function deleteCarpeta(carpetaId: string) {
         if (error) throw error;
 
         // 4. Log action
-        await logAction('DELETE', 'CARPETA', {
-            id: carpetaId,
-            caratula: folder?.caratula
+        logAuditEvent({
+            action: "FOLDER_DELETED",
+            entityType: "carpeta",
+            entityId: carpetaId,
+            carpetaId: carpetaId,
+            summary: `Eliminó carpeta${folder?.caratula ? ` "${folder.caratula}"` : ""}`,
         });
 
         revalidatePath('/dashboard');

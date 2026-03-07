@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireOrgMembership } from "@/lib/auth/getOrg";
 import { buildTemplateContext } from "@/lib/templates/buildTemplateContext";
+import { logAuditEvent } from "@/lib/logger";
 import {
     getActiveTemplate,
     downloadTemplate,
@@ -66,6 +67,16 @@ export async function createActuacion(
             .single();
 
         if (error) throw error;
+
+        logAuditEvent({
+            action: "ACTUACION_GENERATED",
+            entityType: "actuacion",
+            entityId: data.id,
+            carpetaId: carpetaId,
+            summary: `Creó actuación ${actType} (${categoria})`,
+            metadata: { act_type: actType, categoria },
+        });
+
         return { success: true, data: data as Actuacion };
     } catch (error: any) {
         console.error("[createActuacion] Error:", error);

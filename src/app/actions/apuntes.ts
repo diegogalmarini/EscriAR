@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabaseServer";
 import { requireOrgMembership } from "@/lib/auth/getOrg";
 import { revalidatePath } from "next/cache";
+import { logAuditEvent } from "@/lib/logger";
 
 export async function createApunte(carpetaId: string, contenido: string) {
     try {
@@ -54,6 +55,14 @@ export async function createApunte(carpetaId: string, contenido: string) {
             console.log(`[ET4] NOTE_ANALYSIS job creado: ${jobData.id} para apunte ${data.id}`);
         }
 
+        logAuditEvent({
+            action: "NOTE_CREATED",
+            entityType: "apunte",
+            entityId: data.id,
+            carpetaId: carpetaId,
+            summary: `Creó apunte en carpeta`,
+        });
+
         revalidatePath(`/carpeta/${carpetaId}`);
         return { success: true, apunte: data };
     } catch (err: any) {
@@ -104,12 +113,28 @@ export async function deleteApunte(apunteId: string) {
         await requireOrgMembership();
         const supabase = await createClient();
 
+        // Get apunte for carpeta_id before deleting
+        const { data: apunte } = await supabase
+            .from("apuntes")
+            .select("carpeta_id")
+            .eq("id", apunteId)
+            .single();
+
         const { error } = await supabase
             .from("apuntes")
             .delete()
             .eq("id", apunteId);
 
         if (error) throw error;
+
+        logAuditEvent({
+            action: "NOTE_DELETED",
+            entityType: "apunte",
+            entityId: apunteId,
+            carpetaId: apunte?.carpeta_id || null,
+            summary: `Eliminó apunte`,
+        });
+
         return { success: true };
     } catch (err: any) {
         console.error("Error deleting apunte:", err);

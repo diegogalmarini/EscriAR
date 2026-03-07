@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabaseServer";
 import { requireOrgMembership } from "@/lib/auth/getOrg";
 import { revalidatePath } from "next/cache";
 import { applySuggestion } from "@/lib/deterministic/applySuggestion";
+import { logAuditEvent } from "@/lib/logger";
 
 export async function listSugerencias(carpetaId: string) {
     try {
@@ -74,6 +75,16 @@ export async function acceptSuggestion(sugerenciaId: string, carpetaId: string) 
         }
 
         revalidatePath(`/carpeta/${carpetaId}`);
+
+        logAuditEvent({
+            action: "SUGGESTION_ACCEPTED",
+            entityType: "sugerencia",
+            entityId: sugerenciaId,
+            carpetaId,
+            summary: `Aceptó sugerencia tipo ${sug.tipo}`,
+            metadata: { tipo: sug.tipo, applied_changes: result.applied_changes },
+        });
+
         return {
             success: result.success,
             applied_changes: result.applied_changes,
@@ -154,6 +165,14 @@ export async function rejectSuggestion(sugerenciaId: string, carpetaId: string) 
             .eq("id", sugerenciaId);
 
         if (error) throw error;
+
+        logAuditEvent({
+            action: "SUGGESTION_REJECTED",
+            entityType: "sugerencia",
+            entityId: sugerenciaId,
+            carpetaId,
+            summary: `Rechazó sugerencia`,
+        });
 
         revalidatePath(`/carpeta/${carpetaId}`);
         return { success: true };
