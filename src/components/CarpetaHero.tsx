@@ -209,8 +209,8 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }:
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-1.5 min-w-0 flex-1">
                     <p className={`text-xs font-medium tracking-wider uppercase ${subtipo === "ACTO POR SELECCIONAR"
-                            ? "text-muted-foreground/50 italic"
-                            : "text-muted-foreground"
+                        ? "text-muted-foreground/50 italic"
+                        : "text-muted-foreground"
                         }`}>
                         {subtipo}
                     </p>
@@ -290,7 +290,6 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }:
                 <button
                     type="button"
                     onClick={() => {
-                        // Click the Pre-Escriturario tab to navigate to certificates
                         const tab = document.querySelector<HTMLButtonElement>('[value="pre-escritura"]');
                         if (tab) { tab.click(); tab.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
                     }}
@@ -300,13 +299,6 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }:
                     <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
                         Certificados
                     </span>
-                    {certResumen.total > 0 && (
-                        <span className="text-[11px] text-muted-foreground ml-1">
-                            {certResumen.pendientes > 0 && `${certResumen.pendientes} pendiente${certResumen.pendientes !== 1 ? "s" : ""}`}
-                            {certResumen.pendientes > 0 && (certResumen.vigentes + certResumen.vencidos + certResumen.porVencer) > 0 && " · "}
-                            {(certResumen.vigentes + certResumen.vencidos + certResumen.porVencer) > 0 && `${certResumen.vigentes + certResumen.vencidos + certResumen.porVencer} listo${(certResumen.vigentes + certResumen.vencidos + certResumen.porVencer) !== 1 ? "s" : ""}`}
-                        </span>
-                    )}
                 </button>
                 {certResumen.total === 0 ? (
                     <p className="text-xs text-muted-foreground px-1 py-2">
