@@ -763,6 +763,8 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 | 045 | search_carpetas: parties y escrituras SOLO de TRAMITE | ✅ Ejecutada |
 | 046 | Mover participantes huérfanos de INGESTA a TRAMITE (cleanup) | ✅ Ejecutada |
 | 047 | Extracción AI de certificados (ET7): job_type CERT_EXTRACT, campos extraction en certificados | ✅ Ejecutada |
+| 048 | Protocolo: pdf_storage_path, carpeta_id, flexibilizar nro_escritura para errose | ✅ Ejecutada |
+| 049 | Protocolo: columnas de extracción AI (extraction_status, extraction_result, extraction_job_id) | ✅ Ejecutada |
 
 **Nota**: las migraciones se ejecutan MANUAL en Supabase SQL Editor. No hay sistema de migración automático.
 
@@ -1090,6 +1092,58 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 - `5b51179` — fix: Null safety in search + two-line header for guia-tramites
 - `1a005b7` — fix: Filters below search bar + compact cards with !py-0 override
 
+### 2026-03-07 (Antigravity) — Protocolo: CRUD + PDF upload + AI extraction + navegación + reprocesamiento masivo
+
+#### Protocolo Fase 1+2: Seguimiento mejorado
+- `ProtocoloWorkspace.tsx`: eliminadas columnas USD/ARS del display, default sort por folios, iconos Eye + FolderOpen + Trash2 en columna acciones (90px).
+- Interface `ProtocoloRegistro` extendida con `pdf_storage_path` y `carpeta_id`.
+- Migración 048: `pdf_storage_path`, `carpeta_id`, flexibilizar `nro_escritura` para errose.
+- `seed_protocolo_2026.py`: carga masiva de 62 registros (58 escrituras + 4 errose) + 56 PDFs al bucket "protocolo".
+
+#### HOTFIX: Confirmación obligatoria al borrar (SUPER BUG)
+- `ProtocoloWorkspace.tsx`: AlertDialog antes de eliminar. `deleteRow` reemplazada por `confirmDelete` (solo ejecuta tras confirmar). Trash2 ya no borra directo.
+- Escritura 1 restaurada en DB (borrada accidentalmente por el bug).
+
+#### Eye icon → Signed URL
+- Eye icon llama `getSignedUrl("protocolo", pdf_storage_path)` → abre PDF en nueva pestaña con URL firmada (1h expiry).
+
+#### Protocolo Fase 3: Links navegables
+- FolderOpen navega a `/carpeta/{id}` en nueva pestaña.
+- Nombres de partes splitean por " y " → cada nombre es un link individual a `/clientes?q={nombre}`.
+- `/clientes` acepta `?q=` param para pre-llenar búsqueda (con Suspense).
+- `link_carpetas_protocolo.py`: script para auto-vincular carpetas futuras.
+
+#### CRUD Modal + AI Extraction
+- `EscrituraDialog.tsx`: modal nueva escritura con PDF upload + drag & drop.
+- `src/app/actions/protocolo.ts`: server actions CRUD (create, update, delete).
+- `src/lib/actClassifier.ts`: auto-clasificación de código CESBA.
+- `worker/src/escrituraExtractor.ts`: extractor AI de escrituras con Gemini 2.5 Pro.
+- `worker/src/index.ts`: bifurcación para job_type ESCRITURA_EXTRACT.
+- Migración 049: columnas de extracción AI en protocolo_registros.
+
+#### Reprocesamiento masivo
+- `scripts/reprocess_protocolo.ts`: descarga 56 PDFs de Supabase, extrae datos via Gemini 2.5 Pro, corrige tipo_acto, upserts personas/inmuebles. Resultado: 56/56 OK, 237 personas, 53 inmuebles.
+- `scripts/verify_quality.ts`: auditoría de calidad post-proceso.
+
+#### UI Fixes
+- Default `pageSize` = 20 en `ProtocoloWorkspace` (consistente con el resto del SaaS).
+- Texto con `break-words` en vez de `truncate` en tabla Seguimiento — evita solapamiento de columnas.
+- `IndiceProtocolo.tsx`: columna "Operación" ampliada de 180px → 340px para que actos largos quepan en una línea.
+- `InmueblesTable.tsx`: split de partida por `/` además de `;` → cada partida en su propia línea.
+
+#### Commits
+- `7c45adf` — feat: Protocolo Fase 1+2 - Seguimiento mejorado + migración 048 + seed 62 registros
+- `925a440` — fix: HOTFIX - Confirmación obligatoria al borrar registro del protocolo
+- `8b4776b` — feat: Eye icon serves PDFs via signed URL from Supabase Storage
+- `3f182a9` — feat: Protocolo Fase 3 - links navegables
+- `c6e1820` — feat: CRUD modal + PDF upload + AI extraction + auto-classify codigo_acto
+- `ca34811` — feat: mass PDF reprocessing pipeline for Protocolo 2026
+- `ab6ef59` — fix: split client names into individual clickable links
+- `d4f58ba` — fix: default pageSize to 20 in ProtocoloWorkspace
+- `14e9d9f` — fix: Protocolo table text wrapping (break-words)
+- `785faa9` — fix: split partida on '/' separator in InmueblesTable
+- `591bfca` — fix: widen Operacion column to 340px in Indice Protocolo
+
 ### 2026-03-04 — Normalización tipo de acto en CarpetaHero
 
 - **CarpetaHero.tsx**: el subtítulo superior ahora normaliza el `tipo_acto` de la BD contra una lista de actos conocidos (COMPRAVENTA, HIPOTECA, DONACIÓN, etc.), eliminando sufijos espurios como "COMPLETA" que la ingesta AI a veces agrega.
@@ -1266,4 +1320,4 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 > 5. Si subiste un documento al RAG, agregarlo en la sección 8
 > 6. Firmar con tu nombre de agente
 >
-> **Última actualización**: 2026-03-06 — Antigravity — Actualización completa de estado: ET1-ET7 cerradas, migraciones 029-047 ejecutadas, worker deployado, TRAMITE_REQUERIDO activo, Guía de Trámites live.
+> **Última actualización**: 2026-03-07 — Antigravity — Protocolo CRUD completo (Fases 1-3), migraciones 048-049, reprocesamiento masivo 56 PDFs, 237 personas, 53 inmuebles, UI fixes en tablas.
