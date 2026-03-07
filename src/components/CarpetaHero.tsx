@@ -290,7 +290,9 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, children }:
                 <button
                     type="button"
                     onClick={() => {
-                        const tab = document.querySelector<HTMLButtonElement>('[value="pre-escritura"]');
+                        // Find Pre-Escriturario tab by text content (Radix renders value as data attribute)
+                        const tabs = document.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+                        const tab = Array.from(tabs).find(t => t.textContent?.trim() === "Pre-Escriturario");
                         if (tab) { tab.click(); tab.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
                     }}
                     className="flex items-center gap-2 mb-1 group cursor-pointer"
