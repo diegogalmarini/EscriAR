@@ -25,6 +25,7 @@ function formatDateTime(iso: string): string {
         }) + " " + d.toLocaleTimeString("es-AR", {
             hour: "2-digit",
             minute: "2-digit",
+            hour12: false,
         });
     } catch {
         return "—";
@@ -92,11 +93,9 @@ export default function CarpetaInfoPopover({ carpetaId, createdAt }: CarpetaInfo
                         <div>
                             <p className="text-muted-foreground text-xs">Creada</p>
                             <p className="font-medium">{formatDateTime(createdAt)}</p>
-                            {firstEvent && (
-                                <p className="text-xs text-muted-foreground">
-                                    por {emailToName(firstEvent.actor_email)}
-                                </p>
-                            )}
+                            <p className="text-xs text-muted-foreground">
+                                por {firstEvent ? emailToName(firstEvent.actor_email) : "Sistema"}
+                            </p>
                         </div>
                     </div>
 
