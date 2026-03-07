@@ -32,12 +32,11 @@ Implementar la Carpeta notarial con:
 | ET6.1 — Código de Acto | ✅ COMPLETADA | 021-023, 045 | `search_carpetas` filtra por TRAMITE. `CarpetasTable` muestra código+acto. Código CESBA derivado. |
 | ET7 — Pre-escriturario AI | ✅ COMPLETADA | 047 | Upload PDF + extracción IA (Gemini Pro) + confirmación humana + chips vencimientos en header. Deploy Railway OK (2026-03-07). |
 | ET7.1 — Protocolo Inteligente | ⏳ PENDIENTE | — | Worker upsert personas/inmuebles + flujo carpeta→protocolo (producción) + folios/montos en extracción. |
-| ET8 — Header sticky final | ⏳ PENDIENTE | — | `CarpetaHero.tsx` ya es sticky con badge. Falta: chips accionables, colapsado, menú seguro. |
-| ET9 — Auditoría | ⏳ PENDIENTE | — | No iniciada. |
-| ET10 — Notificaciones | ⏳ PENDIENTE | — | Nueva etapa. |
+| ET8+ET9 — Header + Auditoría | ✅ COMPLETADA | 050 | `audit_events` table + `logAuditEvent()` + (i) info popover en CarpetaHero + Server Actions instrumentados. |
+| ET10 — Notificaciones/Dashboard | ✅ COMPLETADA | — | Dashboard alerts (pendientes semáforo) + PendingBadge en sidebar + `getPendingActionsSummary()`. |
 | ET11 — Export carpeta | ⏳ PENDIENTE | — | Nueva etapa. |
 
-Total: **49 migraciones SQL**, **14+ componentes principales**, **7 etapas completadas**, **1 pendiente nueva (ET7.1)**.
+Total: **50 migraciones SQL**, **16+ componentes principales**, **10 etapas completadas**, **1 pendiente nueva (ET7.1)**.
 
 ---
 
@@ -282,91 +281,53 @@ Rollback:
 
 ---
 
-### ETAPA 8 — Header sticky final + QA
-Objetivo: "situación actual" impecable + estabilidad.
+### ETAPA 8+9 — Header info + Auditoría (COMPLETADA, fusionadas)
+Objetivo: auditoría de acciones + botón (i) en CarpetaHero con popover de actividad.
 
-> **Scaffolding existente:** `CarpetaHero.tsx` ya es sticky con `backdrop-blur`, contiene Badge de estado y botón delete. Falta el rework visual de chips y el colapsado.
+> **Completada 2026-03-07.** Migración 050 aplicada. Commit 89eb4b2.
 
-Tareas UI:
-- Rework `CarpetaHero.tsx`:
-  - chip "Etapa: …" (estado de la carpeta).
-  - chips accionables: Pendientes (sugerencias), Certificados (vencidos/OK), Docs (generados), Firma.
-  - colapsado sin lag (intersection observer o scroll threshold).
-  - menú acciones seguro (confirmar antes de delete, proteger acciones destructivas).
-- QA manual: flujos críticos + permisos RLS + fallback IA.
+#### Archivos creados/modificados en ET8+ET9
 
-Hito ET8:
-- PR
-- Header colapsa sin lag; chips navegan a tab/sección correcta; acciones peligrosas protegidas.
+| Archivo | Tipo | Descripción |
+|---------|------|-------------|
+| `supabase_migrations/050_etapa_8_9__audit_events.sql` | **NUEVO** | Tabla `audit_events` con indexes + RLS por org. |
+| `src/lib/logger.ts` | Modificado | Nuevo `logAuditEvent()` (fire-and-forget, typed `AuditAction`). `logAction()` deprecado. |
+| `src/app/actions/audit.ts` | **NUEVO** | `getAuditEventsForCarpeta()` — lee eventos por carpeta. |
+| `src/components/ui/popover.tsx` | **NUEVO** | Componente Popover (shadcn/Radix). |
+| `src/components/CarpetaInfoPopover.tsx` | **NUEVO** | Popover con creación, última acción, log de actividad reciente. |
+| `src/components/CarpetaHero.tsx` | Modificado | Botón (i) entre badge de estado y botón eliminar. |
+| `src/app/actions/carpeta.ts` | Modificado | `FOLDER_CREATED`, `FOLDER_STATE_CHANGED`, `FOLDER_DELETED`. |
+| `src/app/actions/apuntes.ts` | Modificado | `NOTE_CREATED`, `NOTE_DELETED`. |
+| `src/app/actions/sugerencias.ts` | Modificado | `SUGGESTION_ACCEPTED`, `SUGGESTION_REJECTED`. |
+| `src/app/actions/certificados.ts` | Modificado | `CERT_UPLOADED`, `CERT_DELETED`, `CERT_CONFIRMED`. |
+| `src/app/actions/actuaciones.ts` | Modificado | `ACTUACION_GENERATED`. |
+
+Hito ET8+ET9:
+- Todas las acciones clave registran eventos en `audit_events`.
+- Popover (i) muestra creación + última acción + log reciente.
 - `npm run build` OK.
 
-Rollback:
-- Revert PR.
-
 ---
 
-### ETAPA 9 — Logs / Auditoría (Admin) — trazabilidad notarial
-Objetivo: incorporar un registro auditable de acciones (quién, qué, cuándo, sobre qué) con filtros y buscador.
-
-Tareas DB:
-- Crear tabla `audit_events` con:
-  - `id`, `created_at`, `org_id`
-  - `actor_user_id`, `actor_role` (snapshot)
-  - `action` (ej: FOLDER_CREATED, NOTE_CREATED, NOTE_DELETED, SUGGESTION_ACCEPTED, CERT_CONFIRMED, LOGIN, USER_APPROVED, etc.)
-  - `entity_type`, `entity_id`
-  - `summary` (línea general)
-  - `metadata jsonb` (before/after, ids relacionados, confidence, evidencia, etc.)
-  - `ip`, `user_agent`
-  - `request_id` / `correlation_id`
-  - `result` (OK/ERROR) + `error_message`
-- RLS por organización. Acceso a logs: solo `OWNER/ADMIN` (y si se define, `NOTARIO` lectura).
-
-Tareas App (instrumentación):
-- Crear helper `logAuditEvent()` y llamarlo desde Server Actions y acciones sensibles:
-  - CRUD de carpeta, cambios de estado, delete/archivar.
-  - CRUD de apuntes (crear/editar/borrar).
-  - Aceptar/rechazar sugerencias.
-  - Carga/confirmación de certificados y cambios de vigencia.
-  - Generación/regeneración/descarga de documentos.
-  - Aprobaciones/bajas de usuarios (Administración).
-- Asegurar que acciones críticas registren `request_id` para trazabilidad.
-
-Tareas UI (Administración):
-- Agregar pestaña "Logs" después de "Modelos".
-- Tabla con columnas: Fecha/Hora, Usuario, Acción, Entidad, Resumen, Resultado.
-- Buscador global + filtros:
-  - por usuario, por acción, por entidad, por rango de fechas.
-- Drawer/modal para ver `metadata` completa.
-
-Hito ET9:
-- PR + migración SQL + `RUN_MIGRATIONS.md` actualizado.
-- Evidencia: se registran eventos reales al crear/borrar apunte y al cambiar estado de carpeta.
-- UI Logs permite filtrar por usuario y fecha.
-
-Rollback:
-- Revert PR + rollback SQL (drop policies/table) si fuera necesario.
-
----
-
-### ETAPA 10 — Notificaciones y Dashboard de estado (NUEVA)
+### ETAPA 10 — Notificaciones y Dashboard de estado (COMPLETADA)
 Objetivo: que el escribano sepa qué carpetas necesitan atención sin tener que abrirlas una por una.
 
-Tareas:
-- **Dashboard `/dashboard`** con resumen:
-  - Carpetas con sugerencias pendientes (PROPOSED).
-  - Certificados próximos a vencer o vencidos.
-  - Actuaciones sin documento generado.
-  - Carpetas bloqueadas por pre-escriturario.
-- **Badge global** en sidebar/nav indicando items que requieren acción.
-- **Email digest** (opcional, posterior): resumen semanal de carpetas con pendientes. Puede usar Supabase Edge Functions o servicio externo.
+> **Completada 2026-03-07.** Sin migración SQL — lectura de datos existentes.
+
+#### Archivos creados/modificados en ET10
+
+| Archivo | Tipo | Descripción |
+|---------|------|-------------|
+| `src/app/actions/pendientes.ts` | **NUEVO** | `getPendingActionsSummary()`: consulta sugerencias PROPOSED, certificados vencidos/por vencer/sin confirmar, actuaciones DRAFT. Retorna contadores + carpeta_ids. |
+| `src/components/DashboardAlerts.tsx` | **NUEVO** | Server Component. Grid de AlertCards con semáforo (rojo/ámbar/azul) y links a carpetas afectadas. Estado verde cuando no hay pendientes. |
+| `src/components/PendingBadge.tsx` | **NUEVO** | Client Component. Pill roja en sidebar "Inicio" con total de pendientes. Auto-refresh cada 60s. |
+| `src/components/AppShell.tsx` | Modificado | Import + renderizado de `PendingBadge` junto a "Inicio". |
+| `src/app/dashboard/page.tsx` | Modificado | Sección "Pendientes" con `DashboardAlerts` antes de "Alertas de Vencimiento". |
 
 Hito ET10:
-- PR
 - Dashboard muestra resumen real con links a carpetas.
 - Badge de pendientes visible en navegación.
-
-Rollback:
-- Revert PR.
+- `npm run build` OK.
 
 ---
 

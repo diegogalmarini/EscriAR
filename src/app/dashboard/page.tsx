@@ -6,6 +6,7 @@ import { createFolder } from "@/app/actions/carpeta";
 import { revalidatePath } from "next/cache";
 import { ExpiringDeedsAlert } from "@/components/ExpiringDeedsAlert";
 import { MagicDropzone } from "@/components/MagicDropzone";
+import { DashboardAlerts } from "@/components/DashboardAlerts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { DeleteFolderButton } from "@/components/DeleteFolderButton";
@@ -93,6 +94,14 @@ export default async function DashboardPage() {
                         </CardContent>
                     </Card>
                 </div>
+            </section>
+
+            {/* Pendientes — items que requieren atención */}
+            <section>
+                <div className="flex items-center gap-2 mb-4">
+                    <h2 className="text-xl font-bold text-slate-800">Pendientes</h2>
+                </div>
+                <DashboardAlerts />
             </section>
 
             {/* Alerts Section */}
