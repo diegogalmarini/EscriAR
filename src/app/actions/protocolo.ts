@@ -11,6 +11,7 @@ export type ExtractionStatus = "PENDIENTE" | "PROCESANDO" | "COMPLETADO" | "ERRO
 export interface EscrituraExtractionData {
     nro_escritura?: number | null;
     fecha?: string | null;              // "2026-02-15"
+    folios?: string | null;             // "001/005"
     tipo_acto?: string | null;
     vendedor_acreedor?: string | null;
     comprador_deudor?: string | null;

@@ -2,11 +2,39 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
+// ── Schema de persona extraída ──
+
+const PersonaExtraidaSchema = z.object({
+    nombre_completo: z.string().describe('Nombre completo en formato "APELLIDO, Nombre" (ej: "PÉREZ, Juan Carlos")'),
+    dni: z.string().nullable().describe('DNI con puntos (ej: 30.555.123)'),
+    cuit: z.string().nullable().describe('CUIT/CUIL en formato XX-XXXXXXXX-X'),
+    rol: z.string().describe('VENDEDOR, COMPRADOR, CEDENTE, CESIONARIO, ACREEDOR, DEUDOR, PODERDANTE, APODERADO, DONANTE, DONATARIO, etc.'),
+    tipo_persona: z.string().describe('FISICA, JURIDICA o FIDEICOMISO').default('FISICA'),
+    estado_civil: z.string().nullable().describe('Soltero/a, Casado/a, Viudo/a, Divorciado/a'),
+    domicilio: z.string().nullable().describe('Domicilio real completo literal'),
+    nacionalidad: z.string().nullable().describe('Nacionalidad (ej: Argentina)'),
+});
+
+export type PersonaExtraida = z.infer<typeof PersonaExtraidaSchema>;
+
+// ── Schema de inmueble extraído ──
+
+const InmuebleExtraidoSchema = z.object({
+    partido: z.string().nullable().describe('Nombre del partido/departamento (ej: BAHIA BLANCA, MONTE HERMOSO)'),
+    partida_inmobiliaria: z.string().nullable().describe('Número de partida inmobiliaria (solo dígitos, sin puntos)'),
+    nomenclatura: z.string().nullable().describe('Nomenclatura catastral completa'),
+    direccion: z.string().nullable().describe('Dirección o ubicación del inmueble'),
+    descripcion: z.string().nullable().describe('Descripción breve: ubicación, matrícula, superficie'),
+});
+
+export type InmuebleExtraido = z.infer<typeof InmuebleExtraidoSchema>;
+
 // ── Schema de extracción de escrituras notariales ──
 
 const EscrituraExtractionSchema = z.object({
     nro_escritura: z.number().nullable().describe('Número de escritura'),
     fecha: z.string().nullable().describe('Fecha de la escritura en formato YYYY-MM-DD'),
+    folios: z.string().nullable().describe('Rango de folios de la escritura (ej: "001/005", "120/125"). Si solo se ve el folio inicial, poner ese número.'),
     tipo_acto: z.string().nullable().describe('Tipo de acto notarial (ej: Compraventa, Hipoteca, Poder General, Donación, Constitución de Sociedad)'),
     vendedor_acreedor: z.string().nullable().describe('Nombre completo del vendedor, acreedor, poderdante o parte A. Si hay varios, separar con " y " (ej: "PÉREZ, Juan Carlos y GARCÍA, María")'),
     comprador_deudor: z.string().nullable().describe('Nombre completo del comprador, deudor, apoderado o parte B. Si hay varios, separar con " y "'),
@@ -15,6 +43,9 @@ const EscrituraExtractionSchema = z.object({
     monto_usd: z.number().nullable().describe('Monto de la operación en dólares estadounidenses. Sin puntos de miles.'),
     inmueble_descripcion: z.string().nullable().describe('Descripción breve del inmueble: ubicación, nomenclatura catastral, matrícula si aparece'),
     observaciones_ia: z.string().nullable().describe('Observaciones relevantes: cláusulas especiales, restricciones, poderes otorgados, etc.'),
+    // Datos estructurados para upsert en tablas personas/inmuebles
+    personas: z.array(PersonaExtraidaSchema).describe('Todas las personas intervinientes con datos biográficos. Incluir vendedores, compradores, apoderados, etc.'),
+    inmuebles: z.array(InmuebleExtraidoSchema).describe('Inmuebles mencionados en la escritura con datos registrales.'),
 });
 
 export type EscrituraExtraction = z.infer<typeof EscrituraExtractionSchema>;
@@ -42,16 +73,19 @@ REGLAS:
 1. Extrae TODOS los datos visibles. Si un campo no aparece, dejarlo null.
 2. Fechas en formato YYYY-MM-DD.
 3. Montos como números sin puntos de miles (ej: 5000000, no 5.000.000).
-4. DNI con puntos (ej: 30.555.123).
+4. DNI con puntos (ej: 30.555.123). CUIT con guiones (ej: 20-30555123-4).
 5. Para cada dato extraído, incluye en "evidencia" un fragmento textual EXACTO del documento que lo sustenta.
 6. Confianza: HIGH si el dato es explícito y legible. MED si requiere inferencia. LOW si es ambiguo o poco legible.
 7. Nombres de personas en formato "APELLIDO, Nombre" (ej: "PÉREZ, Juan Carlos").
-8. Si hay múltiples partes del mismo lado, separarlas con " y " (ej: "PÉREZ, Juan y GARCÍA, María").
+8. Si hay múltiples partes del mismo lado, separarlas con " y " en vendedor_acreedor/comprador_deudor.
 9. El tipo_acto debe ser descriptivo (ej: "Compraventa", "Hipoteca", "Poder General", "Donación").
 10. Si reconoces el código de acto según tabla del Colegio de Escribanos de la Pcia de Bs As, indicarlo. Si no estás seguro, dejarlo null.
+11. FOLIOS: Extrae el rango de folios (ej: "001/005"). Si solo ves el folio inicial, ponelo como número.
+12. PERSONAS: Para CADA persona interviniente (vendedor, comprador, apoderado, etc.) extraé nombre completo, DNI, CUIT, rol, tipo_persona, estado civil, domicilio y nacionalidad en el array "personas".
+13. INMUEBLES: Para cada inmueble mencionado, extraé partido, partida inmobiliaria, nomenclatura, dirección y descripción en el array "inmuebles". El partido es el nombre del partido/departamento (ej: "BAHIA BLANCA"), NO un código numérico. La partida son solo números sin puntos.
 
 TIPO: Escritura pública notarial
-FOCO: número de escritura, fecha, tipo de acto, partes intervinientes (vendedor/acreedor vs comprador/deudor), montos de la operación, descripción del inmueble si aplica.`;
+FOCO: número de escritura, folios, fecha, tipo de acto, partes intervinientes, montos, personas con datos biográficos, inmuebles con datos registrales.`;
 
 const VISION_SUFFIX = `\n\nAnaliza las imágenes de esta escritura notarial. Ignora manchas, sellos o ruido visual. Extrae TODOS los datos posibles.`;
 
@@ -67,7 +101,7 @@ export async function extractEscritura(
     try {
         if (textContent && textContent.trim().length > 200) {
             const result = await generateObject({
-                model: google('gemini-2.5-pro-preview-06-05'),
+                model: google('gemini-2.5-pro'),
                 prompt: PROMPT_ESCRITURA + '\n\nCONTENIDO DE LA ESCRITURA:\n' + textContent.substring(0, 100000),
                 schema: EscrituraExtractionWithEvidenceSchema,
             });
@@ -82,7 +116,7 @@ export async function extractEscritura(
             }));
 
             const result = await generateObject({
-                model: google('gemini-2.5-pro-preview-06-05'),
+                model: google('gemini-2.5-pro'),
                 messages: [{
                     role: 'user',
                     content: [

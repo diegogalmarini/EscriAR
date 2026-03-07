@@ -917,7 +917,7 @@ async function processEscrituraExtraction(job: any) {
 
         // Auto-rellenar campos canónicos SOLO si están vacíos
         const { data: currentReg } = await supabase.from('protocolo_registros')
-            .select('tipo_acto, vendedor_acreedor, comprador_deudor, codigo_acto, monto_ars, monto_usd')
+            .select('tipo_acto, vendedor_acreedor, comprador_deudor, codigo_acto, monto_ars, monto_usd, folios')
             .eq('id', registroId).single();
 
         if (!currentReg?.tipo_acto && result.datos.tipo_acto) {
@@ -938,13 +938,124 @@ async function processEscrituraExtraction(job: any) {
         if (!currentReg?.monto_usd && result.datos.monto_usd) {
             updateData.monto_usd = result.datos.monto_usd;
         }
+        if (!currentReg?.folios && result.datos.folios) {
+            updateData.folios = result.datos.folios;
+        }
 
         await supabase.from('protocolo_registros').update(updateData).eq('id', registroId);
+
+        // 5b. Upsert personas extraídas en tabla `personas`
+        if (result.datos.personas && result.datos.personas.length > 0) {
+            let personasOk = 0;
+            for (const persona of result.datos.personas) {
+                const rawDni = persona.dni?.replace(/[^a-zA-Z0-9]/g, '') || '';
+                const rawCuit = persona.cuit?.replace(/[^a-zA-Z0-9]/g, '') || '';
+
+                // Detect tipo_persona from CUIT prefix
+                let tipoPersona = persona.tipo_persona || 'FISICA';
+                const cuitPrefix = (rawCuit || rawDni).substring(0, 2);
+                if (['30', '33', '34'].includes(cuitPrefix)) tipoPersona = 'JURIDICA';
+                const upperName = (persona.nombre_completo || '').toUpperCase();
+                if (upperName.includes('BANCO') || upperName.includes('S.A.') || upperName.includes('S.R.L.') || upperName.includes('FIDEICOMISO')) tipoPersona = 'JURIDICA';
+
+                // JURIDICA uses CUIT as ID; FISICA uses DNI
+                let dniFinal = '';
+                if (tipoPersona === 'JURIDICA' || tipoPersona === 'FIDEICOMISO') {
+                    dniFinal = rawCuit || rawDni || '';
+                } else {
+                    dniFinal = rawDni || rawCuit || '';
+                }
+
+                if (!dniFinal) {
+                    dniFinal = `SIN_DNI_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                }
+
+                const personaData: Record<string, any> = {
+                    dni: dniFinal,
+                    nombre_completo: persona.nombre_completo || 'SIN NOMBRE',
+                    cuit: rawCuit || null,
+                    tipo_persona: tipoPersona,
+                    nacionalidad: persona.nacionalidad || null,
+                    estado_civil_detalle: persona.estado_civil || null,
+                    domicilio_real: persona.domicilio ? { literal: persona.domicilio } : {},
+                    origen_dato: 'IA_PROTOCOLO',
+                    updated_at: new Date().toISOString(),
+                };
+
+                const { error: personaError } = await supabase.from('personas').upsert(
+                    personaData,
+                    { onConflict: 'dni' }
+                );
+
+                if (personaError) {
+                    console.error(`[WORKER] Error upserting persona ${persona.nombre_completo}:`, personaError.message);
+                } else {
+                    personasOk++;
+                }
+            }
+            console.log(`[WORKER] ESCRITURA_EXTRACT: ${personasOk}/${result.datos.personas.length} personas upserted`);
+        }
+
+        // 5c. Upsert inmuebles extraídos en tabla `inmuebles`
+        if (result.datos.inmuebles && result.datos.inmuebles.length > 0) {
+            const normPartido = (p: string) => {
+                const accentMap: Record<string, string> = { 'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ü': 'u' };
+                const stripped = (p || 'Sin Partido').trim().toLowerCase().replace(/[áéíóúü]/g, c => accentMap[c] || c);
+                return stripped.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            };
+            const normPartida = (p: string) => (p || '000000').trim().replace(/\./g, '');
+
+            let inmueblesOk = 0;
+            for (const inm of result.datos.inmuebles) {
+                const partidoId = normPartido(inm.partido || 'Sin Partido');
+                // Handle comma-separated partidas (e.g. "12345, 67890")
+                const partidasRaw = (inm.partida_inmobiliaria || '000000');
+                const partidas = partidasRaw.includes(',')
+                    ? partidasRaw.split(',').map((p: string) => normPartida(p.trim()))
+                    : [normPartida(partidasRaw)];
+
+                for (const nroPartida of partidas) {
+                    // Check if already exists
+                    let inmuebleId = null;
+                    if (nroPartida && nroPartida !== '000000') {
+                        const { data: existing } = await supabase.from('inmuebles')
+                            .select('id')
+                            .eq('partido_id', partidoId)
+                            .eq('nro_partida', nroPartida)
+                            .maybeSingle();
+                        if (existing) {
+                            inmuebleId = existing.id;
+                            console.log(`[WORKER] ♻️ Inmueble ${partidoId}/${nroPartida} ya existe (${inmuebleId})`);
+                            inmueblesOk++;
+                            continue;
+                        }
+                    }
+
+                    const { error: inmError } = await supabase.from('inmuebles').insert({
+                        partido_id: partidoId,
+                        nro_partida: nroPartida,
+                        nomenclatura: inm.nomenclatura || null,
+                        transcripcion_literal: inm.descripcion || null,
+                    });
+
+                    if (inmError) {
+                        console.warn(`[WORKER] Warning insertando inmueble ${partidoId}/${nroPartida}:`, inmError.message);
+                    } else {
+                        inmueblesOk++;
+                    }
+                }
+            }
+            console.log(`[WORKER] ESCRITURA_EXTRACT: ${inmueblesOk} inmuebles upserted`);
+        }
 
         // 6. Marcar job como completed
         await supabase.from('ingestion_jobs').update({
             status: 'completed',
-            result_data: { campos_extraidos: Object.keys(result.datos).filter(k => (result.datos as any)[k] !== null).length },
+            result_data: {
+                campos_extraidos: Object.keys(result.datos).filter(k => (result.datos as any)[k] !== null).length,
+                personas_upserted: result.datos.personas?.length || 0,
+                inmuebles_upserted: result.datos.inmuebles?.length || 0,
+            },
             finished_at: new Date().toISOString(),
         }).eq('id', job.id);
 

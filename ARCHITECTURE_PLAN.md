@@ -30,13 +30,14 @@ Implementar la Carpeta notarial con:
 | ET5 — Motor determinístico | ✅ COMPLETADA | 042 | `applySuggestion.ts` (467 LOC), 5 handlers, audit trail. |
 | ET6 — Actuaciones Privado/Protocolar | ✅ COMPLETADA | 043, 044 | `ActuacionesPanel`, `GenerarActuacionDialog`, taxonomía PRIVADO/AMBIGUO/PROTOCOLAR/HIDDEN, microcopy. |
 | ET6.1 — Código de Acto | ✅ COMPLETADA | 021-023, 045 | `search_carpetas` filtra por TRAMITE. `CarpetasTable` muestra código+acto. Código CESBA derivado. |
-| ET7 — Pre-escriturario AI | � EN PROGRESO | 047 | Upload PDF + extracción IA (Gemini Pro) + confirmación humana + chips vencimientos en header. |
+| ET7 — Pre-escriturario AI | ✅ COMPLETADA | 047 | Upload PDF + extracción IA (Gemini Pro) + confirmación humana + chips vencimientos en header. Deploy Railway OK (2026-03-07). |
+| ET7.1 — Protocolo Inteligente | ⏳ PENDIENTE | — | Worker upsert personas/inmuebles + flujo carpeta→protocolo (producción) + folios/montos en extracción. |
 | ET8 — Header sticky final | ⏳ PENDIENTE | — | `CarpetaHero.tsx` ya es sticky con badge. Falta: chips accionables, colapsado, menú seguro. |
 | ET9 — Auditoría | ⏳ PENDIENTE | — | No iniciada. |
 | ET10 — Notificaciones | ⏳ PENDIENTE | — | Nueva etapa. |
 | ET11 — Export carpeta | ⏳ PENDIENTE | — | Nueva etapa. |
 
-Total: **47 migraciones SQL**, **14+ componentes principales**, **6 etapas completadas**, **1 en progreso**.
+Total: **49 migraciones SQL**, **14+ componentes principales**, **7 etapas completadas**, **1 pendiente nueva (ET7.1)**.
 
 ---
 
@@ -229,8 +230,10 @@ Escribano crea certificado + sube PDF
 #### Infraestructura aplicada
 - [x] Migración 047 ejecutada en Supabase SQL Editor (2026-03-06)
 - [x] Bucket Storage "certificados" creado con RLS (2026-03-06)
-- [ ] Deploy worker a Railway (en curso)
-- [ ] Test funcional end-to-end
+- [x] Deploy worker a Railway (2026-03-07) — commit `docs: DIARIO.md - changelog 2026-03-07`
+- [x] Test funcional: 56/56 escrituras reprocesadas → 237 personas, 53 inmuebles (`reprocess_protocolo.ts`)
+- [x] ESCRITURA_EXTRACT worker deployado y operativo en Railway
+- [x] Protocolo CRUD overhaul: migraciones 048-049, EscrituraDialog, ProtocoloWorkspace, IndiceProtocolo
 
 #### Decisiones de diseño
 - **Gemini 2.5 Pro** (no Flash) para certificados: mejor comprensión de documentos escaneados con sellos/manchas.
@@ -246,6 +249,36 @@ Hito ET7:
 
 Rollback:
 - Deshabilitar CERT_EXTRACT (feature flag) + revert PR.
+
+---
+
+### ETAPA 7.1 — Protocolo Inteligente: extracción completa + flujo carpeta→protocolo
+Objetivo: que al subir un PDF en "+ Nueva Escritura" se extraigan **todos** los datos relevantes (incluido upsert de Clientes e Inmuebles), y preparar el camino para que en producción los datos vengan directamente de la Carpeta cerrada.
+
+**Contexto:** La pestaña "Protocolo" tiene dos vistas hermanas que leen la misma fuente (`protocolo_registros`):
+- **Seguimiento de Escrituras** — tabla plana: Esc., Folios, Día, Mes, Acto, Vendedor, Comprador, Código Acto.
+- **Índice del Protocolo 2026** — generado automáticamente: Intervinientes (uno por línea), Operación (=Acto), Fecha (=Día+Mes), Esc., Folio (primer folio).
+
+**Fase actual (pre-producción):** la escribanía sube PDFs generados fuera de NotiAr para nutrir con datos reales la pestaña Protocolo.
+**Fase futura (producción):** al cerrar una Carpeta, un botón/acción toma los datos conocidos (partes, inmueble, acto, fechas, escritura) y crea/actualiza `protocolo_registros` sin necesidad de IA.
+
+Tareas — Fase actual:
+- [ ] **Worker: upsert personas/inmuebles** — Cuando `ESCRITURA_EXTRACT` completa, además de actualizar `protocolo_registros`, hacer upsert en tablas `personas` e `inmuebles` (como hace `reprocess_protocolo.ts` pero inline en cada job). Enriquecer el schema de Gemini para que devuelva datos estructurados de personas (nombre, DNI/CUIT, rol) e inmuebles (partido, partida, dirección).
+- [ ] **Extracción de folios** — Agregar `folios` al schema de extracción de Gemini y al auto-fill del dialog.
+- [ ] **Extracción de montos** — Agregar `monto_ars` / `monto_usd` al schema de extracción.
+
+Tareas — Fase producción (posterior):
+- [ ] **Server Action `publishToCarpeta(carpetaId)`** — Al cerrar carpeta, tomar datos de partes/inmueble/acto y crear/actualizar fila en `protocolo_registros`. Sin IA, datos determinísticos.
+- [ ] **Botón "Publicar en Protocolo"** en CarpetaHero o menú de acciones de la carpeta.
+- [ ] **Sincronización bidireccional** — Si se edita el registro en Protocolo, reflejar en Carpeta y viceversa (o al menos alertar discrepancias).
+
+Hito ET7.1:
+- Subir PDF → extracción → personas/inmuebles upserted + Seguimiento + Índice poblados automáticamente.
+- Cerrar Carpeta → registro en Protocolo creado sin IA.
+- `npm run build` OK.
+
+Rollback:
+- Revert PR. Las tablas personas/inmuebles no se modifican (solo se agregan datos).
 
 ---
 

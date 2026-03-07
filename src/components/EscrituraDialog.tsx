@@ -98,6 +98,7 @@ export function EscrituraDialog({ open, onOpenChange, registro, anio, nextNro, o
                         vendedor_acreedor: prev.vendedor_acreedor || ex.vendedor_acreedor || prev.vendedor_acreedor,
                         comprador_deudor: prev.comprador_deudor || ex.comprador_deudor || prev.comprador_deudor,
                         codigo_acto: prev.codigo_acto || ex.codigo_acto || prev.codigo_acto,
+                        folios: prev.folios || ex.folios || prev.folios,
                         dia: prev.dia ?? (ex.fecha ? parseInt(ex.fecha.split("-")[2]) : null),
                         mes: prev.mes ?? (ex.fecha ? parseInt(ex.fecha.split("-")[1]) : null),
                     }));
@@ -258,9 +259,6 @@ export function EscrituraDialog({ open, onOpenChange, registro, anio, nextNro, o
                                 onChange={handleChange}
                                 placeholder="Ej: 001/005"
                             />
-                            <p className="text-[10px] text-slate-500">
-                                Ingresá manualmente (no se extrae del PDF).
-                            </p>
                         </div>
                     </div>
 
