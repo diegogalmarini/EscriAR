@@ -1,0 +1,91 @@
+{
+  "version": "2026",
+  "fuente": "COLESBA - Otras Tasas 2026 - Vigencia 01/02/2026",
+
+  "legalizacion_apostilla": {
+    "sello_legalizacion_qr": {
+      "descripcion": "Sello de legalización + QR",
+      "precio": 21000,
+      "unidad": "por unidad"
+    },
+    "apostilla": {
+      "descripcion": "Apostilla",
+      "precio": 28000,
+      "unidad": "por unidad"
+    }
+  },
+
+  "archivo_actuaciones_notariales": {
+    "informe": {
+      "descripcion": "Informe (cada uno)",
+      "precio": 14700
+    },
+    "encuadernacion_protocolo": {
+      "descripcion": "Encuadernación tomo protocolo",
+      "precio": 87900
+    },
+    "copia_virtual_hasta_25_fojas": {
+      "descripcion": "Copia virtual (hasta 25 fojas)",
+      "precio": 23000
+    },
+    "testimonio_particular": {
+      "normal_1a5": 113850,
+      "normal_por_foja_extra": 13090,
+      "urgente_1a5": 228800,
+      "urgente_por_foja_extra": 25100
+    },
+    "testimonio_judicial": {
+      "normal": 153050,
+      "urgente": 304000
+    },
+    "copia_certificada_particular": {
+      "normal_1a5": 57500,
+      "normal_por_foja_extra": 7180,
+      "urgente_1a5": 126000,
+      "urgente_por_foja_extra": 13090
+    },
+    "copia_certificada_judicial": {
+      "normal": 93500,
+      "urgente": 185650
+    },
+    "copia_simple_particular": {
+      "normal_1a5": 35400,
+      "normal_por_foja_extra": 4480,
+      "urgente_1a5": 68850,
+      "urgente_por_foja_extra": 8730
+    },
+    "copia_simple_judicial": {
+      "normal": 51950,
+      "urgente": 102250
+    },
+    "busqueda_indice": 9780,
+    "anotacion_marginal_normal": 45970,
+    "anotacion_marginal_urgente": 91950,
+    "exhibicion_protocolo": 11770,
+    "copia_plano_chico": 23200,
+    "copia_plano_grande": 32400,
+    "recepcion_protocolo_tomo": 4920,
+    "recepcion_libro_requerimiento": 3200,
+    "franqueo": 13920,
+    "exhibicion_protocolo_obleas": 11770,
+    "confeccion_minuta_inscripcion": 14700,
+    "confeccion_minuta_urgente": 28180
+  },
+
+  "registros_especiales": {
+    "registro_testamentos": {
+      "inscripcion": 13920,
+      "informe": 32950
+    },
+    "rubrica_libros_consorcios_ph": {
+      "certificado_notarios": 13370,
+      "matriculacion": 13370,
+      "inscripcion_por_libro": 13370,
+      "informe_terceros": 13370
+    },
+    "registro_autoproteccion": {
+      "inscripcion_web": 13920,
+      "informe": 7075
+    }
+  }
+}

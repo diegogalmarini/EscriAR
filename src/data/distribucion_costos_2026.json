@@ -1,0 +1,182 @@
+{
+  "version": "2026",
+  "fuente": "COLESBA - Arancel sept 2025 / Tabla PBA ENE 2026 / Ley 15.558",
+  "descripcion": "Distribución de sellos y aportes por parte según tipo de acto y subcódigo. Valores en ‰ (permil).",
+
+  "compraventa": {
+    "100-00": {
+      "label": "Compraventa SIN exención",
+      "sellos_total_permil": 20,
+      "sellos_comprador_permil": 10,
+      "sellos_vendedor_permil": 10,
+      "aporte_total_permil": 8,
+      "aporte_comprador_permil": 2,
+      "aporte_vendedor_permil": 2,
+      "aporte_notario_permil": 4
+    },
+    "100-51": {
+      "label": "Compraventa VU exenta (VF <= tope)",
+      "sellos_total_permil": 0,
+      "sellos_comprador_permil": 0,
+      "sellos_vendedor_permil": 0,
+      "aporte_total_permil": 4,
+      "aporte_comprador_permil": 0,
+      "aporte_vendedor_permil": 2,
+      "aporte_notario_permil": 2
+    },
+    "100-10": {
+      "label": "Compraventa 1 parte exenta sellos",
+      "sellos_total_permil": 10,
+      "sellos_comprador_permil": 0,
+      "sellos_vendedor_permil": 10,
+      "aporte_total_permil": 8,
+      "aporte_comprador_permil": 2,
+      "aporte_vendedor_permil": 2,
+      "aporte_notario_permil": 4
+    },
+    "100-20": {
+      "label": "Compraventa ambas partes exentas sellos",
+      "sellos_total_permil": 0,
+      "sellos_comprador_permil": 0,
+      "sellos_vendedor_permil": 0,
+      "aporte_total_permil": 8,
+      "aporte_comprador_permil": 2,
+      "aporte_vendedor_permil": 2,
+      "aporte_notario_permil": 4
+    }
+  },
+
+  "hipoteca_bco_provincia": {
+    "300-11": {
+      "label": "Hipoteca Bco Prov SIN exención",
+      "sellos_total_permil": 9,
+      "sellos_acreedor_permil": 0,
+      "sellos_deudor_permil": 9,
+      "aporte_total_permil": 1.5,
+      "aporte_acreedor_permil": 0,
+      "aporte_deudor_permil": 0.75,
+      "aporte_notario_permil": 0.75
+    },
+    "300-22": {
+      "label": "Hipoteca Bco Prov VU exenta (monto <= tope)",
+      "sellos_total_permil": 0,
+      "sellos_acreedor_permil": 0,
+      "sellos_deudor_permil": 0,
+      "aporte_total_permil": 0.75,
+      "aporte_acreedor_permil": 0,
+      "aporte_deudor_permil": 0,
+      "aporte_notario_permil": 0.75
+    },
+    "300-21": {
+      "label": "Hipoteca Bco Prov VU excedente (monto > tope)",
+      "sellos_total_permil": 0,
+      "sellos_acreedor_permil": 0,
+      "sellos_deudor_permil": 0,
+      "aporte_total_permil": 1.5,
+      "aporte_acreedor_permil": 0,
+      "aporte_deudor_permil": 0.75,
+      "aporte_notario_permil": 0.75
+    }
+  },
+
+  "hipoteca_otros_bancos": {
+    "300-00": {
+      "label": "Hipoteca otros bancos SIN exención",
+      "sellos_total_permil": 18,
+      "sellos_acreedor_permil": 9,
+      "sellos_deudor_permil": 9,
+      "aporte_total_permil": 3,
+      "aporte_acreedor_permil": 0.75,
+      "aporte_deudor_permil": 0.75,
+      "aporte_notario_permil": 1.5
+    },
+    "300-22": {
+      "label": "Hipoteca otros bancos VU exenta (monto <= tope)",
+      "sellos_total_permil": 0,
+      "sellos_acreedor_permil": 0,
+      "sellos_deudor_permil": 0,
+      "aporte_total_permil": 0.75,
+      "aporte_acreedor_permil": 0,
+      "aporte_deudor_permil": 0,
+      "aporte_notario_permil": 0.75
+    },
+    "300-10": {
+      "label": "Hipoteca otros bancos 1 parte exenta sellos (monto > tope)",
+      "sellos_total_permil": 9,
+      "sellos_acreedor_permil": 9,
+      "sellos_deudor_permil": 0,
+      "aporte_total_permil": 3,
+      "aporte_acreedor_permil": 0.75,
+      "aporte_deudor_permil": 0.75,
+      "aporte_notario_permil": 1.5
+    },
+    "300-20": {
+      "label": "Hipoteca otros bancos ambas partes exentas sellos (Bco Hipotecario, monto > tope)",
+      "sellos_total_permil": 0,
+      "sellos_acreedor_permil": 0,
+      "sellos_deudor_permil": 0,
+      "aporte_total_permil": 3,
+      "aporte_acreedor_permil": 0.75,
+      "aporte_deudor_permil": 0.75,
+      "aporte_notario_permil": 1.5
+    }
+  },
+
+  "sellos_caba": {
+    "descripcion": "Impuesto de Sellos CABA - Ley 6927 - Vigencia 01/01/2026",
+    "alicuota_general": 0.01,
+    "transmision_dominio": {
+      "tope_alicuota_baja": 226100000,
+      "alicuota_hasta_tope": 0.027,
+      "alicuota_sobre_tope": 0.035
+    },
+    "vivienda_unica_caba": {
+      "vf_exencion_tope": 226100000,
+      "alicuota_excedente": 0.035
+    },
+    "terreno_baldio_caba": {
+      "vir_exencion_tope": 1681000,
+      "nota": "Si VIR > tope: 2.7% o 3.5% según monto, sobre TOTAL sin exención"
+    },
+    "hipoteca_caba": {
+      "nota": "Créditos bancos Ley 21.526 para compra/construcción/ampliación/refacción vivienda: EXENTO SIN LIMITE. Igual para lotes baldíos."
+    },
+    "leasing_locacion": 0.005
+  },
+
+  "impuesto_transmision_gratuita": {
+    "descripcion": "ITG PBA - Ley 15.558 - Vigencia 01/01/2026",
+    "minimo_no_imponible": {
+      "padres_hijos_conyuge": 23343337,
+      "resto_beneficiarios": 5606568
+    },
+    "escala": [
+      { "desde": 0, "hasta": 10701413, "familia_pct": 1.603, "otros_asc_desc_pct": 2.404, "colaterales_2do_pct": 3.205, "colaterales_3_4_extraños_pct": 4.006 },
+      { "desde": 10701413, "hasta": 21402794, "cuota_fija_familia": 171544, "familia_pct": 1.633, "cuota_fija_otros": 257262, "otros_asc_desc_pct": 2.434, "cuota_fija_col2": 342980, "colaterales_2do_pct": 3.235, "cuota_fija_col34": 428699, "colaterales_3_4_extraños_pct": 4.036 },
+      { "desde": 21402794, "hasta": 42805615, "cuota_fija_familia": 346298, "familia_pct": 1.693, "cuota_fija_otros": 517734, "otros_asc_desc_pct": 2.494, "cuota_fija_col2": 689170, "colaterales_2do_pct": 3.295, "cuota_fija_col34": 860607, "colaterales_3_4_extraños_pct": 4.097 },
+      { "desde": 42805615, "hasta": 85611202, "cuota_fija_familia": 708648, "familia_pct": 1.813, "cuota_fija_otros": 1051520, "otros_asc_desc_pct": 2.614, "cuota_fija_col2": 1394393, "colaterales_2do_pct": 3.415, "cuota_fija_col34": 1737481, "colaterales_3_4_extraños_pct": 4.217 },
+      { "desde": 85611202, "hasta": 171222431, "cuota_fija_familia": 1484713, "familia_pct": 2.053, "cuota_fija_otros": 2170458, "otros_asc_desc_pct": 2.855, "cuota_fija_col2": 2856204, "colaterales_2do_pct": 3.656, "cuota_fija_col34": 3542593, "colaterales_3_4_extraños_pct": 4.457 },
+      { "desde": 171222431, "hasta": 342444836, "cuota_fija_familia": 3242312, "familia_pct": 2.534, "cuota_fija_otros": 4614659, "otros_asc_desc_pct": 3.335, "cuota_fija_col2": 5986151, "colaterales_2do_pct": 4.137, "cuota_fija_col34": 7358285, "colaterales_3_4_extraños_pct": 4.938 }
+    ]
+  },
+
+  "uif_reportes": {
+    "descripcion": "UIF - Res. 242/2023 - Reporte Sistemático Mensual - Vigencia 01/01/2026 al 30/06/2026",
+    "smvm_base": 334800,
+    "compraventa_inmueble_efectivo": {
+      "smvm_cantidad": 750,
+      "monto": 251100000
+    },
+    "usufructo_vitalicio": {
+      "smvm_cantidad": 200,
+      "monto": 66960000
+    },
+    "zona_frontera": {
+      "smvm_cantidad": 700,
+      "monto": 234360000
+    },
+    "constitucion_persona_juridica": "SIN TOPE",
+    "cesion_participaciones": "SIN TOPE",
+    "fideicomiso": "SIN TOPE"
+  }
+}

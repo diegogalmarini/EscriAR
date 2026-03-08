@@ -1,0 +1,202 @@
+{
+  "version": "2026",
+  "fuente": "RPI - DTR 13/25 - Ley 15.558 - Vigencia 01/01/2026",
+  "nota": "Valores en ARS. Urgente incluye adicional 1‰ (mín según trámite).",
+
+  "publicidad": {
+    "certificado_dominio": {
+      "descripcion": "Certificado de dominio (por acto y por inmueble)",
+      "codigo_rpi": 750,
+      "simple": 27800,
+      "urgente": 70800,
+      "en_el_dia": 132900
+    },
+    "certificado_anotaciones_personales": {
+      "descripcion": "Certificado de anotaciones personales (por módulo/variante)",
+      "codigo_rpi": 751,
+      "simple": 27800,
+      "urgente": 70800,
+      "en_el_dia": 132900
+    },
+    "informe_dominio": {
+      "descripcion": "Informe de dominio (por inmueble)",
+      "codigo_rpi": 752,
+      "simple": 22300,
+      "urgente": 62800,
+      "en_el_dia": 124900
+    },
+    "informe_anotaciones_personales": {
+      "descripcion": "Informe de anotaciones personales",
+      "codigo_rpi": 753,
+      "simple": 22300,
+      "urgente": 62800,
+      "en_el_dia": 124900
+    },
+    "copia_asiento_dominio": {
+      "descripcion": "Copia de asiento de dominio",
+      "codigo_rpi": 754,
+      "simple": 20400,
+      "urgente": 52200,
+      "en_el_dia": 114300
+    },
+    "indice_titulares": {
+      "descripcion": "Índice de titulares de dominio (por persona)",
+      "codigo_rpi": 755,
+      "simple": 20400,
+      "urgente": 52200,
+      "en_el_dia": 114300
+    },
+    "copia_anios_viejos": {
+      "descripcion": "Copia de años viejos",
+      "codigo_rpi": 759,
+      "simple": 20400,
+      "urgente": 52200,
+      "en_el_dia": 114300
+    },
+    "frecuencia_publicidad": {
+      "descripcion": "Solicitud sobre frecuencia de certificados/informes (folio real)",
+      "codigo_rpi": 763,
+      "simple": 22300,
+      "urgente": 62800,
+      "en_el_dia": 124900
+    },
+    "informe_historico_anotaciones": {
+      "descripcion": "Informe histórico de anotaciones personales",
+      "codigo_rpi": null,
+      "simple": 44600,
+      "urgente": 113300,
+      "en_el_dia": 175400
+    },
+    "consulta_antecedentes_90d": {
+      "descripcion": "Consulta antecedentes publicidad registral (informe 90 días, sin valor legal)",
+      "codigo_rpi": null,
+      "simple": 20400,
+      "urgente": null,
+      "en_el_dia": null
+    },
+    "consulta_anotaciones_personales": {
+      "descripcion": "Consulta de anotaciones personales (sin valor legal)",
+      "codigo_rpi": null,
+      "simple": 20400,
+      "urgente": null,
+      "en_el_dia": null
+    }
+  },
+
+  "registracion": {
+    "transmision_dominio": {
+      "descripcion": "Registración transmisión de dominio",
+      "tasa_permil": 2,
+      "adicional_urgente_permil": 1,
+      "min_simple": 42000,
+      "min_urgente": 131500,
+      "min_adicional_urgente": 282000,
+      "nota": "Se calcula sobre el mayor entre: VF ajustada por coef. corrector, monto operación, o monto cesión. Por inmueble y por acto."
+    },
+    "constitucion_hipoteca": {
+      "descripcion": "Registración constitución/ampliación/reducción/cesión de hipoteca",
+      "tasa_permil": 2,
+      "adicional_urgente_permil": 1,
+      "min_simple": 42000,
+      "min_urgente": 131500,
+      "min_adicional_urgente": 282000,
+      "nota": "Sobre monto de la hipoteca. Preanotación y anotación: sucesivas registraciones."
+    },
+    "cancelacion_derechos_reales": {
+      "descripcion": "Cancelación de derechos reales",
+      "fija_simple": 42000,
+      "fija_urgente": 131500
+    },
+    "anotacion_marginal": {
+      "descripcion": "Anotación marginal sobre inmuebles",
+      "fija_simple": 42000,
+      "fija_urgente": 131500
+    },
+    "prorroga": {
+      "descripcion": "Prórroga de inscripciones sobre inmuebles",
+      "valor_unico": 91000
+    },
+    "declaratoria_herederos": {
+      "descripcion": "Declaratoria de herederos y demás actos Art. 3° Ley 10295",
+      "tasa_permil": 2,
+      "min_simple": 42000,
+      "min_urgente": 131500,
+      "nota": "Por inmueble y por acto (causante)."
+    },
+    "servidumbre_gratuita": {
+      "descripcion": "Servidumbre gratuita",
+      "fija_simple": 42000,
+      "fija_urgente": 131500
+    },
+    "afectacion_ph_hasta_10": {
+      "descripcion": "Afectación PH / conjuntos inmobiliarios (hasta 10 unidades)",
+      "fija_simple": 153000,
+      "fija_urgente": 247000,
+      "por_subparcela_simple": 13500,
+      "por_subparcela_urgente": 26000,
+      "nota": "Más de un inmueble de origen: repone tasa por cada uno."
+    },
+    "afectacion_ph_mas_10": {
+      "descripcion": "Afectación PH / conjuntos inmobiliarios (más de 10 unidades)",
+      "fija_simple": 450000,
+      "fija_urgente": 1350000,
+      "por_subparcela_simple": 13500,
+      "por_subparcela_urgente": 26000
+    },
+    "regimen_vivienda_afectacion": {
+      "descripcion": "Régimen de vivienda - Afectación",
+      "fija_simple": 42000,
+      "fija_urgente": 131500
+    },
+    "regimen_vivienda_desafectacion": {
+      "descripcion": "Régimen de vivienda - Desafectación",
+      "fija_simple": 42000,
+      "fija_urgente": 131500
+    },
+    "medida_cautelar_inmueble": {
+      "descripcion": "Traba/reinscripción/ampliación/rectificatoria/caducidad/levantamiento medida cautelar (por inmueble)",
+      "fija_simple": 42000,
+      "fija_urgente": 131500
+    },
+    "medida_cautelar_persona": {
+      "descripcion": "Traba/reinscripción/rectificatoria/caducidad/levantamiento medida cautelar sobre persona",
+      "fija_simple": 42000,
+      "fija_urgente": 131500
+    }
+  },
+
+  "excepciones_vivienda_unica": {
+    "transmision_dominio": {
+      "construido_vf_max": 1154400,
+      "baldio_vf_max": 577200,
+      "min_simple": 35800,
+      "min_urgente": 112800,
+      "min_adicional_urgente": 242000,
+      "nota": "Exención si VF básica < tope. Si supera, paga 2‰ normal."
+    },
+    "hipoteca": {
+      "construido_monto_max": 251281250,
+      "baldio_monto_max": 125640625,
+      "min_simple": 35800,
+      "min_urgente": 112800,
+      "min_adicional_urgente": 242000
+    }
+  },
+
+  "coeficientes_correctores": {
+    "urbano_edificado": 24.837,
+    "rural_tierra_libre": 44.4635,
+    "nota": "VF ajustada = VF básica × coeficiente. Usada para calcular 2‰ RPI cuando no hay monto de operación."
+  },
+
+  "caducidad": {
+    "plazo_dias": 180,
+    "nota": "Todo documento presentado después de 180 días corridos desde ingreso en Libro Diario debe abonar nuevamente la tasa."
+  },
+
+  "administrativas": {
+    "formacion_expediente": 35800,
+    "locacion_casillero_anual": 154000,
+    "formulario_papel": 200
+  }
+}

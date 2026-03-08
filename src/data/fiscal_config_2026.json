@@ -42,8 +42,23 @@
 
   "rpi": {
     "tasa_general": 0.002,
+    "min_fee_simple": 42000,
+    "min_fee_urgente": 131500,
     "min_fee": 42000,
+    "min_fee_vu_simple": 35800,
+    "min_fee_vu_urgente": 112800,
     "prorroga": 91000
+  },
+
+  "coeficientes_correctores": {
+    "urbano_edificado": 24.837,
+    "rural_tierra_libre": 44.4635,
+    "nota": "VF ajustada = VF básica × coeficiente. Usada para 2‰ RPI cuando no hay monto."
+  },
+
+  "hipoteca_vu": {
+    "tope_construido": 251281250,
+    "tope_baldio": 125640625
   },
 
   "aporte_min_notarial": 25000,

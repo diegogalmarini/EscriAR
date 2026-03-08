@@ -32,6 +32,7 @@ import CarpetaHero from "./CarpetaHero";
 import { WorkspaceRadiography } from "./WorkspaceRadiography";
 import { FasePreEscritura, FaseRedaccion, FasePostEscritura } from "./WorkspacePipeline";
 import ApuntesTab from "./ApuntesTab";
+import PresupuestoTab from "./PresupuestoTab";
 
 export default function FolderWorkspace({ initialData }: { initialData: any }) {
     const [carpeta, setCarpeta] = useState(initialData);
@@ -388,6 +389,7 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                     <TabsTrigger value="antecedentes">Antecedentes</TabsTrigger>
                     <TabsTrigger value="pre-escritura">Pre-Escriturario</TabsTrigger>
                     <TabsTrigger value="post-escritura">Post-Firma</TabsTrigger>
+                    <TabsTrigger value="presupuesto">Presupuesto</TabsTrigger>
                 </TabsList>
             </CarpetaHero>
 
@@ -434,6 +436,10 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                         carpetaEstado={carpeta.estado}
                         isBlockedBySecurity={isBlockedBySecurity}
                     />
+                </TabsContent>
+
+                <TabsContent value="presupuesto" className="mt-6">
+                    <PresupuestoTab carpetaId={carpeta.id} currentEscritura={currentEscritura} />
                 </TabsContent>
             </Tabs>
 
