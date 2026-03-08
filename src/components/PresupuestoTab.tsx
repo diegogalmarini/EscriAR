@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Separator } from "@/components/ui/separator";
 import {
   Calculator, Save, Send, AlertTriangle, CheckCircle2, Info, DollarSign,
-  FileText, Receipt,
+  FileText, Receipt, Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -21,6 +21,7 @@ import {
   cambiarEstadoPresupuesto,
 } from "@/app/actions/presupuestos";
 import type { PresupuestoInput, PresupuestoResult, LineaPresupuesto, Pagador } from "@/lib/services/PresupuestoEngine";
+import { generarPresupuestoPdf } from "@/lib/pdf/presupuestoPdf";
 
 // ─── Helpers ──────────────────────────────────────────────
 
@@ -459,6 +460,16 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
             <Button onClick={handleGuardar} disabled={isPending} variant="default">
               <Save className="h-4 w-4 mr-2" />
               {presupuestoGuardado ? "Guardar nueva versión" : "Guardar Presupuesto"}
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => generarPresupuestoPdf({
+                result: resultado!,
+                version: presupuestoGuardado?.version,
+              })}
+            >
+              <Download className="h-4 w-4 mr-2" /> Descargar PDF
             </Button>
 
             {presupuestoGuardado && presupuestoGuardado.estado === "BORRADOR" && (
