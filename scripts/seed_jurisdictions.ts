@@ -1,4 +1,15 @@
-import { supabaseAdmin } from '../src/lib/supabaseAdmin';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+import { createClient } from '@supabase/supabase-js';
+
+// Cargar .env.local (ESM hoists imports, así que creamos el client después)
+dotenv.config({ path: path.resolve(__dirname, '..', '.env.local') });
+
+const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+);
 
 /**
  * Seed de Jurisdicciones (135 Partidos PBA) para NotiAR.
