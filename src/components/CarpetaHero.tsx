@@ -31,6 +31,7 @@ import { Certificado, getCertificadosPorCarpeta } from "@/app/actions/certificad
 import CarpetaInfoPopover from "@/components/CarpetaInfoPopover";
 import { publishToProtocolo } from "@/app/actions/protocolo";
 import { toast } from "sonner";
+import { generarCaratula } from "@/lib/caratula";
 
 // --- Types ---
 interface CarpetaHeroProps {
@@ -49,87 +50,6 @@ const ESTADO_CONFIG: Record<string, { label: string; dot: string }> = {
     FIRMADA: { label: "En Registro", dot: "bg-violet-500" },
     INSCRIPTA: { label: "Finalizada", dot: "bg-emerald-500" },
 };
-
-// --- Helper: Extraer apellido de nombre_completo ---
-function extractApellido(nombreCompleto: string | null | undefined): string | null {
-    if (!nombreCompleto?.trim()) return null;
-    const trimmed = nombreCompleto.trim();
-
-    // Formato DB estándar: "APELLIDO, Nombre"
-    if (trimmed.includes(",")) {
-        return trimmed.split(",")[0].trim() || null;
-    }
-
-    // Formato alternativo: "Nombre APELLIDO" — buscar palabra en MAYÚSCULAS
-    const parts = trimmed.split(/\s+/);
-    const upper = parts.filter(
-        (p) => p.length > 1 && p === p.toUpperCase() && /[A-ZÁÉÍÓÚÑ]/.test(p)
-    );
-    if (upper.length > 0) return upper[0];
-
-    // Fallback: última palabra en mayúsculas
-    return parts[parts.length - 1]?.toUpperCase() || null;
-}
-
-// --- Helper: Generar carátula dinámica ---
-function generarCaratula(carpeta: any): { titulo: string; subtipo: string } {
-    // Fuente de verdad: escritura TRAMITE (operación activa), NO antecedente
-    const escritura = carpeta.escrituras?.find((e: any) => e.source === 'TRAMITE') || carpeta.escrituras?.[0];
-    const operacion = escritura?.operaciones?.[0];
-
-    // Subtítulo: tipo de acto normalizado o placeholder
-    const rawActo = operacion?.tipo_acto?.toUpperCase()?.trim() || null;
-    const tipoActoRaw = (rawActo === "POR_DEFINIR") ? null : rawActo;
-    // Normalizar: extraer solo la palabra clave del acto (quitar "COMPLETA", "SIMPLE", etc.)
-    const ACTOS_CONOCIDOS = [
-        "COMPRAVENTA", "HIPOTECA", "DONACIÓN", "DONACION", "CESIÓN DE DERECHOS",
-        "CESION DE DERECHOS", "PODER ESPECIAL", "PODER GENERAL", "CANCELACIÓN",
-        "CANCELACION", "USUFRUCTO", "PERMUTA", "FIDEICOMISO", "AFECTACIÓN",
-        "AFECTACION", "DESAFECTACIÓN", "DESAFECTACION",
-    ];
-    const tipoActo = tipoActoRaw
-        ? (ACTOS_CONOCIDOS.find(a => tipoActoRaw.includes(a)) || tipoActoRaw)
-        : null;
-    const subtipo = tipoActo || "ACTO POR SELECCIONAR";
-
-    // Estado procesando sin datos
-    if (carpeta.ingesta_estado === "PROCESANDO" && !tipoActo) {
-        return { titulo: "Procesando operación…", subtipo };
-    }
-
-    // Roles alineados con WorkspacePipeline (Mesa de Trabajo)
-    const participantes = operacion?.participantes_operacion || [];
-
-    const ROLES_TRANSMITENTE = ["VENDEDOR", "TRANSMITENTE", "DONANTE", "CEDENTE", "FIDUCIANTE", "TITULAR", "CONDOMINO"];
-    const ROLES_ADQUIRENTE = ["COMPRADOR", "ADQUIRENTE", "DONATARIO", "CESIONARIO", "MUTUARIO", "FIDEICOMISARIO"];
-
-    const transmitente = participantes.find((p: any) =>
-        ROLES_TRANSMITENTE.includes(p.rol?.toUpperCase() || "")
-    );
-
-    const adquirente = participantes.find((p: any) =>
-        ROLES_ADQUIRENTE.includes(p.rol?.toUpperCase() || "")
-    );
-
-    const apellidoTransmitente = extractApellido(transmitente?.persona?.nombre_completo);
-    const apellidoAdquirente = extractApellido(adquirente?.persona?.nombre_completo);
-
-    // Título: perspectiva adquirente con "de"
-    let titulo: string;
-    if (apellidoAdquirente && apellidoTransmitente) {
-        // Ambas partes: "ADQUIRENTE de TRANSMITENTE"
-        titulo = `${apellidoAdquirente} de ${apellidoTransmitente}`;
-    } else if (apellidoTransmitente) {
-        // Solo transmitente: placeholder para adquirente
-        titulo = `… de ${apellidoTransmitente}`;
-    } else if (apellidoAdquirente) {
-        titulo = apellidoAdquirente;
-    } else {
-        titulo = carpeta.caratula?.replace(".pdf", "") || "Nuevo trámite";
-    }
-
-    return { titulo, subtipo };
-}
 
 function formatDate(dateStr: string): string {
     try {

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabaseServer";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, FileText, Shield, ArrowRight, History } from "lucide-react";
+import { generarLabelDesdeParties } from "@/lib/caratula";
 import { createFolder } from "@/app/actions/carpeta";
 import { revalidatePath } from "next/cache";
 import { ExpiringDeedsAlert } from "@/components/ExpiringDeedsAlert";
@@ -72,9 +73,8 @@ export default async function DashboardPage() {
                         <CardContent className="space-y-4">
                             <div className="space-y-1.5">
                                 {carpetas?.slice(0, 3).map((c: any) => {
-                                    const isFilename = c.title?.toLowerCase().endsWith('.pdf') || c.title?.toLowerCase().endsWith('.docx');
-                                    const displayTitle = isFilename ? `Expediente #${c.number}` : (c.title || `Carpeta #${c.number}`);
-                                    const displaySubtitle = isFilename ? c.title : `Expediente #${c.number}`;
+                                    const displayTitle = generarLabelDesdeParties(c.parties, c.title || `Carpeta #${c.number}`);
+                                    const displaySubtitle = `Expediente #${c.number}`;
 
                                     return (
                                         <Link
