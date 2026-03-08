@@ -767,6 +767,7 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 | 048 | Protocolo: pdf_storage_path, carpeta_id, flexibilizar nro_escritura para errose | ✅ Ejecutada |
 | 049 | Protocolo: columnas de extracción AI (extraction_status, extraction_result, extraction_job_id) | ✅ Ejecutada |
 | 051 | ET12: tabla jurisdicciones + campos partido_code/delegacion_code en inmuebles | ✅ Ejecutada |
+| 052 | ET13: tablas presupuestos, presupuesto_items y presupuesto_honorarios | ✅ Ejecutada |
 
 **Nota**: las migraciones se ejecutan MANUAL en Supabase SQL Editor. No hay sistema de migración automático.
 
@@ -824,6 +825,24 @@ Pipeline dual (frontend sync + worker async Railway) 100% funcional y estabiliza
 ---
 
 ## 17. Changelog
+
+### 2026-03-08 (Claude) — ET13, ET14, ET15: Sistema de Presupuestos, Exportación a PDF y Sellos CABA
+
+#### ET15 — Soporte Sellos CABA en PresupuestoEngine
+- Selector de Jurisdicción (PBA / CABA) en `PresupuestoTab`.
+- Lógica de alícuotas escalonadas para CABA (0%, 2%, 3%, 3.6%) implementada en `cabaTaxCalculator.ts`.
+- Cálculo dinámico dependiendo de la jurisdicción seleccionada en el engine unificado.
+
+#### ET14 — PDF Export de Presupuesto Notarial
+- Integración de `jsPDF` y `jspdf-autotable`.
+- Botón "Descargar PDF" funcional en la pestaña pre-escritura.
+- Documento generado con resumen general para el cliente y detalle analítico (impuestos, aportes, CABA/PBA, exenciones).
+
+#### ET13 — Unificación de Calculadores en PresupuestoEngine
+- Nuevo motor `PresupuestoEngine` como *single source of truth* para costos.
+- Tab Presupuesto movido lógicamente en la carpeta después de Mesa de Trabajo.
+- Eliminado `LiquidacionPanel` (deprecated) y reemplazado por `LiquidacionResumen`.
+- Tablas `presupuestos`, `presupuesto_items` y `presupuesto_honorarios` introducidas en la migración 052 para persistencia estruturada de las liquidaciones al cliente.
 
 ### 2026-03-08 (Claude) — ET12: Motor Jurisdiccional Notarial
 

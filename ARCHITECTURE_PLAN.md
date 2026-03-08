@@ -36,8 +36,11 @@ Implementar la Carpeta notarial con:
 | ET10 — Notificaciones/Dashboard | ✅ COMPLETADA | — | Dashboard alerts (pendientes semáforo) + PendingBadge en sidebar + `getPendingActionsSummary()`. |
 | ET12a — Motor Jurisdiccional | ✅ COMPLETADA | 051 | JSON 135 partidos PBA + JurisdictionResolver + integración ingest/worker + campos partido_code/delegacion_code en inmuebles. |
 | ET12b — Admin UI Jurisdicciones | 🔲 PENDIENTE | — | Tab admin para gestión de jurisdicciones, CRUD partidos, toggle provincias. |
+| ET13 — Presupuestos Notariales | ✅ COMPLETADA | 052 | Motor de liquidación (`PresupuestoEngine`), UI `PresupuestoTab`, tablas de persistencia estructurada, y reorganización UI. |
+| ET14 — Exportación PDF | ✅ COMPLETADA | — | Generación de presupuesto en PDF estructurado con `jsPDF` (`jspdf-autotable`). |
+| ET15 — Sellos CABA | ✅ COMPLETADA | — | Alícuotas escalonadas para Sellos en CABA y selector de jurisdicción (PBA / CABA). |
 
-Total: **51 migraciones SQL**, **17+ componentes principales**, **12 de 13 etapas completadas**.
+Total: **52 migraciones SQL**, **20+ componentes principales**, **15 de 16 etapas completadas**.
 
 ---
 
