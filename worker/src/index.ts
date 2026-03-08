@@ -12,6 +12,7 @@ import actsData from './acts_taxonomy_2026.json';
 import { analyzeNote, NoteAnalysisOutputSchema } from './noteAnalyzer';
 import { extractCertificate } from './certExtractor';
 import { extractEscritura } from './escrituraExtractor';
+import { resolveJurisdiction } from './jurisdictionResolver';
 const pdfParse = require('pdf-parse');
 
 dotenv.config();
@@ -382,6 +383,9 @@ async function workerLoop() {
                 }
 
                 if (!inmuebleId) {
+                    // Resolver códigos jurisdiccionales determinísticamente
+                    const jurisdiccion = resolveJurisdiction(partidoId);
+
                     const { data: insertedInmueble, error: inmuebleError } = await supabase.from('inmuebles').insert({
                         partido_id: partidoId,
                         nro_partida: nroPartida,
@@ -389,6 +393,10 @@ async function workerLoop() {
                         transcripcion_literal: inm.transcripcion_literal || null,
                         titulo_antecedente: inm.titulo_antecedente || null,
                         valuacion_fiscal: inm.valuacion_fiscal || null,
+                        ...(jurisdiccion && {
+                            partido_code: jurisdiccion.partyCode,
+                            delegacion_code: jurisdiccion.delegationCode,
+                        }),
                     }).select().single();
 
                     if (inmuebleError) {
@@ -1031,11 +1039,18 @@ async function processEscrituraExtraction(job: any) {
                         }
                     }
 
+                    // Resolver códigos jurisdiccionales
+                    const jurisdiccion2 = resolveJurisdiction(partidoId);
+
                     const { error: inmError } = await supabase.from('inmuebles').insert({
                         partido_id: partidoId,
                         nro_partida: nroPartida,
                         nomenclatura: inm.nomenclatura || null,
                         transcripcion_literal: inm.descripcion || null,
+                        ...(jurisdiccion2 && {
+                            partido_code: jurisdiccion2.partyCode,
+                            delegacion_code: jurisdiccion2.delegationCode,
+                        }),
                     });
 
                     if (inmError) {

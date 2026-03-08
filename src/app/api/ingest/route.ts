@@ -19,6 +19,7 @@ import { normalizeID, toTitleCase, formatCUIT, normalizePartido, normalizePartid
 import { SkillExecutor } from '@/lib/agent/SkillExecutor';
 import { classifyDocument } from '@/lib/skills/routing/documentClassifier';
 import { taxonomyService, ActIntent } from '@/lib/services/TaxonomyService';
+import { jurisdictionResolver } from '@/lib/services/JurisdictionResolver';
 import { getOrgIdForUser } from '@/lib/auth/getOrg';
 
 // Helper to get CESBA code from tipo_acto
@@ -734,13 +735,20 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
             }
             if (idx === 0) assetId = existingAsset.id;
         } else {
+            // Resolver códigos jurisdiccionales determinísticamente
+            const jurisdiccion = jurisdictionResolver.resolve(partidoNorm);
+
             const { data: asset, error: assetError } = await supabaseAdmin.from('inmuebles').insert({
                 partido_id: partidoNorm,
                 nro_partida: partidaNorm,
                 nomenclatura: inm.nomenclatura,
                 transcripcion_literal: inm.transcripcion_literal,
                 titulo_antecedente: inm.titulo_antecedente,
-                valuacion_fiscal: inm.valuacion_fiscal
+                valuacion_fiscal: inm.valuacion_fiscal,
+                ...(jurisdiccion && {
+                    partido_code: jurisdiccion.partyCode,
+                    delegacion_code: jurisdiccion.delegationCode,
+                }),
             }).select().single();
 
             if (assetError) {

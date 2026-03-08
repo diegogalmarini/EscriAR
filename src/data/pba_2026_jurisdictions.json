@@ -1,0 +1,1290 @@
+{
+  "jurisdiction_id": "PBA",
+  "version": "2026_01",
+  "parties": [
+    {
+      "name": "Adolfo Alsina",
+      "code": "001",
+      "delegation_code": "017",
+      "aliases": [
+        "adolfo alsina",
+        "carhue",
+        "carhué"
+      ]
+    },
+    {
+      "name": "Adolfo Gonzales Chaves",
+      "code": "130",
+      "delegation_code": "015",
+      "aliases": [
+        "adolfo gonzales chaves",
+        "gonzales chaves",
+        "gonzález chaves"
+      ]
+    },
+    {
+      "name": "Alberti",
+      "code": "002",
+      "delegation_code": "008",
+      "aliases": [
+        "alberti"
+      ]
+    },
+    {
+      "name": "Almirante Brown",
+      "code": "003",
+      "delegation_code": "005",
+      "aliases": [
+        "almirante brown",
+        "alte brown",
+        "adrogue",
+        "adrogué",
+        "burzaco"
+      ]
+    },
+    {
+      "name": "Arrecifes",
+      "code": "077",
+      "delegation_code": "011",
+      "aliases": [
+        "arrecifes",
+        "bartolome mitre"
+      ]
+    },
+    {
+      "name": "Avellaneda",
+      "code": "004",
+      "delegation_code": "005",
+      "aliases": [
+        "avellaneda",
+        "sarandi",
+        "wilde",
+        "gerli"
+      ]
+    },
+    {
+      "name": "Ayacucho",
+      "code": "005",
+      "delegation_code": "012",
+      "aliases": [
+        "ayacucho"
+      ]
+    },
+    {
+      "name": "Azul",
+      "code": "006",
+      "delegation_code": "013",
+      "aliases": [
+        "azul"
+      ]
+    },
+    {
+      "name": "Bahía Blanca",
+      "code": "007",
+      "delegation_code": "007",
+      "aliases": [
+        "bahia blanca",
+        "bahía blanca"
+      ]
+    },
+    {
+      "name": "Balcarce",
+      "code": "008",
+      "delegation_code": "009",
+      "aliases": [
+        "balcarce"
+      ]
+    },
+    {
+      "name": "Baradero",
+      "code": "009",
+      "delegation_code": "010",
+      "aliases": [
+        "baradero"
+      ]
+    },
+    {
+      "name": "Benito Juárez",
+      "code": "010",
+      "delegation_code": "012",
+      "aliases": [
+        "benito juarez",
+        "benito juárez",
+        "juarez"
+      ]
+    },
+    {
+      "name": "Berazategui",
+      "code": "011",
+      "delegation_code": "005",
+      "aliases": [
+        "berazategui",
+        "bera"
+      ]
+    },
+    {
+      "name": "Berisso",
+      "code": "012",
+      "delegation_code": "001",
+      "aliases": [
+        "berisso"
+      ]
+    },
+    {
+      "name": "Bolívar",
+      "code": "013",
+      "delegation_code": "013",
+      "aliases": [
+        "bolivar",
+        "bolívar",
+        "san carlos de bolivar"
+      ]
+    },
+    {
+      "name": "Bragado",
+      "code": "014",
+      "delegation_code": "016",
+      "aliases": [
+        "bragado"
+      ]
+    },
+    {
+      "name": "Brandsen",
+      "code": "015",
+      "delegation_code": "001",
+      "aliases": [
+        "brandsen",
+        "coronel brandsen",
+        "cnel brandsen"
+      ]
+    },
+    {
+      "name": "Campana",
+      "code": "016",
+      "delegation_code": "003",
+      "aliases": [
+        "campana"
+      ]
+    },
+    {
+      "name": "Cañuelas",
+      "code": "017",
+      "delegation_code": "005",
+      "aliases": [
+        "cañuelas",
+        "canuelas"
+      ]
+    },
+    {
+      "name": "Capitán Sarmiento",
+      "code": "018",
+      "delegation_code": "011",
+      "aliases": [
+        "capitan sarmiento",
+        "capitán sarmiento"
+      ]
+    },
+    {
+      "name": "Carlos Casares",
+      "code": "019",
+      "delegation_code": "016",
+      "aliases": [
+        "carlos casares",
+        "casares"
+      ]
+    },
+    {
+      "name": "Carlos Tejedor",
+      "code": "020",
+      "delegation_code": "017",
+      "aliases": [
+        "carlos tejedor",
+        "tejedor"
+      ]
+    },
+    {
+      "name": "Carmen de Areco",
+      "code": "021",
+      "delegation_code": "008",
+      "aliases": [
+        "carmen de areco"
+      ]
+    },
+    {
+      "name": "Castelli",
+      "code": "022",
+      "delegation_code": "009",
+      "aliases": [
+        "castelli"
+      ]
+    },
+    {
+      "name": "Chacabuco",
+      "code": "023",
+      "delegation_code": "014",
+      "aliases": [
+        "chacabuco"
+      ]
+    },
+    {
+      "name": "Chascomús",
+      "code": "024",
+      "delegation_code": "009",
+      "aliases": [
+        "chascomus",
+        "chascomús"
+      ]
+    },
+    {
+      "name": "Chivilcoy",
+      "code": "025",
+      "delegation_code": "008",
+      "aliases": [
+        "chivilcoy"
+      ]
+    },
+    {
+      "name": "Colón",
+      "code": "026",
+      "delegation_code": "011",
+      "aliases": [
+        "colon",
+        "colón"
+      ]
+    },
+    {
+      "name": "Coronel Dorrego",
+      "code": "027",
+      "delegation_code": "007",
+      "aliases": [
+        "coronel dorrego",
+        "cnel dorrego"
+      ]
+    },
+    {
+      "name": "Coronel Pringles",
+      "code": "028",
+      "delegation_code": "007",
+      "aliases": [
+        "coronel pringles",
+        "cnel pringles"
+      ]
+    },
+    {
+      "name": "Coronel Rosales",
+      "code": "029",
+      "delegation_code": "007",
+      "aliases": [
+        "coronel rosales",
+        "cnel rosales",
+        "punta alta"
+      ]
+    },
+    {
+      "name": "Coronel Suárez",
+      "code": "030",
+      "delegation_code": "007",
+      "aliases": [
+        "coronel suarez",
+        "coronel suárez",
+        "cnel suarez"
+      ]
+    },
+    {
+      "name": "Daireaux",
+      "code": "031",
+      "delegation_code": "017",
+      "aliases": [
+        "daireaux"
+      ]
+    },
+    {
+      "name": "Dolores",
+      "code": "032",
+      "delegation_code": "009",
+      "aliases": [
+        "dolores"
+      ]
+    },
+    {
+      "name": "Ensenada",
+      "code": "033",
+      "delegation_code": "001",
+      "aliases": [
+        "ensenada"
+      ]
+    },
+    {
+      "name": "Escobar",
+      "code": "034",
+      "delegation_code": "003",
+      "aliases": [
+        "escobar",
+        "belen de escobar",
+        "garin"
+      ]
+    },
+    {
+      "name": "Esteban Echeverría",
+      "code": "035",
+      "delegation_code": "005",
+      "aliases": [
+        "esteban echeverria",
+        "esteban echeverría",
+        "monte grande",
+        "canning"
+      ]
+    },
+    {
+      "name": "Exaltación de la Cruz",
+      "code": "036",
+      "delegation_code": "003",
+      "aliases": [
+        "exaltacion de la cruz",
+        "exaltación de la cruz",
+        "capilla del señor"
+      ]
+    },
+    {
+      "name": "Ezeiza",
+      "code": "037",
+      "delegation_code": "005",
+      "aliases": [
+        "ezeiza",
+        "tristan suarez"
+      ]
+    },
+    {
+      "name": "Florencio Varela",
+      "code": "038",
+      "delegation_code": "005",
+      "aliases": [
+        "florencio varela",
+        "varela"
+      ]
+    },
+    {
+      "name": "Florentino Ameghino",
+      "code": "128",
+      "delegation_code": "014",
+      "aliases": [
+        "florentino ameghino",
+        "ameghino"
+      ]
+    },
+    {
+      "name": "General Alvarado",
+      "code": "040",
+      "delegation_code": "009",
+      "aliases": [
+        "general alvarado",
+        "gral alvarado",
+        "miramar"
+      ]
+    },
+    {
+      "name": "General Alvear",
+      "code": "041",
+      "delegation_code": "013",
+      "aliases": [
+        "general alvear",
+        "gral alvear"
+      ]
+    },
+    {
+      "name": "General Arenales",
+      "code": "042",
+      "delegation_code": "014",
+      "aliases": [
+        "general arenales",
+        "gral arenales"
+      ]
+    },
+    {
+      "name": "General Belgrano",
+      "code": "043",
+      "delegation_code": "009",
+      "aliases": [
+        "general belgrano",
+        "gral belgrano"
+      ]
+    },
+    {
+      "name": "General Guido",
+      "code": "044",
+      "delegation_code": "009",
+      "aliases": [
+        "general guido",
+        "gral guido"
+      ]
+    },
+    {
+      "name": "General La Madrid",
+      "code": "046",
+      "delegation_code": "013",
+      "aliases": [
+        "general la madrid",
+        "gral la madrid",
+        "general lamadrid"
+      ]
+    },
+    {
+      "name": "General Las Heras",
+      "code": "047",
+      "delegation_code": "002",
+      "aliases": [
+        "general las heras",
+        "gral las heras",
+        "las heras"
+      ]
+    },
+    {
+      "name": "General Lavalle",
+      "code": "048",
+      "delegation_code": "009",
+      "aliases": [
+        "general lavalle",
+        "gral lavalle"
+      ]
+    },
+    {
+      "name": "General Madariaga",
+      "code": "049",
+      "delegation_code": "009",
+      "aliases": [
+        "general madariaga",
+        "gral madariaga",
+        "general juan madariaga"
+      ]
+    },
+    {
+      "name": "General Paz",
+      "code": "050",
+      "delegation_code": "009",
+      "aliases": [
+        "general paz",
+        "gral paz",
+        "ranchos"
+      ]
+    },
+    {
+      "name": "General Pinto",
+      "code": "051",
+      "delegation_code": "014",
+      "aliases": [
+        "general pinto",
+        "gral pinto"
+      ]
+    },
+    {
+      "name": "General Pueyrredón",
+      "code": "045",
+      "delegation_code": "009",
+      "aliases": [
+        "general pueyrredon",
+        "gral pueyrredon",
+        "mar del plata",
+        "mdq"
+      ]
+    },
+    {
+      "name": "General Rodríguez",
+      "code": "052",
+      "delegation_code": "008",
+      "aliases": [
+        "general rodriguez",
+        "gral rodriguez",
+        "general rodríguez"
+      ]
+    },
+    {
+      "name": "General San Martín",
+      "code": "053",
+      "delegation_code": "003",
+      "aliases": [
+        "general san martin",
+        "gral san martin",
+        "san martin",
+        "san martín",
+        "villa ballester"
+      ]
+    },
+    {
+      "name": "General Viamonte",
+      "code": "054",
+      "delegation_code": "014",
+      "aliases": [
+        "general viamonte",
+        "gral viamonte",
+        "los toldos"
+      ]
+    },
+    {
+      "name": "General Villegas",
+      "code": "056",
+      "delegation_code": "017",
+      "aliases": [
+        "general villegas",
+        "gral villegas"
+      ]
+    },
+    {
+      "name": "Guaminí",
+      "code": "057",
+      "delegation_code": "017",
+      "aliases": [
+        "guamini",
+        "guaminí"
+      ]
+    },
+    {
+      "name": "Hipólito Yrigoyen",
+      "code": "058",
+      "delegation_code": "016",
+      "aliases": [
+        "hipolito yrigoyen",
+        "hipólito yrigoyen",
+        "henderson"
+      ]
+    },
+    {
+      "name": "Hurlingham",
+      "code": "133",
+      "delegation_code": "002",
+      "aliases": [
+        "hurlingham",
+        "villa tesei",
+        "william morris"
+      ]
+    },
+    {
+      "name": "Ituzaingó",
+      "code": "134",
+      "delegation_code": "002",
+      "aliases": [
+        "ituzaingo",
+        "ituzaingó",
+        "parque leloir"
+      ]
+    },
+    {
+      "name": "José C. Paz",
+      "code": "131",
+      "delegation_code": "002",
+      "aliases": [
+        "jose c paz",
+        "josé c paz",
+        "jose c. paz"
+      ]
+    },
+    {
+      "name": "Junín",
+      "code": "059",
+      "delegation_code": "014",
+      "aliases": [
+        "junin",
+        "junín"
+      ]
+    },
+    {
+      "name": "La Costa",
+      "code": "123",
+      "delegation_code": "009",
+      "aliases": [
+        "la costa",
+        "partido de la costa",
+        "mar del tuyu",
+        "mar del tuyú",
+        "san clemente",
+        "santa teresita",
+        "mar de ajo",
+        "san bernardo"
+      ]
+    },
+    {
+      "name": "La Matanza",
+      "code": "060",
+      "delegation_code": "002",
+      "aliases": [
+        "la matanza",
+        "san justo",
+        "ramos mejia",
+        "gonzalez catan",
+        "isidro casanova"
+      ]
+    },
+    {
+      "name": "La Plata",
+      "code": "055",
+      "delegation_code": "001",
+      "aliases": [
+        "la plata",
+        "laplata",
+        "city bell",
+        "los hornos",
+        "villa elisa",
+        "tolosa"
+      ]
+    },
+    {
+      "name": "Lanús",
+      "code": "061",
+      "delegation_code": "005",
+      "aliases": [
+        "lanus",
+        "lanús",
+        "remedios de escalada",
+        "gerli"
+      ]
+    },
+    {
+      "name": "Laprida",
+      "code": "062",
+      "delegation_code": "013",
+      "aliases": [
+        "laprida"
+      ]
+    },
+    {
+      "name": "Las Flores",
+      "code": "063",
+      "delegation_code": "013",
+      "aliases": [
+        "las flores"
+      ]
+    },
+    {
+      "name": "Leandro N. Alem",
+      "code": "064",
+      "delegation_code": "014",
+      "aliases": [
+        "leandro n alem",
+        "leandro alem",
+        "alem",
+        "vedia"
+      ]
+    },
+    {
+      "name": "Lezama",
+      "code": "135",
+      "delegation_code": "009",
+      "aliases": [
+        "lezama"
+      ]
+    },
+    {
+      "name": "Lincoln",
+      "code": "065",
+      "delegation_code": "014",
+      "aliases": [
+        "lincoln"
+      ]
+    },
+    {
+      "name": "Lobería",
+      "code": "066",
+      "delegation_code": "015",
+      "aliases": [
+        "loberia",
+        "lobería"
+      ]
+    },
+    {
+      "name": "Lobos",
+      "code": "067",
+      "delegation_code": "005",
+      "aliases": [
+        "lobos"
+      ]
+    },
+    {
+      "name": "Lomas de Zamora",
+      "code": "068",
+      "delegation_code": "005",
+      "aliases": [
+        "lomas de zamora",
+        "lomas",
+        "banfield",
+        "temperley"
+      ]
+    },
+    {
+      "name": "Luján",
+      "code": "069",
+      "delegation_code": "008",
+      "aliases": [
+        "lujan",
+        "luján"
+      ]
+    },
+    {
+      "name": "Magdalena",
+      "code": "070",
+      "delegation_code": "001",
+      "aliases": [
+        "magdalena"
+      ]
+    },
+    {
+      "name": "Maipú",
+      "code": "071",
+      "delegation_code": "009",
+      "aliases": [
+        "maipu",
+        "maipú"
+      ]
+    },
+    {
+      "name": "Malvinas Argentinas",
+      "code": "132",
+      "delegation_code": "002",
+      "aliases": [
+        "malvinas argentinas",
+        "los polvorines",
+        "grand bourg",
+        "tortuguitas"
+      ]
+    },
+    {
+      "name": "Mar Chiquita",
+      "code": "072",
+      "delegation_code": "009",
+      "aliases": [
+        "mar chiquita",
+        "coronel vidal",
+        "santa clara del mar"
+      ]
+    },
+    {
+      "name": "Marcos Paz",
+      "code": "073",
+      "delegation_code": "002",
+      "aliases": [
+        "marcos paz"
+      ]
+    },
+    {
+      "name": "Mercedes",
+      "code": "074",
+      "delegation_code": "008",
+      "aliases": [
+        "mercedes"
+      ]
+    },
+    {
+      "name": "Merlo",
+      "code": "075",
+      "delegation_code": "002",
+      "aliases": [
+        "merlo",
+        "san antonio de padua",
+        "libertad",
+        "mariano acosta"
+      ]
+    },
+    {
+      "name": "Monte",
+      "code": "076",
+      "delegation_code": "001",
+      "aliases": [
+        "monte",
+        "san miguel del monte"
+      ]
+    },
+    {
+      "name": "Monte Hermoso",
+      "code": "126",
+      "delegation_code": "007",
+      "aliases": [
+        "monte hermoso",
+        "m. hermoso"
+      ]
+    },
+    {
+      "name": "Moreno",
+      "code": "078",
+      "delegation_code": "002",
+      "aliases": [
+        "moreno",
+        "paso del rey",
+        "trujui"
+      ]
+    },
+    {
+      "name": "Morón",
+      "code": "101",
+      "delegation_code": "002",
+      "aliases": [
+        "moron",
+        "morón",
+        "castelar",
+        "haedo",
+        "el palomar"
+      ]
+    },
+    {
+      "name": "Navarro",
+      "code": "079",
+      "delegation_code": "002",
+      "aliases": [
+        "navarro"
+      ]
+    },
+    {
+      "name": "Necochea",
+      "code": "080",
+      "delegation_code": "015",
+      "aliases": [
+        "necochea",
+        "quequen",
+        "quequén"
+      ]
+    },
+    {
+      "name": "Nueve de Julio",
+      "code": "081",
+      "delegation_code": "016",
+      "aliases": [
+        "nueve de julio",
+        "9 de julio"
+      ]
+    },
+    {
+      "name": "Olavarría",
+      "code": "082",
+      "delegation_code": "013",
+      "aliases": [
+        "olavarria",
+        "olavarría"
+      ]
+    },
+    {
+      "name": "Patagones",
+      "code": "083",
+      "delegation_code": "007",
+      "aliases": [
+        "patagones",
+        "carmen de patagones"
+      ]
+    },
+    {
+      "name": "Pehuajó",
+      "code": "084",
+      "delegation_code": "016",
+      "aliases": [
+        "pehuajo",
+        "pehuajó"
+      ]
+    },
+    {
+      "name": "Pellegrini",
+      "code": "085",
+      "delegation_code": "017",
+      "aliases": [
+        "pellegrini"
+      ]
+    },
+    {
+      "name": "Pergamino",
+      "code": "086",
+      "delegation_code": "011",
+      "aliases": [
+        "pergamino"
+      ]
+    },
+    {
+      "name": "Pila",
+      "code": "087",
+      "delegation_code": "009",
+      "aliases": [
+        "pila"
+      ]
+    },
+    {
+      "name": "Pilar",
+      "code": "088",
+      "delegation_code": "003",
+      "aliases": [
+        "pilar",
+        "del viso",
+        "derqui",
+        "villa rosa"
+      ]
+    },
+    {
+      "name": "Pinamar",
+      "code": "124",
+      "delegation_code": "009",
+      "aliases": [
+        "pinamar",
+        "ostende",
+        "valeria del mar",
+        "carilo",
+        "cariló"
+      ]
+    },
+    {
+      "name": "Presidente Perón",
+      "code": "129",
+      "delegation_code": "005",
+      "aliases": [
+        "presidente peron",
+        "presidente perón",
+        "guernica"
+      ]
+    },
+    {
+      "name": "Puan",
+      "code": "089",
+      "delegation_code": "007",
+      "aliases": [
+        "puan",
+        "puán"
+      ]
+    },
+    {
+      "name": "Punta Indio",
+      "code": "127",
+      "delegation_code": "001",
+      "aliases": [
+        "punta indio",
+        "veronica",
+        "verónica"
+      ]
+    },
+    {
+      "name": "Quilmes",
+      "code": "090",
+      "delegation_code": "005",
+      "aliases": [
+        "quilmes",
+        "bernal",
+        "solano",
+        "ezpeleta",
+        "don bosco"
+      ]
+    },
+    {
+      "name": "Ramallo",
+      "code": "091",
+      "delegation_code": "010",
+      "aliases": [
+        "ramallo"
+      ]
+    },
+    {
+      "name": "Rauch",
+      "code": "092",
+      "delegation_code": "012",
+      "aliases": [
+        "rauch"
+      ]
+    },
+    {
+      "name": "Rivadavia",
+      "code": "093",
+      "delegation_code": "017",
+      "aliases": [
+        "rivadavia",
+        "america",
+        "américa"
+      ]
+    },
+    {
+      "name": "Rojas",
+      "code": "094",
+      "delegation_code": "014",
+      "aliases": [
+        "rojas"
+      ]
+    },
+    {
+      "name": "Roque Pérez",
+      "code": "095",
+      "delegation_code": "001",
+      "aliases": [
+        "roque perez",
+        "roque pérez"
+      ]
+    },
+    {
+      "name": "Saavedra",
+      "code": "096",
+      "delegation_code": "007",
+      "aliases": [
+        "saavedra",
+        "pigue",
+        "pigüé",
+        "pigüe"
+      ]
+    },
+    {
+      "name": "Saladillo",
+      "code": "097",
+      "delegation_code": "016",
+      "aliases": [
+        "saladillo"
+      ]
+    },
+    {
+      "name": "Salliqueló",
+      "code": "122",
+      "delegation_code": "017",
+      "aliases": [
+        "salliquelo",
+        "salliqueló"
+      ]
+    },
+    {
+      "name": "Salto",
+      "code": "098",
+      "delegation_code": "011",
+      "aliases": [
+        "salto"
+      ]
+    },
+    {
+      "name": "San Andrés de Giles",
+      "code": "099",
+      "delegation_code": "008",
+      "aliases": [
+        "san andres de giles",
+        "san andrés de giles",
+        "giles"
+      ]
+    },
+    {
+      "name": "San Antonio de Areco",
+      "code": "100",
+      "delegation_code": "008",
+      "aliases": [
+        "san antonio de areco",
+        "areco"
+      ]
+    },
+    {
+      "name": "San Cayetano",
+      "code": "115",
+      "delegation_code": "015",
+      "aliases": [
+        "san cayetano"
+      ]
+    },
+    {
+      "name": "San Fernando",
+      "code": "102",
+      "delegation_code": "004",
+      "aliases": [
+        "san fernando",
+        "victoria",
+        "virreyes"
+      ]
+    },
+    {
+      "name": "San Isidro",
+      "code": "103",
+      "delegation_code": "004",
+      "aliases": [
+        "san isidro",
+        "s. isidro",
+        "martinez",
+        "martínez",
+        "boulogne",
+        "beccar",
+        "béccar",
+        "acassuso"
+      ]
+    },
+    {
+      "name": "San Miguel",
+      "code": "131",
+      "delegation_code": "002",
+      "aliases": [
+        "san miguel",
+        "bella vista",
+        "muñiz"
+      ]
+    },
+    {
+      "name": "San Nicolás",
+      "code": "104",
+      "delegation_code": "010",
+      "aliases": [
+        "san nicolas",
+        "san nicolás",
+        "san nicolas de los arroyos"
+      ]
+    },
+    {
+      "name": "San Pedro",
+      "code": "105",
+      "delegation_code": "010",
+      "aliases": [
+        "san pedro"
+      ]
+    },
+    {
+      "name": "San Vicente",
+      "code": "106",
+      "delegation_code": "005",
+      "aliases": [
+        "san vicente",
+        "alejandro korn",
+        "domselaar"
+      ]
+    },
+    {
+      "name": "Suipacha",
+      "code": "107",
+      "delegation_code": "008",
+      "aliases": [
+        "suipacha"
+      ]
+    },
+    {
+      "name": "Tandil",
+      "code": "108",
+      "delegation_code": "012",
+      "aliases": [
+        "tandil"
+      ]
+    },
+    {
+      "name": "Tapalqué",
+      "code": "109",
+      "delegation_code": "013",
+      "aliases": [
+        "tapalque",
+        "tapalqué"
+      ]
+    },
+    {
+      "name": "Tigre",
+      "code": "110",
+      "delegation_code": "004",
+      "aliases": [
+        "tigre",
+        "don torcuato",
+        "general pacheco",
+        "gral pacheco",
+        "benavidez",
+        "nordelta"
+      ]
+    },
+    {
+      "name": "Tordillo",
+      "code": "111",
+      "delegation_code": "009",
+      "aliases": [
+        "tordillo",
+        "general conesa"
+      ]
+    },
+    {
+      "name": "Tornquist",
+      "code": "112",
+      "delegation_code": "007",
+      "aliases": [
+        "tornquist",
+        "sierra de la ventana",
+        "villa ventana"
+      ]
+    },
+    {
+      "name": "Trenque Lauquen",
+      "code": "113",
+      "delegation_code": "017",
+      "aliases": [
+        "trenque lauquen",
+        "trenque lauquén",
+        "30 de agosto"
+      ]
+    },
+    {
+      "name": "Tres Arroyos",
+      "code": "114",
+      "delegation_code": "007",
+      "aliases": [
+        "tres arroyos",
+        "claromeco",
+        "claromecó",
+        "orence"
+      ]
+    },
+    {
+      "name": "Tres de Febrero",
+      "code": "117",
+      "delegation_code": "003",
+      "aliases": [
+        "tres de febrero",
+        "3 de febrero",
+        "caseros",
+        "ciudadela",
+        "santos lugares",
+        "martin coronado"
+      ]
+    },
+    {
+      "name": "Tres Lomas",
+      "code": "125",
+      "delegation_code": "017",
+      "aliases": [
+        "tres lomas"
+      ]
+    },
+    {
+      "name": "Veinticinco de Mayo",
+      "code": "118",
+      "delegation_code": "016",
+      "aliases": [
+        "veinticinco de mayo",
+        "25 de mayo"
+      ]
+    },
+    {
+      "name": "Vicente López",
+      "code": "119",
+      "delegation_code": "004",
+      "aliases": [
+        "vicente lopez",
+        "vicente lópez",
+        "vte lopez",
+        "olivos",
+        "florida",
+        "munro",
+        "villa martelli"
+      ]
+    },
+    {
+      "name": "Villa Gesell",
+      "code": "121",
+      "delegation_code": "009",
+      "aliases": [
+        "villa gesell",
+        "gesell",
+        "mar de las pampas",
+        "mar azul"
+      ]
+    },
+    {
+      "name": "Villarino",
+      "code": "116",
+      "delegation_code": "007",
+      "aliases": [
+        "villarino",
+        "medanos",
+        "pedro luro"
+      ]
+    },
+    {
+      "name": "Zárate",
+      "code": "120",
+      "delegation_code": "003",
+      "aliases": [
+        "zarate",
+        "zárate",
+        "lima"
+      ]
+    }
+  ]
+}

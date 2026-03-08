@@ -145,6 +145,8 @@ interface InmuebleTemplate {
     ubicacion_calle: string;
     ubicacion_localidad: string;
     ubicacion_partido: string;
+    partido_code: string;
+    delegacion_code: string;
     ubicacion_provincia: string;
     linderos_norte: string;
     linderos_sur: string;
@@ -562,6 +564,8 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
             ubicacion_calle: inmueble?.nomenclatura || EMPTY,
             ubicacion_localidad: inmueble?.partido_id || EMPTY,
             ubicacion_partido: inmueble?.partido_id || EMPTY,
+            partido_code: (inmueble as any)?.partido_code || EMPTY,
+            delegacion_code: (inmueble as any)?.delegacion_code || EMPTY,
             ubicacion_provincia: "Buenos Aires",
             linderos_norte: EMPTY,
             linderos_sur: EMPTY,
