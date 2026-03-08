@@ -7,7 +7,7 @@
 CREATE TABLE IF NOT EXISTS presupuestos (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   carpeta_id    UUID NOT NULL REFERENCES carpetas(id) ON DELETE CASCADE,
-  org_id        UUID NOT NULL REFERENCES organizations(id),
+  org_id        UUID NOT NULL REFERENCES organizaciones(id),
   version       INT NOT NULL DEFAULT 1,
 
   -- Metadata del cálculo
@@ -79,7 +79,7 @@ ALTER TABLE presupuesto_lineas ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "presupuestos_org_access" ON presupuestos
   FOR ALL USING (
     org_id IN (
-      SELECT org_id FROM user_profiles WHERE user_id = auth.uid()
+      SELECT ou.org_id FROM organizaciones_users ou WHERE ou.user_id = auth.uid()
     )
   );
 
@@ -87,7 +87,7 @@ CREATE POLICY "presupuesto_lineas_access" ON presupuesto_lineas
   FOR ALL USING (
     presupuesto_id IN (
       SELECT id FROM presupuestos
-      WHERE org_id IN (SELECT org_id FROM user_profiles WHERE user_id = auth.uid())
+      WHERE org_id IN (SELECT ou.org_id FROM organizaciones_users ou WHERE ou.user_id = auth.uid())
     )
   );
 
