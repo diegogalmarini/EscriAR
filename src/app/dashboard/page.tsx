@@ -72,9 +72,9 @@ export default async function DashboardPage() {
                         <CardContent className="space-y-4">
                             <div className="space-y-1.5">
                                 {carpetas?.slice(0, 3).map((c: any) => {
-                                    const isFilename = c.caratula?.toLowerCase().endsWith('.pdf') || c.caratula?.toLowerCase().endsWith('.docx');
-                                    const displayTitle = isFilename ? `Expediente #${c.nro_carpeta_interna}` : (c.caratula || `Carpeta #${c.nro_carpeta_interna}`);
-                                    const displaySubtitle = isFilename ? c.caratula : `Expediente #${c.nro_carpeta_interna}`;
+                                    const isFilename = c.title?.toLowerCase().endsWith('.pdf') || c.title?.toLowerCase().endsWith('.docx');
+                                    const displayTitle = isFilename ? `Expediente #${c.number}` : (c.title || `Carpeta #${c.number}`);
+                                    const displaySubtitle = isFilename ? c.title : `Expediente #${c.number}`;
 
                                     return (
                                         <Link

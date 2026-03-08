@@ -1,125 +1,156 @@
 "use server";
 
 import { createClient } from "@/lib/supabaseServer";
-import { getUserOrgId } from "@/lib/auth/getOrg";
 
 export interface PendingAlert {
-    key: string;
-    label: string;
-    count: number;
+    id: string;
     severity: "critical" | "warning" | "info";
-    carpetaIds: string[];
+    message: string;
+    count: number;
+    carpetas: { id: string; label: string }[];
 }
 
-export interface PendingActionsSummary {
+export interface PendingSummary {
     total: number;
     alerts: PendingAlert[];
 }
 
-/**
- * Returns a summary of items that need the notary's attention across all carpetas.
- * Single round-trip, no heavy joins.
- */
-export async function getPendingActionsSummary(): Promise<PendingActionsSummary> {
-    const orgId = await getUserOrgId();
-    if (!orgId) return { total: 0, alerts: [] };
-
+export async function getPendingActionsSummary(): Promise<PendingSummary> {
     const supabase = await createClient();
     const alerts: PendingAlert[] = [];
-    const now = new Date();
-    const soon = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // +3 days
 
-    // 1. Sugerencias pendientes (PROPOSED)
-    const { data: sugRows } = await supabase
+    // 1. Sugerencias PROPOSED sin decidir
+    const { data: sugerencias } = await supabase
         .from("sugerencias")
-        .select("carpeta_id")
-        .eq("estado", "PROPOSED")
-        .limit(100);
+        .select("id, carpeta_id, carpetas(id, caratula, nro_carpeta_interna)")
+        .eq("estado", "PROPOSED");
 
-    if (sugRows && sugRows.length > 0) {
-        const uniqueCarpetas = [...new Set(sugRows.map((r) => r.carpeta_id))];
+    if (sugerencias && sugerencias.length > 0) {
+        const carpetaMap = new Map<string, { id: string; label: string }>();
+        for (const s of sugerencias) {
+            const c = s.carpetas as any;
+            if (c?.id && !carpetaMap.has(c.id)) {
+                carpetaMap.set(c.id, {
+                    id: c.id,
+                    label: c.caratula || `Carpeta #${c.nro_carpeta_interna}`,
+                });
+            }
+        }
         alerts.push({
-            key: "sugerencias_pendientes",
-            label: "Sugerencias de IA sin revisar",
-            count: sugRows.length,
-            severity: "warning",
-            carpetaIds: uniqueCarpetas.slice(0, 5),
+            id: "sugerencias_pendientes",
+            severity: "info",
+            message: "Sugerencias pendientes de revisión",
+            count: sugerencias.length,
+            carpetas: Array.from(carpetaMap.values()),
         });
     }
 
     // 2. Certificados vencidos
-    const { data: vencidos } = await supabase
+    const { data: certVencidos } = await supabase
         .from("certificados")
-        .select("carpeta_id, fecha_vencimiento")
-        .lt("fecha_vencimiento", now.toISOString().split("T")[0])
-        .eq("estado", "RECIBIDO")
-        .limit(100);
+        .select("id, carpeta_id, carpetas(id, caratula, nro_carpeta_interna)")
+        .eq("estado", "VENCIDO");
 
-    if (vencidos && vencidos.length > 0) {
-        const uniqueCarpetas = [...new Set(vencidos.map((r) => r.carpeta_id))];
+    if (certVencidos && certVencidos.length > 0) {
+        const carpetaMap = new Map<string, { id: string; label: string }>();
+        for (const c of certVencidos) {
+            const carp = c.carpetas as any;
+            if (carp?.id && !carpetaMap.has(carp.id)) {
+                carpetaMap.set(carp.id, {
+                    id: carp.id,
+                    label: carp.caratula || `Carpeta #${carp.nro_carpeta_interna}`,
+                });
+            }
+        }
         alerts.push({
-            key: "certs_vencidos",
-            label: "Certificados vencidos",
-            count: vencidos.length,
+            id: "cert_vencidos",
             severity: "critical",
-            carpetaIds: uniqueCarpetas.slice(0, 5),
+            message: "Certificados vencidos",
+            count: certVencidos.length,
+            carpetas: Array.from(carpetaMap.values()),
         });
     }
 
-    // 3. Certificados por vencer (próximos 3 días)
-    const { data: porVencer } = await supabase
+    // 3. Certificados por vencer (≤3 días)
+    const inThreeDays = new Date();
+    inThreeDays.setDate(inThreeDays.getDate() + 3);
+    const { data: certPorVencer } = await supabase
         .from("certificados")
-        .select("carpeta_id, fecha_vencimiento")
-        .gte("fecha_vencimiento", now.toISOString().split("T")[0])
-        .lte("fecha_vencimiento", soon.toISOString().split("T")[0])
+        .select("id, carpeta_id, carpetas(id, caratula, nro_carpeta_interna)")
         .eq("estado", "RECIBIDO")
-        .limit(100);
+        .lte("fecha_vencimiento", inThreeDays.toISOString().split("T")[0])
+        .gte("fecha_vencimiento", new Date().toISOString().split("T")[0]);
 
-    if (porVencer && porVencer.length > 0) {
-        const uniqueCarpetas = [...new Set(porVencer.map((r) => r.carpeta_id))];
+    if (certPorVencer && certPorVencer.length > 0) {
+        const carpetaMap = new Map<string, { id: string; label: string }>();
+        for (const c of certPorVencer) {
+            const carp = c.carpetas as any;
+            if (carp?.id && !carpetaMap.has(carp.id)) {
+                carpetaMap.set(carp.id, {
+                    id: carp.id,
+                    label: carp.caratula || `Carpeta #${carp.nro_carpeta_interna}`,
+                });
+            }
+        }
         alerts.push({
-            key: "certs_por_vencer",
-            label: "Certificados por vencer (3 días)",
-            count: porVencer.length,
+            id: "cert_por_vencer",
             severity: "warning",
-            carpetaIds: uniqueCarpetas.slice(0, 5),
+            message: "Certificados por vencer",
+            count: certPorVencer.length,
+            carpetas: Array.from(carpetaMap.values()),
         });
     }
 
-    // 4. Certificados sin confirmar extracción
-    const { data: sinConfirmar } = await supabase
+    // 4. Certificados sin confirmar (extracción completada, no confirmada)
+    const { data: certSinConfirmar } = await supabase
         .from("certificados")
-        .select("carpeta_id")
+        .select("id, carpeta_id, carpetas(id, caratula, nro_carpeta_interna)")
         .eq("extraction_status", "COMPLETADO")
-        .is("confirmed_at", null)
-        .limit(100);
+        .is("confirmed_at", null);
 
-    if (sinConfirmar && sinConfirmar.length > 0) {
-        const uniqueCarpetas = [...new Set(sinConfirmar.map((r) => r.carpeta_id))];
+    if (certSinConfirmar && certSinConfirmar.length > 0) {
+        const carpetaMap = new Map<string, { id: string; label: string }>();
+        for (const c of certSinConfirmar) {
+            const carp = c.carpetas as any;
+            if (carp?.id && !carpetaMap.has(carp.id)) {
+                carpetaMap.set(carp.id, {
+                    id: carp.id,
+                    label: carp.caratula || `Carpeta #${carp.nro_carpeta_interna}`,
+                });
+            }
+        }
         alerts.push({
-            key: "certs_sin_confirmar",
-            label: "Extracciones IA sin confirmar",
-            count: sinConfirmar.length,
+            id: "cert_sin_confirmar",
             severity: "info",
-            carpetaIds: uniqueCarpetas.slice(0, 5),
+            message: "Certificados extraídos sin confirmar",
+            count: certSinConfirmar.length,
+            carpetas: Array.from(carpetaMap.values()),
         });
     }
 
-    // 5. Actuaciones en DRAFT sin documento generado
-    const { data: drafts } = await supabase
+    // 5. Actuaciones DRAFT pendientes de generar
+    const { data: actuacionesDraft } = await supabase
         .from("actuaciones")
-        .select("carpeta_id")
-        .eq("status", "DRAFT")
-        .limit(100);
+        .select("id, carpeta_id, carpetas(id, caratula, nro_carpeta_interna)")
+        .eq("status", "DRAFT");
 
-    if (drafts && drafts.length > 0) {
-        const uniqueCarpetas = [...new Set(drafts.map((r) => r.carpeta_id))];
+    if (actuacionesDraft && actuacionesDraft.length > 0) {
+        const carpetaMap = new Map<string, { id: string; label: string }>();
+        for (const a of actuacionesDraft) {
+            const carp = a.carpetas as any;
+            if (carp?.id && !carpetaMap.has(carp.id)) {
+                carpetaMap.set(carp.id, {
+                    id: carp.id,
+                    label: carp.caratula || `Carpeta #${carp.nro_carpeta_interna}`,
+                });
+            }
+        }
         alerts.push({
-            key: "actuaciones_draft",
-            label: "Actuaciones pendientes de generar",
-            count: drafts.length,
+            id: "actuaciones_draft",
             severity: "info",
-            carpetaIds: uniqueCarpetas.slice(0, 5),
+            message: "Actuaciones pendientes de generar",
+            count: actuacionesDraft.length,
+            carpetas: Array.from(carpetaMap.values()),
         });
     }
 
