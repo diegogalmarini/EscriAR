@@ -386,10 +386,10 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                 <TabsList>
                     <TabsTrigger value="apuntes">Apuntes</TabsTrigger>
                     <TabsTrigger value="mesa-trabajo">Mesa de Trabajo</TabsTrigger>
+                    <TabsTrigger value="presupuesto">Presupuesto</TabsTrigger>
                     <TabsTrigger value="antecedentes">Antecedentes</TabsTrigger>
                     <TabsTrigger value="pre-escritura">Pre-Escriturario</TabsTrigger>
                     <TabsTrigger value="post-escritura">Post-Firma</TabsTrigger>
-                    <TabsTrigger value="presupuesto">Presupuesto</TabsTrigger>
                 </TabsList>
             </CarpetaHero>
 
@@ -406,6 +406,10 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                         activeDeedId={activeDeedId}
                         carpeta={carpeta}
                     />
+                </TabsContent>
+
+                <TabsContent value="presupuesto" className="mt-6">
+                    <PresupuestoTab carpetaId={carpeta.id} currentEscritura={currentEscritura} />
                 </TabsContent>
 
                 <TabsContent value="antecedentes" className="mt-6">
@@ -436,10 +440,6 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                         carpetaEstado={carpeta.estado}
                         isBlockedBySecurity={isBlockedBySecurity}
                     />
-                </TabsContent>
-
-                <TabsContent value="presupuesto" className="mt-6">
-                    <PresupuestoTab carpetaId={carpeta.id} currentEscritura={currentEscritura} />
                 </TabsContent>
             </Tabs>
 
