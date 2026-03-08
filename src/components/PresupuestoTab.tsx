@@ -93,6 +93,7 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
   const [cotUsd, setCotUsd] = useState("1200");
   const [vf, setVf] = useState(inmueble?.valuacion_fiscal?.toString() || "");
   const [tipoInmueble, setTipoInmueble] = useState<"EDIFICADO" | "BALDIO" | "RURAL">("EDIFICADO");
+  const [jurisdiccion, setJurisdiccion] = useState<"PBA" | "CABA">("PBA");
   const [esVU, setEsVU] = useState(false);
   const [esBcoProv, setEsBcoProv] = useState(false);
   const [fechaAdq, setFechaAdq] = useState("");
@@ -120,6 +121,7 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
     cotizacion_usd: moneda === "USD" ? parseFloat(cotUsd) || 1200 : undefined,
     valuacion_fiscal: parseFloat(vf) || 0,
     tipo_inmueble: tipoInmueble,
+    jurisdiccion,
     es_vivienda_unica: esVU,
     es_banco_provincia: esBcoProv,
     fecha_adquisicion_vendedor: fechaAdq || undefined,
@@ -266,6 +268,18 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
                   <SelectItem value="EDIFICADO">Edificado</SelectItem>
                   <SelectItem value="BALDIO">Baldío</SelectItem>
                   <SelectItem value="RURAL">Rural</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Jurisdicción */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">Jurisdicción</Label>
+              <Select value={jurisdiccion} onValueChange={(v: "PBA" | "CABA") => setJurisdiccion(v)}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PBA">Prov. Buenos Aires</SelectItem>
+                  <SelectItem value="CABA">CABA</SelectItem>
                 </SelectContent>
               </Select>
             </div>

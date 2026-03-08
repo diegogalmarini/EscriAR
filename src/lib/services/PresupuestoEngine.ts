@@ -80,6 +80,7 @@ export interface PresupuestoInput {
   cantidad_personas?: number;
 
   // Jurisdicción
+  jurisdiccion?: "PBA" | "CABA";
   partido?: string;
 
   // Honorarios
@@ -134,8 +135,67 @@ export function calcularPresupuesto(input: PresupuestoInput): PresupuestoResult 
     alertas.push(`No se encontró código CESBA para ${input.tipo_acto}. Cálculo parcial.`);
   }
 
-  // ─── 2. Impuesto de Sellos (PBA) ───
+  // ─── 2. Impuesto de Sellos ───
   const calcSellos = () => {
+    if (input.jurisdiccion === "CABA") return calcSellosCaba();
+    calcSellosPba();
+  };
+
+  // ─── 2a. Sellos CABA ───
+  const calcSellosCaba = () => {
+    const conf = (distribucionCostos as any).sellos_caba;
+    if (!conf) { alertas.push("Sin datos de Sellos CABA"); return; }
+
+    const base = baseImponible;
+    let monto = 0;
+    let label = "";
+
+    if (esHipoteca) {
+      // Hipoteca CABA: bancos Ley 21.526 para vivienda = EXENTO
+      if (input.es_banco_provincia) {
+        label = "Sellos CABA — Hipoteca bancaria vivienda (EXENTO)";
+        monto = 0;
+      } else {
+        monto = round2(base * conf.alicuota_general);
+        label = `Sellos CABA (${(conf.alicuota_general * 100).toFixed(1)}%)`;
+      }
+    } else if (input.tipo_acto === "COMPRAVENTA" || input.tipo_acto === "DONACION") {
+      const td = conf.transmision_dominio;
+      if (input.es_vivienda_unica) {
+        const vu = conf.vivienda_unica_caba;
+        if (base <= vu.vf_exencion_tope) {
+          return; // Exento total
+        }
+        monto = round2(base * vu.alicuota_excedente);
+        label = `Sellos CABA VU (${(vu.alicuota_excedente * 100).toFixed(1)}% s/ total — VF > tope)`;
+      } else if (base <= td.tope_alicuota_baja) {
+        monto = round2(base * td.alicuota_hasta_tope);
+        label = `Sellos CABA (${(td.alicuota_hasta_tope * 100).toFixed(1)}%)`;
+      } else {
+        monto = round2(base * td.alicuota_sobre_tope);
+        label = `Sellos CABA (${(td.alicuota_sobre_tope * 100).toFixed(1)}%)`;
+      }
+    } else {
+      monto = round2(base * conf.alicuota_general);
+      label = `Sellos CABA (${(conf.alicuota_general * 100).toFixed(1)}%)`;
+    }
+
+    if (monto > 0) {
+      lineas.push({
+        rubro: "SELLOS_CABA",
+        concepto: label,
+        baseCalculo: base,
+        alicuota: monto / base,
+        monto,
+        pagador: "COMUN",
+        categoria: "IMPUESTO",
+        notas: "50% cada parte",
+      });
+    }
+  };
+
+  // ─── 2b. Sellos PBA ───
+  const calcSellosPba = () => {
     if (!actData) return;
     const rate = actData.tax_variables.stamp_duty_rate;
     if (rate === 0) return;
@@ -457,7 +517,7 @@ export function calcularPresupuesto(input: PresupuestoInput): PresupuestoResult 
       moneda_operacion: input.moneda,
       cotizacion_usd: cotUsd,
       es_vivienda_unica: input.es_vivienda_unica,
-      jurisdiccion: input.partido ?? "No especificada",
+      jurisdiccion: input.jurisdiccion === "CABA" ? "CABA" : (input.partido ?? "PBA"),
       fecha_calculo: new Date().toISOString(),
     },
     alertas,
