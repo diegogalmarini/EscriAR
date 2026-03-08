@@ -1,5 +1,5 @@
 # NotiAR — Carpeta AI-First (Cerebro Híbrido) — Architecture & Implementation Plan
-Fecha: 2026-03-04 (actualizado 2026-03-06)  
+Fecha: 2026-03-04 (actualizado 2026-03-08)
 Owner: Diego  
 Implementador: Agente  
 Scope: Rediseño completo de Carpeta + IA proactiva + Jobs + Seguridad completa (multi-tenant por Organización + RLS)
@@ -34,8 +34,10 @@ Implementar la Carpeta notarial con:
 | ET7.1 — Protocolo Inteligente | ✅ COMPLETADA | — | `publishToProtocolo(carpetaId)`: mapeo determinístico carpeta→protocolo_registros. Trigger auto en FIRMADA (updateFolderStatus + markAsSigned). Botón manual en CarpetaHero. Upsert idempotente by carpeta_id. Pendiente: sync bidireccional. |
 | ET8+ET9 — Header + Auditoría | ✅ COMPLETADA | 050 | `audit_events` table + `logAuditEvent()` + (i) info popover en CarpetaHero + Server Actions instrumentados. |
 | ET10 — Notificaciones/Dashboard | ✅ COMPLETADA | — | Dashboard alerts (pendientes semáforo) + PendingBadge en sidebar + `getPendingActionsSummary()`. |
+| ET12a — Motor Jurisdiccional | ✅ COMPLETADA | 051 | JSON 135 partidos PBA + JurisdictionResolver + integración ingest/worker + campos partido_code/delegacion_code en inmuebles. |
+| ET12b — Admin UI Jurisdicciones | 🔲 PENDIENTE | — | Tab admin para gestión de jurisdicciones, CRUD partidos, toggle provincias. |
 
-Total: **50 migraciones SQL**, **16+ componentes principales**, **11 de 11 etapas completadas**. Todas las etapas del plan original finalizadas.
+Total: **51 migraciones SQL**, **17+ componentes principales**, **12 de 13 etapas completadas**.
 
 ---
 
@@ -327,6 +329,65 @@ Hito ET10:
 - Dashboard muestra resumen real con links a carpetas.
 - Badge de pendientes visible en navegación.
 - `npm run build` OK.
+
+---
+
+### ✅ ETAPA 12a — Motor Jurisdiccional Notarial: datos + resolver (COMPLETADA)
+Objetivo: mapeo determinístico partido→códigos oficiales (RPI/ARBA + delegación CESBA) para minutas, certificados catastrales y boletas.
+
+> **Completada 2026-03-08.** Migración 051 aplicada. JSON con 135 partidos PBA. Seed ejecutado.
+
+#### Patrón "Cerebro Híbrido" aplicado
+- La IA extrae texto libre del partido (ej: "Bahia Blanca", "M. Hermoso").
+- TypeScript resuelve determinísticamente a códigos numéricos exactos.
+- La IA NUNCA memoriza ni calcula códigos.
+
+#### Archivos creados/modificados en ET12a
+
+| Archivo | Tipo | Descripción |
+|---------|------|-------------|
+| `src/data/pba_2026_jurisdictions.json` | **NUEVO** | Mapa de verdad PBA: 135 partidos con `code` (ARBA), `delegation_code` (CESBA), `aliases`. |
+| `src/lib/services/JurisdictionResolver.ts` | **NUEVO** | Resolver determinístico. Patrón TaxonomyService: import estático JSON → singleton → O(1) alias lookup. Métodos: `resolve(text)`, `resolveByCode(code)`, `getAllParties()`. |
+| `worker/src/jurisdictionResolver.ts` | **NUEVO** | Versión standalone para worker Railway (CommonJS). Lee JSON compartido vía `fs.readFileSync`. |
+| `supabase_migrations/051_etapa_12__jurisdicciones.sql` | **NUEVO** | Tabla `jurisdicciones` (GIN index en aliases, RLS por org). Campos `partido_code` + `delegacion_code` en `inmuebles`. |
+| `scripts/seed_jurisdictions.ts` | **NUEVO** | Seed idempotente: JSON → tabla `jurisdicciones` vía Supabase admin. |
+| `src/app/api/ingest/route.ts` | Modificado | Post-extracción: `jurisdictionResolver.resolve(partido)` → guarda códigos en inmueble. |
+| `worker/src/index.ts` | Modificado | Post-extracción escrituras: resuelve códigos en ambos puntos de insert de inmuebles. |
+| `src/lib/templates/buildTemplateContext.ts` | Modificado | `partido_code` y `delegacion_code` disponibles en template context para minutas. |
+
+#### Flujo implementado
+```
+Apunte/PDF ingesta → IA extrae "Bahia Blanca" como partido
+  → normalizePartido() → "Bahia Blanca" (Title Case, sin tildes excepto ñ)
+  → jurisdictionResolver.resolve("Bahia Blanca")
+  → Exact match en aliasMap → { partyCode: "007", delegationCode: "007" }
+  → inmuebles.insert({ partido_id: "Bahia Blanca", partido_code: "007", delegacion_code: "007" })
+  → Template context incluye códigos → minutas RPI generan datos correctos
+```
+
+#### Matching strategy
+1. **Exact match**: input normalizado (lowercase, sin acentos) vs aliases pregenerados.
+2. **Containment match**: si no hay exact, busca el alias más largo contenido en el input (mínimo 4 chars).
+3. **No match**: retorna `null` — el campo queda vacío, el escribano completa manualmente.
+
+Hito ET12a:
+- `jurisdictionResolver.resolve("Bahia Blanca")` → `{ partyCode: "007", ... }` ✅
+- `jurisdictionResolver.resolve("M. Hermoso")` → `{ partyCode: "126", ... }` ✅
+- `jurisdictionResolver.resolve("INVENTADO")` → `null` ✅
+- `npm run build` OK ✅
+
+---
+
+### 🔲 ETAPA 12b — Admin UI para Jurisdicciones (PENDIENTE)
+Objetivo: panel de administración para gestionar jurisdicciones sin tocar código.
+
+Tareas planificadas:
+- [ ] Nueva tab "Jurisdicciones" en `/admin/users` (junto a Escribanos, Usuarios, Conocimiento, Modelos).
+- [ ] Toggle por provincia (PBA activa, Córdoba inactiva, etc.).
+- [ ] Selector de versión activa por provincia.
+- [ ] CRUD de partidos: nombre, código, delegación, aliases.
+- [ ] Upgrade JurisdictionResolver: cargar desde Supabase con TTL cache (60s) en vez de JSON estático.
+- [ ] Auditoría de cambios (`logAuditEvent`).
 
 ---
 
