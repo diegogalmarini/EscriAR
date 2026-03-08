@@ -2,20 +2,21 @@
  * Deterministic Tax Calculator for Argentine Notary Operations (PBA focus)
  * Based on notary-tax-calculator skill.
  *
- * Todos los valores fiscales se leen de fiscal_config_2026.json
- * (fuente única de verdad para tasas, topes y aportes).
+ * Delegated to PresupuestoEngine as single source of truth.
+ * This wrapper preserves the original interface for SkillExecutor compatibility.
  */
 
+import { calcularPresupuesto, type PresupuestoInput } from '@/lib/services/PresupuestoEngine';
 import fiscalConfig from '@/data/fiscal_config_2026.json';
 
 export interface TaxCalculationInput {
     price: number;
     currency: 'USD' | 'ARS' | 'UVA';
-    exchangeRate: number; // For USD this is the dollar rate, for UVA it's the UVA rate
-    acquisitionDate: string; // YYYY-MM-DD
+    exchangeRate: number;
+    acquisitionDate: string;
     isUniqueHome: boolean;
     fiscalValuation: number;
-    sellosExemptionThreshold?: number; // Tope Ley Impositiva
+    sellosExemptionThreshold?: number;
 }
 
 export interface TaxCalculationResult {
@@ -33,55 +34,35 @@ export interface TaxCalculationResult {
 }
 
 export function calculateNotaryExpenses(input: TaxCalculationInput): TaxCalculationResult {
-    const {
-        price,
-        currency,
-        exchangeRate,
-        acquisitionDate,
-        isUniqueHome,
-        fiscalValuation,
-        sellosExemptionThreshold = fiscalConfig.sellos.tope_default
-    } = input;
+    const exchangeRate = input.currency === 'ARS' ? 1 : input.exchangeRate;
+    const priceArs = input.price * exchangeRate;
 
-    // Calculo de Base Imponible en ARS
-    let priceArs = price;
-    if (currency === 'USD') {
-        priceArs = price * exchangeRate;
-    } else if (currency === 'UVA') {
-        priceArs = price * exchangeRate; // Aquí exchangeRate es el valor de la UVA
-    }
+    const engineInput: PresupuestoInput = {
+        tipo_acto: "COMPRAVENTA",
+        monto_operacion: input.price,
+        moneda: input.currency === 'UVA' ? 'ARS' : (input.currency as 'ARS' | 'USD'),
+        cotizacion_usd: input.currency === 'USD' ? input.exchangeRate : undefined,
+        valuacion_fiscal: input.fiscalValuation,
+        tipo_inmueble: "EDIFICADO",
+        es_vivienda_unica: input.isUniqueHome,
+        fecha_adquisicion_vendedor: input.acquisitionDate,
+        honorarios_pct: fiscalConfig.honorarios.suggested_rate,
+    };
 
-    const baseSellos = Math.max(priceArs, fiscalValuation);
+    const result = calcularPresupuesto(engineInput);
 
-    // 1. Impuesto de Sellos (PBA)
-    let sellosPba = 0;
-    const tasaSellos = fiscalConfig.sellos.rate;
+    // Map engine output back to legacy interface
+    const byRubro = (rubro: string) =>
+        result.lineas.filter(l => l.rubro === rubro).reduce((s, l) => s + l.monto, 0);
 
-    if (isUniqueHome) {
-        if (baseSellos > sellosExemptionThreshold) {
-            sellosPba = (baseSellos - sellosExemptionThreshold) * tasaSellos;
-        } else {
-            sellosPba = 0;
-        }
-    } else {
-        sellosPba = baseSellos * tasaSellos;
-    }
+    const sellosPba = byRubro("SELLOS_PBA");
+    const itiAfip = byRubro("ITI") + byRubro("GANANCIAS_CEDULARES");
+    const honorarios = byRubro("HONORARIOS");
+    const iva21 = byRubro("IVA_HONORARIOS");
+    const aportesNotariales = byRubro("APORTE_CAJA") + byRubro("APORTE_COLEGIO");
 
-    // 2. ITI - Aplica si se adquirió antes de 2018
-    let itiAfip = 0;
-    const isPre2018 = new Date(acquisitionDate) < new Date(fiscalConfig.iti.cutoff_date);
-    if (isPre2018) {
-        itiAfip = priceArs * fiscalConfig.iti.rate;
-    }
-
-    // 3. Honorarios
-    const honorarios = priceArs * fiscalConfig.honorarios.suggested_rate;
-    const iva21 = honorarios * fiscalConfig.iva.rate;
-
-    // 4. Aportes
-    const aportesNotariales = honorarios * fiscalConfig.aportes.sobre_honorarios;
-
-    const totalArs = sellosPba + itiAfip + honorarios + iva21 + aportesNotariales;
+    const totalArs = result.totales.total;
+    const baseSellos = Math.max(priceArs, input.fiscalValuation);
 
     return {
         baseCalculoArs: baseSellos,
@@ -90,10 +71,10 @@ export function calculateNotaryExpenses(input: TaxCalculationInput): TaxCalculat
             itiAfip: Math.round(itiAfip * 100) / 100,
             honorarios: Math.round(honorarios * 100) / 100,
             iva21: Math.round(iva21 * 100) / 100,
-            aportesNotariales: Math.round(aportesNotariales * 100) / 100
+            aportesNotariales: Math.round(aportesNotariales * 100) / 100,
         },
         totalExpensesArs: Math.round(totalArs * 100) / 100,
-        totalExpensesUsd: currency === 'USD' ? Math.round((totalArs / exchangeRate) * 100) / 100 : undefined,
-        totalExpensesUva: currency === 'UVA' ? Math.round((totalArs / exchangeRate) * 100) / 100 : undefined
+        totalExpensesUsd: input.currency === 'USD' ? Math.round((totalArs / exchangeRate) * 100) / 100 : undefined,
+        totalExpensesUva: input.currency === 'UVA' ? Math.round((totalArs / exchangeRate) * 100) / 100 : undefined,
     };
 }

@@ -426,7 +426,7 @@ export default function FolderWorkspace({ initialData }: { initialData: any }) {
                 </TabsContent>
 
                 <TabsContent value="pre-escritura" className="mt-6">
-                    <FasePreEscritura currentEscritura={currentEscritura} carpetaId={carpeta.id} carpeta={carpeta} />
+                    <FasePreEscritura currentEscritura={currentEscritura} carpetaId={carpeta.id} carpeta={carpeta} onNavigateToPresupuesto={() => setActiveTab("presupuesto")} />
                 </TabsContent>
 
                 <TabsContent value="post-escritura" className="mt-6">

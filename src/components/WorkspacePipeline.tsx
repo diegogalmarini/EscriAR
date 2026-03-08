@@ -22,7 +22,7 @@ import { MinutaGenerator } from "./MinutaGenerator";
 import { AMLCompliance } from "./AMLCompliance";
 import { InscriptionTracker } from "./InscriptionTracker";
 import { TaxBreakdownCard } from "./smart/TaxBreakdownCard";
-import { LiquidacionPanel } from "./LiquidacionPanel";
+import { LiquidacionResumen } from "./LiquidacionResumen";
 import { PersonSearch } from "./PersonSearch";
 import { CertificadosPanel } from "./CertificadosPanel";
 import { supabase } from "@/lib/supabaseClient";
@@ -53,6 +53,7 @@ interface FasePreEscrituraProps {
     currentEscritura: any;
     carpetaId: string;
     carpeta: any;
+    onNavigateToPresupuesto: () => void;
 }
 
 interface FaseRedaccionProps {
@@ -73,7 +74,7 @@ interface FasePostEscrituraProps {
    Certificados + TaxBreakdown + Liquidación y Honorarios
    ══════════════════════════════════════════════════════════ */
 
-export function FasePreEscritura({ currentEscritura, carpetaId, carpeta }: FasePreEscrituraProps) {
+export function FasePreEscritura({ currentEscritura, carpetaId, carpeta, onNavigateToPresupuesto }: FasePreEscrituraProps) {
     // Extraer DNIs de todos los participantes involucrados en la carpeta
     const personasDni = carpeta?.escrituras
         ?.flatMap((esc: any) => esc.operaciones || [])
@@ -85,10 +86,6 @@ export function FasePreEscritura({ currentEscritura, carpetaId, carpeta }: FaseP
         ?.filter(Boolean) || [];
 
     const uniqueDnis: string[] = Array.from(new Set(personasDni));
-
-    // Extraer datos para liquidación
-    const tipoActo = currentEscritura?.operaciones?.[0]?.tipo_acto || "";
-    const valuacionFiscal = currentEscritura?.inmuebles?.valuacion_fiscal;
 
     return (
         <div className="space-y-6">
@@ -104,9 +101,9 @@ export function FasePreEscritura({ currentEscritura, carpetaId, carpeta }: FaseP
 
             {/* Liquidación Impositiva y Honorarios (Hito 1.5) */}
             <div className="border border-border rounded-lg bg-background p-6">
-                <LiquidacionPanel
-                    tipoActo={tipoActo}
-                    valuacionFiscalInicial={valuacionFiscal}
+                <LiquidacionResumen
+                    carpetaId={carpetaId}
+                    onNavigateToPresupuesto={onNavigateToPresupuesto}
                 />
             </div>
         </div>
