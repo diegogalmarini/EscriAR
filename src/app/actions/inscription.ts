@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabaseServer";
 import { revalidatePath } from "next/cache";
+import { publishToProtocolo } from "@/app/actions/protocolo";
 
 /**
  * Mark a deed as signed and calculate the inscription deadline (45 days)
@@ -43,6 +44,11 @@ export async function markAsSigned(escrituraId: string, fechaFirma: string) {
             .eq("id", escritura.carpeta_id);
 
         if (carpetaError) throw carpetaError;
+
+        // ET7.1: Publicar automáticamente en protocolo al firmar
+        publishToProtocolo(escritura.carpeta_id).catch((err) =>
+            console.error("[markAsSigned] Error publicando en protocolo:", err)
+        );
 
         revalidatePath("/dashboard");
         revalidatePath(`/carpeta/${escritura.carpeta_id}`);

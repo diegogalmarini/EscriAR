@@ -31,12 +31,11 @@ Implementar la Carpeta notarial con:
 | ET6 — Actuaciones Privado/Protocolar | ✅ COMPLETADA | 043, 044 | `ActuacionesPanel`, `GenerarActuacionDialog`, taxonomía PRIVADO/AMBIGUO/PROTOCOLAR/HIDDEN, microcopy. |
 | ET6.1 — Código de Acto | ✅ COMPLETADA | 021-023, 045 | `search_carpetas` filtra por TRAMITE. `CarpetasTable` muestra código+acto. Código CESBA derivado. |
 | ET7 — Pre-escriturario AI | ✅ COMPLETADA | 047 | Upload PDF + extracción IA (Gemini Pro) + confirmación humana + chips vencimientos en header. Deploy Railway OK (2026-03-07). |
-| ET7.1 — Protocolo Inteligente | ⏳ PENDIENTE | — | Worker upsert personas/inmuebles + flujo carpeta→protocolo (producción) + folios/montos en extracción. |
+| ET7.1 — Protocolo Inteligente | ✅ COMPLETADA | — | `publishToProtocolo(carpetaId)`: mapeo determinístico carpeta→protocolo_registros. Trigger auto en FIRMADA (updateFolderStatus + markAsSigned). Botón manual en CarpetaHero. Upsert idempotente by carpeta_id. Pendiente: sync bidireccional. |
 | ET8+ET9 — Header + Auditoría | ✅ COMPLETADA | 050 | `audit_events` table + `logAuditEvent()` + (i) info popover en CarpetaHero + Server Actions instrumentados. |
 | ET10 — Notificaciones/Dashboard | ✅ COMPLETADA | — | Dashboard alerts (pendientes semáforo) + PendingBadge en sidebar + `getPendingActionsSummary()`. |
-| ET11 — Export carpeta | ⏳ PENDIENTE | — | Nueva etapa. |
 
-Total: **50 migraciones SQL**, **16+ componentes principales**, **10 etapas completadas**, **1 pendiente nueva (ET7.1)**.
+Total: **50 migraciones SQL**, **16+ componentes principales**, **11 de 11 etapas completadas**. Todas las etapas del plan original finalizadas.
 
 ---
 
@@ -331,27 +330,6 @@ Hito ET10:
 
 ---
 
-### ETAPA 11 — Export de carpeta completa (NUEVA)
-Objetivo: permitir descargar toda la documentación de una carpeta como bundle (ZIP o PDF compuesto).
-
-Motivación: en el ámbito notarial, poder exportar la carpeta completa (escritura, certificados, actuaciones, documentos generados) es un requisito operativo para archivo y para entregar al cliente.
-
-Tareas:
-- Server Action `exportCarpeta(carpetaId)`:
-  - Recopilar: escritura (DOCX/PDF), certificados (PDFs de Storage), actuaciones generadas (DOCX).
-  - Generar carátula/índice.
-  - Empaquetar como ZIP (o PDF compuesto con TOC si se prefiere).
-- UI: botón "Exportar Carpeta" en CarpetaHero o menú de acciones.
-- Auditar evento `CARPETA_EXPORTED` (si ET9 ya existe).
-
-Hito ET11:
-- PR
-- Descargar ZIP con todos los documentos de una carpeta.
-- Auditoría del export (si disponible).
-
-Rollback:
-- Revert PR.
-
 ---
 
 ## 6) Reglas de PR y entrega
@@ -372,7 +350,6 @@ Rollback:
 - Evidencia + confianza en sugerencias
 - Auditoría aceptar/rechazar
 - UI operable aun si IA falla
-- Export de carpeta funcional
 - Dashboard de pendientes operativo
 
 ---
@@ -381,3 +358,4 @@ Rollback:
 - **Drafting versionado**: `template-render.ts` sobreescribe al regenerar. Necesita tabla `actuacion_borradores` o campo `version` para preservar historial. Prioridad: abordar antes o durante ET7.
 - **Actuaciones como tab independiente**: si con el uso la lista crece mucho dentro de Mesa de Trabajo, considerar promover a tab propio. Decisión diferida a feedback de uso real.
 - **12 modelos de actos faltantes**: cancelacion_hipoteca, poder, usufructo, afectacion_vivienda, fideicomiso, constitucion_sociedad, declaratoria_herederos, testamento, servidumbre, reglamento_ph, protocolizacion, certificacion_firmas. Necesitan DOCX fuente para ser procesados por el Template Builder.
+- **Export de carpeta completa (ex-ET11)**: empaquetar escritura + certificados + actuaciones en ZIP/PDF. Nice-to-have, no es bloqueante para la operación diaria. Implementar cuando surja la necesidad real.

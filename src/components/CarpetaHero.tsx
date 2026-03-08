@@ -25,9 +25,12 @@ import {
     ShieldAlert,
     ShieldX,
     Clock,
+    BookOpen,
 } from "lucide-react";
 import { Certificado, getCertificadosPorCarpeta } from "@/app/actions/certificados";
 import CarpetaInfoPopover from "@/components/CarpetaInfoPopover";
+import { publishToProtocolo } from "@/app/actions/protocolo";
+import { toast } from "sonner";
 
 // --- Types ---
 interface CarpetaHeroProps {
@@ -141,6 +144,7 @@ function formatDate(dateStr: string): string {
 export default function CarpetaHero({ carpeta, onDelete, isDeleting, onNavigateTab, children }: CarpetaHeroProps) {
     const { titulo, subtipo } = useMemo(() => generarCaratula(carpeta), [carpeta]);
     const [certificados, setCertificados] = useState<Certificado[]>([]);
+    const [isPublishing, setIsPublishing] = useState(false);
 
     // Fetch certificados para los chips de vencimiento
     useEffect(() => {
@@ -191,6 +195,18 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, onNavigateT
 
     const estadoCfg = ESTADO_CONFIG[estadoKey] || ESTADO_CONFIG.ABIERTA;
     const isProcessing = estadoKey === "PROCESANDO";
+    const canPublishProtocolo = estadoKey === "FIRMADA" || estadoKey === "INSCRIPTA";
+
+    const handlePublishProtocolo = async () => {
+        setIsPublishing(true);
+        const res = await publishToProtocolo(carpeta.id);
+        setIsPublishing(false);
+        if (res.success) {
+            toast.success(res.isUpdate ? "Registro de protocolo actualizado" : "Publicado en protocolo");
+        } else {
+            toast.error(res.error || "Error al publicar en protocolo");
+        }
+    };
 
     // Inmueble: preferir TRAMITE, fallback a INGESTA
     const tramiteEsc = carpeta.escrituras?.find((e: any) => e.source === 'TRAMITE');
@@ -256,6 +272,18 @@ export default function CarpetaHero({ carpeta, onDelete, isDeleting, onNavigateT
                         {estadoCfg.label}
                     </Badge>
                     <CarpetaInfoPopover carpetaId={carpeta.id} createdAt={carpeta.created_at} />
+                    {canPublishProtocolo && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs"
+                            onClick={handlePublishProtocolo}
+                            disabled={isPublishing}
+                        >
+                            {isPublishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <BookOpen className="h-3.5 w-3.5" />}
+                            Protocolo
+                        </Button>
+                    )}
                     {onDelete && (
                         <AlertDialog>
                             <AlertDialogTrigger asChild>

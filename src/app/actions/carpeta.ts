@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { logAction, logAuditEvent } from "@/lib/logger";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getUserOrgId } from "@/lib/auth/getOrg";
+import { publishToProtocolo } from "@/app/actions/protocolo";
 
 export async function createFolder(caratula?: string) {
     try {
@@ -187,6 +188,13 @@ export async function updateFolderStatus(folderId: string, newStatus: string) {
             summary: `Cambió estado a ${newStatus}`,
             metadata: { nuevo_estado: newStatus },
         });
+
+        // ET7.1: Publicar automáticamente en protocolo al pasar a FIRMADA
+        if (newStatus === "FIRMADA") {
+            publishToProtocolo(folderId).catch((err) =>
+                console.error("[updateFolderStatus] Error publicando en protocolo:", err)
+            );
+        }
 
         revalidatePath('/dashboard');
         revalidatePath(`/carpeta/${folderId}`);

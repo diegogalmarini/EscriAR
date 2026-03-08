@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireOrgMembership } from "@/lib/auth/getOrg";
+import { logAuditEvent } from "@/lib/logger";
 
 // ── Types ──
 
@@ -306,4 +307,140 @@ export async function retryEscrituraExtraction(registroId: string): Promise<Prot
     }
 
     return updated as ProtocoloRegistro;
+}
+
+// ── Publish Carpeta → Protocolo (ET7.1) ──
+
+const ROLES_TRANSMITENTE = ["VENDEDOR", "TRANSMITENTE", "DONANTE", "CEDENTE", "FIDUCIANTE", "TITULAR", "CONDOMINO"];
+const ROLES_ADQUIRENTE = ["COMPRADOR", "ADQUIRENTE", "DONATARIO", "CESIONARIO", "MUTUARIO", "FIDEICOMISARIO"];
+
+/**
+ * Crea o actualiza un registro de protocolo a partir de los datos de una carpeta.
+ * Idempotente: si ya existe un registro con ese carpeta_id, lo actualiza.
+ * Se dispara automáticamente cuando la carpeta pasa a FIRMADA, o manualmente.
+ */
+export async function publishToProtocolo(
+    carpetaId: string
+): Promise<{ success: boolean; registroId?: string; isUpdate?: boolean; error?: string }> {
+    try {
+        await requireOrgMembership();
+
+        // Load carpeta with full hierarchy (admin bypasses RLS, same as page loader)
+        const { data: carpeta, error: loadErr } = await supabaseAdmin
+            .from("carpetas")
+            .select(`
+                *,
+                escrituras (
+                    *,
+                    operaciones (
+                        *,
+                        participantes_operacion (
+                            *,
+                            persona:personas (*)
+                        )
+                    )
+                )
+            `)
+            .eq("id", carpetaId)
+            .single();
+
+        if (loadErr || !carpeta) {
+            return { success: false, error: "Carpeta no encontrada" };
+        }
+
+        // Fuente de verdad: escritura TRAMITE
+        const escritura = (carpeta as any).escrituras?.find((e: any) => e.source === "TRAMITE")
+            || (carpeta as any).escrituras?.[0];
+        if (!escritura) {
+            return { success: false, error: "No se encontró escritura para publicar" };
+        }
+
+        const operacion = escritura.operaciones?.[0];
+        const participantes = operacion?.participantes_operacion || [];
+
+        const vendedores = participantes
+            .filter((p: any) => ROLES_TRANSMITENTE.includes(p.rol?.toUpperCase()))
+            .map((p: any) => p.persona?.nombre_completo)
+            .filter(Boolean);
+
+        const compradores = participantes
+            .filter((p: any) => ROLES_ADQUIRENTE.includes(p.rol?.toUpperCase()))
+            .map((p: any) => p.persona?.nombre_completo)
+            .filter(Boolean);
+
+        // Parse fecha_escritura → dia/mes/anio
+        let dia: number | null = null;
+        let mes: number | null = null;
+        let anio = new Date().getFullYear();
+
+        if (escritura.fecha_escritura) {
+            const d = new Date(escritura.fecha_escritura + "T12:00:00");
+            if (!isNaN(d.getTime())) {
+                dia = d.getDate();
+                mes = d.getMonth() + 1;
+                anio = d.getFullYear();
+            }
+        }
+
+        const registroData = {
+            nro_escritura: escritura.nro_protocolo ?? null,
+            folios: null as string | null,
+            dia,
+            mes,
+            anio,
+            tipo_acto: operacion?.tipo_acto || null,
+            codigo_acto: operacion?.codigo || null,
+            es_errose: false,
+            vendedor_acreedor: vendedores.join("; ") || null,
+            comprador_deudor: compradores.join("; ") || null,
+            monto_ars: operacion?.monto_operacion ?? null,
+            monto_usd: null as number | null,
+            notas: null as string | null,
+            carpeta_id: carpetaId,
+        };
+
+        // Upsert: buscar registro existente con este carpeta_id
+        const supabase = await createClient();
+        const { data: existing } = await supabase
+            .from("protocolo_registros")
+            .select("id")
+            .eq("carpeta_id", carpetaId)
+            .maybeSingle();
+
+        let registroId: string;
+        const isUpdate = !!existing;
+
+        if (existing) {
+            const { data: updated, error: updateErr } = await supabase
+                .from("protocolo_registros")
+                .update(registroData)
+                .eq("id", existing.id)
+                .select("id")
+                .single();
+            if (updateErr) throw updateErr;
+            registroId = updated.id;
+        } else {
+            const { data: created, error: insertErr } = await supabase
+                .from("protocolo_registros")
+                .insert(registroData)
+                .select("id")
+                .single();
+            if (insertErr) throw insertErr;
+            registroId = created.id;
+        }
+
+        logAuditEvent({
+            action: isUpdate ? "PROTOCOLO_UPDATED_FROM_CARPETA" : "PROTOCOLO_CREATED_FROM_CARPETA",
+            entityType: "protocolo_registro",
+            entityId: registroId,
+            carpetaId,
+            summary: `${isUpdate ? "Actualizó" : "Publicó"} registro protocolo desde carpeta`,
+            metadata: { nro_escritura: registroData.nro_escritura, tipo_acto: registroData.tipo_acto },
+        });
+
+        return { success: true, registroId, isUpdate };
+    } catch (error: any) {
+        console.error("[publishToProtocolo]", error);
+        return { success: false, error: error.message };
+    }
 }

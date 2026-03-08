@@ -22,7 +22,9 @@ export type AuditAction =
     | "PARTICIPANT_REMOVED"
     | "INMUEBLE_LINKED"
     | "PROTOCOLO_REGISTRO_CREATED"
-    | "PROTOCOLO_REGISTRO_DELETED";
+    | "PROTOCOLO_REGISTRO_DELETED"
+    | "PROTOCOLO_CREATED_FROM_CARPETA"
+    | "PROTOCOLO_UPDATED_FROM_CARPETA";
 
 export interface AuditEventInput {
     action: AuditAction;

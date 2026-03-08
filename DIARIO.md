@@ -591,9 +591,9 @@ Todas las acciones del servidor están en `src/app/actions/`. Son funciones `"us
 
 | Archivo | Funciones | Qué hace |
 |---|---|---|
-| `carpeta.ts` | `createFolder`, `deleteCarpeta`, `updateFolderStatus`, `addOperationToDeed`, `linkPersonToOperation`, `unlinkPersonFromOperation`, `linkAssetToDeed`, `upsertPerson`, `updateRepresentacion` | CRUD de carpetas + vincular personas/inmuebles a operaciones |
+| `carpeta.ts` | `createFolder`, `deleteCarpeta`, `updateFolderStatus`, `addOperationToDeed`, `linkPersonToOperation`, `unlinkPersonFromOperation`, `linkAssetToDeed`, `upsertPerson`, `updateRepresentacion` | CRUD de carpetas + vincular personas/inmuebles a operaciones. `updateFolderStatus` publica en protocolo automáticamente al pasar a FIRMADA. |
 | `escritura.ts` | `updateEscritura`, `updateOperacion`, `updateInmueble` | Editar metadatos de escritura, operación e inmueble |
-| `inscription.ts` | `markAsSigned`, `updateRegistryStatus`, `getExpiringDeeds` | Workflow post-firma: firma → inscripción RPI. Calcula vencimiento 45 días. Semáforo verde/amarillo/rojo. |
+| `inscription.ts` | `markAsSigned`, `updateRegistryStatus`, `getExpiringDeeds` | Workflow post-firma: firma → inscripción RPI. Calcula vencimiento 45 días. Semáforo verde/amarillo/rojo. `markAsSigned` publica en protocolo automáticamente. |
 
 ### Personas
 
@@ -616,6 +616,7 @@ Todas las acciones del servidor están en `src/app/actions/`. Son funciones `"us
 | Archivo | Funciones | Qué hace |
 |---|---|---|
 | `draft.ts` | `generateDeedDraft`, `saveDeedDraft` | Genera borrador de escritura con Gemini + datos de carpeta + escribano. Persiste en `contenido_borrador`. |
+| `protocolo.ts` | `createProtocoloRegistro`, `updateProtocoloRegistro`, `deleteProtocoloRegistro`, `getProtocoloRegistro`, `uploadEscrituraPdf`, `confirmEscrituraExtraction`, `retryEscrituraExtraction`, **`publishToProtocolo`** | CRUD protocolo + PDF upload + extracción AI. **`publishToProtocolo(carpetaId)`**: mapea datos de carpeta→protocolo_registros determinísticamente. Idempotente (upsert por carpeta_id). |
 | `storageSync.ts` | `listStorageFiles`, `deleteStorageFile`, `getSignedUrl` | Acceso a Supabase Storage. Signed URLs para visualizar PDFs. |
 | `inmuebles.ts` | `deleteInmueble` | Eliminar un inmueble. |
 
@@ -631,7 +632,7 @@ Todas las acciones del servidor están en `src/app/actions/`. Son funciones `"us
 | `FolderWorkspace.tsx` | **Orquestador.** State, handlers, realtime subscriptions, dialogs. Renderiza CarpetaHero + Tabs (4 pestañas: Mesa de Trabajo, Antecedentes, Pre-Escriturario, Post-Firma). |
 | `WorkspaceRadiography.tsx` | **Pestaña Antecedentes** (full width). Datos extraídos read-only: Documento, Inmueble, Partes, Archivos. Sin `<details>`, DNI/CUIT siempre visible, line-clamp-4 con "Ver más". |
 | `WorkspacePipeline.tsx` | Exporta 3 componentes: `FasePreEscritura` (Certificados + Tax + Liquidación), `FaseRedaccion` (Borrador IA + Editor), `FasePostEscritura` (Minuta + Compliance + Inscripción). |
-| `CarpetaHero.tsx` | Header de carpeta: carátula, badge estado, chips de certificados en vivo (vencidos/por vencer/vigentes/pendientes/sin confirmar), botón eliminar con AlertDialog. |
+| `CarpetaHero.tsx` | Header de carpeta: carátula, badge estado, chips de certificados en vivo (vencidos/por vencer/vigentes/pendientes/sin confirmar), botón eliminar con AlertDialog, botón "Protocolo" manual (visible en FIRMADA/INSCRIPTA). |
 | `CarpetasTable.tsx` | Tabla de carpetas con búsqueda. Consume RPC `search_carpetas` (estructura plana con `parties[]` y `escrituras[]`). |
 | `ApuntesTab.tsx` | Tab de apuntes con análisis AI: renderiza sugerencias tipo TRAMITE_REQUERIDO con links clickeables a organismos, badges de jurisdicción (PBA/CABA) y costos. Polling automático, retry, skeletons. |
 | `CertificadoDialog.tsx` | Modal alta/edición de certificados con drag & drop para subir PDF (reemplazó campo URL manual). Auto-trigger de extracción AI al subir. |
@@ -1091,6 +1092,49 @@ Problema: BANCO DE LA NACION ARGENTINA aparecía 3 veces con distintos SIN_DNI.
 - `070a603` — style: Remove tabla-actos footer, sticky header + compact cards for guia-tramites
 - `5b51179` — fix: Null safety in search + two-line header for guia-tramites
 - `1a005b7` — fix: Filters below search bar + compact cards with !py-0 override
+
+---
+
+### 2026-03-07 — ET7.1 Fase Producción: publishToProtocolo
+
+#### Contexto y decisión
+La tabla `protocolo_registros` tenía una columna `carpeta_id` (FK → carpetas) que nadie escribía. El worker ya upsertaba personas/inmuebles y extraía folios, pero el registro de protocolo nunca se vinculaba a la carpeta origen. Se decidió crear una función determinística que mapee los datos de la carpeta al protocolo cuando el trámite se firma.
+
+#### Diseño aprobado
+- **Trigger automático**: cuando una carpeta pasa a estado `FIRMADA` (sea vía `updateFolderStatus` o `markAsSigned`)
+- **Mapeo determinístico** (sin IA): escritura TRAMITE → operación → participantes → personas
+- **Idempotente**: upsert por `carpeta_id` — si ya existe, actualiza; si no, crea
+- **No bloqueante**: si falla la publicación, el cambio de estado sigue siendo exitoso (fire-and-forget con `.catch()`)
+- **Botón manual**: visible en CarpetaHero cuando el estado es FIRMADA o INSCRIPTA como fallback
+
+#### Mapeo de campos carpeta → protocolo_registros
+| Campo protocolo | Fuente carpeta |
+|---|---|
+| `nro_escritura` | `escritura.nro_protocolo` |
+| `dia/mes/anio` | `escritura.fecha_escritura` (parseado) |
+| `tipo_acto` | `operacion.tipo_acto` |
+| `codigo_acto` | `operacion.codigo` |
+| `vendedor_acreedor` | Participantes con rol VENDEDOR/TRANSMITENTE/DONANTE/CEDENTE/FIDUCIANTE/TITULAR/CONDOMINO → `nombre_completo` separados por "; " |
+| `comprador_deudor` | Participantes con rol COMPRADOR/ADQUIRENTE/DONATARIO/CESIONARIO/MUTUARIO/FIDEICOMISARIO → `nombre_completo` separados por "; " |
+| `monto_ars` | `operacion.monto_operacion` |
+| `carpeta_id` | El propio `carpetaId` |
+| `es_errose` | Siempre `false` (viene de trámite real) |
+
+#### Archivos modificados
+- **`src/app/actions/protocolo.ts`**: nueva función `publishToProtocolo(carpetaId)` — carga carpeta con jerarquía completa vía `supabaseAdmin`, mapea datos, upsert en `protocolo_registros`
+- **`src/app/actions/carpeta.ts`**: `updateFolderStatus` ahora llama `publishToProtocolo` cuando `newStatus === "FIRMADA"` (fire-and-forget)
+- **`src/app/actions/inscription.ts`**: `markAsSigned` ahora llama `publishToProtocolo` después de setear estado FIRMADA (fire-and-forget)
+- **`src/components/CarpetaHero.tsx`**: botón "Protocolo" (icono BookOpen) visible en FIRMADA/INSCRIPTA, con loading state y toast de feedback
+
+#### Dos caminos a FIRMADA
+1. **StatusStepper** → `updateFolderStatus(folderId, "FIRMADA")` → dispara `publishToProtocolo`
+2. **InscriptionTracker** → `markAsSigned(escrituraId, fechaFirma)` → actualiza carpeta directamente → dispara `publishToProtocolo`
+
+Ambos caminos están cubiertos.
+
+#### Deuda técnica pendiente (ET7.1 bi-direccional)
+- Sync protocolo→carpeta no implementado (si se edita un registro de protocolo, no se refleja en la carpeta)
+- Detección de conflictos entre ediciones manuales del protocolo y las de carpeta
 
 ### 2026-03-07 (Antigravity) — Protocolo: CRUD + PDF upload + AI extraction + navegación + reprocesamiento masivo
 
