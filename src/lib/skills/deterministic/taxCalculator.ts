@@ -1,7 +1,12 @@
 /**
  * Deterministic Tax Calculator for Argentine Notary Operations (PBA focus)
  * Based on notary-tax-calculator skill.
+ *
+ * Todos los valores fiscales se leen de fiscal_config_2026.json
+ * (fuente única de verdad para tasas, topes y aportes).
  */
+
+import fiscalConfig from '@/data/fiscal_config_2026.json';
 
 export interface TaxCalculationInput {
     price: number;
@@ -35,7 +40,7 @@ export function calculateNotaryExpenses(input: TaxCalculationInput): TaxCalculat
         acquisitionDate,
         isUniqueHome,
         fiscalValuation,
-        sellosExemptionThreshold = 90000000 // Default or dynamic
+        sellosExemptionThreshold = fiscalConfig.sellos.tope_default
     } = input;
 
     // Calculo de Base Imponible en ARS
@@ -48,10 +53,9 @@ export function calculateNotaryExpenses(input: TaxCalculationInput): TaxCalculat
 
     const baseSellos = Math.max(priceArs, fiscalValuation);
 
-    // 1. Impuesto de Sellos (PBA - 2% para hipotecas también, aunque hay exenciones según monto/vivienda social)
-    // NOTA: Para este upgrade mantenemos la lógica de 2% pero con base UVA convertida.
+    // 1. Impuesto de Sellos (PBA)
     let sellosPba = 0;
-    const tasaSellos = 0.02;
+    const tasaSellos = fiscalConfig.sellos.rate;
 
     if (isUniqueHome) {
         if (baseSellos > sellosExemptionThreshold) {
@@ -63,19 +67,19 @@ export function calculateNotaryExpenses(input: TaxCalculationInput): TaxCalculat
         sellosPba = baseSellos * tasaSellos;
     }
 
-    // 2. ITI (1.5%) - Aplica si se adquirió antes de 2018 (Generalmente compraventas, pero lo mantenemos)
+    // 2. ITI - Aplica si se adquirió antes de 2018
     let itiAfip = 0;
-    const isPre2018 = new Date(acquisitionDate) < new Date('2018-01-01');
+    const isPre2018 = new Date(acquisitionDate) < new Date(fiscalConfig.iti.cutoff_date);
     if (isPre2018) {
-        itiAfip = priceArs * 0.015;
+        itiAfip = priceArs * fiscalConfig.iti.rate;
     }
 
-    // 3. Honorarios (2% suggested)
-    const honorarios = priceArs * 0.02;
-    const iva21 = honorarios * 0.21;
+    // 3. Honorarios
+    const honorarios = priceArs * fiscalConfig.honorarios.suggested_rate;
+    const iva21 = honorarios * fiscalConfig.iva.rate;
 
-    // 4. Aportes (Approx 15% of Fees)
-    const aportesNotariales = honorarios * 0.15;
+    // 4. Aportes
+    const aportesNotariales = honorarios * fiscalConfig.aportes.sobre_honorarios;
 
     const totalArs = sellosPba + itiAfip + honorarios + iva21 + aportesNotariales;
 

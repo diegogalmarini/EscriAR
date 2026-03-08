@@ -1,0 +1,51 @@
+{
+  "version": "2026",
+  "jurisdiction": "PBA",
+  "description": "Parámetros fiscales centralizados. Fuente única de verdad para taxCalculator y LiquidacionPanel.",
+  "nota_actualizacion": "Actualizar este archivo cada enero con los nuevos valores de la Ley Impositiva PBA, tabla CESBA y resoluciones ARBA/UIF. Ver ACTUALIZACION_ANUAL.md.",
+
+  "sellos": {
+    "rate": 0.02,
+    "tope_vu_edificado": 1154400,
+    "tope_vu_baldio": 577200,
+    "tope_default": 90000000
+  },
+
+  "iti": {
+    "rate": 0.015,
+    "cutoff_date": "2018-01-01",
+    "retencion_ganancias_cedular": 0.015
+  },
+
+  "ganancias_cedular": {
+    "rate": 0.15
+  },
+
+  "iva": {
+    "rate": 0.21
+  },
+
+  "honorarios": {
+    "suggested_rate": 0.02
+  },
+
+  "aportes": {
+    "caja_notarial": 0.006,
+    "colegio": 0.001,
+    "sobre_honorarios": 0.15
+  },
+
+  "tasa_retributiva": {
+    "rate": 0.004,
+    "suspended": true
+  },
+
+  "rpi": {
+    "tasa_general": 0.002,
+    "min_fee": 42000,
+    "prorroga": 91000
+  },
+
+  "aporte_min_notarial": 25000,
+  "ut_arba": 275
+}

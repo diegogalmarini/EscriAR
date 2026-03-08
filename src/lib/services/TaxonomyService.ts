@@ -5,6 +5,7 @@
  */
 
 import actsData from '@/data/acts_taxonomy_2026.json';
+import fiscalConfig from '@/data/fiscal_config_2026.json';
 
 // Types
 export interface ActIntent {
@@ -218,7 +219,7 @@ export class TaxonomyService {
         const impuesto_sellos = act.suspended_rate_2026 ? 0 : amount * act.tax_variables.stamp_duty_rate;
 
         // Tasa retributiva (4‰ if not suspended)
-        const tasa_retributiva = act.suspended_rate_2026 ? 0 : amount * 0.004;
+        const tasa_retributiva = (act.suspended_rate_2026 || fiscalConfig.tasa_retributiva.suspended) ? 0 : amount * fiscalConfig.tasa_retributiva.rate;
 
         return {
             honorario_minimo,

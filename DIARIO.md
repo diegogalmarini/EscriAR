@@ -766,6 +766,7 @@ Servicio de **triangulación de datos** que valida la identidad de una persona c
 | 047 | Extracción AI de certificados (ET7): job_type CERT_EXTRACT, campos extraction en certificados | ✅ Ejecutada |
 | 048 | Protocolo: pdf_storage_path, carpeta_id, flexibilizar nro_escritura para errose | ✅ Ejecutada |
 | 049 | Protocolo: columnas de extracción AI (extraction_status, extraction_result, extraction_job_id) | ✅ Ejecutada |
+| 051 | ET12: tabla jurisdicciones + campos partido_code/delegacion_code en inmuebles | ✅ Ejecutada |
 
 **Nota**: las migraciones se ejecutan MANUAL en Supabase SQL Editor. No hay sistema de migración automático.
 
@@ -823,6 +824,32 @@ Pipeline dual (frontend sync + worker async Railway) 100% funcional y estabiliza
 ---
 
 ## 17. Changelog
+
+### 2026-03-08 (Claude) — ET12: Motor Jurisdiccional Notarial
+
+#### ET12a — Resolver Determinístico + Integración
+- Tabla `jurisdicciones` (migración 051) con 135 partidos PBA, códigos ARBA oficiales y delegaciones CESBA
+- `JurisdictionResolver.ts` (frontend singleton) + `jurisdictionResolver.ts` (worker standalone) — patrón Cerebro Híbrido: AI extrae texto, TS resuelve códigos
+- Matching: normalización (lowercase, strip accents) → exact match aliases → containment match
+- Integración en `ingest/route.ts` y `worker/index.ts`: al persistir inmuebles, resuelve `partido_code` + `delegacion_code` automáticamente
+- `buildTemplateContext.ts` mapea códigos resueltos al template context para minutas/certificados
+- JSON compartido `src/data/pba_2026_jurisdictions.json` usado por ambos resolvers
+
+#### ET12b — Admin UI Jurisdicciones
+- Nueva pestaña "JURISDICCIONES" en `/admin/users` (lazy loaded)
+- CRUD completo: crear, editar, eliminar partidos con códigos y aliases
+- Stats cards (total, activos, inactivos, delegaciones)
+- Filtros por búsqueda, estado activo/inactivo, provincia
+- Toggle activo/inactivo individual y bulk por provincia
+- Server actions en `src/app/actions/jurisdicciones.ts`
+
+#### Corrección de datos seed
+- Auditoría reveló ~80% de códigos ARBA incorrectos en seed original (sistema de codificación desconocido, no ARBA/Geodesia)
+- Verificación contra fuente oficial: https://www.arba.gov.ar/archivos/Publicaciones/codigospartidos.html
+- Correcciones clave: José C. Paz=132 (no 131 duplicado), Ezeiza=130, Zárate=038, Arrecifes=010, Lezama=137
+- Fix columnas DB: seed usaba nombres en español, DB usa inglés (`jurisdiction_id`, `party_name`, `party_code`)
+- Fix onConflict: alineado con UNIQUE constraint `(jurisdiction_id, version, party_code)`
+- Fix seed script: crear Supabase client directo (ESM hoisting impedía carga de dotenv antes de import)
 
 ### 2026-02-23 (Antigravity) — Sesión 1: Ficha de Poderes y Estabilización Visual
 

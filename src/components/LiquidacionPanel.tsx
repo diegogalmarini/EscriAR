@@ -9,21 +9,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, Calculator, Info, AlertTriangle, TrendingDown } from "lucide-react";
+import fiscalConfig from "@/data/fiscal_config_2026.json";
 
 /* ══════════════════════════════════════════════════════════
    Motor de Cálculo Fiscal Notarial — Provincia de Buenos Aires
    Basado en: Ley Impositiva PBA, Ley ITI, Art. 305 CCyC
+   Valores centralizados en fiscal_config_2026.json
    ══════════════════════════════════════════════════════════ */
 
-// Tasas vigentes (actualizables)
 const TASAS = {
-    SELLOS_PBA: 0.02,               // 2% - Impuesto de Sellos PBA
-    ITI: 0.015,                     // 1.5% - Impuesto a la Transferencia Inmueble
-    GANANCIAS_CEDULAR: 0.15,        // 15% - Sobre la diferencia (post-2018)
-    IVA: 0.21,                      // 21% - IVA sobre honorarios
-    APORTE_CAJA_NOTARIAL: 0.006,    // 0.6% - Caja Prev. para Escribanos PBA (sobre monto acto)
-    APORTE_COLEGIO: 0.001,          // 0.1% - Aporte Colegio de Escribanos 
-    TOPE_EXENCION_VU_2025: 182_750_000, // Tope exención vivienda única (Ley Impositiva 2025 PBA - referencia)
+    SELLOS_PBA: fiscalConfig.sellos.rate,
+    ITI: fiscalConfig.iti.rate,
+    GANANCIAS_CEDULAR: fiscalConfig.ganancias_cedular.rate,
+    IVA: fiscalConfig.iva.rate,
+    APORTE_CAJA_NOTARIAL: fiscalConfig.aportes.caja_notarial,
+    APORTE_COLEGIO: fiscalConfig.aportes.colegio,
+    TOPE_EXENCION_VU: fiscalConfig.sellos.tope_default,
 };
 
 const HONORARIOS_SUGERIDOS = [
@@ -67,7 +68,7 @@ export function LiquidacionPanel({ valuacionFiscalInicial, tipoActo }: Liquidaci
         // 2. Impuesto de Sellos PBA
         let sellos = 0;
         if (esViviendaUnica) {
-            const tope = TASAS.TOPE_EXENCION_VU_2025;
+            const tope = TASAS.TOPE_EXENCION_VU;
             if (baseImponible > tope) {
                 sellos = (baseImponible - tope) * TASAS.SELLOS_PBA;
             }
@@ -88,7 +89,7 @@ export function LiquidacionPanel({ valuacionFiscalInicial, tipoActo }: Liquidaci
         } else {
             // Post-2018: Ganancias Cedulares 15% sobre diferencia
             // Como no tenemos precio de compra, estimamos retencion a cuenta
-            gananciasCedulares = precioPesos * 0.015; // Retención a cuenta simplificada
+            gananciasCedulares = precioPesos * fiscalConfig.iti.retencion_ganancias_cedular;
             labelImpuestoVendedor = "Ganancias Cedulares (retención a cuenta)";
         }
 
@@ -122,7 +123,7 @@ export function LiquidacionPanel({ valuacionFiscalInicial, tipoActo }: Liquidaci
             aporteColegio,
             totalGastos,
             totalGastosUsd: moneda === "USD" ? totalGastos / cotizacion : null,
-            esExento: esViviendaUnica && baseImponible <= TASAS.TOPE_EXENCION_VU_2025,
+            esExento: esViviendaUnica && baseImponible <= TASAS.TOPE_EXENCION_VU,
         };
     }, [precio, moneda, cotizacionUsd, valuacionFiscal, esViviendaUnica, fechaAdquisicionAnterior2018, tieneExencionITI, honorariosTipo, honorariosCustom]);
 
@@ -396,9 +397,9 @@ export function LiquidacionPanel({ valuacionFiscalInicial, tipoActo }: Liquidaci
                         <div className="p-3 bg-slate-50 flex items-start gap-2 border-t">
                             <AlertTriangle className="h-3.5 w-3.5 text-amber-500 mt-0.5 shrink-0" />
                             <p className="text-[10px] leading-relaxed text-muted-foreground">
-                                Estimación orientativa basada en tasas vigentes. Los valores finales pueden variar
+                                Estimación orientativa basada en tasas vigentes ({fiscalConfig.version}). Los valores finales pueden variar
                                 según tasas municipales, cotización del día de firma, y situación fiscal particular
-                                de las partes. Tope exención Vivienda Única: {fmt(TASAS.TOPE_EXENCION_VU_2025)} (referencia Ley Impositiva 2025 PBA).
+                                de las partes. Tope exención Vivienda Única: {fmt(TASAS.TOPE_EXENCION_VU)} (Ley Impositiva PBA {fiscalConfig.version}).
                             </p>
                         </div>
                     </CardContent>
