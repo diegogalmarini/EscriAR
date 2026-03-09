@@ -62,5 +62,10 @@
   },
 
   "aporte_min_notarial": 25000,
-  "ut_arba": 275
+  "ut_arba": 275,
+
+  "protocolo": {
+    "folio_elaborado": 80000,
+    "certificacion_copias_por_foja": 16400
+  }
 }

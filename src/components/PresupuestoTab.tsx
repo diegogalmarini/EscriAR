@@ -99,13 +99,16 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
   const [esBcoProv, setEsBcoProv] = useState(false);
   const [fechaAdq, setFechaAdq] = useState("");
   const [certNoRetencion, setCertNoRetencion] = useState(false);
-  const [urgencia, setUrgencia] = useState<"simple" | "urgente">("simple");
+  const [urgencia, setUrgencia] = useState<"simple" | "urgente" | "en_el_dia">("simple");
   const [cantInmuebles, setCantInmuebles] = useState("1");
   const [cantPersonas, setCantPersonas] = useState("2");
   const [honorariosTipo, setHonorariosTipo] = useState("0.02");
   const [honorariosFijo, setHonorariosFijo] = useState("");
   const [cantLeg, setCantLeg] = useState("0");
   const [cantApo, setCantApo] = useState("0");
+  const [cantFolios, setCantFolios] = useState("0");
+  const [cantTestimonios, setCantTestimonios] = useState("0");
+  const [parentescoItg, setParentescoItg] = useState<"FAMILIA" | "OTROS_ASC_DESC" | "COLATERALES_2DO" | "COLATERALES_3_4">("FAMILIA");
 
   // ── Results ──
   const [resultado, setResultado] = useState<PresupuestoResult | null>(null);
@@ -115,6 +118,7 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
   const [shareOpen, setShareOpen] = useState(false);
 
   const esHipoteca = tipoActo === "HIPOTECA";
+  const esDonacion = tipoActo === "DONACION";
 
   // ── Pre-carga automática ──
   // Solo al montar, si no hay presupuesto guardado
@@ -155,6 +159,8 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
       // Legalizaciones/apostillas
       if (op?.cantidad_legalizaciones) setCantLeg(op.cantidad_legalizaciones.toString());
       if (op?.cantidad_apostillas) setCantApo(op.cantidad_apostillas.toString());
+      if (op?.cantidad_folios) setCantFolios(op.cantidad_folios.toString());
+      if (op?.cantidad_testimonios) setCantTestimonios(op.cantidad_testimonios.toString());
     }
   }, [currentEscritura]);
 
@@ -178,6 +184,9 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
     honorarios_fijo: honorariosTipo === "custom" ? parseFloat(honorariosFijo) || 0 : undefined,
     cantidad_legalizaciones: parseInt(cantLeg) || 0,
     cantidad_apostillas: parseInt(cantApo) || 0,
+    cantidad_folios: parseInt(cantFolios) || 0,
+    cantidad_testimonios: parseInt(cantTestimonios) || 0,
+    parentesco_itg: esDonacion ? parentescoItg : undefined,
   });
 
   // ── Actions ──
@@ -357,6 +366,7 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
                 <SelectContent>
                   <SelectItem value="simple">Simple</SelectItem>
                   <SelectItem value="urgente">Urgente</SelectItem>
+                  <SelectItem value="en_el_dia">En el día</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -370,6 +380,31 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
               <Label className="text-xs">Cant. Personas</Label>
               <Input type="number" min={1} value={cantPersonas} onChange={e => setCantPersonas(e.target.value)} className="h-9" />
             </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Folios de Protocolo</Label>
+              <Input type="number" min={0} value={cantFolios} onChange={e => setCantFolios(e.target.value)} className="h-9" />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Testimonios</Label>
+              <Input type="number" min={0} value={cantTestimonios} onChange={e => setCantTestimonios(e.target.value)} className="h-9" />
+            </div>
+
+            {esDonacion && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">Parentesco (ITG)</Label>
+                <Select value={parentescoItg} onValueChange={(v: any) => setParentescoItg(v)}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FAMILIA">Padres/Hijos/Cónyuge</SelectItem>
+                    <SelectItem value="OTROS_ASC_DESC">Otros asc./desc.</SelectItem>
+                    <SelectItem value="COLATERALES_2DO">Colaterales 2do grado</SelectItem>
+                    <SelectItem value="COLATERALES_3_4">Colat. 3ro-4to / Extraños</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           {/* Switches */}

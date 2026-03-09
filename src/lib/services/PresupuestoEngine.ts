@@ -14,6 +14,7 @@
 import fiscalConfig from "@/data/fiscal_config_2026.json";
 import rpiTasas from "@/data/rpi_tasas_2026.json";
 import distribucionCostos from "@/data/distribucion_costos_2026.json";
+import otrasTasas from "@/data/otras_tasas_colesba_2026.json";
 import { taxonomyService } from "@/lib/services/TaxonomyService";
 
 // ─── Types ────────────────────────────────────────────────
@@ -90,6 +91,11 @@ export interface PresupuestoInput {
   // Extras opcionales
   cantidad_legalizaciones?: number;
   cantidad_apostillas?: number;
+  cantidad_folios?: number;          // Folios de protocolo elaborados
+  cantidad_testimonios?: number;     // Testimonios particulares (1-5 fojas)
+
+  // ITG (Donaciones/Herencias)
+  parentesco_itg?: "FAMILIA" | "OTROS_ASC_DESC" | "COLATERALES_2DO" | "COLATERALES_3_4";
 }
 
 // ─── Helpers ──────────────────────────────────────────────
@@ -405,6 +411,23 @@ export function calcularPresupuesto(input: PresupuestoInput): PresupuestoResult 
     });
   }
 
+  // ─── 5b. Validación aporte mínimo ───
+  const totalAportes = round2(lineas.filter(l => l.categoria === "APORTE").reduce((s, l) => s + l.monto, 0));
+  if (totalAportes > 0 && totalAportes < fiscalConfig.aporte_min_notarial) {
+    const diff = round2(fiscalConfig.aporte_min_notarial - totalAportes);
+    lineas.push({
+      rubro: "APORTE_AJUSTE_MINIMO",
+      concepto: `Ajuste al aporte mínimo CESBA`,
+      baseCalculo: fiscalConfig.aporte_min_notarial,
+      alicuota: null,
+      monto: diff,
+      pagador: "ESCRIBANIA",
+      categoria: "APORTE",
+      notas: `Aportes calculados ($${totalAportes.toLocaleString()}) por debajo del mínimo ($${fiscalConfig.aporte_min_notarial.toLocaleString()}).`,
+    });
+    alertas.push(`Aportes ajustados al mínimo CESBA ($${fiscalConfig.aporte_min_notarial.toLocaleString()}).`);
+  }
+
   // ─── 6. Certificados RPI ───
   const addCertificado = (key: keyof typeof rpiTasas.publicidad, cantidad: number, label?: string) => {
     const cert = rpiTasas.publicidad[key];
@@ -491,6 +514,53 @@ export function calcularPresupuesto(input: PresupuestoInput): PresupuestoResult 
     });
   }
 
+  // ─── 9. Folio de protocolo elaborado ───
+  if (input.cantidad_folios && input.cantidad_folios > 0) {
+    const precioFolio = fiscalConfig.protocolo.folio_elaborado;
+    lineas.push({
+      rubro: "FOLIO_ELABORADO",
+      concepto: "Folio de protocolo elaborado",
+      baseCalculo: precioFolio,
+      alicuota: null,
+      monto: round2(precioFolio * input.cantidad_folios),
+      pagador: "ESCRIBANIA",
+      categoria: "GASTO_ADMIN",
+      notas: `${input.cantidad_folios} × $${precioFolio.toLocaleString()}`,
+    });
+  }
+
+  // ─── 10. Testimonios ───
+  if (input.cantidad_testimonios && input.cantidad_testimonios > 0) {
+    const precioTest = otrasTasas.archivo_actuaciones_notariales.testimonio_particular.normal_1a5;
+    lineas.push({
+      rubro: "TESTIMONIO",
+      concepto: "Testimonio particular (1-5 fojas)",
+      baseCalculo: precioTest,
+      alicuota: null,
+      monto: round2(precioTest * input.cantidad_testimonios),
+      pagador: "COMUN",
+      categoria: "GASTO_ADMIN",
+      notas: `${input.cantidad_testimonios} × $${precioTest.toLocaleString()}`,
+    });
+  }
+
+  // ─── 11. ITG (Impuesto Transmisión Gratuita — donaciones/herencias) ───
+  if (input.tipo_acto === "DONACION" && input.parentesco_itg && montoArs > 0) {
+    const itgResult = calcITG(montoArs, input.parentesco_itg);
+    if (itgResult.monto > 0) {
+      lineas.push({
+        rubro: "ITG_PBA",
+        concepto: `Imp. Transmisión Gratuita PBA (${itgResult.parentescoLabel})`,
+        baseCalculo: itgResult.baseGravada,
+        alicuota: itgResult.alicuotaEfectiva,
+        monto: itgResult.monto,
+        pagador: "COMPRADOR",
+        categoria: "IMPUESTO",
+        notas: `Base gravada: $${itgResult.baseGravada.toLocaleString()} (mín. no imp. $${itgResult.minimoNoImponible.toLocaleString()})`,
+      });
+    }
+  }
+
   // ─── UIF Alert ───
   const uifCompraventa = (distribucionCostos as any).uif_reportes?.compraventa_inmueble_efectivo?.monto;
   if (uifCompraventa && montoArs > uifCompraventa) {
@@ -521,6 +591,77 @@ export function calcularPresupuesto(input: PresupuestoInput): PresupuestoResult 
       fecha_calculo: new Date().toISOString(),
     },
     alertas,
+  };
+}
+
+// ─── ITG Calculator ──────────────────────────────────────
+
+interface ITGResult {
+  monto: number;
+  baseGravada: number;
+  minimoNoImponible: number;
+  alicuotaEfectiva: number | null;
+  parentescoLabel: string;
+}
+
+type ParentescoITG = NonNullable<PresupuestoInput["parentesco_itg"]>;
+
+const ITG_LABELS: Record<ParentescoITG, string> = {
+  FAMILIA: "Padres/Hijos/Cónyuge",
+  OTROS_ASC_DESC: "Otros asc./desc.",
+  COLATERALES_2DO: "Colaterales 2° grado",
+  COLATERALES_3_4: "Colaterales 3°/4° y extraños",
+};
+
+const ITG_PCT_KEY: Record<ParentescoITG, string> = {
+  FAMILIA: "familia_pct",
+  OTROS_ASC_DESC: "otros_asc_desc_pct",
+  COLATERALES_2DO: "colaterales_2do_pct",
+  COLATERALES_3_4: "colaterales_3_4_extraños_pct",
+};
+
+const ITG_CUOTA_KEY: Record<ParentescoITG, string> = {
+  FAMILIA: "cuota_fija_familia",
+  OTROS_ASC_DESC: "cuota_fija_otros",
+  COLATERALES_2DO: "cuota_fija_col2",
+  COLATERALES_3_4: "cuota_fija_col34",
+};
+
+function calcITG(monto: number, parentesco: ParentescoITG): ITGResult {
+  const itg = (distribucionCostos as any).impuesto_transmision_gratuita;
+  if (!itg) return { monto: 0, baseGravada: 0, minimoNoImponible: 0, alicuotaEfectiva: null, parentescoLabel: ITG_LABELS[parentesco] };
+
+  const minNoImp = parentesco === "FAMILIA"
+    ? itg.minimo_no_imponible.padres_hijos_conyuge
+    : itg.minimo_no_imponible.resto_beneficiarios;
+
+  const baseGravada = Math.max(0, monto - minNoImp);
+  if (baseGravada <= 0) {
+    return { monto: 0, baseGravada: 0, minimoNoImponible: minNoImp, alicuotaEfectiva: null, parentescoLabel: ITG_LABELS[parentesco] };
+  }
+
+  const pctKey = ITG_PCT_KEY[parentesco];
+  const cuotaKey = ITG_CUOTA_KEY[parentesco];
+  const escala = itg.escala as any[];
+
+  let impuesto = 0;
+  for (let i = escala.length - 1; i >= 0; i--) {
+    const tramo = escala[i];
+    if (baseGravada > tramo.desde) {
+      const cuotaFija = tramo[cuotaKey] ?? 0;
+      const alicuota = (tramo[pctKey] ?? 0) / 100;
+      const excedente = baseGravada - tramo.desde;
+      impuesto = round2(cuotaFija + excedente * alicuota);
+      break;
+    }
+  }
+
+  return {
+    monto: impuesto,
+    baseGravada,
+    minimoNoImponible: minNoImp,
+    alicuotaEfectiva: impuesto / baseGravada,
+    parentescoLabel: ITG_LABELS[parentesco],
   };
 }
 
