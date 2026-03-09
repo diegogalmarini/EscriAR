@@ -826,6 +826,22 @@ Pipeline dual (frontend sync + worker async Railway) 100% funcional y estabiliza
 
 ## 17. Changelog
 
+### 2026-03-09 (Claude) — ET16, ET12b, ET17: Compartir, Admin Jurisdicciones, Pre-carga
+
+#### ET17 — Pre-carga automática en PresupuestoTab
+- Los campos se llenan al abrir la pestaña usando datos de carpeta, operación, inmueble y participantes
+- Campos: tipo_acto, monto, moneda, cotización, VF, tipo inmueble, cantidad inmuebles/personas, jurisdicción, VU, Bco Provincia, fecha adquisición, cert no retención, urgencia, honorarios, legalizaciones, apostillas
+- Fix: import useEffect movido al top-level (import en medio del componente causaba build error del otro agente)
+
+#### ET16 — Compartir presupuesto por WhatsApp, email y clipboard
+- Componente `CompartirPresupuestoDialog` con 3 canales de envío
+- Integrado en PresupuestoTab
+
+#### ET12b — Panel Admin Jurisdicciones (completado)
+- JurisdictionResolver ahora lee de DB con caché TTL 5min + fallback JSON
+- Panel admin CRUD + filtros + bulk toggle en `/admin/users`
+- Server actions para create, update, delete, toggle jurisdicciones
+
 ### 2026-03-08 (Claude) — ET13, ET14, ET15: Sistema de Presupuestos, Exportación a PDF y Sellos CABA
 
 #### ET15 — Soporte Sellos CABA en PresupuestoEngine
