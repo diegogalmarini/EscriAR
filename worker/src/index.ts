@@ -384,7 +384,7 @@ async function workerLoop() {
 
                 if (!inmuebleId) {
                     // Resolver códigos jurisdiccionales determinísticamente
-                    const jurisdiccion = resolveJurisdiction(partidoId);
+                    const jurisdiccion = await resolveJurisdiction(partidoId);
 
                     const { data: insertedInmueble, error: inmuebleError } = await supabase.from('inmuebles').insert({
                         partido_id: partidoId,
@@ -1040,7 +1040,7 @@ async function processEscrituraExtraction(job: any) {
                     }
 
                     // Resolver códigos jurisdiccionales
-                    const jurisdiccion2 = resolveJurisdiction(partidoId);
+                    const jurisdiccion2 = await resolveJurisdiction(partidoId);
 
                     const { error: inmError } = await supabase.from('inmuebles').insert({
                         partido_id: partidoId,

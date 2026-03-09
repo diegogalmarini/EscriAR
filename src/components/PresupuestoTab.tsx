@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useTransition } from "react";
+import { useState, useMemo, useTransition, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,17 +82,17 @@ interface PresupuestoTabProps {
 // ─── Component ────────────────────────────────────────────
 
 export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresupuesto }: PresupuestoTabProps) {
-  // Auto-seed from operación
+  // Auto-seed from carpeta/operación/inmueble/participantes
   const op = currentEscritura?.operaciones?.[0];
-  const inmueble = currentEscritura?.operaciones?.[0]?.inmuebles?.[0]
-    ?? currentEscritura?.inmuebles?.[0];
+  const inmueble = op?.inmuebles?.[0] ?? currentEscritura?.inmuebles?.[0];
+  const participantes = op?.participantes_operacion ?? [];
 
   // ── Form State ──
-  const [tipoActo, setTipoActo] = useState(op?.tipo_acto?.toUpperCase() || "COMPRAVENTA");
-  const [monto, setMonto] = useState(op?.monto_operacion?.toString() || "");
+  const [tipoActo, setTipoActo] = useState("COMPRAVENTA");
+  const [monto, setMonto] = useState("");
   const [moneda, setMoneda] = useState<"ARS" | "USD">("USD");
   const [cotUsd, setCotUsd] = useState("1200");
-  const [vf, setVf] = useState(inmueble?.valuacion_fiscal?.toString() || "");
+  const [vf, setVf] = useState("");
   const [tipoInmueble, setTipoInmueble] = useState<"EDIFICADO" | "BALDIO" | "RURAL">("EDIFICADO");
   const [jurisdiccion, setJurisdiccion] = useState<"PBA" | "CABA">("PBA");
   const [esVU, setEsVU] = useState(false);
@@ -115,6 +115,48 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
   const [shareOpen, setShareOpen] = useState(false);
 
   const esHipoteca = tipoActo === "HIPOTECA";
+
+  // ── Pre-carga automática ──
+  // Solo al montar, si no hay presupuesto guardado
+  useEffect(() => {
+    if (!presupuestoGuardado) {
+      // Tipo de acto
+      if (op?.tipo_acto) setTipoActo(op.tipo_acto.toUpperCase());
+      // Monto
+      if (op?.monto_operacion) setMonto(op.monto_operacion.toString());
+      // Moneda
+      if (op?.moneda_operacion) setMoneda(op.moneda_operacion);
+      // Cotización USD
+      if (op?.cotizacion_usd) setCotUsd(op.cotizacion_usd.toString());
+      // Valuación fiscal
+      if (inmueble?.valuacion_fiscal) setVf(inmueble.valuacion_fiscal.toString());
+      // Tipo inmueble
+      if (inmueble?.tipo_inmueble) setTipoInmueble(inmueble.tipo_inmueble);
+      // Cantidad de inmuebles
+      setCantInmuebles(op?.inmuebles?.length?.toString() || "1");
+      // Cantidad de personas
+      setCantPersonas(participantes.length?.toString() || "2");
+      // Partido/jurisdicción
+      if (inmueble?.partido_code) setJurisdiccion("PBA");
+      if (inmueble?.delegacion_code) setJurisdiccion("PBA");
+      // Vivienda única
+      if (op?.es_vivienda_unica) setEsVU(!!op.es_vivienda_unica);
+      // Banco Provincia
+      if (op?.es_banco_provincia) setEsBcoProv(!!op.es_banco_provincia);
+      // Fecha adquisición
+      if (op?.fecha_adquisicion_vendedor) setFechaAdq(op.fecha_adquisicion_vendedor);
+      // Certificado no retención
+      if (op?.tiene_cert_no_retencion_iti) setCertNoRetencion(!!op.tiene_cert_no_retencion_iti);
+      // Urgencia
+      if (op?.urgencia_rpi) setUrgencia(op.urgencia_rpi);
+      // Honorarios
+      if (op?.honorarios_pct) setHonorariosTipo(op.honorarios_pct.toString());
+      if (op?.honorarios_fijo) setHonorariosFijo(op.honorarios_fijo.toString());
+      // Legalizaciones/apostillas
+      if (op?.cantidad_legalizaciones) setCantLeg(op.cantidad_legalizaciones.toString());
+      if (op?.cantidad_apostillas) setCantApo(op.cantidad_apostillas.toString());
+    }
+  }, [currentEscritura]);
 
   // ── Build input ──
   const buildInput = (): PresupuestoInput => ({
