@@ -39,8 +39,9 @@ Implementar la Carpeta notarial con:
 | ET13 — Presupuestos Notariales | ✅ COMPLETADA | 052 | Motor de liquidación (`PresupuestoEngine`), UI `PresupuestoTab`, tablas de persistencia estructurada, y reorganización UI. |
 | ET14 — Exportación PDF | ✅ COMPLETADA | — | Generación de presupuesto en PDF estructurado con `jsPDF` (`jspdf-autotable`). |
 | ET15 — Sellos CABA | ✅ COMPLETADA | — | Alícuotas escalonadas para Sellos en CABA y selector de jurisdicción (PBA / CABA). |
+| ET16 — Compartir Presupuesto | ✅ COMPLETADA | — | `CompartirPresupuestoDialog`: envío por WhatsApp (`wa.me/`), Email (`mailto:`), copiar al portapapeles. Selector de destinatario con contactos de la carpeta. Integrado en `PresupuestoTab`. |
 
-Total: **52 migraciones SQL**, **20+ componentes principales**, **15 de 16 etapas completadas**.
+Total: **52 migraciones SQL**, **20+ componentes principales**, **16 de 17 etapas completadas**.
 
 ---
 
