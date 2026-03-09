@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Separator } from "@/components/ui/separator";
 import {
   Calculator, Save, Send, AlertTriangle, CheckCircle2, Info, DollarSign,
-  FileText, Receipt, Download,
+  FileText, Receipt, Download, Share2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -22,6 +22,7 @@ import {
 } from "@/app/actions/presupuestos";
 import type { PresupuestoInput, PresupuestoResult, LineaPresupuesto, Pagador } from "@/lib/services/PresupuestoEngine";
 import { generarPresupuestoPdf } from "@/lib/pdf/presupuestoPdf";
+import { CompartirPresupuestoDialog } from "@/components/CompartirPresupuestoDialog";
 
 // ─── Helpers ──────────────────────────────────────────────
 
@@ -110,6 +111,8 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
   const [resultado, setResultado] = useState<PresupuestoResult | null>(null);
   const [presupuestoGuardado, setPresupuestoGuardado] = useState(savedPresupuesto ?? null);
   const [isPending, startTransition] = useTransition();
+
+  const [shareOpen, setShareOpen] = useState(false);
 
   const esHipoteca = tipoActo === "HIPOTECA";
 
@@ -486,6 +489,10 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
               <Download className="h-4 w-4 mr-2" /> Descargar PDF
             </Button>
 
+            <Button variant="outline" onClick={() => setShareOpen(true)}>
+              <Share2 className="h-4 w-4 mr-2" /> Compartir
+            </Button>
+
             {presupuestoGuardado && presupuestoGuardado.estado === "BORRADOR" && (
               <Button onClick={handleEnviar} disabled={isPending} variant="secondary">
                 <Send className="h-4 w-4 mr-2" /> Marcar como Enviado
@@ -504,6 +511,25 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
             Valores según Ley Impositiva PBA 15.558, Tabla CESBA ENE 2026, RPI DTR 13/25.
             Presupuesto estimativo, sujeto a verificación de certificados y condiciones particulares.
           </p>
+
+          {/* Compartir Dialog */}
+          <CompartirPresupuestoDialog
+            open={shareOpen}
+            onOpenChange={setShareOpen}
+            resultado={resultado}
+            participantes={
+              (currentEscritura?.operaciones ?? []).flatMap((op: any) =>
+                (op.participantes_operacion ?? []).map((po: any) => {
+                  const persona = po.persona ?? po.personas;
+                  return {
+                    nombre_completo: persona?.nombre_completo ?? "Sin nombre",
+                    contacto: persona?.contacto,
+                    rol: po.rol ?? "PARTE",
+                  };
+                })
+              )
+            }
+          />
         </>
       )}
     </div>
