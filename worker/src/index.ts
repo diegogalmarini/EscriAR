@@ -358,7 +358,9 @@ async function workerLoop() {
             // Normalize helpers (inline since worker is a separate project)
             const normPartido = (p: string) => {
                 const accentMap: Record<string, string> = { 'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ü': 'u' };
-                const stripped = (p || 'Sin Partido').trim().toLowerCase().replace(/[áéíóúü]/g, c => accentMap[c] || c);
+                // Strip parenthetical codes like "(007)" that AI sometimes appends
+                const cleaned = (p || 'Sin Partido').trim().replace(/\s*\(\d+\)\s*/g, '').trim() || 'Sin Partido';
+                const stripped = cleaned.toLowerCase().replace(/[áéíóúü]/g, c => accentMap[c] || c);
                 return stripped.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
             };
             const normPartida = (p: string) => (p || '000000').trim().replace(/\./g, '');
@@ -915,6 +917,13 @@ async function processEscrituraExtraction(job: any) {
 
         console.log(`[WORKER] ESCRITURA_EXTRACT: Extracción exitosa. Campos: ${Object.keys(result.datos).filter(k => (result.datos as any)[k] !== null).join(', ')}`);
 
+        // 4b. Resolver código CESBA determinísticamente (la IA no conoce la tabla oficial)
+        const codigoResuelto = getCESBACode(result.datos.tipo_acto || '') || result.datos.codigo_acto;
+        if (codigoResuelto && codigoResuelto !== result.datos.codigo_acto) {
+            console.log(`[WORKER] ESCRITURA_EXTRACT: Código CESBA corregido: "${result.datos.codigo_acto}" → "${codigoResuelto}" (tipo_acto: ${result.datos.tipo_acto})`);
+            result.datos.codigo_acto = codigoResuelto;
+        }
+
         // 5. Guardar resultados en protocolo_registros
         const updateData: Record<string, any> = {
             extraction_status: 'COMPLETADO',
@@ -937,8 +946,8 @@ async function processEscrituraExtraction(job: any) {
         if (!currentReg?.comprador_deudor && result.datos.comprador_deudor) {
             updateData.comprador_deudor = result.datos.comprador_deudor;
         }
-        if (!currentReg?.codigo_acto && result.datos.codigo_acto) {
-            updateData.codigo_acto = result.datos.codigo_acto;
+        if (!currentReg?.codigo_acto) {
+            updateData.codigo_acto = codigoResuelto;
         }
         if (!currentReg?.monto_ars && result.datos.monto_ars) {
             updateData.monto_ars = result.datos.monto_ars;
@@ -1008,7 +1017,9 @@ async function processEscrituraExtraction(job: any) {
         if (result.datos.inmuebles && result.datos.inmuebles.length > 0) {
             const normPartido = (p: string) => {
                 const accentMap: Record<string, string> = { 'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ü': 'u' };
-                const stripped = (p || 'Sin Partido').trim().toLowerCase().replace(/[áéíóúü]/g, c => accentMap[c] || c);
+                // Strip parenthetical codes like "(007)" that AI sometimes appends
+                const cleaned = (p || 'Sin Partido').trim().replace(/\s*\(\d+\)\s*/g, '').trim() || 'Sin Partido';
+                const stripped = cleaned.toLowerCase().replace(/[áéíóúü]/g, c => accentMap[c] || c);
                 return stripped.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
             };
             const normPartida = (p: string) => (p || '000000').trim().replace(/\./g, '');

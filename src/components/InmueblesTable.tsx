@@ -23,7 +23,7 @@ interface InmueblesTableProps {
     onInmuebleDeleted: () => void;
 }
 
-type SortKey = "partido" | "partida" | "nomenclatura";
+type SortKey = "partido_code" | "partido" | "partida" | "nomenclatura";
 type SortDirection = "asc" | "desc";
 
 interface SortConfig {
@@ -42,6 +42,12 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
     const sortedData = [...data].sort((a, b) => {
         const { key, direction } = sortConfig;
         const multiplier = direction === "asc" ? 1 : -1;
+
+        if (key === "partido_code") {
+            const valA = a.partido_code || "";
+            const valB = b.partido_code || "";
+            return valA.localeCompare(valB, undefined, { numeric: true }) * multiplier;
+        }
 
         if (key === "partido") {
             const valA = a.partido_id || "";
@@ -76,7 +82,17 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
         <Table className="w-full table-fixed">
             <TableHeader>
                 <TableRow className="bg-slate-50/50">
-                    <TableHead className="w-[20%]">
+                    <TableHead className="w-[7%]">
+                        <Button
+                            variant="ghost"
+                            onClick={() => handleSort("partido_code")}
+                            className="h-8 text-xs font-normal text-muted-foreground hover:bg-slate-100 px-2 -ml-2"
+                        >
+                            Cód.
+                            <ArrowUpDown className="ml-2 h-3 w-3" />
+                        </Button>
+                    </TableHead>
+                    <TableHead className="w-[16%]">
                         <Button
                             variant="ghost"
                             onClick={() => handleSort("partido")}
@@ -86,7 +102,7 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
                             <ArrowUpDown className="ml-2 h-3 w-3" />
                         </Button>
                     </TableHead>
-                    <TableHead className="w-[15%]">
+                    <TableHead className="w-[13%]">
                         <Button
                             variant="ghost"
                             onClick={() => handleSort("partida")}
@@ -96,13 +112,13 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
                             <ArrowUpDown className="ml-2 h-3 w-3" />
                         </Button>
                     </TableHead>
-                    <TableHead className="w-[53%]">
+                    <TableHead className="w-[52%]">
                         <Button
                             variant="ghost"
                             onClick={() => handleSort("nomenclatura")}
                             className="h-8 text-xs font-normal text-muted-foreground hover:bg-slate-100 px-2 -ml-2"
                         >
-                            Nomenclatura
+                            Nomenclatura catastral
                             <ArrowUpDown className="ml-2 h-3 w-3" />
                         </Button>
                     </TableHead>
@@ -116,6 +132,11 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
                         className="group hover:bg-slate-50/50 cursor-pointer transition-colors"
                         onClick={() => router.push(`/inmuebles/${inmueble.id}`)}
                     >
+                        <TableCell className="py-2 align-top">
+                            <div className="font-mono text-xs text-muted-foreground text-center">
+                                {inmueble.partido_code || '—'}
+                            </div>
+                        </TableCell>
                         <TableCell className="py-2 align-top" title={inmueble.partido_id}>
                             <div className="text-sm font-normal text-slate-700 break-words">
                                 {inmueble.partido_id || 'N/A'}
@@ -166,7 +187,7 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
                 ))}
                 {sortedData.length === 0 && (
                     <TableRow>
-                        <TableCell colSpan={4} className="text-center py-20 text-muted-foreground">
+                        <TableCell colSpan={5} className="text-center py-20 text-muted-foreground">
                             <Building2 className="mx-auto h-12 w-12 opacity-20 mb-4" />
                             No se encontraron inmuebles registrados.
                         </TableCell>

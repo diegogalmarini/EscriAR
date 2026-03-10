@@ -20,8 +20,11 @@ const ACCENT_MAP: Record<string, string> = { 'á': 'a', 'é': 'e', 'í': 'i', '�
 
 export function normalizePartido(partido: string | null | undefined): string {
     if (!partido || !partido.trim()) return 'Sin Partido';
-    // Strip accents for canonical form (except ñ), then Title Case
-    const stripped = partido.trim().toLowerCase().replace(/[áéíóúü]/g, c => ACCENT_MAP[c] || c);
+    // 1. Strip parenthetical codes like "(007)", "(7)" that AI sometimes appends
+    let cleaned = partido.trim().replace(/\s*\(\d+\)\s*/g, '').trim();
+    if (!cleaned) return 'Sin Partido';
+    // 2. Strip accents for canonical form (except ñ), then Title Case
+    const stripped = cleaned.toLowerCase().replace(/[áéíóúü]/g, c => ACCENT_MAP[c] || c);
     return stripped.split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
