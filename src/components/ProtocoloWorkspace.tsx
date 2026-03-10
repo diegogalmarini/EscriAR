@@ -9,7 +9,7 @@ import {
     Plus, Trash2, ClipboardList, BookOpen,
     AlertTriangle, Search,
     ArrowUpDown, ArrowUp, ArrowDown,
-    Eye, FolderOpen, ExternalLink, Pencil, Loader2, TableProperties
+    Eye, FolderOpen, ExternalLink, Pencil, Loader2
 } from "lucide-react";
 
 import {
@@ -294,14 +294,11 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                                                     e.stopPropagation();
                                                                     window.open(`/tabla-actos?q=${encodeURIComponent(String(displayValue).trim())}`, "_blank");
                                                                 }}
-                                                                className="font-mono text-[11px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded hover:bg-blue-100 hover:text-blue-900 transition-colors cursor-pointer inline-flex items-center gap-1"
-                                                                title={`Ver código ${displayValue} en Tabla de Actos`}
+                                                                className="font-mono text-[11px] text-slate-700 hover:underline cursor-pointer"
+                                                                title={`Ver en Tabla de Actos`}
                                                             >
                                                                 {String(displayValue)}
-                                                                <TableProperties className="h-2.5 w-2.5 shrink-0 opacity-60" />
                                                             </button>
-                                                        ) : col.key === "codigo_acto" ? (
-                                                            <span className="text-slate-400 text-[11px]">—</span>
                                                         ) : null}
                                                     </span>
                                                 </div>
