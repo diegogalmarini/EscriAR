@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +24,7 @@ interface ActEntry {
     raw_row?: string[];
 }
 
-export default function TablaActosPage() {
+function TablaActosContent() {
     const searchParams = useSearchParams();
     const [searchTerm, setSearchTerm] = useState(() => searchParams.get("q") ?? "");
     const highlightCode = searchParams.get("q") ?? "";
@@ -293,5 +293,13 @@ export default function TablaActosPage() {
             )}
 
         </div>
+    );
+}
+
+export default function TablaActosPage() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-slate-400">Cargando tabla de actos...</div>}>
+            <TablaActosContent />
+        </Suspense>
     );
 }
