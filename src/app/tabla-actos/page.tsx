@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,10 @@ interface ActEntry {
 }
 
 export default function TablaActosPage() {
-    const [searchTerm, setSearchTerm] = useState("");
+    const searchParams = useSearchParams();
+    const [searchTerm, setSearchTerm] = useState(() => searchParams.get("q") ?? "");
+    const highlightCode = searchParams.get("q") ?? "";
+    const highlightRowRef = useRef<HTMLTableRowElement | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(50);
 
@@ -55,6 +59,15 @@ export default function TablaActosPage() {
         const startIndex = (currentPage - 1) * itemsPerPage;
         return filteredActs.slice(startIndex, startIndex + itemsPerPage);
     }, [filteredActs, currentPage, itemsPerPage]);
+
+    // Auto-scroll to highlighted row when page renders with a ?q= param
+    useEffect(() => {
+        if (highlightCode && highlightRowRef.current) {
+            setTimeout(() => {
+                highlightRowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }, 150);
+        }
+    }, [highlightCode, paginatedActs]);
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(e.target.value);
@@ -169,6 +182,7 @@ export default function TablaActosPage() {
                         {paginatedActs.map((act) => {
                             const row = act.raw_row || [];
                             const codigo = row[1] || act.code;
+                            const isHighlighted = highlightCode && codigo === highlightCode;
                             const tipoActo = row[2] || act.description;
                             const baseImponible = row[3] || '-';
                             const impuestoTasa = row[4] || '-';
@@ -180,7 +194,11 @@ export default function TablaActosPage() {
                             const aporteMinimo = row[11] || '-';
 
                             return (
-                                <tr key={act.code} className="hover:bg-slate-50 transition-colors divide-x divide-slate-100 text-xs">
+                                <tr
+                                    key={act.code}
+                                    ref={isHighlighted ? highlightRowRef : null}
+                                    className={`hover:bg-slate-50 transition-colors divide-x divide-slate-100 text-xs${isHighlighted ? " bg-yellow-50 ring-2 ring-inset ring-yellow-400" : ""}`}
+                                >
                                     <td className="px-2 py-3 text-center align-top">
                                         <code className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-mono text-[11px] whitespace-nowrap">
                                             {codigo}

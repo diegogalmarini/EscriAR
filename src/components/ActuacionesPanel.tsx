@@ -197,11 +197,29 @@ export default function ActuacionesPanel({
     };
 
     const handleDownload = async (actuacion: Actuacion) => {
-        const result = await getActuacionDownloadUrl(actuacion.id);
-        if (result.success && result.url) {
-            window.open(result.url, "_blank");
-        } else {
-            toast.error(result.error || "Error al descargar");
+        try {
+            const result = await getActuacionDownloadUrl(actuacion.id);
+            if (!(result.success && result.url)) {
+                toast.error(result.error || "Error al descargar");
+                return;
+            }
+
+            const response = await fetch(result.url);
+            if (!response.ok) {
+                throw new Error("No se pudo descargar el archivo");
+            }
+
+            const blob = await response.blob();
+            const downloadUrl = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            link.download = result.filename || `${actuacion.act_type}.docx`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(downloadUrl);
+        } catch (error: any) {
+            toast.error(error?.message || "Error al descargar");
         }
     };
 

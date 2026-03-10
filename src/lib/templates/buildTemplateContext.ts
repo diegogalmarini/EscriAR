@@ -11,7 +11,7 @@
  */
 
 import { createClient } from "@/lib/supabaseServer";
-import { priceToSpanishWords, amountToWords } from "./numberToWords";
+import { priceToSpanishWords } from "./numberToWords";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -87,6 +87,12 @@ interface EscribanoDB {
     matricula: string | null;
     cuit: string | null;
     domicilio_legal: string | null;
+}
+
+interface PresupuestoDB {
+    monto_operacion: number | null;
+    moneda: string | null;
+    version: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -189,6 +195,35 @@ interface OperacionTemplate {
     saldo: string;
     valuacion_fiscal: string;
     valuacion_fiscal_acto: string;
+}
+
+interface CurrencyMeta {
+    labelUpper: string;
+    labelLower: string;
+    symbol: string;
+}
+
+function normalizeCurrencyMeta(monedaRaw: string | null | undefined): CurrencyMeta {
+    const moneda = (monedaRaw || "ARS").toUpperCase().trim();
+    if (moneda === "USD" || moneda === "U$S" || moneda === "DOLAR" || moneda === "DÓLAR") {
+        return {
+            labelUpper: "DÓLARES ESTADOUNIDENSES",
+            labelLower: "dólares estadounidenses",
+            symbol: "U$S",
+        };
+    }
+    return {
+        labelUpper: "PESOS",
+        labelLower: "pesos",
+        symbol: "$",
+    };
+}
+
+function formatMoney(amount: number, symbol: string): string {
+    return `${symbol} ${amount.toLocaleString("es-AR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })}`;
 }
 
 interface CertificadosTemplate {
@@ -458,6 +493,16 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
 
     const certs: CertificadoDB[] = certificados || [];
 
+    // 2b. Fetch último presupuesto (fuente preferida para monto/moneda)
+    const { data: presupuesto } = await supabase
+        .from("presupuestos")
+        .select("monto_operacion, moneda, version")
+        .eq("carpeta_id", carpetaId)
+        .order("version", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+    const presupuestoActual: PresupuestoDB | null = (presupuesto as PresupuestoDB | null) || null;
+
     // 3. Fetch escribano (default)
     const { data: escribano } = await supabase
         .from("escribanos")
@@ -498,6 +543,11 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
     //    templates. They duplicate an existing value under the name the template expects.
     const fechaParts = extractDatePartsSpanish(escritura?.fecha_escritura);
     const actoTitulo = operacion?.tipo_acto || EMPTY;
+
+    const montoPresupuesto = presupuestoActual?.monto_operacion ?? null;
+    const currencyMeta = presupuestoActual?.moneda
+        ? normalizeCurrencyMeta(presupuestoActual.moneda)
+        : null;
 
     const context: TemplateContext = {
         // --- escritura ---
@@ -600,20 +650,23 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
 
         // --- operación ---
         operacion: {
-            precio_venta: operacion?.monto_operacion
-                ? `$${operacion.monto_operacion.toLocaleString("es-AR")}`
-                : EMPTY,
-            precio_letras: operacion?.monto_operacion
-                ? priceToSpanishWords(operacion.monto_operacion)
-                : EMPTY,
-            moneda: "pesos",
+            precio_venta: (() => {
+                if (!montoPresupuesto || !currencyMeta) return EMPTY;
+                return formatMoney(montoPresupuesto, currencyMeta.symbol);
+            })(),
+            precio_letras: (() => {
+                if (!montoPresupuesto || !currencyMeta) return EMPTY;
+                return priceToSpanishWords(montoPresupuesto, currencyMeta.labelUpper, currencyMeta.symbol);
+            })(),
+            moneda: currencyMeta?.labelLower || EMPTY,
             forma_pago: EMPTY, // no persiste en BD aún
             plazo_pago: EMPTY,
             // Alias TB
-            precio_total: operacion?.monto_operacion
-                ? `$${operacion.monto_operacion.toLocaleString("es-AR")}`
-                : EMPTY,
-            precio_numeros: operacion?.monto_operacion?.toString() || EMPTY,
+            precio_total: (() => {
+                if (!montoPresupuesto || !currencyMeta) return EMPTY;
+                return formatMoney(montoPresupuesto, currencyMeta.symbol);
+            })(),
+            precio_numeros: montoPresupuesto?.toString() || EMPTY,
             senia: EMPTY,
             saldo: EMPTY,
             valuacion_fiscal: EMPTY,

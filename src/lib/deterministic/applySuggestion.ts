@@ -43,6 +43,8 @@ type Handler = (
     context: ApplyContext
 ) => Promise<ApplyResult>;
 
+type PresupuestoMoneda = "ARS" | "USD";
+
 // ─── Dispatcher ───────────────────────────────────────────
 const handlers: Record<string, Handler> = {
     AGREGAR_PERSONA: handleAgregarPersona,
@@ -161,6 +163,137 @@ async function getTramiteOperacion(_supabase: SupabaseClient, carpetaId: string)
 
     console.log(`[ET5] ✅ getTramiteOperacion: operacion_id=${operacion.id}, escritura_id=${tramiteEscritura.id} (source=TRAMITE)`);
     return operacion;
+}
+
+function normalizeMoneda(raw: unknown): PresupuestoMoneda {
+    const text = String(raw ?? "").toUpperCase();
+    if (
+        text.includes("USD") ||
+        text.includes("U$S") ||
+        text.includes("DOLAR") ||
+        text.includes("DÓLAR")
+    ) {
+        return "USD";
+    }
+    return "ARS";
+}
+
+function parseMoneyValue(raw: unknown): number | null {
+    if (raw === null || raw === undefined) return null;
+    if (typeof raw === "number") return Number.isFinite(raw) ? raw : null;
+
+    const original = String(raw).trim();
+    if (!original) return null;
+
+    // Keep only digits, comma, dot and minus to parse locale variants.
+    let cleaned = original.replace(/[^\d,.-]/g, "");
+    const hasComma = cleaned.includes(",");
+    const hasDot = cleaned.includes(".");
+
+    if (hasComma && hasDot) {
+        const lastComma = cleaned.lastIndexOf(",");
+        const lastDot = cleaned.lastIndexOf(".");
+        const decimalSep = lastComma > lastDot ? "," : ".";
+        const thousandSep = decimalSep === "," ? "." : ",";
+        cleaned = cleaned.split(thousandSep).join("");
+        if (decimalSep === ",") {
+            cleaned = cleaned.replace(",", ".");
+        } else {
+            cleaned = cleaned.replace(/,/g, "");
+        }
+    } else if (hasComma) {
+        const commaParts = cleaned.split(",");
+        const decimalCandidate = commaParts[commaParts.length - 1];
+        if (decimalCandidate.length <= 2) {
+            cleaned = cleaned.replace(/\./g, "").replace(",", ".");
+        } else {
+            cleaned = cleaned.replace(/,/g, "");
+        }
+    } else if (hasDot) {
+        const dotParts = cleaned.split(".");
+        const decimalCandidate = dotParts[dotParts.length - 1];
+        if (decimalCandidate.length > 2) {
+            cleaned = cleaned.replace(/\./g, "");
+        }
+    }
+
+    const parsed = Number.parseFloat(cleaned);
+    return Number.isFinite(parsed) ? parsed : null;
+}
+
+function extractMonetaryFromPayload(payload: any, evidenciaTexto?: string): {
+    monto: number | null;
+    moneda: PresupuestoMoneda;
+    cotizacionUsd: number | null;
+} {
+    const valorBruto = payload?.valor ?? payload?.monto ?? null;
+    const monto = parseMoneyValue(valorBruto);
+
+    const monedaRaw = payload?.moneda || payload?.currency || payload?.divisa || evidenciaTexto || "";
+    const moneda = normalizeMoneda(monedaRaw);
+
+    const cotizacionRaw = payload?.cotizacion_usd ?? payload?.tipo_cambio ?? payload?.exchangeRate ?? null;
+    const cotizacionUsd = parseMoneyValue(cotizacionRaw);
+
+    return { monto, moneda, cotizacionUsd };
+}
+
+async function upsertPresupuestoMontoFromSuggestion(ctx: ApplyContext, data: {
+    monto: number;
+    moneda: PresupuestoMoneda;
+    cotizacionUsd: number | null;
+    tipoActo: string | null;
+    codigoActo: string | null;
+}): Promise<{ presupuestoId: string; version: number; accion: "insert" | "update" }> {
+    const { data: lastPresupuesto, error: lastErr } = await supabaseAdmin
+        .from("presupuestos")
+        .select("id, version")
+        .eq("carpeta_id", ctx.carpetaId)
+        .order("version", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (lastErr) {
+        throw new Error(`Error consultando presupuesto actual: ${lastErr.message}`);
+    }
+
+    const common = {
+        monto_operacion: data.monto,
+        moneda: data.moneda,
+        cotizacion_usd: data.moneda === "USD" ? data.cotizacionUsd : null,
+        tipo_acto: data.tipoActo,
+        codigo_acto: data.codigoActo,
+    };
+
+    if (lastPresupuesto?.id) {
+        const { error: updErr } = await supabaseAdmin
+            .from("presupuestos")
+            .update(common)
+            .eq("id", lastPresupuesto.id);
+
+        if (updErr) {
+            throw new Error(`Error actualizando presupuesto: ${updErr.message}`);
+        }
+
+        return { presupuestoId: lastPresupuesto.id, version: lastPresupuesto.version, accion: "update" };
+    }
+
+    const { data: inserted, error: insErr } = await supabaseAdmin
+        .from("presupuestos")
+        .insert({
+            carpeta_id: ctx.carpetaId,
+            org_id: ctx.orgId,
+            version: 1,
+            ...common,
+        })
+        .select("id, version")
+        .single();
+
+    if (insErr || !inserted) {
+        throw new Error(`Error creando presupuesto: ${insErr?.message || "insert failed"}`);
+    }
+
+    return { presupuestoId: inserted.id, version: inserted.version, accion: "insert" };
 }
 
 /** Intenta extraer un DNI de un texto (fallback para payloads v1 legacy) */
@@ -557,6 +690,7 @@ async function handleCompletarDatos(
     const camposOperacion: Record<string, string> = {
         monto: "monto_operacion",
         monto_operacion: "monto_operacion",
+        precio: "monto_operacion",
         tipo_acto: "tipo_acto",
         codigo: "codigo",
     };
@@ -582,8 +716,43 @@ async function handleCompletarDatos(
             }
         }
 
+        if (dbColumn === "monto_operacion") {
+            const parsed = extractMonetaryFromPayload(payload, ctx.evidenciaTexto);
+            if (parsed.monto === null) {
+                return {
+                    success: false,
+                    applied_changes: null,
+                    error: `No se pudo interpretar monto_operacion desde valor=${String(valor)}`,
+                };
+            }
+
+            const sync = await upsertPresupuestoMontoFromSuggestion(ctx, {
+                monto: parsed.monto,
+                moneda: parsed.moneda,
+                cotizacionUsd: parsed.cotizacionUsd,
+                tipoActo: operacion.tipo_acto || null,
+                codigoActo: operacion.codigo || null,
+            });
+
+            return {
+                success: true,
+                applied_changes: {
+                    tabla: "presupuestos",
+                    accion: sync.accion,
+                    presupuesto_id: sync.presupuestoId,
+                    version: sync.version,
+                    campo: "monto_operacion",
+                    valor_nuevo: parsed.monto,
+                    moneda: parsed.moneda,
+                    cotizacion_usd: parsed.moneda === "USD" ? parsed.cotizacionUsd : null,
+                    valor_anterior_operacion: (operacion as any).monto_operacion,
+                    nota: "monto_operacion desde Apuntes se sincroniza en Presupuesto (fuente de verdad)",
+                },
+            };
+        }
+
         const updateData: Record<string, any> = {};
-        updateData[dbColumn] = dbColumn === "monto_operacion" ? parseFloat(valor) : valor;
+        updateData[dbColumn] = valor;
 
         // Auto-setear código CESBA cuando se define tipo_acto
         if (dbColumn === "tipo_acto") {

@@ -15,6 +15,46 @@ import {
 } from "@/lib/templates/docxRenderer";
 import type { Actuacion } from "./actuaciones-types";
 
+function sanitizeFilenamePart(value: string): string {
+    return value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[\\/:*?"<>|]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function prettyActType(actType: string): string {
+    return actType
+        .split("_")
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+        .join(" ");
+}
+
+function buildActuacionFilename(actuacion: {
+    act_type: string;
+    generation_context?: Record<string, any> | null;
+    created_at?: string;
+}): string {
+    const sources = (actuacion.generation_context?.sources || {}) as Record<string, any>;
+    const vendedores = Array.isArray(sources.vendedores) ? sources.vendedores : [];
+    const compradores = Array.isArray(sources.compradores) ? sources.compradores : [];
+
+    const vendedor = vendedores[0] ? sanitizeFilenamePart(String(vendedores[0])) : "";
+    const comprador = compradores[0] ? sanitizeFilenamePart(String(compradores[0])) : "";
+    const acto = sanitizeFilenamePart(prettyActType(actuacion.act_type || "acto"));
+    const numeroEscritura = sanitizeFilenamePart(String(actuacion.generation_context?.escritura_numero || ""));
+
+    const participantes = [vendedor, comprador].filter(Boolean).join(" a ");
+    const prefijo = numeroEscritura ? `Escritura ${numeroEscritura}` : "Escritura";
+    const fecha = new Date(actuacion.created_at || Date.now()).toISOString().slice(0, 10);
+
+    const parts = [prefijo, acto, participantes || fecha].filter(Boolean);
+    const base = sanitizeFilenamePart(parts.join(" - ")) || `Escritura-${fecha}`;
+    return `${base}.docx`;
+}
+
 // ---------------------------------------------------------------------------
 // getActuaciones — lista todas las actuaciones de una carpeta
 // ---------------------------------------------------------------------------
@@ -137,6 +177,7 @@ export async function generateActuacion(
                 template_version: template.version,
                 act_type: actuacion.act_type,
                 generated_at: new Date().toISOString(),
+                escritura_numero: (context.escritura as any)?.numero || null,
                 // Resumen de fuentes usadas (sin datos sensibles completos)
                 sources: {
                     vendedores: (context.vendedores as any[])?.map((v: any) => v.nombre_completo).filter(Boolean) || [],
@@ -257,13 +298,13 @@ export async function deleteActuacion(
 
 export async function getActuacionDownloadUrl(
     actuacionId: string
-): Promise<{ success: boolean; url?: string; error?: string }> {
+): Promise<{ success: boolean; url?: string; filename?: string; error?: string }> {
     try {
         const supabase = await createClient();
 
         const { data: actuacion } = await supabase
             .from("actuaciones")
-            .select("docx_path")
+            .select("docx_path, act_type, generation_context, created_at")
             .eq("id", actuacionId)
             .single();
 
@@ -276,7 +317,15 @@ export async function getActuacionDownloadUrl(
             return { success: false, error: "No se pudo generar URL de descarga" };
         }
 
-        return { success: true, url };
+        return {
+            success: true,
+            url,
+            filename: buildActuacionFilename(actuacion as {
+                act_type: string;
+                generation_context?: Record<string, any> | null;
+                created_at?: string;
+            }),
+        };
     } catch (error: any) {
         console.error("[getActuacionDownloadUrl] Error:", error);
         return { success: false, error: error.message };
