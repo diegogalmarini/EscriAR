@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The automated audit successfully tested the NotiAR ingestion pipeline across 7 notarial documents, revealing **critical performance bottlenecks** in the AI extraction layer while confirming that the **infrastructure foundation is stable**.
+The automated audit successfully tested the EscriAR ingestion pipeline across 7 notarial documents, revealing **critical performance bottlenecks** in the AI extraction layer while confirming that the **infrastructure foundation is stable**.
 
 ### Audit Results
 
@@ -31,7 +31,7 @@ The automated audit successfully tested the NotiAR ingestion pipeline across 7 n
 **Root Cause:** Next.js 16/Turbopack environment isolation required aggressive browser global mocking for server-side libraries (Supabase, Sentry).
 
 **Solution Implemented:**
-- Created comprehensive polyfills in [`supabaseAdmin.ts`](file:///c:/Users/diego/NotiAr/src/lib/supabaseAdmin.ts) and [`route.ts`](file:///c:/Users/diego/NotiAr/src/app/api/ingest/route.ts)
+- Created comprehensive polyfills in [`supabaseAdmin.ts`](file:///c:/Users/diego/EscriAr/src/lib/supabaseAdmin.ts) and [`route.ts`](file:///c:/Users/diego/EscriAr/src/app/api/ingest/route.ts)
 - Used `Object.defineProperty` for non-overridable global mocks
 - Verified stability through isolated dependency testing
 
@@ -107,7 +107,7 @@ This triggers the `after()` background worker and returns immediate HTTP 200 res
 
 **Recommended:** `gemini-3-flash-preview` (SILVER tier, 5-10x faster)
 
-**Action:** Update [`aiConfig.ts` MODEL_HIERARCHY](file:///c:/Users/diego/NotiAr/src/lib/aiConfig.ts#L11-L15):
+**Action:** Update [`aiConfig.ts` MODEL_HIERARCHY](file:///c:/Users/diego/EscriAr/src/lib/aiConfig.ts#L11-L15):
 
 ```typescript
 export const MODEL_HIERARCHY = [
@@ -175,8 +175,8 @@ DELETE FROM carpetas WHERE created_at > NOW() - INTERVAL '1 hour';
 
 ## Next Steps
 
-1. **[URGENT]** Lower `isLarge` threshold to 500KB in [`route.ts`](file:///c:/Users/diego/NotiAr/src/app/api/ingest/route.ts#L67)
-2. **[HIGH]** Swap MODEL_HIERARCHY ordering in [`aiConfig.ts`](file:///c:/Users/diego/NotiAr/src/lib/aiConfig.ts#L11)
+1. **[URGENT]** Lower `isLarge` threshold to 500KB in [`route.ts`](file:///c:/Users/diego/EscriAr/src/app/api/ingest/route.ts#L67)
+2. **[HIGH]** Swap MODEL_HIERARCHY ordering in [`aiConfig.ts`](file:///c:/Users/diego/EscriAr/src/lib/aiConfig.ts#L11)
 3. **[MEDIUM]** Monitor extraction times post-Flash deployment
 4. **[LOW]** Implement SSE streaming for real-time progress
 
@@ -198,7 +198,7 @@ DELETE FROM carpetas WHERE created_at > NOW() - INTERVAL '1 hour';
 
 ## Conclusion
 
-The NotiAR ingestion pipeline infrastructure is **production-ready** after environment and schema fixes. The critical path forward is **optimizing AI extraction speed** via background processing and model tier adjustments. With these changes, the system can achieve sub-30s processing times for most documents while maintaining legal-grade accuracy.
+The EscriAR ingestion pipeline infrastructure is **production-ready** after environment and schema fixes. The critical path forward is **optimizing AI extraction speed** via background processing and model tier adjustments. With these changes, the system can achieve sub-30s processing times for most documents while maintaining legal-grade accuracy.
 
 **Estimated Impact of Recommendations:**
 - Background processing: **Immediate user experience improvement** (responses in <1s)

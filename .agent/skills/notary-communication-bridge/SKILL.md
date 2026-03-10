@@ -8,7 +8,7 @@ license: Proprietary
 
 ## Overview
 
-La experiencia del cliente (CX) en una escribanía suele ser fragmentada y manual. Esta habilidad actúa como el "Concierge Digital" de NotiAR. Su función es traducir eventos técnicos del sistema (ej. `status_certificados = 'APPROVED'`) en comunicaciones humanas claras y empáticas.
+La experiencia del cliente (CX) en una escribanía suele ser fragmentada y manual. Esta habilidad actúa como el "Concierge Digital" de EscriAR. Su función es traducir eventos técnicos del sistema (ej. `status_certificados = 'APPROVED'`) en comunicaciones humanas claras y empáticas.
 
 Reduce la carga operativa del equipo administrativo al generar borradores listos para enviar para situaciones repetitivas, asegurando que el cliente siempre esté informado del avance de su carpeta.
 

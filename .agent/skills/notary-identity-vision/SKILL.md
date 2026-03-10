@@ -8,7 +8,7 @@ license: Proprietary
 
 ## Overview
 
-Cumpliendo con el **Módulo A (Gestión de Identidad)** del Roadmap NotiAR, esta habilidad permite el "Alta por Escaneo". Transforma una foto de un DNI o Pasaporte en una ficha de cliente validada, eliminando el error humano de tipeo y acelerando el proceso de apertura de carpeta.
+Cumpliendo con el **Módulo A (Gestión de Identidad)** del Roadmap EscriAR, esta habilidad permite el "Alta por Escaneo". Transforma una foto de un DNI o Pasaporte en una ficha de cliente validada, eliminando el error humano de tipeo y acelerando el proceso de apertura de carpeta.
 
 A diferencia de los extractores de texto plano, esta habilidad entiende la estructura visual del documento de identidad argentino.
 

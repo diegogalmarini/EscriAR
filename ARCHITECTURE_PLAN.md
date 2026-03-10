@@ -1,4 +1,4 @@
-# NotiAR — Carpeta AI-First (Cerebro Híbrido) — Architecture & Implementation Plan
+# EscriAR — Carpeta AI-First (Cerebro Híbrido) — Architecture & Implementation Plan
 Fecha: 2026-03-04 (actualizado 2026-03-08)
 Owner: Diego  
 Implementador: Agente  
@@ -71,7 +71,7 @@ Total: **52 migraciones SQL**, **20+ componentes principales**, **17 de 18 etapa
 - **Supabase** (Postgres + Storage + Auth + RLS)
 - **IA:** `src/lib/agent/SkillExecutor.ts` (Gemini Flash/Pro)
 - **Jobs/background:** tabla `ingestion_jobs` + worker externo (Railway) que hace polling por status
-- **Template Builder:** Streamlit en `notiar-template-builder/` (34 modelos de actos en Supabase)
+- **Template Builder:** Streamlit en `escriar-template-builder/` (34 modelos de actos en Supabase)
 
 Rutas y componentes relevantes:
 - Carpeta: `src/app/carpeta/[id]/page.tsx`
@@ -264,7 +264,7 @@ Objetivo: que al subir un PDF en "+ Nueva Escritura" se extraigan **todos** los 
 - **Seguimiento de Escrituras** — tabla plana: Esc., Folios, Día, Mes, Acto, Vendedor, Comprador, Código Acto.
 - **Índice del Protocolo 2026** — generado automáticamente: Intervinientes (uno por línea), Operación (=Acto), Fecha (=Día+Mes), Esc., Folio (primer folio).
 
-**Fase actual (pre-producción):** la escribanía sube PDFs generados fuera de NotiAr para nutrir con datos reales la pestaña Protocolo.
+**Fase actual (pre-producción):** la escribanía sube PDFs generados fuera de EscriAr para nutrir con datos reales la pestaña Protocolo.
 **Fase futura (producción):** al cerrar una Carpeta, un botón/acción toma los datos conocidos (partes, inmueble, acto, fechas, escritura) y crea/actualiza `protocolo_registros` sin necesidad de IA.
 
 Tareas — Fase actual:

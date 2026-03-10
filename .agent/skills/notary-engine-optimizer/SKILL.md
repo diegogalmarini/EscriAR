@@ -1,7 +1,7 @@
 # Skill: Notary Engine Optimizer (Internal)
 
 ## Propósito
-Garantizar que el sistema NotiAR siempre utilice el modelo de inteligencia artificial más potente y preciso disponible, evitando caídas del servicio (SaaS "muerto") ante cambios inesperados en la API de Google Gemini.
+Garantizar que el sistema EscriAR siempre utilice el modelo de inteligencia artificial más potente y preciso disponible, evitando caídas del servicio (SaaS "muerto") ante cambios inesperados en la API de Google Gemini.
 
 ## Lógica de Funcionamiento (Escudo de Fidelidad)
 Este sistema opera mediante una jerarquía determinista y validación estricta:
@@ -21,4 +21,4 @@ Este sistema opera mediante una jerarquía determinista y validación estricta:
 - **Transparencia:** Registra logs internos cuando ocurre un cambio de motor para auditoría técnica.
 
 ---
-*Implementado en `src/lib/aiConfig.ts` como el núcleo de fiabilidad de NotiAR.*
+*Implementado en `src/lib/aiConfig.ts` como el núcleo de fiabilidad de EscriAR.*

@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     }
     try {
         const { email, action } = await req.json();
-        const userEmail = email || 'test@notiar.dev';
+        const userEmail = email || 'test@escriar.dev';
 
         if (action === 'generate_session') {
             // Generar magic link y extraer tokens

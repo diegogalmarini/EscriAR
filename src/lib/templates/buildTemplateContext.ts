@@ -1,7 +1,7 @@
 /**
  * buildTemplateContext.ts
  *
- * Transforma los datos de una carpeta NotiAR en el formato JSON
+ * Transforma los datos de una carpeta EscriAR en el formato JSON
  * que esperan los templates DOCX Jinja2 del Template Builder.
  *
  * Uso: buildTemplateContext(carpetaId) → { escritura, vendedores[], compradores[], ... }

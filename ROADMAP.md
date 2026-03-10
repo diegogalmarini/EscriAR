@@ -1,4 +1,4 @@
-# NotiAR — Roadmap de Desarrollo
+# EscriAR — Roadmap de Desarrollo
 
 > **Documento compartido entre todos los agentes.**
 > Antes de comenzar cualquier tarea, consultar este roadmap para saber qué está hecho, qué falta, y en qué orden trabajar.
@@ -79,7 +79,7 @@ Lo que ya está construido y funcionando en producción:
 
 ## ETAPA 1 — Estudio de Título y Liquidación Impositiva
 
-> **Objetivo**: El escribano abre una carpeta, sube el PDF del título antecedente, y NotiAR le presenta toda la información necesaria para redactar: certificados vigentes, estudio de dominio, datos de las partes, y liquidación de impuestos.
+> **Objetivo**: El escribano abre una carpeta, sube el PDF del título antecedente, y EscriAR le presenta toda la información necesaria para redactar: certificados vigentes, estudio de dominio, datos de las partes, y liquidación de impuestos.
 
 ### Hito 1.1: Gestor de Certificados
 **Prioridad**: ALTA | **Dependencias**: ninguna
@@ -105,7 +105,7 @@ El escribano necesita solicitar y trackear certificados obligatorios antes de es
 ### Hito 1.2: Lector de Certificados RPI (Dominio e Inhibición)
 **Prioridad**: ALTA | **Dependencias**: Hito 1.1
 
-El escribano sube el certificado de dominio/inhibición y NotiAR extrae automáticamente gravámenes, embargos, hipotecas, inhibiciones.
+El escribano sube el certificado de dominio/inhibición y EscriAR extrae automáticamente gravámenes, embargos, hipotecas, inhibiciones.
 
 - [x] Implementar skill `notary-rpi-reader` en TypeScript:
   - Subir PDF del certificado → extraer con Gemini
@@ -195,7 +195,7 @@ Verificaciones obligatorias de Lavado de Activos.
 
 ## ETAPA 2 — Redacción de Escritura y Firma
 
-> **Objetivo**: NotiAR genera un borrador de escritura basado en los datos de la carpeta, el escribano lo revisa/edita, calcula sellos ARBA, y gestiona la firma.
+> **Objetivo**: EscriAR genera un borrador de escritura basado en los datos de la carpeta, el escribano lo revisa/edita, calcula sellos ARBA, y gestiona la firma.
 
 ### Hito 2.1: Biblioteca de Templates de Escritura
 **Prioridad**: ALTA | **Dependencias**: Etapa 1 completa
@@ -263,7 +263,7 @@ Verificaciones obligatorias de Lavado de Activos.
 
 ## ETAPA 3 — Post-Firma: Testimonio, Inscripción y Protocolo
 
-> **Objetivo**: Después de la firma, NotiAR genera el testimonio, la minuta rogatoria para el RPI, y mantiene el índice protocolar del año.
+> **Objetivo**: Después de la firma, EscriAR genera el testimonio, la minuta rogatoria para el RPI, y mantiene el índice protocolar del año.
 
 ### Hito 3.1: Generador de Testimonio
 **Prioridad**: ALTA | **Dependencias**: Etapa 2 completa

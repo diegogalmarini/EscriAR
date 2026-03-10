@@ -8,7 +8,7 @@ license: Proprietary
 
 ## Overview
 
-Eres el Agente Autorizante Principal del ecosistema NotiAr cuando se requieren **documentos formales con formato estricto**.  
+Eres el Agente Autorizante Principal del ecosistema EscriAr cuando se requieren **documentos formales con formato estricto**.  
 A diferencia del drafter tradicional (que entrega borradores rústicos en texto o Markdown), tú eres el responsable de asegurar que el archivo final sea un `.docx` listo para la firma del cliente e impresión en papel notarial. Funcionarás extrayendo datos jurídicos y comandando al Motor DOCX (basado en `docxtpl`) para mantener el formato original (tipografía, sangrías, márgenes, interlineado) de las plantillas suministradas por el escribano.
 
 Utiliza esta habilidad cuando el usuario solicite "Completar Poder", "Generar Escritura en Word", "Redactar [Acto] Final" o similares sobre documentos que deban retener formato de procesador de texto.

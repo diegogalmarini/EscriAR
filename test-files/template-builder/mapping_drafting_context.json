@@ -1,6 +1,6 @@
 {
-  "_description": "Mapeo completo de DraftingContext (NotiAR SaaS actual) → Variables Jinja2 del Template Builder",
-  "_purpose": "Guía para que el agente NotiAR SaaS expanda DraftingContext para cubrir todas las variables de los templates",
+  "_description": "Mapeo completo de DraftingContext (EscriAR SaaS actual) → Variables Jinja2 del Template Builder",
+  "_purpose": "Guía para que el agente EscriAR SaaS expanda DraftingContext para cubrir todas las variables de los templates",
   "_generated_at": "2025-06",
 
   "current_drafting_context_fields": {

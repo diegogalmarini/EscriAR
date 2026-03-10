@@ -1,4 +1,4 @@
-# NotiAR — Orden de Migraciones
+# EscriAR — Orden de Migraciones
 
 Ejecutar en orden en el SQL Editor de Supabase.
 Cada archivo incluye PRECHECKS / APPLY / POSTCHECKS / ROLLBACK.

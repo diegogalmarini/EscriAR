@@ -98,7 +98,7 @@ async function main() {
             act_type: "compraventa",
             template_name: metadata.template_name || "compraventa_inmueble_template",
             label: "Compraventa de Inmueble",
-            description: "Escritura pública de compraventa de inmueble — template generado por NotiAR Template Builder.",
+            description: "Escritura pública de compraventa de inmueble — template generado por EscriAR Template Builder.",
             instrument_category: "ESCRITURA_PUBLICA",
             version: newVersion,
             is_active: true,

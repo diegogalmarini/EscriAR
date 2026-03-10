@@ -527,7 +527,7 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                     <div className="px-5 py-3 border-b border-border">
                         <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                             <Sparkles className="h-4 w-4" />
-                            Sugerencias NotiAR
+                            Sugerencias EscriAR
                             {pendingSugerencias.length > 0 && (
                                 <Badge className="bg-blue-500 text-white text-[10px] ml-1">
                                     {pendingSugerencias.length}
@@ -568,7 +568,7 @@ export default function ApuntesTab({ carpetaId }: ApuntesTabProps) {
                                     Asistente inteligente
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    NotiAR analiza sus apuntes y sugiere acciones para completar la carpeta.
+                                    EscriAR analiza sus apuntes y sugiere acciones para completar la carpeta.
                                 </p>
                             </div>
 

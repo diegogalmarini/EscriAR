@@ -220,7 +220,7 @@ export function generarPresupuestoPdf(opts: PresupuestoPdfOptions): void {
     doc.setFontSize(7);
     doc.setTextColor(150);
     doc.text(
-      `Página ${i} de ${pageCount} — Generado por NotiAr`,
+      `Página ${i} de ${pageCount} — Generado por EscriAr`,
       pageW / 2,
       doc.internal.pageSize.getHeight() - 8,
       { align: "center" }

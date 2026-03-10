@@ -1,6 +1,6 @@
-# NotiAr - Guía de Variables de Entorno
+# EscriAr - Guía de Variables de Entorno
 
-Esta guía detalla todas las variables de entorno necesarias para el correcto funcionamiento de NotiAr en producción (Vercel).
+Esta guía detalla todas las variables de entorno necesarias para el correcto funcionamiento de EscriAr en producción (Vercel).
 
 ## 📋 Variables Requeridas
 

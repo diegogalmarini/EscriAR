@@ -1,4 +1,4 @@
-# Diario de Desarrollo — NotiAR
+# Diario de Desarrollo — EscriAR
 
 ## 2026-03-09
 
@@ -7,6 +7,14 @@
   - Los campos se llenan al abrir la pestaña usando los datos de la carpeta, operación, inmueble y participantes.
 - Actualizado ARCHITECTURE_PLAN.md para reflejar ET16 y ET12b.
 - Panel admin de jurisdicciones y resolver DB ya integrados.
+
+## 2026-03-10
+
+- **Costos de Infraestructura en Producción (Mensual):**
+  - **Railway Pro:** $20/mes (Servidor backend/workers, always-on)
+  - **Supabase Pro:** $25/mes (Base de datos, Auth, 100GB Storage, Backups)
+  - **Vercel Pro:** $20/mes (Frontend, Serverless actions largas)
+  - **Gemini AI:** Pago según uso (API calls)
 
 ## Próximos pasos
 - Validación cruzada de aporte mínimo en el engine.

@@ -1,7 +1,7 @@
 # Skill: Notary Cost Monitor
 
 ## Propósito
-Optimizar y auditar el consumo de recursos de IA del SaaS NotiAR, garantizando la viabilidad económica del negocio mediante el monitoreo de tokens, la gestión de umbrales de gasto y el uso de Context Caching.
+Optimizar y auditar el consumo de recursos de IA del SaaS EscriAR, garantizando la viabilidad económica del negocio mediante el monitoreo de tokens, la gestión de umbrales de gasto y el uso de Context Caching.
 
 ## Funcionalidades Core
 1. **Interceptor de Telemetría**: Captura metadatos de uso (`usage_metadata`) de cada llamada a Gemini, incluyendo tokens de entrada, salida y razonamiento.

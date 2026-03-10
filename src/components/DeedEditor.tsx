@@ -226,7 +226,7 @@ export function DeedEditor({ escrituraId, initialContent, dataSummary }: DeedEdi
                             Modelo: Gemini Flash • Edición en tiempo real habilitada
                         </p>
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                            NotiAR Redactor v2
+                            EscriAR Redactor v2
                         </p>
                     </div>
                 </div>

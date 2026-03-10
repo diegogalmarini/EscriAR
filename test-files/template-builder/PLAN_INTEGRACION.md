@@ -1,4 +1,4 @@
-# Plan de Integración: NotiAR Template Builder ↔ NotiAR SaaS
+# Plan de Integración: EscriAR Template Builder ↔ EscriAR SaaS
 
 > **Fecha:** Junio 2025  
 > **Versión:** 1.0  
@@ -16,7 +16,7 @@
 | Categorías de instrumentos | ESCRITURA_PUBLICA, COPIA_TESTIMONIO, ACTA_NOTARIAL, CERTIFICACION, INSTRUMENTO_DIGITAL, INSTRUMENTO_PRIVADO |
 | Salida | ZIP = template.docx (Jinja2) + metadata.json (schema) |
 
-### NotiAR SaaS (producto principal)
+### EscriAR SaaS (producto principal)
 | Componente | Estado |
 |---|---|
 | `deedDrafter.ts` | Hardcoded, solo COMPRAVENTA + HIPOTECA, texto plano, solo Bahía Blanca |
@@ -31,7 +31,7 @@
 
 ### DraftingContext actual vs. nuestras variables (ejemplo: Compraventa)
 
-**NotiAR SaaS tiene hoy (DraftingContext):**
+**EscriAR SaaS tiene hoy (DraftingContext):**
 
 | Campo SaaS | Categoría Nuestra | Variables Nuestras Equivalentes |
 |---|---|---|
@@ -53,7 +53,7 @@
 | `compliance.risk_level` | — | No existe (dato interno, no va en escritura) |
 | `mortgage.financial_terms` | hipoteca_datos | `{{ hipoteca_datos.monto_capital }}`, etc. |
 
-**Categorías que NotiAR NO tiene en absoluto (47 variables faltantes):**
+**Categorías que EscriAR NO tiene en absoluto (47 variables faltantes):**
 
 | Categoría | Variables | Datos Ejemplo |
 |---|---|---|
@@ -78,7 +78,7 @@
 ### Resumen Cuantitativo (solo Compraventa)
 
 ```
-NotiAR SaaS extrae:    ~15 datos efectivos
+EscriAR SaaS extrae:    ~15 datos efectivos
 Template Builder requiere: 103 variables en 12 categorías
 
 Cobertura:  15/103 = 14.6%
@@ -102,7 +102,7 @@ Brecha:     88 variables adicionales necesarias
 │                                 inyecta Jinja2               ├─ .docx   │
 │                                                              └─ .json   │
 │                                                                         │
-│  PRODUCCIÓN (NotiAR SaaS — producto principal)                          │
+│  PRODUCCIÓN (EscriAR SaaS — producto principal)                          │
 │  ═════════════════════════════════════════════                           │
 │                                                                         │
 │    Carga ZIP ──→ Almacena en         ──→ Extrae datos    ──→ Render     │
@@ -172,7 +172,7 @@ Brecha:     88 variables adicionales necesarias
 | **Procesar primer documento real** | ⏳ Pendiente | ALTA |
 | **Generar templates de ejemplo para testing** | ⏳ Pendiente | MEDIA |
 
-### B) NotiAR SaaS (producto principal) — Lo que debe construir
+### B) EscriAR SaaS (producto principal) — Lo que debe construir
 
 | Tarea | Prioridad | Detalle |
 |---|---|---|
@@ -226,7 +226,7 @@ CREATE TABLE modelos_actos (
 - ITI AFIP (si aplica)
 - Montos en letras (PESOS QUINIENTOS MIL → $500.000)
 
-**Recomendación para NotiAR SaaS:** El `metadata.json` ya incluye un campo `type` por variable. Agregar un campo `source` con valores: `"ai_extract"`, `"user_input"`, `"calculated"`. Esto permite saber de dónde viene cada dato.
+**Recomendación para EscriAR SaaS:** El `metadata.json` ya incluye un campo `type` por variable. Agregar un campo `source` con valores: `"ai_extract"`, `"user_input"`, `"calculated"`. Esto permite saber de dónde viene cada dato.
 
 ---
 
@@ -235,11 +235,11 @@ CREATE TABLE modelos_actos (
 ### FASE 1 — Inmediata (esta semana)
 1. ✅ Exportar catálogo de variables como JSON (`export_catalog.py`)
 2. ⏳ Subir primer documento real al Builder y generar primer ZIP
-3. Compartir con NotiAR SaaS: catálogo JSON + ZIP de ejemplo + este documento
+3. Compartir con EscriAR SaaS: catálogo JSON + ZIP de ejemplo + este documento
 
 ### FASE 2 — Corto plazo (1-2 semanas)
-1. NotiAR SaaS crea tabla `modelos_actos` y endpoint de upload
-2. NotiAR SaaS expande `DraftingContext` para cubrir las 12 categorías
+1. EscriAR SaaS crea tabla `modelos_actos` y endpoint de upload
+2. EscriAR SaaS expande `DraftingContext` para cubrir las 12 categorías
 3. Generar templates para los 5 actos más comunes:
    - Compraventa inmueble
    - Poder especial
@@ -259,13 +259,13 @@ CREATE TABLE modelos_actos (
 
 ---
 
-## 7. Qué decirle al agente NotiAR SaaS
+## 7. Qué decirle al agente EscriAR SaaS
 
 ### Mensaje sugerido:
 
-> **Para el agente de NotiAR SaaS:**
+> **Para el agente de EscriAR SaaS:**
 >
-> 1. **El catálogo de variables ya está listo.** Son 782 variables Jinja2 organizadas en 100 categorías, cubriendo 78 actos notariales argentinos. Te adjunto el JSON completo (`catalogo_variables_notiar.json`).
+> 1. **El catálogo de variables ya está listo.** Son 782 variables Jinja2 organizadas en 100 categorías, cubriendo 78 actos notariales argentinos. Te adjunto el JSON completo (`catalogo_variables_escriar.json`).
 >
 > 2. **El Template Builder genera ZIPs** con dos archivos:
 >    - `template.docx` — plantilla Word con tags Jinja2 que `docxtpl` renderiza directamente (tu `notary_docx_builder.py` ya lo hace)
@@ -302,9 +302,9 @@ CREATE TABLE modelos_actos (
 | `src/variables_catalog.py` | Fuente de verdad de las 782 variables |
 | `src/notary_knowledge.py` | Taxonomía de 78 actos y 6 categorías |
 | `src/packager.py` | Generador de ZIP (template + metadata) |
-| `catalogo_variables_notiar.json` | Export JSON del catálogo completo (generado) |
+| `catalogo_variables_escriar.json` | Export JSON del catálogo completo (generado) |
 | `PLAN_INTEGRACION.md` | Este documento |
 
 ---
 
-*Generado por NotiAR Template Builder — Fase de integración*
+*Generado por EscriAR Template Builder — Fase de integración*

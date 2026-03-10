@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "generated_at": "2026-02-24T12:52:22.824705+00:00",
-  "description": "Catálogo completo de variables Jinja2 para templates notariales argentinos. Generado por NotiAR Template Builder.",
+  "description": "Catálogo completo de variables Jinja2 para templates notariales argentinos. Generado por EscriAR Template Builder.",
   "filter": "ALL",
   "summary": {
     "total_acts": 78,

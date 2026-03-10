@@ -111,7 +111,7 @@ export function NuevoClienteDialog() {
 
     const shareEmail = () => {
         if (!link) return;
-        const subject = "Completa tus datos - NotiAR";
+        const subject = "Completa tus datos - EscriAR";
         const body = `Hola ${nombre},\n\nPor favor completa tus datos:\n${link}\n\nGracias.`;
         window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
     };

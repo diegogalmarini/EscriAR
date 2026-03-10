@@ -1,6 +1,6 @@
 # Manual del Ecosistema de Modelos Notariales (SOP para Agentes)
 
-Este documento es el Manual de Operaciones Estandarizado (SOP) para cualquier agente de IA (como `notary-deed-drafter`, u otros) encargado de procesar, leer e inyectar datos en Modelos de Actos Notariales dentro del ecosistema NotiAr.
+Este documento es el Manual de Operaciones Estandarizado (SOP) para cualquier agente de IA (como `notary-deed-drafter`, u otros) encargado de procesar, leer e inyectar datos en Modelos de Actos Notariales dentro del ecosistema EscriAr.
 
 Toda la lógica de recolección de datos y generación de documentos finales DEBE basarse siempre en la lectura previa del modelo correspondiente ubicado en el directorio `/modelos_actos/`. 
 

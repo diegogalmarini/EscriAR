@@ -1,7 +1,7 @@
-# NotiAR — La Biblia del Proyecto
+# EscriAR — La Biblia del Proyecto
 
 > **DOCUMENTO MAESTRO COMPARTIDO ENTRE TODOS LOS AGENTES (Claude, Gemini, etc.)**
-> Este archivo es el alma del proyecto. Contiene TODO lo que necesitás saber para entender, mantener y extender NotiAR.
+> Este archivo es el alma del proyecto. Contiene TODO lo que necesitás saber para entender, mantener y extender EscriAR.
 > Cada agente que trabaje en el proyecto **DEBE** leer este archivo al inicio y actualizarlo al finalizar su sesión.
 > NO crear documentos separados. Este es el único archivo de estado del proyecto.
 
@@ -9,7 +9,7 @@
 
 ## Índice
 
-1. [Qué es NotiAR](#1-qué-es-notiar)
+1. [Qué es EscriAR](#1-qué-es-escriar)
 2. [Stack Tecnológico](#2-stack-tecnológico)
 3. [Arquitectura General](#3-arquitectura-general)
 4. [Estructura del Proyecto](#4-estructura-del-proyecto)
@@ -30,9 +30,9 @@
 
 ---
 
-## 1. Qué es NotiAR
+## 1. Qué es EscriAR
 
-**NotiAR** es un SaaS argentino diseñado para **escribanos (notarios públicos)**. Su propósito es digitalizar y automatizar el ciclo completo de una escritura pública:
+**EscriAR** es un SaaS argentino diseñado para **escribanos (notarios públicos)**. Su propósito es digitalizar y automatizar el ciclo completo de una escritura pública:
 
 1. **Ingesta**: el escribano sube un PDF (escritura, título antecedente, certificado) y la AI extrae automáticamente todos los datos estructurados (personas, inmuebles, operaciones, montos, roles).
 2. **Gestión**: organiza carpetas notariales con participantes, inmuebles, documentos adjuntos, estados de trámite.
@@ -43,9 +43,19 @@
 ### Usuario principal
 Un escribano público de Argentina, específicamente de la Provincia de Buenos Aires (Bahía Blanca). El sistema está pensado para derecho argentino, códigos CESBA (Colegio de Escribanos BA), e impuestos ARBA.
 
-### Producto actual en producción
-- URL: https://noti-ar.vercel.app/
+### Producto actual
+- URL de Producción: https://escriar.com
 - El escribano puede: subir PDFs → ver datos extraídos → gestionar carpetas → ver participantes → generar borradores → calcular impuestos básicos.
+
+### Modelo de Negocio y Pricing (SaaS B2B)
+EscriAR está posicionado como un software de misión crítica **Enterprise / B2B** de alto valor agregado.
+- **Pricing Objetivo:** ~$500 USD mensuales por escribanía (o planes por volumen de escrituras).
+- **Value Proposition (ROI):** EscriAR reemplaza horas de *data entry* legal y liquidación de impuestos propenso a errores humanos (multas ARBA/AFIP), justificando ampliamente su costo frente al salario y cargas sociales de un empleado administrativo dedicado.
+- **Margen Operativo:** Permite utilizar los modelos de IA más avanzados y costosos del mercado (Gemini 2.5 Pro / Claude 3.5 Sonnet / etc.) sin comprometer la rentabilidad, ya que el grueso de la tarifa absorbe los costos variables por token.
+- **Requisitos Técnicos Críticos para este Precio:**
+  1. **Zero Downtime:** Infraestructura PRO obligatoria (Supabase Pro, Railway Pro, Vercel Pro).
+  2. **Multi-tenancy RLS estricto:** Es de vida o muerte la separación de datos entre organizaciones. Un escribano NUNCA debe poder ver los datos u operaciones de otra jurisdicción o colega.
+  3. **Trazabilidad y Seguridad:** Logs detallados (Sentry) y auditoría inmutable (Skill `notary-audit-logger` con Hashing SHA-256).
 
 ---
 
@@ -108,7 +118,7 @@ Un escribano público de Argentina, específicamente de la Provincia de Buenos A
 
 ### Dual Pipeline de Ingesta
 
-NotiAR tiene **dos pipelines** para procesar PDFs, ambos hacen lo mismo (extraer datos con Gemini e insertar en BD) pero con distintas capacidades:
+EscriAR tiene **dos pipelines** para procesar PDFs, ambos hacen lo mismo (extraer datos con Gemini e insertar en BD) pero con distintas capacidades:
 
 | Característica | Frontend (`/api/ingest`) | Worker (Railway) |
 |---|---|---|
@@ -126,7 +136,7 @@ NotiAR tiene **dos pipelines** para procesar PDFs, ambos hacen lo mismo (extraer
 ## 4. Estructura del Proyecto
 
 ```
-NotiAR/
+EscriAR/
 ├── src/
 │   ├── app/                          # Next.js App Router
 │   │   ├── actions/                  # 14 server actions (lógica backend)
@@ -432,7 +442,7 @@ SkillExecutor.execute(skillSlug, file?, contextData?)
 
 ### ¿Qué es el RAG?
 
-**RAG** (Retrieval-Augmented Generation) es la **"memoria legal"** de NotiAR. Son documentos de referencia que la AI consulta para entender contexto jurídico. En el RAG van:
+**RAG** (Retrieval-Augmented Generation) es la **"memoria legal"** de EscriAR. Son documentos de referencia que la AI consulta para entender contexto jurídico. En el RAG van:
 
 - Leyes y normativas argentinas
 - Doctrina notarial
@@ -1285,7 +1295,7 @@ Ambos caminos están cubiertos.
 - **CarpetaHero.tsx**: el subtítulo superior ahora normaliza el `tipo_acto` de la BD contra una lista de actos conocidos (COMPRAVENTA, HIPOTECA, DONACIÓN, etc.), eliminando sufijos espurios como "COMPLETA" que la ingesta AI a veces agrega.
 - Cuando no hay tipo de acto definido, muestra **"ACTO A DEFINIR"** (antes "Acto por definir").
 
-### 2026-03-03 (Antigravity) — Integración Template Builder → SaaS NotiAR
+### 2026-03-03 (Antigravity) — Integración Template Builder → SaaS EscriAR
 
 #### Lo hecho
 - Se procesaron 34 modelos DOCX (escrituras públicas + instrumentos privados) con el Template Builder de Streamlit. 767 variables Jinja2 extraídas en total.
@@ -1303,7 +1313,7 @@ Ambos caminos están cubiertos.
 - `SUPPORTED_ACT_TYPES` expandido de 21 a 47 entradas organizadas por categoría.
 - Build Next.js pasa limpio (0 errores TS).
 
-#### Archivos modificados en NotiAR SaaS
+#### Archivos modificados en EscriAR SaaS
 - `src/components/WorkspacePipeline.tsx` — dropdown dinámico + botón render
 - `buildTemplateContext.ts` — aliases + precio_letras
 - `src/lib/templates/numberToWords.ts` — nuevo

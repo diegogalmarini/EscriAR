@@ -83,7 +83,7 @@ function LoginForm() {
     return (
         <Card className="max-w-md w-full">
             <CardHeader className="text-center">
-                <CardTitle className="text-3xl font-bold">NotiAr</CardTitle>
+                <CardTitle className="text-3xl font-bold">EscriAr</CardTitle>
                 <CardDescription>Sistema de Gestión Notarial</CardDescription>
             </CardHeader>
             <CardContent>

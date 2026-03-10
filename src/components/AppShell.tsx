@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex min-h-screen bg-slate-50">
             {/* Mobile Header */}
             <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b flex items-center justify-between px-4 z-50">
-                <span className="font-bold text-xl text-primary">NotiAr</span>
+                <span className="font-bold text-xl text-primary">EscriAr</span>
                 <Button variant="ghost" size="icon" onClick={() => setIsMobileOpen(!isMobileOpen)}>
                     {isMobileOpen ? <X /> : <Menu />}
                 </Button>
@@ -106,7 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <div className="flex flex-col h-full">
                     {/* Header */}
                     <div className="h-16 flex items-center justify-between px-6 border-b shrink-0">
-                        {!isCollapsed && <span className="font-bold text-xl text-primary">NotiAr</span>}
+                        {!isCollapsed && <span className="font-bold text-xl text-primary">EscriAr</span>}
                         <Button
                             variant="ghost"
                             size="icon"

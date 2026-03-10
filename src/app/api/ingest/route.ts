@@ -9,7 +9,7 @@ if (typeof globalThis !== 'undefined') {
     if (!g.btoa) g.btoa = (str: string) => Buffer.from(str, 'binary').toString('base64');
 
     // Ensure navigator exists minimally
-    if (!g.navigator) g.navigator = { userAgent: 'Node.js/NotiAR' };
+    if (!g.navigator) g.navigator = { userAgent: 'Node.js/EscriAR' };
 }
 // Flash v1.2.17 - SCHEMA FIX: Separated DNI/CUIT + Biographical Fields
 import { NextResponse, after } from 'next/server';

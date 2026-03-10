@@ -1,6 +1,6 @@
-# Conceptos de Fideicomiso e Ingesta de Datos (NotiAR)
+# Conceptos de Fideicomiso e Ingesta de Datos (EscriAR)
 
-Este documento sirve como base de conocimiento experto para la IA de NotiAR sobre cómo extraer datos de contratos de Fideicomiso y Cesiones de Beneficiario en Argentina.
+Este documento sirve como base de conocimiento experto para la IA de EscriAR sobre cómo extraer datos de contratos de Fideicomiso y Cesiones de Beneficiario en Argentina.
 
 ## 1. Relación Fideicomiso - Fiduciaria
 

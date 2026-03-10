@@ -67,7 +67,7 @@ export function SendFichaDialog({ persona }: SendFichaDialogProps) {
     const shareEmail = () => {
         if (!link) return;
         const email = persona.contacto?.email || '';
-        const subject = "Ficha de Datos Personales - NotiAR";
+        const subject = "Ficha de Datos Personales - EscriAR";
         const body = `Hola ${persona.nombre_completo},\n\nPor favor, completa tus datos personales ingresando al siguiente link seguro:\n${link}\n\nMuchas gracias.`;
         window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
     };

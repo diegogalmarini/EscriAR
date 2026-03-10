@@ -1,0 +1,3 @@
+Vercel CLI 48.2.9
+Fetching projects in diegos-projects-f7927b35
+> No projects found under diegos-projects-f7927b35  [1s]

@@ -149,7 +149,7 @@ export function MagicDropzone() {
                     {isDragging ? "¡Sueltalo ahora!" : "Inicia un trámite con Magia"}
                 </h3>
                 <p className="text-slate-500 max-w-sm mx-auto">
-                    Arrastra tu Escritura, PDF, Word o Ficha aquí. NotiAr creará la carpeta y extraerá los datos automáticamente.
+                    Arrastra tu Escritura, PDF, Word o Ficha aquí. EscriAr creará la carpeta y extraerá los datos automáticamente.
                 </p>
             </div>
 

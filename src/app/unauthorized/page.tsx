@@ -18,7 +18,7 @@ export default function UnauthorizedPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <p className="text-sm text-muted-foreground text-center">
-                        Solo los usuarios con correos autorizados pueden acceder a NotiAr.
+                        Solo los usuarios con correos autorizados pueden acceder a EscriAr.
                         Si crees que esto es un error, contacta al administrador del sistema.
                     </p>
                     <Button asChild className="w-full">

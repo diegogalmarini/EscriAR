@@ -1,4 +1,4 @@
-# Manual de Usuario NotiAr SaaS
+# Manual de Usuario EscriAr SaaS
 
 ---
 
@@ -32,8 +32,8 @@
 
 ## 1. Introducción
 
-### ¿Qué es NotiAr SaaS?
-NotiAr SaaS es una plataforma web diseñada específicamente para escribanías y notarías en Argentina, que centraliza y simplifica la gestión integral de actos notariales, carpetas de clientes, presupuestos y documentación.
+### ¿Qué es EscriAr SaaS?
+EscriAr SaaS es una plataforma web diseñada específicamente para escribanías y notarías en Argentina, que centraliza y simplifica la gestión integral de actos notariales, carpetas de clientes, presupuestos y documentación.
 
 ### Objetivo de la plataforma
 La plataforma tiene como objetivo principal:
@@ -44,7 +44,7 @@ La plataforma tiene como objetivo principal:
 - **Optimizar** la comunicación con clientes mediante envío de presupuestos digitales
 
 ### Características principales
-NotiAr SaaS ofrece las siguientes funcionalidades clave:
+EscriAr SaaS ofrece las siguientes funcionalidades clave:
 
 1. **Gestión de carpetas**: Crea, edita y organiza carpetas de clientes con toda la información de operaciones, inmuebles y participantes.
 
@@ -65,7 +65,7 @@ Esta plataforma está diseñada para:
 - **Administradores**: Configuración del sistema, gestión de usuarios y jurisdicciones, supervisión de actividad.
 
 ### Requisitos del sistema
-Para utilizar NotiAr SaaS solo necesitas:
+Para utilizar EscriAr SaaS solo necesitas:
 - Navegador web moderno (Chrome, Firefox, Edge, Safari)
 - Conexión a internet estable
 - Credenciales de acceso proporcionadas por tu escribanía

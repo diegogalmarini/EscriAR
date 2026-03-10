@@ -22,5 +22,5 @@ if (typeof globalThis !== 'undefined') {
     if (!g.btoa) g.btoa = (str: string) => Buffer.from(str, 'binary').toString('base64');
 
     // Ensure navigator exists minimally
-    if (!g.navigator) g.navigator = { userAgent: 'Node.js/NotiAR' };
+    if (!g.navigator) g.navigator = { userAgent: 'Node.js/EscriAR' };
 }

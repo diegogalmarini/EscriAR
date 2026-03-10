@@ -5,7 +5,7 @@ description: Habilidad especializada en la creación de nuevas habilidades (skil
 
 # Skill Creator (Creador de Habilidades)
 
-Esta habilidad te permite actuar como un arquitecto de agentes, diseñando y documentando nuevas capacidades (skills) para el proyecto NotiAr.
+Esta habilidad te permite actuar como un arquitecto de agentes, diseñando y documentando nuevas capacidades (skills) para el proyecto EscriAr.
 
 ## Instrucciones Generales
 Cuando el usuario solicite crear una nueva "habilidad" o "skill", debes:

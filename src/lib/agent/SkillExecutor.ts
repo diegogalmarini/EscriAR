@@ -11,7 +11,7 @@ import os from "os";
 import * as mammoth from "mammoth";
 
 /**
- * SkillExecutor: The "Hybrid Router" of NotiAR.
+ * SkillExecutor: The "Hybrid Router" of EscriAR.
  * Unified under Gemini 3 Pro (GOLD) for the highest notary rigor.
  */
 export class SkillExecutor {
@@ -25,7 +25,7 @@ export class SkillExecutor {
         const buffer = file.buffer || (file.arrayBuffer ? Buffer.from(await file.arrayBuffer()) : file);
         if (!(buffer instanceof Buffer)) throw new Error("Could not extract buffer from file object");
 
-        const fileName = file.name || `notiar_${Date.now()}.pdf`;
+        const fileName = file.name || `escriar_${Date.now()}.pdf`;
         const tempPath = path.join(os.tmpdir(), fileName);
         fs.writeFileSync(tempPath, buffer);
 

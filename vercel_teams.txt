@@ -1,0 +1,6 @@
+Vercel CLI 48.2.9
+Fetching teams
+Fetching user information
+
+id                           Team name            
+diegos-projects-f7927b35     Diego's projects     

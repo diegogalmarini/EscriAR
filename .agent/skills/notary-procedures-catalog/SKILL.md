@@ -15,7 +15,7 @@ Esta habilidad te convierte en un experto (Oracle) en los requisitos previos, co
 
 ## Flujo de Trabajo (Workflow)
 Cuando se invoque esta habilidad o se solicite información sobre trámites notariales a realizar:
-1. Utiliza la herramienta `view_file` para leer el contenido principal de `c:\Users\diego\NotiAr\.agent\skills\notary-procedures-catalog\resources\source_data.md`.
+1. Utiliza la herramienta `view_file` para leer el contenido principal de `c:\Users\diego\EscriAr\.agent\skills\notary-procedures-catalog\resources\source_data.md`.
 2. Cruza los datos de la operación (tipo de acto, jurisdicción, montos, partes involucradas) contra la matriz de conocimiento del archivo fuente.
 3. Devuelve los resultados de manera estructurada y profesional, detallando los certificados a solicitar, los impuestos a retener y los formularios a presentar.
 

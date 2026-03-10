@@ -83,7 +83,7 @@ export function FichaForm({ tokenData }: { tokenData: any }) {
                 <CheckCircle2 className="mx-auto h-16 w-16 text-green-500 mb-4" />
                 <CardTitle className="text-2xl mb-2">¡Muchas Gracias!</CardTitle>
                 <CardDescription className="text-lg">
-                    Tus datos han sido recibidos correctamente por el sistema NotiAR.
+                    Tus datos han sido recibidos correctamente por el sistema EscriAR.
                     Ya puedes cerrar esta ventana.
                 </CardDescription>
             </Card>

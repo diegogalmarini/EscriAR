@@ -15,7 +15,7 @@ export default function DiagPage() {
 
     return (
         <div className="p-8 font-mono text-sm">
-            <h1 className="text-xl font-bold mb-4">NotiAR Diagnostics</h1>
+            <h1 className="text-xl font-bold mb-4">EscriAR Diagnostics</h1>
 
             {error && (
                 <div className="p-4 bg-red-100 text-red-700 mb-4 rounded">

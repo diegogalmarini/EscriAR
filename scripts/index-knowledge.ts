@@ -17,7 +17,7 @@ async function main() {
     ];
 
     console.log("------------------------------------------");
-    console.log("🚀 NotiAR Knowledge Base Indexer");
+    console.log("🚀 EscriAR Knowledge Base Indexer");
     console.log("------------------------------------------");
 
     let totalFiles = 0;

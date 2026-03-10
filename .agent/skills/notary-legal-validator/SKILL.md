@@ -1,6 +1,6 @@
 ---
 name: notary-legal-validator
-description: Valida jurídica y administrativamente una operación notarial (ej. Compraventa, Donación) cruzando los datos extraídos contra las Reglas de Negocio y Requisitos Legales del sistema NotiAR. Detecta faltantes críticos, inconsistencias conyugales (Art. 470 CCyC) y bloqueos registrales.
+description: Valida jurídica y administrativamente una operación notarial (ej. Compraventa, Donación) cruzando los datos extraídos contra las Reglas de Negocio y Requisitos Legales del sistema EscriAR. Detecta faltantes críticos, inconsistencias conyugales (Art. 470 CCyC) y bloqueos registrales.
 license: Proprietary
 ---
 

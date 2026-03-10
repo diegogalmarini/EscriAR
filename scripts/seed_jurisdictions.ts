@@ -12,7 +12,7 @@ const supabaseAdmin = createClient(
 );
 
 /**
- * Seed de Jurisdicciones (135 Partidos PBA) para NotiAR.
+ * Seed de Jurisdicciones (135 Partidos PBA) para EscriAR.
  * Codigos de Partido: fuente oficial ARBA/Geodesia (partidas inmobiliarias).
  * Codigos de Delegacion: Ley 9020/78 (Colegio de Escribanos, 17 delegaciones).
  * Ref: https://www.arba.gov.ar/archivos/Publicaciones/codigospartidos.html

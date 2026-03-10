@@ -31,7 +31,7 @@ async function seedSkills() {
     const { supabaseAdmin } = await import('../src/lib/supabaseAdmin');
 
     console.log("------------------------------------------");
-    console.log("🚀 NotiAR Skill Registry Seeder");
+    console.log("🚀 EscriAR Skill Registry Seeder");
     console.log("------------------------------------------");
 
     if (!fs.existsSync(SKILLS_DIR)) {

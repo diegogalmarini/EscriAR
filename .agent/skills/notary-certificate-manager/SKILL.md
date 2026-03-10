@@ -8,7 +8,7 @@ license: Proprietary
 
 ## Overview
 
-Esta habilidad implementa la lógica del **Módulo C (El Semáforo)** descrita en el Roadmap de NotiAR. A diferencia del validador (que solo dice si está vencido hoy), esta habilidad **proyecta** fechas y gestiona los plazos legales de la "Reserva de Prioridad" registral.
+Esta habilidad implementa la lógica del **Módulo C (El Semáforo)** descrita en el Roadmap de EscriAR. A diferencia del validador (que solo dice si está vencido hoy), esta habilidad **proyecta** fechas y gestiona los plazos legales de la "Reserva de Prioridad" registral.
 
 Es fundamental para evitar que una escritura se firme con certificados vencidos, lo cual podría resultar en la pérdida de la protección registral frente a embargos posteriores.
 

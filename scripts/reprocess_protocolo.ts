@@ -431,7 +431,7 @@ async function main() {
     const hasta = args[1] ? parseInt(args[1]) : null;
 
     console.log('╔══════════════════════════════════════════════╗');
-    console.log('║  REPROCESAMIENTO PROTOCOLO 2026 — NotiAr    ║');
+    console.log('║  REPROCESAMIENTO PROTOCOLO 2026 — EscriAr    ║');
     console.log('╚══════════════════════════════════════════════╝');
     console.log();
 

@@ -1,4 +1,4 @@
-# Checklist de Actualización Fiscal Anual — NotiAR
+# Checklist de Actualización Fiscal Anual — EscriAR
 
 > **Cuándo**: Diciembre de cada año, cuando se publican las nuevas leyes impositivas y tabla CESBA.
 > **Quién**: El administrador del SaaS (escribano titular).
