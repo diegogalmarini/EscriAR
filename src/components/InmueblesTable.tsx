@@ -138,12 +138,12 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
                             </div>
                         </TableCell>
                         <TableCell className="py-2 align-top" title={inmueble.partido_id}>
-                            <div className="text-sm font-normal text-slate-700 break-words">
+                            <div className="text-sm font-normal text-slate-700 truncate">
                                 {inmueble.partido_id || 'N/A'}
                             </div>
                         </TableCell>
                         <TableCell className="py-2 align-top" title={inmueble.nro_partida} onClick={(e) => e.stopPropagation()}>
-                            <div className="font-mono text-xs font-medium space-y-0.5">
+                            <div className="font-mono text-xs font-medium space-y-0.5 overflow-hidden">
                                 {(inmueble.nro_partida || 'N/A')
                                     .split(/[;]|\s*\/\s*/)
                                     .map((p: string, idx: number) => {
@@ -153,7 +153,8 @@ export function InmueblesTable({ data, onInmuebleDeleted }: InmueblesTableProps)
                                             <Link
                                                 key={idx}
                                                 href={`/inmuebles/${inmueble.id}`}
-                                                className="block text-blue-600 hover:text-blue-800 hover:underline whitespace-nowrap"
+                                                className="block text-blue-600 hover:text-blue-800 hover:underline truncate"
+                                                title={formatted}
                                             >
                                                 {formatted}
                                             </Link>

@@ -50,22 +50,46 @@ function getParties(): JurisdictionParty[] {
     return _partiesCache!;
 }
 
-function resolvePartidoCode(partidoName: string): { partyCode: string; delegationCode: string } | null {
-    if (!partidoName) return null;
-    const parties = getParties();
-    const needle = stripAccents(partidoName.toLowerCase().trim());
+// Special non-PBA jurisdictions
+const SPECIAL_JURISDICTIONS: Record<string, { canonicalName: string; code: string; delegationCode: string }> = {
+    'ciudad autonoma de buenos aires': { canonicalName: 'Ciudad Autónoma de Buenos Aires', code: 'CABA', delegationCode: 'CABA' },
+    'caba': { canonicalName: 'Ciudad Autónoma de Buenos Aires', code: 'CABA', delegationCode: 'CABA' },
+    'capital federal': { canonicalName: 'Ciudad Autónoma de Buenos Aires', code: 'CABA', delegationCode: 'CABA' },
+};
 
+function normalizePartido(rawPartido: string): { canonicalName: string; partyCode: string | null; delegationCode: string | null } {
+    if (!rawPartido) return { canonicalName: rawPartido, partyCode: null, delegationCode: null };
+
+    // Strip "(XXX)" suffixes like "(007)"
+    const cleaned = rawPartido.replace(/\s*\(\d+\)\s*$/, '').trim();
+    const needle = stripAccents(cleaned.toLowerCase());
+
+    // Check special jurisdictions (CABA etc.)
+    const special = SPECIAL_JURISDICTIONS[needle];
+    if (special) return { canonicalName: special.canonicalName, partyCode: special.code, delegationCode: special.delegationCode };
+
+    const parties = getParties();
+
+    // Exact alias match
     for (const p of parties) {
         if (p.aliases.some(a => stripAccents(a.toLowerCase()) === needle)) {
-            return { partyCode: p.code, delegationCode: p.delegation_code };
+            return { canonicalName: p.name, partyCode: p.code, delegationCode: p.delegation_code };
         }
     }
+    // Partial match
     for (const p of parties) {
         const normName = stripAccents(p.name.toLowerCase());
         if (normName.includes(needle) || needle.includes(normName)) {
-            return { partyCode: p.code, delegationCode: p.delegation_code };
+            return { canonicalName: p.name, partyCode: p.code, delegationCode: p.delegation_code };
         }
     }
+    return { canonicalName: cleaned, partyCode: null, delegationCode: null };
+}
+
+// Backward-compat wrapper
+function resolvePartidoCode(partidoName: string): { partyCode: string; delegationCode: string } | null {
+    const result = normalizePartido(partidoName);
+    if (result.partyCode) return { partyCode: result.partyCode, delegationCode: result.delegationCode! };
     return null;
 }
 
@@ -388,7 +412,11 @@ async function upsertInmueble(inm: z.infer<typeof InmuebleExtraidoSchema>): Prom
     // Gemini puede devolver múltiples partidas separadas por comas — tomar la primera
     const rawPartida = inm.nro_partida?.replace(/\./g, '') || null;
     const partidas = rawPartida ? rawPartida.split(/[,;]/).map(s => s.trim()).filter(Boolean) : [null];
-    const partidoNorm = inm.partido || null;
+
+    // Normalize partido name (strip "(007)", fix casing, use canonical name)
+    const rawPartido = inm.partido || null;
+    const resolved = rawPartido ? normalizePartido(rawPartido) : null;
+    const partidoNorm = resolved?.canonicalName || rawPartido;
 
     let firstId: string | null = null;
 
@@ -413,13 +441,10 @@ async function upsertInmueble(inm: z.infer<typeof InmuebleExtraidoSchema>): Prom
         if (inm.descripcion) inmData.transcripcion_literal = inm.descripcion;
         if (inm.titulo_antecedente) inmData.titulo_antecedente = inm.titulo_antecedente;
         if (inm.valuacion_fiscal) inmData.valuacion_fiscal = inm.valuacion_fiscal;
-        // Resolve jurisdiction codes from partido name
-        if (partidoNorm) {
-            const jurisdiccion = resolvePartidoCode(partidoNorm);
-            if (jurisdiccion) {
-                inmData.partido_code = jurisdiccion.partyCode;
-                inmData.delegacion_code = jurisdiccion.delegationCode;
-            }
+        // Use already-resolved jurisdiction codes
+        if (resolved?.partyCode) {
+            inmData.partido_code = resolved.partyCode;
+            inmData.delegacion_code = resolved.delegationCode;
         }
 
         if (existingId) {
