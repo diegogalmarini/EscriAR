@@ -31,31 +31,28 @@ function InmueblesContent() {
         setLoading(true);
         try {
             const offset = (currentPage - 1) * pageSize;
+            const term = debouncedSearchTerm.trim();
 
-            const { data, error } = await supabase
-                .rpc('search_inmuebles', {
-                    search_term: debouncedSearchTerm,
-                    p_limit: pageSize,
-                    p_offset: offset
-                });
+            let query = supabase
+                .from('inmuebles')
+                .select('id, partido_id, partido_code, delegacion_code, nro_partida, nomenclatura, transcripcion_literal, titulo_antecedente, valuacion_fiscal, created_at', { count: 'exact' });
+
+            if (term) {
+                query = query.or(
+                    `partido_id.ilike.%${term}%,nro_partida.ilike.%${term}%,nomenclatura.ilike.%${term}%,partido_code.ilike.%${term}%`
+                );
+            }
+
+            const { data, error, count } = await query
+                .order('partido_id', { ascending: true })
+                .order('nro_partida', { ascending: true })
+                .range(offset, offset + pageSize - 1);
 
             if (error) {
                 console.error("Error fetching inmuebles:", error);
             } else if (data) {
-                // Get total from first record's total_count field (set by RPC)
-                // If RPC doesn't provide total_count, do a separate count query
-                let total = 0;
-                if (data.length > 0 && data[0].total_count !== undefined) {
-                    total = Number(data[0].total_count);
-                } else {
-                    // Fallback: count all matching inmuebles
-                    const { count } = await supabase
-                        .from('inmuebles')
-                        .select('*', { count: 'exact', head: true });
-                    total = count || data.length;
-                }
                 setInmuebles(data);
-                setTotalItems(total);
+                setTotalItems(count || data.length);
             }
         } catch (err) {
             console.error("Exception fetching inmuebles:", err);

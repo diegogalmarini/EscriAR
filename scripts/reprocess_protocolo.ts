@@ -20,8 +20,54 @@ import { generateObject } from 'ai';
 import { z } from 'zod';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
+import * as fs from 'fs';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
+
+// ── Jurisdiction Resolver (inline, from JSON) ──
+interface JurisdictionParty {
+    name: string;
+    code: string;
+    delegation_code: string;
+    aliases: string[];
+}
+
+const ACCENT_MAP: Record<string, string> = {
+    'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ñ': 'n', 'ü': 'u',
+};
+
+function stripAccents(s: string): string {
+    return s.replace(/[áéíóúñü]/g, ch => ACCENT_MAP[ch] || ch);
+}
+
+let _partiesCache: JurisdictionParty[] | null = null;
+function getParties(): JurisdictionParty[] {
+    if (!_partiesCache) {
+        const jsonPath = path.resolve(__dirname, '../src/data/pba_2026_jurisdictions.json');
+        const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+        _partiesCache = data.parties;
+    }
+    return _partiesCache!;
+}
+
+function resolvePartidoCode(partidoName: string): { partyCode: string; delegationCode: string } | null {
+    if (!partidoName) return null;
+    const parties = getParties();
+    const needle = stripAccents(partidoName.toLowerCase().trim());
+
+    for (const p of parties) {
+        if (p.aliases.some(a => stripAccents(a.toLowerCase()) === needle)) {
+            return { partyCode: p.code, delegationCode: p.delegation_code };
+        }
+    }
+    for (const p of parties) {
+        const normName = stripAccents(p.name.toLowerCase());
+        if (normName.includes(needle) || needle.includes(normName)) {
+            return { partyCode: p.code, delegationCode: p.delegation_code };
+        }
+    }
+    return null;
+}
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qcqrcrpnnvvlitiidrlc.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -361,12 +407,20 @@ async function upsertInmueble(inm: z.infer<typeof InmuebleExtraidoSchema>): Prom
         const inmData: Record<string, any> = {};
         if (partidoNorm) inmData.partido_id = partidoNorm;
         if (partidaNorm) inmData.nro_partida = partidaNorm;
-        if (inm.nomenclatura_catastral) inmData.nomenclatura_catastral = inm.nomenclatura_catastral;
+        // FIX: nomenclatura_catastral → nomenclatura (column was renamed)
+        if (inm.nomenclatura_catastral) inmData.nomenclatura = inm.nomenclatura_catastral;
         // Skip tipo_inmueble — DB check constraint has unknown valid values
         if (inm.descripcion) inmData.transcripcion_literal = inm.descripcion;
         if (inm.titulo_antecedente) inmData.titulo_antecedente = inm.titulo_antecedente;
         if (inm.valuacion_fiscal) inmData.valuacion_fiscal = inm.valuacion_fiscal;
-        if (inm.matricula) inmData.nomenclatura = inm.matricula;
+        // Resolve jurisdiction codes from partido name
+        if (partidoNorm) {
+            const jurisdiccion = resolvePartidoCode(partidoNorm);
+            if (jurisdiccion) {
+                inmData.partido_code = jurisdiccion.partyCode;
+                inmData.delegacion_code = jurisdiccion.delegationCode;
+            }
+        }
 
         if (existingId) {
             await supabase.from('inmuebles').update(inmData).eq('id', existingId);
