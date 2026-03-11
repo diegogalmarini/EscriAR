@@ -1,37 +1,67 @@
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabaseServer'
+import { cookies } from 'next/headers'
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
-    // if "next" or "redirectTo" is in param, use it as the redirect URL
     const next = searchParams.get('redirectTo') ?? searchParams.get('next') ?? '/dashboard'
 
-    if (code) {
-        const supabase = await createClient()
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        
-        if (!error) {
-            console.log('[CALLBACK SERVER] Session exchanged flawlessly. Redirecting...', next)
-            const forwardedHost = request.headers.get('x-forwarded-host') 
-            const isLocalEnv = process.env.NODE_ENV === 'development'
-            
-            if (isLocalEnv) {
-                // local environment, no load balancers
-                return NextResponse.redirect(`${origin}${next}`)
-            } else if (forwardedHost) {
-                // production with Vercel load balancer causing origin issues
-                return NextResponse.redirect(`https://${forwardedHost}${next}`)
-            } else {
-                return NextResponse.redirect(`${origin}${next}`)
-            }
-        } else {
-            console.error('[CALLBACK SERVER] Code exchange error:', error)
-            return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`)
-        }
+    // Determine redirect base URL (handle Vercel load balancer)
+    const forwardedHost = request.headers.get('x-forwarded-host')
+    const isLocalEnv = process.env.NODE_ENV === 'development'
+    let redirectBase: string
+    if (isLocalEnv) {
+        redirectBase = origin
+    } else if (forwardedHost) {
+        redirectBase = `https://${forwardedHost}`
+    } else {
+        redirectBase = origin
     }
 
-    console.error('[CALLBACK SERVER] No "code" parameter found in URL')
-    // return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/login?error=invalid_auth_callback`)
+    if (!code) {
+        console.error('[AUTH CALLBACK] No code parameter found')
+        return NextResponse.redirect(`${redirectBase}/login?error=no_code`)
+    }
+
+    const cookieStore = await cookies()
+
+    // Collect cookies to explicitly set on the redirect response
+    // (cookieStore.set() does NOT transfer to NextResponse.redirect())
+    const pendingCookies: { name: string; value: string; options: Record<string, unknown> }[] = []
+
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return cookieStore.getAll()
+                },
+                setAll(cookiesToSet) {
+                    cookiesToSet.forEach((cookie) => {
+                        pendingCookies.push(cookie)
+                    })
+                },
+            },
+        }
+    )
+
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (error) {
+        console.error('[AUTH CALLBACK] Code exchange error:', error.message)
+        return NextResponse.redirect(`${redirectBase}/login?error=${encodeURIComponent(error.message)}`)
+    }
+
+    // Create redirect and EXPLICITLY set all auth cookies on the response
+    const redirectUrl = `${redirectBase}${next}`
+    console.log('[AUTH CALLBACK] Session exchanged OK. Redirecting to:', redirectUrl, '| Cookies:', pendingCookies.length)
+
+    const response = NextResponse.redirect(redirectUrl)
+    pendingCookies.forEach(({ name, value, options }) => {
+        response.cookies.set(name, value, options as any)
+    })
+
+    return response
 }
