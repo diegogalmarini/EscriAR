@@ -111,7 +111,7 @@ const ACT_RULES: { pattern: RegExp; code: string }[] = [
     { pattern: /renun.*usuf/i, code: "414-30" },
     { pattern: /ext.*usuf/i, code: "401-30" },
     { pattern: /const.*usuf|usufruct/i, code: "400-00" },
-    { pattern: /desaf.*vivien/i, code: "501-30" },
+    { pattern: /desaf.*vivien/i, code: "501-32" },
     { pattern: /afect.*vivien/i, code: "500-32" },
     { pattern: /reglam.*p\.?\s*h|afect.*horiz/i, code: "512-30" },
     { pattern: /adj.*disol.*soc.*cony|disol.*soc.*cony/i, code: "709-00" },
@@ -129,7 +129,7 @@ const ACT_RULES: { pattern: RegExp; code: string }[] = [
     { pattern: /daci[oó]n.*pago/i, code: "110-00" },
     { pattern: /permut/i, code: "107-00" },
     { pattern: /distract/i, code: "105-00" },
-    { pattern: /complement|aclarator|rectificat/i, code: "702-00" },
+    { pattern: /complement|aclarator|rectificat/i, code: "702-20" },
     { pattern: /segund.*testim|2.*testim/i, code: "708-00" },
     { pattern: /obra\s*nuev/i, code: "515-00" },
     { pattern: /cancel/i, code: "311-00" },
@@ -194,7 +194,18 @@ const EscrituraEnriquecidaSchema = z.object({
     nro_escritura: z.number().nullish().describe('Número de la escritura'),
     fecha: z.string().nullish().describe('Fecha de la escritura en YYYY-MM-DD'),
     tipo_acto_canonico: z.string().describe('Nombre CANÓNICO del acto notarial en MAYÚSCULAS. Usar terminología correcta del Colegio de Escribanos: COMPRAVENTA (no "venta"), CONSTITUCIÓN DE HIPOTECA (no "hipoteca"), CANCELACIÓN DE HIPOTECA, CONTRATO DE CRÉDITO CON GARANTÍA HIPOTECARIA, PODER GENERAL DE ADMINISTRACIÓN Y DISPOSICIÓN, PODER ESPECIAL PARA ESCRITURAR, DONACIÓN, CESIÓN DE DERECHOS HEREDITARIOS S/INMUEBLE ONEROSA, ADJUDICACIÓN POR DISOLUCIÓN DE SOCIEDAD CONYUGAL, ESCRITURA COMPLEMENTARIA, ACTA, PROTOCOLIZACIÓN, DESAFECTACIÓN A VIVIENDA, COMPRAVENTA - TRACTO ABREVIADO (si tiene), COMPRAVENTA - EXTINCIÓN DE USUFRUCTO (si es compuesto), etc.'),
-    codigo_acto: z.string().nullish().describe('Código CESBA si lo conocés (ej: "100-00" para Compraventa). Null si no estás seguro.'),
+    codigo_acto: z.string().nullish().describe(`Código CESBA formato "NNN-SS". El sufijo -SS indica tratamiento fiscal:
+-00 = gravada normal, -10 = 1 parte exenta sellos, -20 = exenta sellos, -22 = exenta sellos + exenta aportes terceros, -30 = gratuita, -32 = no gravada sellos + exenta aportes, -51 = vivienda única exenta total.
+Códigos base principales:
+100 = COMPRAVENTA, 103 = COMPRAVENTA NUDA PROPIEDAD, 105 = DISTRACTO, 107 = PERMUTA, 108 = FIDEICOMISO, 109 = LEASING, 110 = DACIÓN EN PAGO, 121 = TRANSF. DOMINIO BENEF. FIDEICOMISO,
+200-30 = DONACIÓN INMUEBLES, 300 = CONSTITUCIÓN DE HIPOTECA, 311 = CANCELACIÓN HIPOTECA,
+400 = CONSTITUCIÓN USUFRUCTO, 401-30 = EXTINCIÓN USUFRUCTO GRATUITA, 414-30 = RENUNCIA USUFRUCTO GRATUITA,
+500-32 = AFECTACIÓN VIVIENDA, 501-32 = DESAFECTACIÓN VIVIENDA, 512-30 = AFECTACIÓN P.H., 515-30 = OBRA NUEVA,
+600-20 = APORTE CAPITAL INMUEBLE, 606 = ADJ. POR LIQUIDACIÓN SOCIEDADES,
+700 = CESIÓN DERECHOS HEREDITARIOS (CON INM) ONEROSA, 702-20 = COMPLEMENTARIA, 705 = DIV. CONDOMINIO, 707 = DECLARATORIA HEREDEROS, 709 = ADJ. DISOLUCIÓN SOC. CONYUGAL, 713 = TRACTO ABREVIADO, 716 = PARTICIÓN HERENCIA, 720 = CESIÓN DERECHOS HEREDITARIOS (SIN INM) ONEROSA,
+800-32 = ACTAS/PODERES (no gravados), 875-30 = PROTOCOLIZACIÓN, 999-00 = ANULADA/NO PASÓ.
+Para actos compuestos separar con " / ". Ej: COMPRAVENTA con tracto abreviado = "100-00 / 713-00".
+Determina el sufijo correcto leyendo si hay exenciones de sellos, vivienda única, etc. en la escritura. Null si no estás seguro.`),
     personas: z.array(PersonaExtraidaSchema).describe('TODAS las personas que intervienen en la escritura, con todos sus datos tal como figuran'),
     inmueble: InmuebleExtraidoSchema.nullish().describe('Datos del inmueble si la escritura involucra uno. Null para poderes, actas, etc.'),
     monto_ars: z.number().nullish().describe('Monto de la operación en pesos argentinos. Sin puntos de miles.'),
@@ -245,7 +256,19 @@ REGLAS CRÍTICAS:
 
 8. Montos como números sin puntos de miles (ej: 5000000, no 5.000.000).
 
-9. Fechas en formato YYYY-MM-DD.`;
+9. Fechas en formato YYYY-MM-DD.
+
+10. CÓDIGO ACTO (codigo_acto): Formato "NNN-SS" del CESBA. El sufijo SS indica tratamiento fiscal:
+   - 00 = gravada normal (paga sellos + aportes)
+   - 10 = 1 parte exenta de imp. de sellos
+   - 20 = exenta de impuesto de sellos
+   - 22 = exenta de sellos + exenta de aportes de terceros
+   - 30 = gratuita (no gravada sellos)
+   - 32 = no gravada de sellos + exenta aportes terceros
+   - 51 = vivienda única (exención total sellos)
+   Determina el sufijo correcto leyendo si la escritura menciona exenciones fiscales, vivienda única, ley de sellos, etc.
+   Códigos base: 100=COMPRAVENTA, 200-30=DONACIÓN, 300=HIPOTECA, 311=CANCELACIÓN HIPOTECA, 414-30=RENUNCIA USUFRUCTO, 501-32=DESAFECTACIÓN VIVIENDA, 702-20=COMPLEMENTARIA, 709=ADJ.DISOLUCIÓN SOC.CONYUGAL, 713=TRACTO ABREVIADO, 720=CESIÓN DERECHOS HEREDITARIOS, 800-32=ACTAS/PODERES, 999-00=ANULADA.
+   Para actos compuestos: separar con " / " (ej: "100-00 / 713-00" para compraventa con tracto abreviado).`;
 
 // ── Funciones de extracción ──
 

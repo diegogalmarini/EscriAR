@@ -44,7 +44,7 @@ const RULES: Rule[] = [
     { pattern: /const.*usuf|usufruct/i, code: "400-00" },
 
     // ── Vivienda ──
-    { pattern: /desaf.*vivien/i, code: "501-30" },
+    { pattern: /desaf.*vivien/i, code: "501-32" },
     { pattern: /afect.*vivien/i, code: "500-32" },
 
     // ── Propiedad horizontal ──
@@ -82,7 +82,7 @@ const RULES: Rule[] = [
     { pattern: /distract/i, code: "105-00" },
 
     // ── Complementaria / Rectificatoria ──
-    { pattern: /complement|aclarator|rectificat/i, code: "702-00" },
+    { pattern: /complement|aclarator|rectificat/i, code: "702-20" },
 
     // ── Anotación marginal ──
     { pattern: /anot.*marg/i, code: "701-00" },
