@@ -285,21 +285,29 @@ export function ProtocoloWorkspace({ registros: initialRegistros, anio }: Props)
                                                                     <ExternalLink className="h-3 w-3" />
                                                                 </button>
                                                             </span>
+                                                        ) : col.key === "codigo_acto" && displayValue ? (
+                                                            <span className="flex flex-col items-center gap-0.5">
+                                                                {String(displayValue).split(/\s*[\/;]\s*/).map((code, i) => {
+                                                                    const trimmed = code.trim();
+                                                                    if (!trimmed) return null;
+                                                                    return (
+                                                                        <button
+                                                                            key={i}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                window.open(`/tabla-actos?q=${encodeURIComponent(trimmed)}`, "_blank");
+                                                                            }}
+                                                                            className="font-mono text-[11px] text-slate-700 hover:underline hover:text-indigo-600 cursor-pointer transition-colors"
+                                                                            title={`Ver en Tabla de Actos: ${trimmed}`}
+                                                                        >
+                                                                            {trimmed}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </span>
                                                         ) : (
                                                             displayValue
                                                         )}
-                                                        {col.key === "codigo_acto" && displayValue ? (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    window.open(`/tabla-actos?q=${encodeURIComponent(String(displayValue).trim())}`, "_blank");
-                                                                }}
-                                                                className="font-mono text-[11px] text-slate-700 hover:underline cursor-pointer"
-                                                                title={`Ver en Tabla de Actos`}
-                                                            >
-                                                                {String(displayValue)}
-                                                            </button>
-                                                        ) : null}
                                                     </span>
                                                 </div>
                                             );
