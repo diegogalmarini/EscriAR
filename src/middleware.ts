@@ -71,7 +71,9 @@ export async function middleware(request: NextRequest) {
     if (!user && !isPublicRoute) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
-        url.searchParams.set('redirectTo', pathname)
+        if (pathname !== '/dashboard') {
+            url.searchParams.set('redirectTo', pathname)
+        }
 
         const redirectResponse = NextResponse.redirect(url)
 
