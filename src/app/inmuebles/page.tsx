@@ -35,7 +35,7 @@ function InmueblesContent() {
 
             let query = supabase
                 .from('inmuebles')
-                .select('id, partido_id, partido_code, delegacion_code, nro_partida, nomenclatura, transcripcion_literal, titulo_antecedente, valuacion_fiscal, created_at', { count: 'exact' });
+                .select('id, partido_id, partido_code, delegacion_code, nro_partida, nomenclatura, transcripcion_literal, titulo_antecedente, valuacion_fiscal', { count: 'exact' });
 
             if (term) {
                 query = query.or(
