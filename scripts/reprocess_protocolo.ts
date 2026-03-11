@@ -93,6 +93,61 @@ function resolvePartidoCode(partidoName: string): { partyCode: string; delegatio
     return null;
 }
 
+// ── Act Classifier (inline, same logic as src/lib/actClassifier.ts) ──
+const ACT_RULES: { pattern: RegExp; code: string }[] = [
+    { pattern: /no\s*pas[oó]/i, code: "999-00" },
+    { pattern: /anulad[ao]/i, code: "999-00" },
+    { pattern: /venta.*t\.?\s*a\.?|compraventa.*tracto/i, code: "100-00 / 713-00" },
+    { pattern: /venta.*ext\.?\s*usuf/i, code: "100-00 / 401-30" },
+    { pattern: /venta.*renun.*usuf/i, code: "100-00 / 414-30" },
+    { pattern: /venta.*cancel.*hip/i, code: "100-00 / 311-00" },
+    { pattern: /venta.*hip[oó]t/i, code: "100-00 / 300-00" },
+    { pattern: /compraventa|^venta/i, code: "100-00" },
+    { pattern: /tracto\s*abrev/i, code: "713-00" },
+    { pattern: /donac/i, code: "200-30" },
+    { pattern: /cancel.*hip[oó]t/i, code: "311-00" },
+    { pattern: /cont.*cr[eé]d.*hip|hip[oó]t.*cr[eé]d|const.*hip/i, code: "300-00" },
+    { pattern: /hip[oó]t/i, code: "300-00" },
+    { pattern: /renun.*usuf/i, code: "414-30" },
+    { pattern: /ext.*usuf/i, code: "401-30" },
+    { pattern: /const.*usuf|usufruct/i, code: "400-00" },
+    { pattern: /desaf.*vivien/i, code: "501-30" },
+    { pattern: /afect.*vivien/i, code: "500-32" },
+    { pattern: /reglam.*p\.?\s*h|afect.*horiz/i, code: "512-30" },
+    { pattern: /adj.*disol.*soc.*cony|disol.*soc.*cony/i, code: "709-00" },
+    { pattern: /adj.*liq.*fideicom/i, code: "121-51" },
+    { pattern: /adj.*parti|partic.*herenc/i, code: "716-00" },
+    { pattern: /ces.*der.*her.*s.*inm.*oner/i, code: "720-00" },
+    { pattern: /ces.*der.*her/i, code: "700-00" },
+    { pattern: /declarator.*hered/i, code: "707-00" },
+    { pattern: /renun.*herenc/i, code: "730-00" },
+    { pattern: /divis.*condom/i, code: "705-00" },
+    { pattern: /const.*soc|soc.*const/i, code: "600-20" },
+    { pattern: /protocol.*disol|adj.*liq.*soc/i, code: "606-00" },
+    { pattern: /transf.*fiduc|fideic/i, code: "108-30" },
+    { pattern: /transf.*benef/i, code: "121-00" },
+    { pattern: /daci[oó]n.*pago/i, code: "110-00" },
+    { pattern: /permut/i, code: "107-00" },
+    { pattern: /distract/i, code: "105-00" },
+    { pattern: /complement|aclarator|rectificat/i, code: "702-00" },
+    { pattern: /segund.*testim|2.*testim/i, code: "708-00" },
+    { pattern: /obra\s*nuev/i, code: "515-00" },
+    { pattern: /cancel/i, code: "311-00" },
+    { pattern: /ces.*der.*acc/i, code: "902-00" },
+    { pattern: /^acta|acta\b/i, code: "800-32" },
+    { pattern: /poder|pod\b|pod\./i, code: "800-32" },
+    { pattern: /testam/i, code: "800-32" },
+];
+
+function classifyActoInline(tipoActo: string | null | undefined): string | null {
+    if (!tipoActo?.trim()) return null;
+    const normalized = tipoActo.trim();
+    for (const rule of ACT_RULES) {
+        if (rule.pattern.test(normalized)) return rule.code;
+    }
+    return null;
+}
+
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qcqrcrpnnvvlitiidrlc.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const GEMINI_KEY = process.env.GEMINI_API_KEY!;
@@ -486,8 +541,16 @@ async function updateRegistro(registroId: string, ext: EscrituraEnriquecida, per
         monto_usd: ext.monto_usd,
     };
 
-    // Solo actualizar codigo_acto si Gemini lo proporcionó
-    if (ext.codigo_acto) updateData.codigo_acto = ext.codigo_acto;
+    // Validate and set codigo_acto: use Gemini's if valid format, otherwise derive from tipo_acto
+    const VALID_CODE_PATTERN = /^\d{3}-\d{2}(\s*\/\s*\d{3}-\d{2})*$/;
+    const geminiCode = ext.codigo_acto?.trim();
+    if (geminiCode && VALID_CODE_PATTERN.test(geminiCode)) {
+        updateData.codigo_acto = geminiCode;
+    } else {
+        // Derive from tipo_acto using classifier rules
+        const derived = classifyActoInline(ext.tipo_acto_canonico);
+        if (derived) updateData.codigo_acto = derived;
+    }
 
     // Actualizar día/mes si la fecha extraída es válida
     if (ext.fecha) {
