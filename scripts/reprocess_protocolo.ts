@@ -240,7 +240,7 @@ async function extractFromPdf(fileBuffer: Buffer, nroEscritura: number): Promise
     if (hasText) {
         // Text path — enviar texto plano via AI SDK
         const result = await generateObject({
-            model: google('gemini-2.5-pro'),
+            model: google('gemini-3-flash-preview'),
             prompt: PROMPT + `\n\nESTAS ANALIZANDO LA ESCRITURA N° ${nroEscritura} DEL PROTOCOLO 2026.\n\nCONTENIDO:\n` + textContent!.substring(0, 120000),
             schema: EscrituraEnriquecidaSchema,
         });
@@ -249,7 +249,7 @@ async function extractFromPdf(fileBuffer: Buffer, nroEscritura: number): Promise
 
     // PDF escaneado → enviar directamente a Gemini via raw SDK
     const model = googleRaw.getGenerativeModel({
-        model: 'gemini-2.5-pro',
+        model: 'gemini-3-flash-preview',
         generationConfig: {
             responseMimeType: 'application/json',
             responseSchema: JSON_SCHEMA_FOR_GEMINI as any,
@@ -525,7 +525,7 @@ async function main() {
             console.log(`   ✓ Descargado (${(buffer.length / 1024).toFixed(0)} KB)`);
 
             // 2. Extract with Gemini
-            console.log(`   ⏳ Extrayendo con Gemini 2.5 Pro...`);
+            console.log(`   ⏳ Extrayendo con Gemini 3 Flash...`);
             const ext = await extractFromPdf(buffer, nro);
             console.log(`   ✓ Tipo acto: ${ext.tipo_acto_canonico}`);
             console.log(`   ✓ Personas: ${ext.personas.length}`);
