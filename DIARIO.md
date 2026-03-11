@@ -84,7 +84,7 @@ EscriAR está posicionado como un software de misión crítica **Enterprise / B2
 ```
                      ┌─────────────────────────────────────────────┐
                      │              USUARIO (Escribano)            │
-                     │          https://noti-ar.vercel.app         │
+                     │          https://escriar.vercel.app         │
                      └───────────┬─────────────────┬───────────────┘
                                  │                 │
                     Sube PDF < 500KB          Sube PDF > 500KB

@@ -27,7 +27,7 @@ export async function createFichaToken(personaId: string) {
         if (error) throw error;
 
         // Build the full URL dynamically or fallback to production
-        let baseUrl = "https://noti-ar.vercel.app";
+        let baseUrl = "https://escriar.vercel.app";
         try {
             const { headers } = await import("next/headers");
             const headersList = await headers();

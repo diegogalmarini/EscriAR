@@ -114,7 +114,7 @@ export function PersonForm({ initialData, onSuccess, onCancel }: PersonFormProps
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        const draftKey = `notiAr_personFormDraft_${initialData?.dni || initialData?.cuit || 'new'}`;
+        const draftKey = `escriAr_personFormDraft_${initialData?.dni || initialData?.cuit || 'new'}`;
         try {
             let finalData = { ...formData };
             // Sanitization

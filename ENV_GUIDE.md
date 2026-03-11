@@ -43,7 +43,7 @@ GEMINI_API_KEY=AIzaSy...
 ### 3. URL Base de la Aplicación (Opcional pero Recomendado)
 
 ```env
-NEXT_PUBLIC_SITE_URL=https://noti-ar.vercel.app
+NEXT_PUBLIC_SITE_URL=https://escriar.vercel.app
 ```
 
 **Por qué es importante:**

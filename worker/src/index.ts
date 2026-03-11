@@ -95,7 +95,7 @@ function getCESBACode(tipoActo: string): string | null {
 const port = process.env.PORT || 8080;
 http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('NotiAR Worker is running\n');
+    res.end('EscriAR Worker is running\n');
 }).listen(port, () => {
     console.log(`[WORKER] Healthcheck server listening on port ${port}`);
 });

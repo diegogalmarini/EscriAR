@@ -15,6 +15,8 @@ const PUBLIC_ROUTES = [
     '/api/auth-diag',
     '/pending-approval',
     '/unauthorized',
+    '/privacy',
+    '/terms',
 ];
 
 const PUBLIC_ROUTE_PATTERNS = [

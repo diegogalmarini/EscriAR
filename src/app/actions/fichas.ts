@@ -100,7 +100,7 @@ export async function generateFichaLink(personaId: string) {
         if (error) throw error;
 
         // Use the current host from headers for total reliability
-        let baseUrl = 'https://noti-ar.vercel.app';
+        let baseUrl = 'https://escriar.vercel.app';
 
         try {
             const { headers } = await import('next/headers');
