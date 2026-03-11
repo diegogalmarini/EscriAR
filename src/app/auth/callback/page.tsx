@@ -36,10 +36,11 @@ function AuthCallbackContent() {
                     if (data.session) {
                         console.log('[CALLBACK CLIENT] Session established for:', data.session.user.email)
 
-                        // Small delay to ensure cookies are fully set
+                        // Aumentamos el delay y usamos window.location.href (hard reload)
+                        // para asegurar que las cookies Auth viajen 100% al middleware.
                         setTimeout(() => {
-                            router.push(redirectTo)
-                        }, 100)
+                            window.location.href = redirectTo
+                        }, 500)
                     } else {
                         console.error('[CALLBACK CLIENT] No session returned')
                         router.push('/login?error=no_session')
