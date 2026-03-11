@@ -6,7 +6,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholde
 /**
  * Standard Supabase Browser Client.
  */
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        flowType: 'implicit',
+    },
+});
 
 // Helper for dynamic access if needed (optional)
 export function getSupabaseBrowserClient() {
