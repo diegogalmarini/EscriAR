@@ -19,6 +19,8 @@ export async function GET(request: Request) {
         redirectBase = origin
     }
 
+    console.log('[AUTH CALLBACK] origin:', origin, '| forwardedHost:', forwardedHost, '| redirectBase:', redirectBase, '| code:', code ? 'present' : 'MISSING')
+
     if (!code) {
         console.error('[AUTH CALLBACK] No code parameter found')
         return NextResponse.redirect(`${redirectBase}/login?error=no_code`)
@@ -26,8 +28,11 @@ export async function GET(request: Request) {
 
     const cookieStore = await cookies()
 
+    // Log incoming cookies for diagnosis
+    const incomingCookies = cookieStore.getAll()
+    console.log('[AUTH CALLBACK] Incoming cookies:', incomingCookies.map(c => c.name).join(', '))
+
     // Collect cookies to explicitly set on the redirect response
-    // (cookieStore.set() does NOT transfer to NextResponse.redirect())
     const pendingCookies: { name: string; value: string; options: Record<string, unknown> }[] = []
 
     const supabase = createServerClient(
@@ -40,6 +45,13 @@ export async function GET(request: Request) {
                 },
                 setAll(cookiesToSet) {
                     cookiesToSet.forEach((cookie) => {
+                        // Update cookie store for subsequent reads within this request
+                        try {
+                            cookieStore.set(cookie.name, cookie.value, cookie.options as any)
+                        } catch {
+                            // May fail in some contexts, that's OK
+                        }
+                        // Also collect for explicit setting on the redirect response
                         pendingCookies.push(cookie)
                     })
                 },
@@ -56,7 +68,8 @@ export async function GET(request: Request) {
 
     // Create redirect and EXPLICITLY set all auth cookies on the response
     const redirectUrl = `${redirectBase}${next}`
-    console.log('[AUTH CALLBACK] Session exchanged OK. Redirecting to:', redirectUrl, '| Cookies:', pendingCookies.length)
+    const cookieNames = pendingCookies.map(c => c.name).join(', ')
+    console.log('[AUTH CALLBACK] SUCCESS. Redirecting to:', redirectUrl, '| Setting cookies:', cookieNames, '| Count:', pendingCookies.length)
 
     const response = NextResponse.redirect(redirectUrl)
     pendingCookies.forEach(({ name, value, options }) => {
