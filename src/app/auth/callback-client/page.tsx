@@ -11,52 +11,65 @@ function CallbackClientContent() {
     const redirectTo = searchParams.get('redirectTo') || '/dashboard';
 
     useEffect(() => {
-        const handleImplicitFlow = async () => {
+        const handleAuthCallback = async () => {
             try {
-                // Parse hash params
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                const accessToken = hashParams.get('access_token');
-                const refreshToken = hashParams.get('refresh_token');
-                const error = hashParams.get('error');
-                const error_description = hashParams.get('error_description');
-
-                if (error) {
-                    console.error('[CLIENT CALLBACK] OAuth error:', error, error_description);
-                    toast.error(error_description || error);
-                    router.push('/login');
-                    return;
-                }
-
-                if (!accessToken || !refreshToken) {
-                    console.error('[CLIENT CALLBACK] No tokens in hash');
-                    router.push('/login');
-                    return;
-                }
-
-                console.log('[CLIENT CALLBACK] Processing implicit flow tokens...');
-
                 const supabase = createBrowserClient(
                     process.env.NEXT_PUBLIC_SUPABASE_URL!,
                     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
                 );
 
-                const { error: sessionError } = await supabase.auth.setSession({
-                    access_token: accessToken,
-                    refresh_token: refreshToken,
-                });
+                // Check for PKCE code flow (code in query params)
+                const code = searchParams.get('code');
+                if (code) {
+                    console.log('[CLIENT CALLBACK] PKCE code detected, exchanging...');
+                    const { error } = await supabase.auth.exchangeCodeForSession(code);
+                    if (error) {
+                        console.error('[CLIENT CALLBACK] Code exchange error:', error.message);
+                        toast.error(error.message);
+                        router.push('/login?error=' + encodeURIComponent(error.message));
+                        return;
+                    }
+                    console.log('[CLIENT CALLBACK] Code exchange successful');
+                    toast.success("Sesión iniciada correctamente");
+                    window.location.href = redirectTo;
+                    return;
+                }
 
-                if (sessionError) {
-                    console.error('[CLIENT CALLBACK] Session error:', sessionError);
-                    toast.error(sessionError.message);
+                // Check for implicit flow (tokens in hash)
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const accessToken = hashParams.get('access_token');
+                const refreshToken = hashParams.get('refresh_token');
+                const error = hashParams.get('error');
+                const errorDescription = hashParams.get('error_description');
+
+                if (error) {
+                    console.error('[CLIENT CALLBACK] OAuth error:', error, errorDescription);
+                    toast.error(errorDescription || error);
                     router.push('/login');
                     return;
                 }
 
-                console.log('[CLIENT CALLBACK] Session established successfully');
-                toast.success("Sesión iniciada correctamente");
+                if (accessToken && refreshToken) {
+                    console.log('[CLIENT CALLBACK] Implicit flow tokens detected...');
+                    const { error: sessionError } = await supabase.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: refreshToken,
+                    });
+                    if (sessionError) {
+                        console.error('[CLIENT CALLBACK] Session error:', sessionError);
+                        toast.error(sessionError.message);
+                        router.push('/login');
+                        return;
+                    }
+                    console.log('[CLIENT CALLBACK] Session established successfully');
+                    toast.success("Sesión iniciada correctamente");
+                    window.location.href = redirectTo;
+                    return;
+                }
 
-                // Use hard redirect to ensure cookies are sent
-                window.location.href = redirectTo;
+                // No code and no tokens — invalid callback
+                console.error('[CLIENT CALLBACK] No code or tokens found');
+                router.push('/login?error=invalid_callback');
             } catch (err: any) {
                 console.error('[CLIENT CALLBACK] Error:', err);
                 toast.error(err.message || "Error en la autenticación");
@@ -64,8 +77,8 @@ function CallbackClientContent() {
             }
         };
 
-        handleImplicitFlow();
-    }, [router, redirectTo]);
+        handleAuthCallback();
+    }, [router, redirectTo, searchParams]);
 
     return (
         <div className="min-h-screen flex items-center justify-center">

@@ -49,7 +49,7 @@ export default function SignupPage() {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: `${siteUrl}/auth/callback?redirectTo=/pending-approval`,
+                redirectTo: `${siteUrl}/auth/callback-client?redirectTo=/pending-approval`,
                 queryParams: {
                     access_type: 'offline',
                     prompt: 'consent',
