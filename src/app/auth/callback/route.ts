@@ -1,46 +1,37 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabaseServer'
 
-export async function GET(request: NextRequest) {
-    const requestUrl = new URL(request.url)
-    const code = requestUrl.searchParams.get('code')
-    const redirectTo = requestUrl.searchParams.get('redirectTo') || '/dashboard'
+export async function GET(request: Request) {
+    const { searchParams, origin } = new URL(request.url)
+    const code = searchParams.get('code')
+    // if "next" or "redirectTo" is in param, use it as the redirect URL
+    const next = searchParams.get('redirectTo') ?? searchParams.get('next') ?? '/dashboard'
 
     if (code) {
-        let response = NextResponse.redirect(`${requestUrl.origin}${redirectTo}`)
-
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() {
-                        return request.cookies.getAll()
-                    },
-                    setAll(cookiesToSet) {
-                        cookiesToSet.forEach(({ name, value, options }) => {
-                            request.cookies.set(name, value)
-                        })
-                        response = NextResponse.redirect(`${requestUrl.origin}${redirectTo}`)
-                        cookiesToSet.forEach(({ name, value, options }) => {
-                            response.cookies.set(name, value, options)
-                        })
-                    },
-                },
-            }
-        )
-
+        const supabase = await createClient()
         const { error } = await supabase.auth.exchangeCodeForSession(code)
-
+        
         if (!error) {
-            console.log('[CALLBACK SERVER] Session exchanged flawlessly. Cookie set for route:', redirectTo)
-            return response
+            console.log('[CALLBACK SERVER] Session exchanged flawlessly. Redirecting...', next)
+            const forwardedHost = request.headers.get('x-forwarded-host') 
+            const isLocalEnv = process.env.NODE_ENV === 'development'
+            
+            if (isLocalEnv) {
+                // local environment, no load balancers
+                return NextResponse.redirect(`${origin}${next}`)
+            } else if (forwardedHost) {
+                // production with Vercel load balancer causing origin issues
+                return NextResponse.redirect(`https://${forwardedHost}${next}`)
+            } else {
+                return NextResponse.redirect(`${origin}${next}`)
+            }
         } else {
-             console.error('[CALLBACK SERVER] Code exchange error:', error.message)
-             return NextResponse.redirect(`${requestUrl.origin}/login?error=${encodeURIComponent(error.message)}`)
+            console.error('[CALLBACK SERVER] Code exchange error:', error)
+            return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`)
         }
     }
 
     console.error('[CALLBACK SERVER] No "code" parameter found in URL')
-    return NextResponse.redirect(`${requestUrl.origin}/login?error=invalid_auth_callback`)
+    // return the user to an error page with instructions
+    return NextResponse.redirect(`${origin}/login?error=invalid_auth_callback`)
 }
