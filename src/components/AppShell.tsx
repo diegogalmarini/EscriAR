@@ -25,7 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabaseClient";
-import { PendingBadge } from "@/components/PendingBadge";
+
 
 const baseMenuItems = [
     { name: "Inicio", href: "/dashboard", icon: LayoutDashboard },
@@ -138,7 +138,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                                 >
                                     <item.icon size={20} className={cn("shrink-0", isActive ? "" : "group-hover:text-primary")} />
                                     {!isCollapsed && <span className="font-medium whitespace-nowrap">{item.name}</span>}
-                                    {!isCollapsed && item.href === "/dashboard" && <PendingBadge />}
                                 </button>
                             );
                         })}
