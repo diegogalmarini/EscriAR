@@ -9,14 +9,20 @@ import { revalidatePath } from "next/cache";
 // List all modelos
 // ---------------------------------------------------------------------------
 
-export async function getModelos(): Promise<{ success: boolean; data?: ModeloActo[]; error?: string }> {
+export async function getModelos(instrumentCategory?: string): Promise<{ success: boolean; data?: ModeloActo[]; error?: string }> {
     try {
         const supabase = await createClient();
-        const { data, error } = await supabase
+        let query = supabase
             .from("modelos_actos")
             .select("*")
             .order("act_type", { ascending: true })
             .order("version", { ascending: false });
+
+        if (instrumentCategory) {
+            query = query.eq("instrument_category", instrumentCategory);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
             console.error("[getModelos] DB Error:", error);
@@ -140,7 +146,7 @@ export async function uploadModeloZip(
                 template_name: metadata.template_name || `${actType}_template`,
                 label: label,
                 description: `Template v${newVersion}${metadata.schema_version ? ` (schema ${metadata.schema_version})` : ""}${actCode ? ` · Cód. ${actCode}` : ""} — ${metadata.total_variables || 0} variables en ${(metadata.categories_used || []).length} categorías`,
-                instrument_category: "ESCRITURA_PUBLICA",
+                instrument_category: (formData.get("instrument_category") as string) || "ESCRITURA_PUBLICA",
                 version: newVersion,
                 is_active: true,
                 docx_path: storagePath,

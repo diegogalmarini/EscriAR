@@ -26,7 +26,7 @@ import { toast } from "sonner";
 import {
     getModelos, uploadModeloZip, deleteModelo, toggleModeloActive,
 } from "@/app/actions/modelos";
-import { type ModeloActo, SUPPORTED_ACT_TYPES } from "@/app/actions/modelos-types";
+import { type ModeloActo, type InstrumentCategory, SUPPORTED_ACT_TYPES, INSTRUMENT_CATEGORY_LABELS, getActTypesForCategory } from "@/app/actions/modelos-types";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 
 // ---------------------------------------------------------------------------
@@ -106,7 +106,11 @@ function VariableDetail({ modelo }: { modelo: ModeloActo }) {
 // Main Component
 // ---------------------------------------------------------------------------
 
-export function ModelosTab() {
+interface ModelosTabProps {
+    instrumentCategory: InstrumentCategory;
+}
+
+export function ModelosTab({ instrumentCategory }: ModelosTabProps) {
     const [modelos, setModelos] = useState<ModeloActo[]>([]);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
@@ -125,7 +129,7 @@ export function ModelosTab() {
     const loadModelos = async () => {
         setLoading(true);
         try {
-            const res = await getModelos();
+            const res = await getModelos(instrumentCategory);
             if (res.success && res.data) {
                 setModelos(res.data);
             }
@@ -138,7 +142,7 @@ export function ModelosTab() {
 
     useEffect(() => {
         loadModelos();
-    }, []);
+    }, [instrumentCategory]);
 
     // ------ Upload flow ------
 
@@ -166,6 +170,7 @@ export function ModelosTab() {
         try {
             const formData = new FormData();
             formData.set("file", pendingFile);
+            formData.set("instrument_category", instrumentCategory);
             if (selectedActType) {
                 formData.set("act_type", selectedActType);
             }
@@ -284,10 +289,10 @@ export function ModelosTab() {
                 <div>
                     <CardTitle className="text-xl flex items-center gap-2">
                         <Package className="text-blue-600" />
-                        Modelos de Actos
+                        {INSTRUMENT_CATEGORY_LABELS[instrumentCategory]}
                     </CardTitle>
                     <CardDescription>
-                        Plantillas DOCX para generación documental. Generadas por el Template Builder.
+                        Plantillas DOCX de {INSTRUMENT_CATEGORY_LABELS[instrumentCategory].toLowerCase()}. Generadas por el Template Builder.
                     </CardDescription>
                 </div>
                 <Dialog open={isUploadOpen} onOpenChange={(open) => {
@@ -330,7 +335,7 @@ export function ModelosTab() {
                                             <SelectValue placeholder="Seleccionar tipo de acto" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {SUPPORTED_ACT_TYPES.map((t) => (
+                                            {getActTypesForCategory(instrumentCategory).map((t) => (
                                                 <SelectItem key={t.value} value={t.value}>
                                                     {t.label}
                                                 </SelectItem>
