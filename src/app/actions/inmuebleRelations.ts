@@ -43,15 +43,16 @@ export async function getInmuebleWithRelations(id: string) {
                 data: {
                     inmueble,
                     carpetas: [],
+                    escrituras: [],
                     titularActual: null
                 }
             };
         }
 
-        // 3. Get Escrituras Details (to get Carpeta ID)
+        // 3. Get Escrituras Details (to get Carpeta ID + PDF link)
         const { data: escrituras } = await supabase
             .from("escrituras")
-            .select("id, carpeta_id, fecha_escritura, nro_protocolo")
+            .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente")
             .in("id", escrituraIds)
             .order("fecha_escritura", { ascending: false }); // Newest first
 
@@ -142,6 +143,7 @@ export async function getInmuebleWithRelations(id: string) {
             data: {
                 inmueble,
                 carpetas: carpetas || [],
+                escrituras: escrituras || [],
                 titularActual: titularActual // Array of persons
             }
         };

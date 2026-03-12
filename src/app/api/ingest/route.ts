@@ -219,6 +219,7 @@ export async function POST(req: Request) {
 
         const formData = await req.formData();
         const file = formData.get('file') as File;
+        const existingFolderId = formData.get('existingFolderId') as string | null;
 
         if (!file) {
             return NextResponse.json({ error: "No se encontró el archivo en la solicitud." }, { status: 400 });
@@ -237,16 +238,29 @@ export async function POST(req: Request) {
             }
         } catch { /* fallback to default org */ }
 
-        // 1. Initial creation for status tracking
-        console.log(`[PIPELINE] Creating folder for: ${file.name}`);
-        const { data: carpeta, error: folderError } = await supabaseAdmin.from('carpetas').insert({
-            caratula: file.name.substring(0, 100),
-            ingesta_estado: 'PROCESANDO',
-            ingesta_paso: 'Iniciando análisis',
-            org_id: orgId
-        }).select().single();
-
-        if (folderError) throw new Error(`Error creando carpeta: ${folderError.message}`);
+        // 1. Use existing folder or create new one for status tracking
+        let carpeta: { id: string; [key: string]: any };
+        if (existingFolderId) {
+            console.log(`[PIPELINE] Using existing folder: ${existingFolderId}`);
+            const { data: existing, error: fetchErr } = await supabaseAdmin.from('carpetas')
+                .select().eq('id', existingFolderId).single();
+            if (fetchErr || !existing) throw new Error(`Carpeta ${existingFolderId} no encontrada`);
+            carpeta = existing;
+            await supabaseAdmin.from('carpetas').update({
+                ingesta_estado: 'PROCESANDO',
+                ingesta_paso: 'Re-procesando documento',
+            }).eq('id', carpeta.id);
+        } else {
+            console.log(`[PIPELINE] Creating folder for: ${file.name}`);
+            const { data: newCarpeta, error: folderError } = await supabaseAdmin.from('carpetas').insert({
+                caratula: file.name.substring(0, 100),
+                ingesta_estado: 'PROCESANDO',
+                ingesta_paso: 'Iniciando análisis',
+                org_id: orgId
+            }).select().single();
+            if (folderError) throw new Error(`Error creando carpeta: ${folderError.message}`);
+            carpeta = newCarpeta;
+        }
 
         // --- HYBRID PROCESSING: SYNC for Small, ASYNC for Large ---
         const isLarge = file.size > 500 * 1024; // 500KB threshold

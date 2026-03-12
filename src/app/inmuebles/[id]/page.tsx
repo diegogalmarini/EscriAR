@@ -30,7 +30,7 @@ export default async function InmuebleDetailPage({ params }: { params: Promise<{
         );
     }
 
-    const { inmueble, carpetas, titularActual } = result.data;
+    const { inmueble, carpetas, escrituras, titularActual } = result.data;
 
     return (
         <div className="min-h-screen bg-slate-50/50 p-6 md:p-8 space-y-6 animate-in fade-in duration-300">
@@ -148,6 +148,74 @@ export default async function InmuebleDetailPage({ params }: { params: Promise<{
                                 <div className="text-center py-6 text-slate-400">
                                     <Folder className="mx-auto h-8 w-8 opacity-20 mb-2" />
                                     <p className="text-xs">No hay carpetas vinculadas.</p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* DOCUMENTOS RELACIONADOS */}
+                    <Card className="border-slate-200 shadow-sm">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                                <FileText size={14} /> Documentos Relacionados
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {escrituras && escrituras.length > 0 ? (
+                                <div className="space-y-2">
+                                    {escrituras.map((esc: any) => (
+                                        <div key={esc.id} className="p-3 text-sm bg-white border border-slate-100 rounded-lg space-y-1.5">
+                                            <div className="flex items-center gap-2">
+                                                <FileText size={14} className="text-blue-500 shrink-0" />
+                                                <span className="font-semibold text-slate-700">
+                                                    Escritura N° {esc.nro_protocolo || '?'}
+                                                </span>
+                                                {esc.registro && (
+                                                    <span className="text-xs text-slate-400">Reg. {esc.registro}</span>
+                                                )}
+                                            </div>
+                                            {esc.fecha_escritura && (
+                                                <p className="text-xs text-slate-500 pl-6">
+                                                    Fecha: {new Date(esc.fecha_escritura).toLocaleDateString('es-AR')}
+                                                </p>
+                                            )}
+                                            {esc.notario_interviniente && (
+                                                <p className="text-xs text-slate-500 pl-6">
+                                                    Notario: {esc.notario_interviniente}
+                                                </p>
+                                            )}
+                                            <div className="flex gap-2 pl-6 pt-1">
+                                                {esc.pdf_url && (
+                                                    <a
+                                                        href={esc.pdf_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                                                    >
+                                                        <FileText size={12} />
+                                                        Ver PDF
+                                                    </a>
+                                                )}
+                                                {esc.carpeta_id && (
+                                                    <Link
+                                                        href={`/carpeta/${esc.carpeta_id}`}
+                                                        className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 hover:underline"
+                                                    >
+                                                        <Folder size={12} />
+                                                        Ver Carpeta
+                                                    </Link>
+                                                )}
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 pl-6">
+                                                Fuente: {esc.source === 'INGESTA' ? 'Extracción IA' : esc.source || 'Desconocido'}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-6 text-slate-400">
+                                    <FileText className="mx-auto h-8 w-8 opacity-20 mb-2" />
+                                    <p className="text-xs">No hay documentos vinculados.</p>
                                 </div>
                             )}
                         </CardContent>
