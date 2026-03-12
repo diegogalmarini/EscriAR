@@ -23,7 +23,7 @@ export interface TaxCalculationResult {
     baseCalculoArs: number;
     detail: {
         sellosPba: number;
-        itiAfip: number;
+        gananciasGlobalAfip: number;
         honorarios: number;
         iva21: number;
         aportesNotariales: number;
@@ -56,7 +56,7 @@ export function calculateNotaryExpenses(input: TaxCalculationInput): TaxCalculat
         result.lineas.filter(l => l.rubro === rubro).reduce((s, l) => s + l.monto, 0);
 
     const sellosPba = byRubro("SELLOS_PBA");
-    const itiAfip = byRubro("ITI") + byRubro("GANANCIAS_CEDULARES");
+    const gananciasGlobalAfip = byRubro("GANANCIAS_GLOBAL");
     const honorarios = byRubro("HONORARIOS");
     const iva21 = byRubro("IVA_HONORARIOS");
     const aportesNotariales = byRubro("APORTE_CAJA") + byRubro("APORTE_COLEGIO");
@@ -68,7 +68,7 @@ export function calculateNotaryExpenses(input: TaxCalculationInput): TaxCalculat
         baseCalculoArs: baseSellos,
         detail: {
             sellosPba: Math.round(sellosPba * 100) / 100,
-            itiAfip: Math.round(itiAfip * 100) / 100,
+            gananciasGlobalAfip: Math.round(gananciasGlobalAfip * 100) / 100,
             honorarios: Math.round(honorarios * 100) / 100,
             iva21: Math.round(iva21 * 100) / 100,
             aportesNotariales: Math.round(aportesNotariales * 100) / 100,

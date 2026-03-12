@@ -1,5 +1,33 @@
 # EscriAR — La Biblia del Proyecto
 
+## Sesión 22: Reorganización de Navegación y Nombres de Actos
+**Fecha:** 2026-03-12
+**Objetivo:** Renombrar categorías de actos y mover "Modelos" y "Jurisdicciones" a la barra lateral principal.
+
+### Cambios Realizados:
+- **UI Workbench**: Renombrado "Actos Protocolares" a "Escrituras" y "Actos Privados" a "Instrumentos Privados" en `ActuacionesPanel.tsx`.
+- **Navegación Sidebar**: Reorganización de la barra lateral en `AppShell.tsx` para incluir "Modelos" y "Jurisdicciones" con sus íconos correspondientes.
+- **Nuevas Páginas**: Creadas `/app/modelos/page.tsx` y `/app/jurisdicciones/page.tsx`.
+- **Admin Panel**: Eliminadas las pestañas duplicadas en `/admin/users/page.tsx`.
+- **Acciones**: Actualizada la revalidación de caché en `modelos.ts` y `jurisdicciones.ts`.
+
+---
+
+
+## Sesión 22: Reorganización de Navegación y Nombres de Actos
+**Fecha:** 2026-03-12
+**Objetivo:** Renombrar categorías de actos y mover "Modelos" y "Jurisdicciones" a la barra lateral principal.
+
+### Cambios Realizados:
+- **UI Workbench**: Renombrado "Actos Protocolares" a "Escrituras" y "Actos Privados" a "Instrumentos Privados" en `ActuacionesPanel.tsx`.
+- **Navegación Sidebar**: Reorganización de la barra lateral en `AppShell.tsx` para incluir "Modelos" y "Jurisdicciones" como secciones de primer nivel.
+- **Nuevas Páginas**: Creadas `/app/modelos/page.tsx` y `/app/jurisdicciones/page.tsx` para hostear los componentes de gestión.
+- **Admin Panel**: Eliminadas las pestañas duplicadas de "Modelos" y "Jurisdicciones" en `/admin/users/page.tsx`.
+- **Server Actions**: Actualizada la lógica de `revalidatePath` en `modelos.ts` y `jurisdicciones.ts` para reflejar las nuevas rutas de la aplicación.
+
+---
+
+
 > **DOCUMENTO MAESTRO COMPARTIDO ENTRE TODOS LOS AGENTES (Claude, Gemini, etc.)**
 > Este archivo es el alma del proyecto. Contiene TODO lo que necesitás saber para entender, mantener y extender EscriAR.
 > Cada agente que trabaje en el proyecto **DEBE** leer este archivo al inicio y actualizarlo al finalizar su sesión.
@@ -346,7 +374,7 @@ Estos NO llaman a Gemini. Son funciones TypeScript puras que calculan resultados
 
 | Skill | Archivo | Qué hace |
 |---|---|---|
-| `taxCalculator` | `src/lib/skills/deterministic/taxCalculator.ts` | Calcula Sellos PBA (2%), ITI AFIP (1.5%), Honorarios (2%), IVA (21%), Aportes Notariales (15%). Soporta ARS, USD, UVA con tipo de cambio. Exención vivienda única configurable. |
+| `taxCalculator` | `src/lib/skills/deterministic/taxCalculator.ts` | Calcula Sellos PBA (2%), Ganancias Global (3%), Honorarios (2%), IVA (21%), Aportes Notariales (15%). Soporta ARS, USD, UVA con tipo de cambio. Exención vivienda única configurable. |
 | `timelinePlanner` | `src/lib/skills/deterministic/timelinePlanner.ts` | Planificación inversa desde fecha de firma: calcula cuándo solicitar cada certificado (Dominio, Inhibición, Catastro, Municipal) según jurisdicción PBA. Modos Simple/Urgente con buffer de seguridad. |
 
 #### B. Skills Generadores (template, sin AI en runtime)
@@ -665,7 +693,7 @@ Todas las acciones del servidor están en `src/app/actions/`. Son funciones `"us
 | Componente | Qué hace |
 |---|---|
 | `SmartDeedEditor.tsx` | Editor de escritura con sugerencias AI en tiempo real. |
-| `TaxBreakdownCard.tsx` | Desglose de impuestos (Sellos, ITI, Honorarios, IVA). |
+| `TaxBreakdownCard.tsx` | Desglose de impuestos (Sellos, Ganancias Global, Honorarios, IVA). |
 | `ComplianceTrafficLight.tsx` | Semáforo de compliance (verde/amarillo/rojo). |
 
 ### CrossCheckService
@@ -835,6 +863,13 @@ Pipeline dual (frontend sync + worker async Railway) 100% funcional y estabiliza
 ---
 
 ## 17. Changelog
+
+### 2026-03-12 08:07 — Alineación de Prioridades (Notario)
+
+- Se incorpora directiva operativa del día: **primero** ajustes de pestañas/UI según feedback del notario.
+- Se define **Presupuesto** como paso crítico **pre-carpeta**: si el cliente no acepta, **no** se crea carpeta ni se persisten datos finales.
+- Se aclara alcance de Presupuestos: soportar variantes múltiples con campos manuales personalizados y campos calculados.
+- Se alinea planificación entre documentos: `ROADMAP.md` concentra prioridades inmediatas; `ARCHITECTURE_PLAN.md` mantiene estado técnico de implementación por etapas.
 
 ### 2026-03-09 (Claude) — ET16, ET12b, ET17: Compartir, Admin Jurisdicciones, Pre-carga
 
@@ -1454,7 +1489,7 @@ Ambos caminos están cubiertos.
 - **ET completadas**: ET1-ET7 (ver ARCHITECTURE_PLAN.md)
 - **Hitos completados**: 1.1 (Certificados), 1.2 (Lector RPI + Inhibiciones), 1.3 (Ficha Comprador)
 - [ ] **Hito 1.4**: Determinación automática del acto (subcódigos CESBA)
-- [ ] **Hito 1.5**: Liquidación impositiva completa (ARBA, RPI, arancel CANN, ITI/Ganancias)
+- [ ] **Hito 1.5**: Liquidación impositiva completa (ARBA, RPI, arancel CANN, Ganancias Global/Cedular)
 
 ---
 
@@ -1467,3 +1502,64 @@ Ambos caminos están cubiertos.
 > 6. Firmar con tu nombre de agente
 >
 > **Última actualización**: 2026-03-07 — Antigravity — Protocolo CRUD completo (Fases 1-3), ET7.1 Protocolo Inteligente (upsert personas/inmuebles), migraciones 048-049, reprocesamiento masivo 56 PDFs, UI fixes en tablas.
+
+### 2026-03-12 (Antigravity) � Sesi�n 7: Derogaci�n ITI y Ajustes Fiscales
+
+#### Objetivo
+Actualizar el sistema para reflejar la derogaci�n definitiva del Impuesto a la Transferencia de Inmuebles (ITI) seg�n Ley 27.743 (Paquete Fiscal 2024).
+
+#### Cambios Realizados
+- **Eliminaci�n ITI**: Se removi� el c�lculo del 1.5% de ITI en todo el sistema. 
+- **Ganancias Global**: Se implement� la retenci�n del 3% para empresas y habitualistas (AFIP).
+- **Ganancias Cedular**: Se a�adi� l�gica informativa para el 15% (individuos, compra post-2018).
+- **Configuraci�n Fiscal**: Actualizado fiscal_config_2026.json.
+- **UI/UX**: Actualizado TaxBreakdownCard.tsx y presupuestoPdf.ts.
+- **Skills**: Actualizado notary-tax-calculator (SKILL.md) y deedDrafter.ts.
+
+#### Archivos Modificados
+- src/lib/services/PresupuestoEngine.ts
+- src/lib/skills/deterministic/taxCalculator.ts
+- src/components/smart/TaxBreakdownCard.tsx
+- src/data/fiscal_config_2026.json
+- src/lib/skills/generation/deedDrafter.ts
+- src/lib/templates/buildTemplateContext.ts
+- src/lib/pdf/presupuestoPdf.ts
+- .agent/skills/notary-tax-calculator/SKILL.md
+- DIARIO.md y ROADMAP.md
+
+---
+- Badge \ Analizando...\ con spinner para apuntes en proceso.
+
+#### UX/UI
+- Corregido glitch de scroll en el Editor al insertar cláusulas largas.
+- Mejorada visibilidad del \Semáforo de Vencimientos\ en modo oscuro.
+
+---
+
+> **�ltima actualización**: 2026-03-12 � Antigravity (Sesión 7: Derogación ITI)
+
+### 2026-03-12 (Antigravity) � Sesión 7: Derogación ITI y Ajustes Fiscales
+
+#### Objetivo
+Actualizar el sistema para reflejar la derogación definitiva del Impuesto a la Transferencia de Inmuebles (ITI) según Ley 27.743 (Paquete Fiscal 2024).
+
+#### Cambios Realizados
+- **Eliminación ITI**: Se removió el cálculo del 1.5% de ITI en todo el sistema. 
+- **Ganancias Global**: Se implementó la retención del 3% para empresas y habitualistas (AFIP).
+- **Ganancias Cedular**: Se añadió lógica informativa para el 15% (individuos, compra post-2018).
+- **Configuración Fiscal**: Actualizado fiscal_config_2026.json.
+- **UI/UX**: Actualizado TaxBreakdownCard.tsx y el footer de presupuestoPdf.ts.
+- **Skills**: Actualizado notary-tax-calculator (SKILL.md) y deedDrafter.ts.
+
+#### Archivos Modificados
+- src/lib/services/PresupuestoEngine.ts
+- src/lib/skills/deterministic/taxCalculator.ts
+- src/components/smart/TaxBreakdownCard.tsx
+- src/data/fiscal_config_2026.json
+- src/lib/skills/generation/deedDrafter.ts
+- src/lib/templates/buildTemplateContext.ts
+- src/lib/pdf/presupuestoPdf.ts
+- .agent/skills/notary-tax-calculator/SKILL.md
+
+---
+

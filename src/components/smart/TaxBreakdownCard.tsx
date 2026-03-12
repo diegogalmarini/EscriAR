@@ -9,7 +9,7 @@ interface TaxBreakdownProps {
         baseCalculoArs: number;
         detail: {
             sellosPba: number;
-            itiAfip: number;
+            gananciasGlobalAfip: number;
             honorarios: number;
             iva21: number;
             aportesNotariales: number;
@@ -35,11 +35,11 @@ export function TaxBreakdownCard({ taxData }: TaxBreakdownProps) {
         }).format(val);
     };
 
-    const detail = taxData.detail || { sellosPba: 0, itiAfip: 0, honorarios: 0, iva21: 0, aportesNotariales: 0 };
+    const detail = taxData.detail || { sellosPba: 0, gananciasGlobalAfip: 0, honorarios: 0, iva21: 0, aportesNotariales: 0 };
 
     const rows = [
         { label: 'Impuesto de Sellos (PBA)', value: detail.sellosPba || 0, color: 'text-slate-700' },
-        { label: 'ITI (AFIP)', value: detail.itiAfip || 0, color: 'text-slate-700' },
+        { label: 'Ganancias Global (AFIP)', value: detail.gananciasGlobalAfip || 0, color: 'text-slate-700' },
         { label: 'Honorarios Notariales', value: detail.honorarios || 0, color: 'text-slate-700' },
         { label: 'IVA (21%)', value: detail.iva21 || 0, color: 'text-slate-700' },
         { label: 'Aportes (Caja Notarial)', value: detail.aportesNotariales || 0, color: 'text-slate-700' },

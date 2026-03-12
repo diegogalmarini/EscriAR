@@ -21,13 +21,11 @@ El sistema debe comparar valores para determinar sobre qué monto se tributa:
     1. Si `Precio` es en USD, convertir a ARS usando la cotización "Vendedor Banco Nación" del día anterior (o del día, según norma local).
     2. `Base_Imponible` = MAX(`Precio_ARS`, `Valuación_Fiscal`).
 
-### 2. Lógica de Impuesto a la Transferencia (Vendedor)
-Determinar si corresponde ITI o Impuesto a las Ganancias Cedulares (Reforma 2018).
-* **Check:** Fecha de adquisición del inmueble por parte del vendedor.
-* **Regla:**
-    * Si `fecha_adquisicion` < 1 de Enero 2018: Aplica **ITI** (1.5% del Precio).
-    * Si `fecha_adquisicion` >= 1 de Enero 2018: Aplica **Ganancias** (15% sobre la diferencia entre Compra y Venta actualizable). *Nota: En la práctica notarial, a veces se retiene un % a cuenta o el contador libera certificado de no retención.*
-    * **Excepción:** Si es "Venta de Casa Habitación para reemplazo" (Certificado de No Retención AFIP), Tasa = 0%.
+### 2. Lógica de Impuestos Nacionales a la Transferencia (Vendedor)
+El ITI (1.5%) fue **derogado en su totalidad a partir del 8 de julio de 2024** mediante la Ley 27.743. Por lo tanto:
+* **Adquisiciones antes del 1° de enero de 2018 (Personas Humanas):** Ya no están alcanzadas por ningún impuesto nacional a la transferencia. El escribano no retiene ni se precisa certificado de no retención.
+* **Adquisiciones desde el 1° de enero de 2018 (Personas Humanas):** Aplica **Impuesto a las Ganancias Cedular (15%)**. El escribano **NO** es agente de retención; el tributo es responsabilidad del contribuyente.
+* **Sujetos colectivos, empresas o habitualistas:** Mantiene vigencia el **Impuesto a las Ganancias Global (3%)** con retención obligatoria a cargo del escribano.
 
 ### 3. Impuesto de Sellos (Provincia de Buenos Aires)
 * **Tasa General:** 2.0% (Dividido 50/50 partes o según pacto).

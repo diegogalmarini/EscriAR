@@ -442,8 +442,8 @@ export default function ActuacionesPanel({
 
     return (
         <div className="space-y-4">
-            {renderSection("Actos Protocolares", protocolares, protocolaresOpen, setProtocolaresOpen, "PROTOCOLAR")}
-            {renderSection("Actos Privados", privados, privadosOpen, setPrivadosOpen, "PRIVADO")}
+            {renderSection("Escrituras", protocolares, protocolaresOpen, setProtocolaresOpen, "PROTOCOLAR")}
+            {renderSection("Instrumentos Privados", privados, privadosOpen, setPrivadosOpen, "PRIVADO")}
 
             {/* Dialog para crear nueva actuación */}
             <GenerarActuacionDialog

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { type ModeloActo, SUPPORTED_ACT_TYPES } from "./modelos-types";
+import { revalidatePath } from "next/cache";
 
 // ---------------------------------------------------------------------------
 // List all modelos
@@ -151,7 +152,8 @@ export async function uploadModeloZip(
             .single();
 
         if (insertError) throw insertError;
-
+        
+        revalidatePath("/modelos");
         return { success: true, data: inserted as ModeloActo };
     } catch (error: any) {
         console.error("[uploadModeloZip] CRITICAL ERROR:", error);
@@ -199,6 +201,7 @@ export async function toggleModeloActive(
                 .eq("id", modeloId);
         }
 
+        revalidatePath("/modelos");
         return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -237,6 +240,8 @@ export async function deleteModelo(
             .eq("id", modeloId);
 
         if (error) throw error;
+        
+        revalidatePath("/modelos");
         return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };

@@ -206,7 +206,7 @@ export function generarPresupuestoPdf(opts: PresupuestoPdfOptions): void {
     "Este presupuesto es de carácter orientativo y no constituye liquidación definitiva.",
     "Los montos pueden variar según la cotización del día de firma, tasas vigentes al momento de registración,",
     "y la situación fiscal particular de las partes. Fuentes: Ley Impositiva PBA 2026, DTR 13/25 (RPI),",
-    "Tabla de Aranceles COLESBA, AFIP (ITI/Ganancias). Válido por 30 días desde la fecha de emisión.",
+    "Tabla de Aranceles COLESBA, AFIP (Ganancias Global/Cedular). Válido por 30 días desde la fecha de emisión.",
   ];
   for (const line of disclaimer) {
     doc.text(line, margin, y);

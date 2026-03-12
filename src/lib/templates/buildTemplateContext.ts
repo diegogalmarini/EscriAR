@@ -243,9 +243,6 @@ interface CertificadosTemplate {
 interface ImpuestosTemplate {
     base_imponible: string;
     sellados: string;
-    iti: string;
-    // --- Alias Template Builder ---
-    iti_monto: string;
     ganancias: string;
 }
 
@@ -692,9 +689,6 @@ export async function buildTemplateContext(carpetaId: string): Promise<TemplateC
         impuestos: {
             base_imponible: EMPTY, // se calcula con taxCalculator
             sellados: EMPTY,
-            iti: EMPTY,
-            // Alias TB
-            iti_monto: EMPTY,
             ganancias: EMPTY,
         },
 

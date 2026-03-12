@@ -71,7 +71,7 @@ export async function createJurisdiccion(data: {
 
         if (error) throw error;
 
-        revalidatePath("/admin/users");
+        revalidatePath("/jurisdicciones");
         return { success: true, data: created };
     } catch (error: any) {
         console.error("[createJurisdiccion]", error);
@@ -90,7 +90,7 @@ export async function updateJurisdiccion(id: string, data: Partial<Jurisdiccion>
 
         if (error) throw error;
 
-        revalidatePath("/admin/users");
+        revalidatePath("/jurisdicciones");
         return { success: true, data: updated };
     } catch (error: any) {
         console.error("[updateJurisdiccion]", error);
@@ -107,7 +107,7 @@ export async function deleteJurisdiccion(id: string) {
 
         if (error) throw error;
 
-        revalidatePath("/admin/users");
+        revalidatePath("/jurisdicciones");
         return { success: true };
     } catch (error: any) {
         console.error("[deleteJurisdiccion]", error);
@@ -124,7 +124,7 @@ export async function toggleJurisdiccionActive(id: string, active: boolean) {
 
         if (error) throw error;
 
-        revalidatePath("/admin/users");
+        revalidatePath("/jurisdicciones");
         return { success: true };
     } catch (error: any) {
         console.error("[toggleJurisdiccionActive]", error);
@@ -141,7 +141,7 @@ export async function toggleBulkActive(jurisdictionId: string, active: boolean) 
 
         if (error) throw error;
 
-        revalidatePath("/admin/users");
+        revalidatePath("/jurisdicciones");
         return { success: true };
     } catch (error: any) {
         console.error("[toggleBulkActive]", error);

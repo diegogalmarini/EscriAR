@@ -11,14 +11,13 @@
     "tope_default": 90000000
   },
 
-  "iti": {
-    "rate": 0.015,
-    "cutoff_date": "2018-01-01",
-    "retencion_ganancias_cedular": 0.015
+  "ganancias_global": {
+    "rate": 0.03
   },
 
   "ganancias_cedular": {
-    "rate": 0.15
+    "rate": 0.15,
+    "cutoff_date": "2018-01-01"
   },
 
   "iva": {

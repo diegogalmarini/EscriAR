@@ -72,8 +72,8 @@ export interface PresupuestoInput {
   monto_hipoteca?: number;
 
   // Vendedor
-  fecha_adquisicion_vendedor?: string;  // YYYY-MM-DD for ITI vs Ganancias
-  tiene_cert_no_retencion_iti?: boolean;
+  fecha_adquisicion_vendedor?: string;  // YYYY-MM-DD para verificar Ganancias Cedular
+  es_empresario_habitualista?: boolean; // Habilita retención 3% Ganancias Global
 
   // Certificados RPI
   urgencia_rpi?: "simple" | "urgente" | "en_el_dia";
@@ -267,47 +267,31 @@ export function calcularPresupuesto(input: PresupuestoInput): PresupuestoResult 
   };
   calcSellos();
 
-  // ─── 3. ITI / Ganancias Cedulares ───
+  // ─── 3. Impuesto a las Ganancias (Transferencia Inmuebles) ───
   if (!esHipoteca && montoArs > 0) {
-    if (input.tiene_cert_no_retencion_iti) {
-      // Exento - no agregar línea
-    } else if (input.fecha_adquisicion_vendedor) {
-      const pre2018 = new Date(input.fecha_adquisicion_vendedor) < new Date(fiscalConfig.iti.cutoff_date);
-      if (pre2018) {
-        lineas.push({
-          rubro: "ITI",
-          concepto: "ITI (Ley 23.905) — 1.5%",
-          baseCalculo: montoArs,
-          alicuota: fiscalConfig.iti.rate,
-          monto: round2(montoArs * fiscalConfig.iti.rate),
-          pagador: "VENDEDOR",
-          categoria: "IMPUESTO",
-        });
-      } else {
-        lineas.push({
-          rubro: "GANANCIAS_CEDULAR",
-          concepto: "Ganancias Cedulares (retención a cuenta) — 1.5%",
-          baseCalculo: montoArs,
-          alicuota: fiscalConfig.iti.retencion_ganancias_cedular,
-          monto: round2(montoArs * fiscalConfig.iti.retencion_ganancias_cedular),
-          pagador: "VENDEDOR",
-          categoria: "IMPUESTO",
-          notas: "Retención a cuenta. Monto definitivo = 15% sobre ganancia neta.",
-        });
-      }
-    } else {
-      // Default: ITI
+    // El ITI (1.5%) fue derogado en su totalidad por Ley 27.743 (Julio 2024).
+    if (input.es_empresario_habitualista) {
       lineas.push({
-        rubro: "ITI",
-        concepto: "ITI (Ley 23.905) — 1.5%",
+        rubro: "GANANCIAS_GLOBAL",
+        concepto: "Impuesto a las Ganancias Global — 3%",
         baseCalculo: montoArs,
-        alicuota: fiscalConfig.iti.rate,
-        monto: round2(montoArs * fiscalConfig.iti.rate),
+        alicuota: fiscalConfig.ganancias_global.rate,
+        monto: round2(montoArs * fiscalConfig.ganancias_global.rate),
         pagador: "VENDEDOR",
         categoria: "IMPUESTO",
-        notas: "Asumiendo adquisición pre-2018. Verificar fecha real.",
+        notas: "Retención a cuenta (Sujetos colectivos / Habitualistas).",
       });
-      alertas.push("Fecha de adquisición no informada. Se asumió ITI (pre-2018).");
+    } else {
+      if (input.fecha_adquisicion_vendedor) {
+        const pre2018 = new Date(input.fecha_adquisicion_vendedor) < new Date(fiscalConfig.ganancias_cedular.cutoff_date);
+        if (!pre2018) {
+          alertas.push("El vendedor (persona humana) adquirió post-2018. Sujeto a Ganancias Cedular (15%). El escribano NO retiene, es a cargo del contribuyente.");
+        } else {
+          // pre-2018, persona humana => No ITI, No Ganancias
+        }
+      } else {
+        alertas.push("Adquisición del vendedor no informada. Al tratarse de persona humana, asume exención (ITI derogado en pre-2018 / Cedular post-2018 no retenible).");
+      }
     }
   }
 

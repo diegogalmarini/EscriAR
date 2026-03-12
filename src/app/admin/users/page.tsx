@@ -35,8 +35,6 @@ import { Input } from "@/components/ui/input";
 import { UsersTab } from "./UsersTab";
 import { EscribanosTab } from "./EscribanosTab";
 import { KnowledgeTab } from "./KnowledgeTab";
-const ModelosTab = lazy(() => import("./ModelosTab").then(m => ({ default: m.ModelosTab })));
-const JurisdiccionesTab = lazy(() => import("./JurisdiccionesTab").then(m => ({ default: m.JurisdiccionesTab })));
 
 export default function AdminUsersPage() {
     const [activeTab, setActiveTab] = useState("escribanos");
@@ -125,14 +123,6 @@ export default function AdminUsersPage() {
                         <BookOpen size={16} />
                         CONOCIMIENTO
                     </TabsTrigger>
-                    <TabsTrigger value="modelos" className="gap-2 px-6">
-                        <Package size={16} />
-                        MODELOS
-                    </TabsTrigger>
-                    <TabsTrigger value="jurisdicciones" className="gap-2 px-6">
-                        <MapPin size={16} />
-                        JURISDICCIONES
-                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="escribanos" className="mt-0 border-none p-0 focus-visible:ring-0">
@@ -154,18 +144,6 @@ export default function AdminUsersPage() {
 
                 <TabsContent value="conocimiento" className="mt-0 border-none p-0 focus-visible:ring-0">
                     <KnowledgeTab />
-                </TabsContent>
-
-                <TabsContent value="modelos" className="mt-0 border-none p-0 focus-visible:ring-0">
-                    <Suspense fallback={<div className="flex justify-center p-12"><span className="text-slate-400">Cargando modelos...</span></div>}>
-                        <ModelosTab />
-                    </Suspense>
-                </TabsContent>
-
-                <TabsContent value="jurisdicciones" className="mt-0 border-none p-0 focus-visible:ring-0">
-                    <Suspense fallback={<div className="flex justify-center p-12"><span className="text-slate-400">Cargando jurisdicciones...</span></div>}>
-                        <JurisdiccionesTab />
-                    </Suspense>
                 </TabsContent>
             </Tabs>
 

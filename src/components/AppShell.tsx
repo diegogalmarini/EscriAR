@@ -18,7 +18,9 @@ import {
     X,
     ChevronLeft,
     ChevronRight,
-    Shield
+    Shield,
+    Package,
+    MapPin
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -30,8 +32,10 @@ const baseMenuItems = [
     { name: "Carpetas", href: "/carpetas", icon: FolderKanban },
     { name: "Clientes", href: "/clientes", icon: Users },
     { name: "Inmuebles", href: "/inmuebles", icon: Building2 },
-    { name: "Agenda", href: "/agenda", icon: Calendar },
     { name: "Protocolo", href: "/protocolo", icon: BookOpen },
+    { name: "Modelos", href: "/modelos", icon: Package },
+    { name: "Agenda", href: "/agenda", icon: Calendar },
+    { name: "Jurisdicciones", href: "/jurisdicciones", icon: MapPin },
     { name: "Tabla de Actos", href: "/tabla-actos", icon: FileSpreadsheet },
     { name: "Guía de Trámites", href: "/guia-tramites", icon: ClipboardList },
 ];

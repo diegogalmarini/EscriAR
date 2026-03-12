@@ -44,6 +44,11 @@ Implementar la Carpeta notarial con:
 
 Total: **52 migraciones SQL**, **20+ componentes principales**, **17 de 18 etapas completadas**.
 
+### Nota de alineación (2026-03-12 08:07)
+- El estado de ET13/ET17 en este documento refleja **implementación técnica base completada**.
+- La prioridad operativa del día se gestiona en `ROADMAP.md`: primero ajustes de pestañas/UI y luego profundización funcional del flujo de Presupuestos como paso pre-carpeta.
+- No hay contradicción: Architecture Plan describe capacidad implementada; Roadmap define foco inmediato de producto y UX.
+
 ---
 
 ## 1) Principios obligatorios (Guardrails)

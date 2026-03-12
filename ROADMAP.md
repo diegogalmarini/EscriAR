@@ -17,6 +17,13 @@
 
 ---
 
+## Tareas Inmediatas (12-03-2026)
+
+1. **Reorganización de UI**: Acomodar pestañas y temas de interfaz gráfica según indicaciones del Notario. ✅ COMPLETADO (Sesión 22)
+2. **Módulo de Presupuestos (Paso Crítico Pre-Carpeta)**: Existen cantidad de presupuestos diferentes y cada uno es muy personalizado (campos personalizados y calculados). Este es el **primer paso absoluto** antes de crear una carpeta; si el cliente no acepta el presupuesto, la carpeta no se crea ni se guardan los datos finales.
+
+---
+
 ## FUNDACIÓN (Completada)
 
 Lo que ya está construido y funcionando en producción:
@@ -59,7 +66,7 @@ Lo que ya está construido y funcionando en producción:
 ### Skills Implementados (con código TS funcional)
 - [x] `documentClassifier` — clasifica tipo de documento
 - [x] `deedDrafter` — borrador de escritura AI
-- [x] `taxCalculator` — cálculo de tasas y sellos
+- [x] `taxCalculator` — cálculo de tasas y sellos (Actualizado: Derogación ITI / Ganancias Global)
 - [x] `timelinePlanner` — planificación de plazos
 
 ### Skills Definidos (solo prompt/spec, sin TS)
@@ -162,10 +169,12 @@ Calcular todos los impuestos y tasas que el escribano debe liquidar.
   - **Tasa RPI** (inscripción): según tipo de acto
   - **Tasa de Justicia**: si aplica
   - **Arancel notarial**: según monto y tabla CANN (Colegio de Escribanos)
-  - **ITI / Ganancias**: 1.5% o exención vivienda única
-- [ ] Tabla de aranceles CANN (necesitamos datos actualizados 2026)
-- [ ] UI: `TaxBreakdownCard` expandido con desglose completo por concepto
-- [ ] Exportar liquidación a PDF/DOCX para entregar al cliente
+  - **Ganancias Global (AFIP)**: Retención 3% para empresas/habitualistas (L. 27.743)
+  - **Ganancias Cedular**: Nota informativa 15% (no retención notarial)
+  - **Arancel notarial**: según monto y tabla CANN (Colegio de Escribanos)
+- [x] Tabla de aranceles CANN (necesitamos datos actualizados 2026)
+- [x] UI: `TaxBreakdownCard` expandido con desglose completo por concepto (Actualizado: Ganancias Global)
+- [x] Exportar liquidación a PDF/DOCX para entregar al cliente
 
 **Criterio de aceptación**: El escribano ve un desglose completo de impuestos con totales, puede exportarlo, y los montos coinciden con la liquidación manual.
 
@@ -400,4 +409,4 @@ Para avanzar en las etapas necesitamos:
 
 ---
 
-> **Última actualización**: 2026-02-21 — Claude
+> **Última actualización**: 2026-03-12 — Antigravity (Reorganización de Sidebar / Nombres de Actos)

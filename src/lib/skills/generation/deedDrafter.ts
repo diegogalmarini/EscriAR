@@ -99,7 +99,11 @@ export class DeedDrafter {
         // Taxes
         text += `\n\nIMPUESTOS Y TASAS: Se hace constar que se retienen las siguientes sumas: `;
         text += `Impuesto de Sellos: ${formatNotaryMoney(tax_calculation?.detail?.sellosPba || 0, 'ARS')}; `;
-        text += `ITI: ${formatNotaryMoney(tax_calculation?.detail?.itiAfip || 0, 'ARS')}. `;
+        if (tax_calculation?.detail?.gananciasGlobalAfip) {
+            text += `Retención a cuenta de Imp. a las Ganancias: ${formatNotaryMoney(tax_calculation?.detail?.gananciasGlobalAfip || 0, 'ARS')}. `;
+        } else {
+            text += `No corresponde retención de Impuesto a las Ganancias ni ITI (derogado). `;
+        }
 
         text += `\n\nCIERRE: Leo a los comparecientes, quienes se ratifican en su contenido y firman ante mí, de lo que doy fe.`;
 
