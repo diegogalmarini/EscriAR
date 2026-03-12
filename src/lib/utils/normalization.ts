@@ -83,9 +83,10 @@ export function isLegalEntity(persona: any): boolean {
     if (!persona) return false;
     if (persona.tipo_persona === 'JURIDICA' || persona.tipo_persona === 'FIDEICOMISO') return true;
 
-    // Check CUIT/CUIL
+    // Check CUIT — only if it's a proper 10-11 digit CUIT with juridical prefix (30/33/34)
+    // A short number like 33369801 (8 digits) is a DNI, not a CUIT
     const cuit = (persona.cuit_cuil || persona.cuit)?.toString()?.replace(/\D/g, '') || '';
-    if (['30', '33', '34'].some(prefix => cuit.startsWith(prefix))) return true;
+    if (cuit.length >= 10 && cuit.length <= 11 && ['30', '33', '34'].some(prefix => cuit.startsWith(prefix))) return true;
 
     // Fallback: detect by name keywords when tipo_persona is not set correctly
     const nombre = (persona.nombre_completo || persona.full_name || '').toUpperCase();

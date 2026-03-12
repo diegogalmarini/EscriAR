@@ -77,15 +77,22 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ d
                                 <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">DNI</p>
                                     <p className="text-sm text-slate-900 font-mono mt-1">
-                                        {persona.dni && persona.dni.startsWith('SIN-DNI-') ? 'Pendiente' : (persona.dni || 'N/A')}
+                                        {persona.dni && (persona.dni.startsWith('SIN-DNI-') || persona.dni.startsWith('SIN_DNI_') || persona.dni.startsWith('TEMP-'))
+                                            ? <span className="text-slate-400 italic">Pendiente</span>
+                                            : (persona.dni || 'N/A')}
                                     </p>
                                 </div>
-                                {persona.cuit && (
-                                    <div>
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">CUIT/CUIL</p>
-                                        <p className="text-sm text-slate-900 font-mono mt-1">{persona.cuit}</p>
-                                    </div>
-                                )}
+                                {persona.cuit && (() => {
+                                    const digits = persona.cuit.replace(/\D/g, '');
+                                    const isValid = digits.length >= 10 && digits.length <= 11 && ['20','23','24','27','30','33','34'].some((p: string) => digits.startsWith(p));
+                                    if (!isValid) return null;
+                                    return (
+                                        <div>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">CUIT/CUIL</p>
+                                            <p className="text-sm text-slate-900 font-mono mt-1">{formatCUIT(digits)}</p>
+                                        </div>
+                                    );
+                                })()}
                                 {persona.nacionalidad && (
                                     <div>
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Nacionalidad</p>

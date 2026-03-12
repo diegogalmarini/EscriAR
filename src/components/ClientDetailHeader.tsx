@@ -70,18 +70,26 @@ export function ClientDetailHeader({ persona, onClienteUpdated }: ClientDetailHe
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] uppercase font-bold text-slate-400">DNI</span>
                                         <span className="font-mono text-slate-700">
-                                            {persona.dni && persona.dni.startsWith('SIN-DNI-')
+                                            {persona.dni && (persona.dni.startsWith('SIN-DNI-') || persona.dni.startsWith('SIN_DNI_') || persona.dni.startsWith('TEMP-'))
                                                 ? <Badge variant="outline" className="font-mono text-[10px] bg-slate-50 text-slate-500 border-dashed">Pendiente</Badge>
                                                 : (persona.dni || 'N/A')}
                                         </span>
                                     </div>
                                 )}
-                                {persona.cuit && (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[10px] uppercase font-bold text-slate-400">CUIT</span>
-                                        <span className="font-mono text-slate-700">{formatCUIT(persona.cuit)}</span>
-                                    </div>
-                                )}
+                                {(() => {
+                                    const rawCuit = persona.cuit || (isLegalEntity(persona) ? persona.dni : null);
+                                    const digits = rawCuit ? rawCuit.replace(/\D/g, '') : '';
+                                    const isValid = digits.length >= 10 && digits.length <= 11 && ['20','23','24','27','30','33','34'].some(p => digits.startsWith(p));
+                                    if (isValid) {
+                                        return (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] uppercase font-bold text-slate-400">CUIT</span>
+                                                <span className="font-mono text-slate-700">{formatCUIT(digits)}</span>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                })()}
                                 {persona.fecha_nacimiento && (
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] uppercase font-bold text-slate-400">
