@@ -10,6 +10,12 @@ if (typeof globalThis !== 'undefined') {
 
     // Ensure navigator exists minimally
     if (!g.navigator) g.navigator = { userAgent: 'Node.js/EscriAR' };
+
+    // Polyfill location for libraries that destructure window.location
+    if (!g.location) {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:3000';
+        g.location = { protocol: 'https:', hostname: 'localhost', host: 'localhost:3000', href: supabaseUrl, origin: supabaseUrl, pathname: '/', search: '', hash: '' };
+    }
 }
 // Flash v1.2.17 - SCHEMA FIX: Separated DNI/CUIT + Biographical Fields
 import { NextResponse, after } from 'next/server';

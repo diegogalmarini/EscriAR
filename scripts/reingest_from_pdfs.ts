@@ -41,10 +41,15 @@ async function ingestPdf(filePath: string): Promise<IngestResult> {
     const blob = new Blob([fileBuffer], { type: 'application/pdf' });
     formData.append('file', blob, fileName);
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5 * 60 * 1000); // 5 min timeout per PDF
+
     const response = await fetch(`${BASE_URL}/api/ingest`, {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
     });
+    clearTimeout(timeout);
 
     if (!response.ok) {
         const text = await response.text();
