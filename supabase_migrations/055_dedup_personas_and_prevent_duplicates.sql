@@ -154,7 +154,21 @@ BEGIN
     RAISE NOTICE 'Total personas merged (pass 2 CUIT): %', merge_count;
 END $$;
 
--- ── PASO 4: Unique index en CUIT (parcial, solo no-null no-empty) ──
+-- ── PASO 4: Backfill CUIT para jurídicas que tienen CUIT como DNI (PK) ──
+-- Muchas jurídicas fueron ingresadas con CUIT como PK (dni=30XXXXXXXX) pero cuit vacío
+
+UPDATE personas
+SET cuit = dni
+WHERE (cuit IS NULL OR cuit = '')
+  AND (
+    tipo_persona IN ('JURIDICA', 'FIDEICOMISO')
+    OR UPPER(nombre_completo) ~ '.*(BANCO|S\.A\.|S\.R\.L\.|S\.A\.U\.|SOCIEDAD|FIDEICOMISO|FUNDACION|ASOCIACION|COOPERATIVA|CONSORCIO|MUTUAL).*'
+  )
+  AND dni ~ '^\d{10,11}$'
+  AND dni NOT LIKE 'TEMP-%'
+  AND dni NOT LIKE 'SIN-%';
+
+-- ── PASO 5: Unique index en CUIT (parcial, solo no-null no-empty) ──
 -- Previene futuros duplicados de CUIT para personas jurídicas
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_personas_unique_cuit

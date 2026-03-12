@@ -134,18 +134,27 @@ export function ClientesTable({ data, onClienteDeleted }: ClientesTableProps) {
                                     <div className="flex items-center gap-1.5">
                                         <span className="text-[9px] uppercase font-normal text-slate-400">DNI</span>
                                         <span className="font-mono text-[11px] font-light text-slate-700">
-                                            {persona.dni && persona.dni.startsWith('SIN-DNI-')
+                                            {persona.dni && (persona.dni.startsWith('SIN-DNI-') || persona.dni.startsWith('SIN_DNI_') || persona.dni.startsWith('TEMP-'))
                                                 ? <Badge variant="outline" className="font-mono text-[9px] px-1 py-0 h-4 bg-slate-50 text-slate-500 border-dashed font-light">Pendiente</Badge>
                                                 : (persona.dni || 'N/A')}
                                         </span>
                                     </div>
                                 )}
-                                {persona.cuit && (
+                                {persona.cuit ? (
                                     <div className="flex items-center gap-1.5">
                                         <span className="text-[9px] uppercase font-normal text-slate-400">CUIT</span>
                                         <span className="font-mono text-[11px] font-light text-slate-700">{formatCUIT(persona.cuit)}</span>
                                     </div>
-                                )}
+                                ) : persona.isLegal && persona.dni && !persona.dni.startsWith('TEMP-') ? (
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-[9px] uppercase font-normal text-slate-400">CUIT</span>
+                                        <span className="font-mono text-[11px] font-light text-slate-700">{formatCUIT(persona.dni)}</span>
+                                    </div>
+                                ) : persona.isLegal ? (
+                                    <div className="flex items-center gap-1.5">
+                                        <Badge variant="outline" className="font-mono text-[9px] px-1 py-0 h-4 bg-amber-50 text-amber-600 border-dashed font-light">Sin CUIT</Badge>
+                                    </div>
+                                ) : null}
                             </div>
                         </TableCell>
                         <TableCell className="py-2.5">
