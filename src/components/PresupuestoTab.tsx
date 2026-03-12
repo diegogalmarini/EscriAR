@@ -98,7 +98,6 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
   const [esVU, setEsVU] = useState(false);
   const [esBcoProv, setEsBcoProv] = useState(false);
   const [fechaAdq, setFechaAdq] = useState("");
-  const [certNoRetencion, setCertNoRetencion] = useState(false);
   const [urgencia, setUrgencia] = useState<"simple" | "urgente" | "en_el_dia">("simple");
   const [cantInmuebles, setCantInmuebles] = useState("1");
   const [cantPersonas, setCantPersonas] = useState("2");
@@ -149,8 +148,6 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
       if (op?.es_banco_provincia) setEsBcoProv(!!op.es_banco_provincia);
       // Fecha adquisición
       if (op?.fecha_adquisicion_vendedor) setFechaAdq(op.fecha_adquisicion_vendedor);
-      // Certificado no retención
-      if (op?.tiene_cert_no_retencion_iti) setCertNoRetencion(!!op.tiene_cert_no_retencion_iti);
       // Urgencia
       if (op?.urgencia_rpi) setUrgencia(op.urgencia_rpi);
       // Honorarios
@@ -176,7 +173,6 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
     es_vivienda_unica: esVU,
     es_banco_provincia: esBcoProv,
     fecha_adquisicion_vendedor: fechaAdq || undefined,
-    tiene_cert_no_retencion_iti: certNoRetencion,
     urgencia_rpi: urgencia,
     cantidad_inmuebles: parseInt(cantInmuebles) || 1,
     cantidad_personas: parseInt(cantPersonas) || 2,
@@ -419,17 +415,9 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
                 <Label htmlFor="bcoprov" className="text-xs">Bco. Provincia</Label>
               </div>
             )}
-            {!esHipoteca && (
-              <>
-                <div className="flex items-center gap-2">
-                  <Switch id="certiti" checked={certNoRetencion} onCheckedChange={setCertNoRetencion} />
-                  <Label htmlFor="certiti" className="text-xs">Cert. No Retención ITI</Label>
-                </div>
-              </>
-            )}
           </div>
 
-          {!esHipoteca && !certNoRetencion && (
+          {!esHipoteca && (
             <div className="space-y-1.5 max-w-xs">
               <Label className="text-xs">Fecha adquisición vendedor</Label>
               <Input type="date" value={fechaAdq} onChange={e => setFechaAdq(e.target.value)} className="h-9" />

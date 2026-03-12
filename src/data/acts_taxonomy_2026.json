@@ -23397,7 +23397,7 @@
     "base_imponible": "***"
   },
   "901-32": {
-    "description": "ACTOS PROTOCOLARES QUE GENEREN HONORARIOS JUDICIALES",
+    "description": "ESCRITURAS QUE GENEREN HONORARIOS JUDICIALES",
     "category": "NON_REGISTRABLE",
     "tax_variables": {
       "stamp_duty_rate": 0,
@@ -23412,7 +23412,7 @@
     "raw_row": [
       "6",
       "901-32",
-      "ACTOS PROTOCOLARES QUE GENEREN HONORARIOS JUDICIALES",
+      "ESCRITURAS QUE GENEREN HONORARIOS JUDICIALES",
       "***",
       "***",
       "***",
@@ -23423,7 +23423,7 @@
       "***",
       "$ 0"
     ],
-    "act_name": "ACTOS PROTOCOLARES QUE GENEREN HONORARIOS JUDICIALES",
+    "act_name": "ESCRITURAS QUE GENEREN HONORARIOS JUDICIALES",
     "base_imponible": "***"
   },
   "902-00": {

@@ -420,7 +420,7 @@ export default function ActuacionesPanel({
                 <div className="p-3 space-y-2">
                     {items.length === 0 ? (
                         <p className="text-sm text-muted-foreground text-center py-6">
-                            Sin actos {categoria === "PRIVADO" ? "privados" : "protocolares"} generados
+                            Sin {categoria === "PRIVADO" ? "instrumentos privados" : "escrituras"} generadas
                         </p>
                     ) : (
                         items.map(renderActuacionRow)

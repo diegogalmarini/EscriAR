@@ -1,31 +1,22 @@
 # EscriAR — La Biblia del Proyecto
 
-## Sesión 22: Reorganización de Navegación y Nombres de Actos
+## Sesión 22: Limpieza Final ITI y Reorganización de Terminología
 **Fecha:** 2026-03-12
-**Objetivo:** Renombrar categorías de actos y mover "Modelos" y "Jurisdicciones" a la barra lateral principal.
+**Objetivo:** Finalizar la derogación del ITI y actualizar la terminología de Actos.
 
 ### Cambios Realizados:
-- **UI Workbench**: Renombrado "Actos Protocolares" a "Escrituras" y "Actos Privados" a "Instrumentos Privados" en `ActuacionesPanel.tsx`.
-- **Navegación Sidebar**: Reorganización de la barra lateral en `AppShell.tsx` para incluir "Modelos" y "Jurisdicciones" con sus íconos correspondientes.
-- **Nuevas Páginas**: Creadas `/app/modelos/page.tsx` y `/app/jurisdicciones/page.tsx`.
-- **Admin Panel**: Eliminadas las pestañas duplicadas en `/admin/users/page.tsx`.
-- **Acciones**: Actualizada la revalidación de caché en `modelos.ts` y `jurisdicciones.ts`.
-
----
-
-
-## Sesión 22: Reorganización de Navegación y Nombres de Actos
-**Fecha:** 2026-03-12
-**Objetivo:** Renombrar categorías de actos y mover "Modelos" y "Jurisdicciones" a la barra lateral principal.
-
-### Cambios Realizados:
-- **UI Workbench**: Renombrado "Actos Protocolares" a "Escrituras" y "Actos Privados" a "Instrumentos Privados" en `ActuacionesPanel.tsx`.
+- **Limpieza ITI**: Eliminación de residuos de ITI en `PresupuestoTab.tsx` (state duplicado y lógicas de retención).
+- **Terminología**: 
+    - Actualizado "ACTOS PROTOCOLARES" a "ESCRITURAS" en `acts_taxonomy_2026.json`.
+    - Actualizado "Acto Privado/Protocolar" a "Instrumento Privado/Escritura" en `GenerarActuacionDialog.tsx`.
+    - Actualizado mensajes de estado vacío en `ActuacionesPanel.tsx` con la nueva terminología.
 - **Navegación Sidebar**: Reorganización de la barra lateral en `AppShell.tsx` para incluir "Modelos" y "Jurisdicciones" como secciones de primer nivel.
-- **Nuevas Páginas**: Creadas `/app/modelos/page.tsx` y `/app/jurisdicciones/page.tsx` para hostear los componentes de gestión.
-- **Admin Panel**: Eliminadas las pestañas duplicadas de "Modelos" y "Jurisdicciones" en `/admin/users/page.tsx`.
-- **Server Actions**: Actualizada la lógica de `revalidatePath` en `modelos.ts` y `jurisdicciones.ts` para reflejar las nuevas rutas de la aplicación.
+- **Nuevas Páginas**: Creadas `/app/modelos/page.tsx` y `/app/jurisdicciones/page.tsx`.
+- **Admin Panel**: Eliminación de pestañas duplicadas en `/admin/users/page.tsx`.
+- **Server Actions**: Actualizada la revalidación de caché en `modelos.ts` y `jurisdicciones.ts`.
 
 ---
+
 
 
 > **DOCUMENTO MAESTRO COMPARTIDO ENTRE TODOS LOS AGENTES (Claude, Gemini, etc.)**

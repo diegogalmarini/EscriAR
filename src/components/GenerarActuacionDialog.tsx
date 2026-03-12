@@ -84,7 +84,7 @@ export default function GenerarActuacionDialog({
             <DialogContent className="sm:max-w-[450px]">
                 <DialogHeader>
                     <DialogTitle>
-                        Nuevo Acto {defaultCategoria === "PRIVADO" ? "Privado" : "Protocolar"}
+                        Nuevo {defaultCategoria === "PRIVADO" ? "Instrumento Privado" : "Escritura"}
                     </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-2">
@@ -107,8 +107,8 @@ export default function GenerarActuacionDialog({
                         {selectedActType && categoriaForActType(selectedActType) === "AMBIGUO" && (
                             <p className="text-xs text-muted-foreground mt-1.5">
                                 Se guardará como: {defaultCategoria === "PRIVADO"
-                                    ? "Privado (no impacta Protocolo)"
-                                    : "Protocolar (impacta Protocolo)"}
+                                    ? "Instrumento Privado (no impacta Protocolo)"
+                                    : "Escritura (impacta Protocolo)"}
                             </p>
                         )}
                     </div>
