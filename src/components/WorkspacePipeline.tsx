@@ -629,7 +629,7 @@ export function FaseRedaccion({ currentEscritura, activeDeedId, carpeta }: FaseR
                     </div>
                 )}
 
-                {/* ── Actuaciones (Actos Privados + Protocolares) ── */}
+                {/* ── Actuaciones (Instrumentos Privados + Escrituras) ── */}
                 <ActuacionesPanel
                     carpetaId={carpeta.id}
                     orgId={carpeta.org_id}
