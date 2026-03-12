@@ -876,6 +876,20 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
         // JURIDICA: CUIT is the canonical ID (no DNI). FISICA: DNI first, CUIT fallback.
         let finalID = isJuridica ? (cleanCuit || cleanDni) : (cleanDni || cleanCuit);
 
+        // DEDUP: If no direct ID but we have CUIT, check if persona already exists by CUIT
+        if (!finalID && cleanCuit) {
+            const { data: existingByCuit } = await supabaseAdmin
+                .from('personas')
+                .select('dni')
+                .eq('cuit', cleanCuit)
+                .limit(1)
+                .maybeSingle();
+            if (existingByCuit) {
+                finalID = existingByCuit.dni;
+                console.log(`[PERSIST] Found existing persona by CUIT ${cleanCuit} → reusing DNI ${finalID}`);
+            }
+        }
+
         if (!finalID) {
             // FALLBACK for CEDENTES, FIDEICOMISOS or other critical actors without ID in the text
             const role = String(c.rol).toUpperCase();
@@ -890,11 +904,28 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
         }
 
         // --- SMART CHECK: Persona ---
-        const { data: existingPerson } = await supabaseAdmin
+        // First try by DNI (primary key), then fallback to CUIT lookup to prevent duplicates
+        let { data: existingPerson } = await supabaseAdmin
             .from('personas')
             .select('*')
             .eq('dni', finalID)
             .maybeSingle();
+
+        // If not found by DNI but CUIT exists, check if another record has this CUIT
+        if (!existingPerson && cleanCuit) {
+            const { data: personByCuit } = await supabaseAdmin
+                .from('personas')
+                .select('*')
+                .eq('cuit', cleanCuit)
+                .limit(1)
+                .maybeSingle();
+            if (personByCuit) {
+                // Reuse the existing persona's DNI to avoid creating a duplicate
+                console.log(`[PERSIST] CUIT ${cleanCuit} already belongs to persona ${personByCuit.dni}, reusing instead of creating ${finalID}`);
+                finalID = personByCuit.dni;
+                existingPerson = personByCuit;
+            }
+        }
 
         const extractedPersona = {
             dni: finalID,
@@ -920,7 +951,7 @@ async function persistIngestedData(aiData: any, file: File, buffer: Buffer, exis
             if (addressChanged || statusChanged || nameChanged) {
                 conflicts.push({
                     type: 'PERSONA',
-                    id: finalID,
+                    id: finalID!,
                     existing: existingPerson,
                     extracted: extractedPersona
                 });
