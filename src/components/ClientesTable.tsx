@@ -140,21 +140,28 @@ export function ClientesTable({ data, onClienteDeleted }: ClientesTableProps) {
                                         </span>
                                     </div>
                                 )}
-                                {persona.cuit ? (
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="text-[9px] uppercase font-normal text-slate-400">CUIT</span>
-                                        <span className="font-mono text-[11px] font-light text-slate-700">{formatCUIT(persona.cuit)}</span>
-                                    </div>
-                                ) : persona.isLegal && persona.dni && !persona.dni.startsWith('TEMP-') ? (
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="text-[9px] uppercase font-normal text-slate-400">CUIT</span>
-                                        <span className="font-mono text-[11px] font-light text-slate-700">{formatCUIT(persona.dni)}</span>
-                                    </div>
-                                ) : persona.isLegal ? (
-                                    <div className="flex items-center gap-1.5">
-                                        <Badge variant="outline" className="font-mono text-[9px] px-1 py-0 h-4 bg-amber-50 text-amber-600 border-dashed font-light">Sin CUIT</Badge>
-                                    </div>
-                                ) : null}
+                                {(() => {
+                                    // Determine the best CUIT to display
+                                    const rawCuit = persona.cuit || (persona.isLegal ? persona.dni : null);
+                                    const digits = rawCuit ? rawCuit.replace(/\D/g, '') : '';
+                                    const isValidCuit = digits.length >= 10 && digits.length <= 11 && ['20','23','24','27','30','33','34'].some((p: string) => digits.startsWith(p));
+
+                                    if (isValidCuit) {
+                                        return (
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[9px] uppercase font-normal text-slate-400">CUIT</span>
+                                                <span className="font-mono text-[11px] font-light text-slate-700">{formatCUIT(digits)}</span>
+                                            </div>
+                                        );
+                                    } else if (persona.isLegal) {
+                                        return (
+                                            <div className="flex items-center gap-1.5">
+                                                <Badge variant="outline" className="font-mono text-[9px] px-1 py-0 h-4 bg-amber-50 text-amber-600 border-dashed font-light">Sin CUIT</Badge>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                })()}
                             </div>
                         </TableCell>
                         <TableCell className="py-2.5">
