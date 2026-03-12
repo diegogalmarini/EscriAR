@@ -1494,63 +1494,32 @@ Ambos caminos están cubiertos.
 >
 > **Última actualización**: 2026-03-07 — Antigravity — Protocolo CRUD completo (Fases 1-3), ET7.1 Protocolo Inteligente (upsert personas/inmuebles), migraciones 048-049, reprocesamiento masivo 56 PDFs, UI fixes en tablas.
 
-### 2026-03-12 (Antigravity) � Sesi�n 7: Derogaci�n ITI y Ajustes Fiscales
+
+### 2026-03-12 (Antigravity) – Sesión 7: Derogación ITI y Ajustes Fiscales (Finalizado)
 
 #### Objetivo
-Actualizar el sistema para reflejar la derogaci�n definitiva del Impuesto a la Transferencia de Inmuebles (ITI) seg�n Ley 27.743 (Paquete Fiscal 2024).
+Actualizar el sistema para reflejar la derogación definitiva del Impuesto a la Transferencia de Inmuebles (ITI) según Ley 27.743 (Paquete Fiscal 2024) y unificar terminología.
 
 #### Cambios Realizados
-- **Eliminaci�n ITI**: Se removi� el c�lculo del 1.5% de ITI en todo el sistema. 
-- **Ganancias Global**: Se implement� la retenci�n del 3% para empresas y habitualistas (AFIP).
-- **Ganancias Cedular**: Se a�adi� l�gica informativa para el 15% (individuos, compra post-2018).
-- **Configuraci�n Fiscal**: Actualizado fiscal_config_2026.json.
-- **UI/UX**: Actualizado TaxBreakdownCard.tsx y presupuestoPdf.ts.
-- **Skills**: Actualizado notary-tax-calculator (SKILL.md) y deedDrafter.ts.
+- **Eliminación ITI**: Se removió el cálculo del 1.5% de ITI y estados residuales en src/components/PresupuestoTab.tsx.
+- **Ganancias Global**: Implementación de retención del 3% para empresas y habitualistas (AFIP).
+- **Ganancias Cedular**: Lógica informativa para el 15%.
+- **Unificación Terminológica**: Cambio de 'Actos Protocolares/Privados' a 'Escrituras' e 'Instrumentos Privados' en archivos de data (src/data/acts_taxonomy_2026.json) y UI (src/components/GenerarActuacionDialog.tsx, src/components/ActuacionesPanel.tsx).
+- **Configuración Fiscal**: Actualizado src/data/fiscal_config_2026.json.
+- **Borrador/Presets**: Actualizado src/lib/skills/generation/deedDrafter.ts and src/lib/templates/buildTemplateContext.ts.
 
 #### Archivos Modificados
 - src/lib/services/PresupuestoEngine.ts
 - src/lib/skills/deterministic/taxCalculator.ts
 - src/components/smart/TaxBreakdownCard.tsx
+- src/data/acts_taxonomy_2026.json
 - src/data/fiscal_config_2026.json
-- src/lib/skills/generation/deedDrafter.ts
-- src/lib/templates/buildTemplateContext.ts
-- src/lib/pdf/presupuestoPdf.ts
-- .agent/skills/notary-tax-calculator/SKILL.md
-- DIARIO.md y ROADMAP.md
-
----
-- Badge \ Analizando...\ con spinner para apuntes en proceso.
-
-#### UX/UI
-- Corregido glitch de scroll en el Editor al insertar cláusulas largas.
-- Mejorada visibilidad del \Semáforo de Vencimientos\ en modo oscuro.
-
----
-
-> **�ltima actualización**: 2026-03-12 � Antigravity (Sesión 7: Derogación ITI)
-
-### 2026-03-12 (Antigravity) � Sesión 7: Derogación ITI y Ajustes Fiscales
-
-#### Objetivo
-Actualizar el sistema para reflejar la derogación definitiva del Impuesto a la Transferencia de Inmuebles (ITI) según Ley 27.743 (Paquete Fiscal 2024).
-
-#### Cambios Realizados
-- **Eliminación ITI**: Se removió el cálculo del 1.5% de ITI en todo el sistema. 
-- **Ganancias Global**: Se implementó la retención del 3% para empresas y habitualistas (AFIP).
-- **Ganancias Cedular**: Se añadió lógica informativa para el 15% (individuos, compra post-2018).
-- **Configuración Fiscal**: Actualizado fiscal_config_2026.json.
-- **UI/UX**: Actualizado TaxBreakdownCard.tsx y el footer de presupuestoPdf.ts.
-- **Skills**: Actualizado notary-tax-calculator (SKILL.md) y deedDrafter.ts.
-
-#### Archivos Modificados
-- src/lib/services/PresupuestoEngine.ts
-- src/lib/skills/deterministic/taxCalculator.ts
-- src/components/smart/TaxBreakdownCard.tsx
-- src/data/fiscal_config_2026.json
-- src/lib/skills/generation/deedDrafter.ts
-- src/lib/templates/buildTemplateContext.ts
-- src/lib/pdf/presupuestoPdf.ts
+- src/components/GenerarActuacionDialog.tsx
+- src/components/ActuacionesPanel.tsx
+- src/components/PresupuestoTab.tsx
 - .agent/skills/notary-tax-calculator/SKILL.md
 
 ---
+
+> **Última actualización**: 2026-03-12 — Antigravity (Cierre de Limpieza ITI y Terminología)
 
