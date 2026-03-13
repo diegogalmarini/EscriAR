@@ -1,0 +1,6 @@
+inmuebles YES, keys: id, partido_id, nro_partida, nomenclatura_catastral, tipo_inmueble, transcripcion_literal, titularidad_actual, valuacion_fiscal, nomenclatura, titulo_antecedente, partido_code, delegacion_code
+operaciones YES, keys: id, escritura_id, tipo_acto, monto_operacion, created_at, codigo, precio_construccion, precio_cesion, moneda_cesion, tipo_cambio_cesion, equivalente_ars_cesion, beneficiario_cedente, fecha_incorporacion_cedente, beneficiario_cesionario, fecha_cesion
+escrituras_inmuebles error: Could not find the table 'public.escrituras_inmuebles' in the schema cache
+inmuebles_operacion error: Could not find the table 'public.inmuebles_operacion' in the schema cache
+operaciones_inmuebles error: Could not find the table 'public.operaciones_inmuebles' in the schema cache
+inmuebles_operaciones error: Could not find the table 'public.inmuebles_operaciones' in the schema cache

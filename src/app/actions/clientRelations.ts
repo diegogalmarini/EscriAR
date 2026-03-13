@@ -163,7 +163,10 @@ export async function getClientWithRelations(dni: string) {
         // 7. Build the relationships
         const operaciones = participaciones?.map((part: any) => {
             const op = operacionesData?.find((o: any) => o.id === part.operacion_id);
-            const esc = escriturasData?.find((e: any) => e.id === op?.escritura_id);
+            const esc = escriturasData?.find((e: any) => 
+                (op?.escritura_id && op.escritura_id === e.id) || 
+                (op?.carpeta_id && e.carpeta_id && op.carpeta_id === e.carpeta_id)
+            );
             const carp = carpetasData?.find((c: any) => c.id === esc?.carpeta_id);
 
             return {
@@ -211,7 +214,10 @@ export async function getClientWithRelations(dni: string) {
 
         // 7c. Build enriched documentos for "Documentos Relacionados" tab
         const documentos = escriturasData?.map((esc: any) => {
-            const relatedOps = operacionesData?.filter((o: any) => o.escritura_id === esc.id) || [];
+            const relatedOps = operacionesData?.filter((o: any) => 
+                (o.escritura_id && o.escritura_id === esc.id) || 
+                (o.carpeta_id && esc.carpeta_id && o.carpeta_id === esc.carpeta_id)
+            ) || [];
             const opIds = relatedOps.map((o: any) => o.id);
             const part = participaciones?.find((p: any) => opIds.includes(p.operacion_id));
             const op = relatedOps[0];
