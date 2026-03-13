@@ -27,16 +27,18 @@ export async function getInmuebleWithRelations(id: string) {
         const operacionIds = opInmuebles?.map((o: any) => o.operacion_id).filter(Boolean) || [];
 
         let carpetaIds: string[] = [];
+        let escrituraIds: string[] = [];
         if (operacionIds.length > 0) {
             const { data: operacionesData } = await supabase
                 .from("operaciones")
-                .select("carpeta_id")
+                .select("carpeta_id, escritura_id")
                 .in("id", operacionIds);
             
-            carpetaIds = operacionesData?.map((o: any) => o.carpeta_id).filter(Boolean) || [];
+            carpetaIds = Array.from(new Set(operacionesData?.map((o: any) => o.carpeta_id).filter(Boolean) || []));
+            escrituraIds = Array.from(new Set(operacionesData?.map((o: any) => o.escritura_id).filter(Boolean) || []));
         }
 
-        if (carpetaIds.length === 0) {
+        if (carpetaIds.length === 0 && escrituraIds.length === 0) {
             return {
                 success: true,
                 data: {
@@ -49,13 +51,19 @@ export async function getInmuebleWithRelations(id: string) {
         }
 
         // 3. Get Escrituras Details (to get Carpeta ID + PDF link)
-        const { data: escriturasData } = await supabase
-            .from("escrituras")
-            .select(`
-                id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id
-            `)
-            .in("carpeta_id", carpetaIds)
-            .order("fecha_escritura", { ascending: false }); // Newest first
+        let queryEscrituras = supabase.from("escrituras").select(`
+            id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id
+        `);
+        
+        if (carpetaIds.length > 0 && escrituraIds.length > 0) {
+            queryEscrituras = queryEscrituras.or(`carpeta_id.in.(${carpetaIds.join(',')}),id.in.(${escrituraIds.join(',')})`);
+        } else if (carpetaIds.length > 0) {
+            queryEscrituras = queryEscrituras.in("carpeta_id", carpetaIds);
+        } else {
+            queryEscrituras = queryEscrituras.in("id", escrituraIds);
+        }
+
+        const { data: escriturasData } = await queryEscrituras.order("fecha_escritura", { ascending: false }); // Newest first
 
         const allCarpetaIds = escriturasData?.map((e: any) => e.carpeta_id).filter(Boolean) || [];
         const protoIds = escriturasData?.map((e: any) => e.protocolo_registro_id).filter(Boolean) || [];

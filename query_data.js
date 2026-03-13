@@ -1,0 +1,1 @@
+require("dotenv").config({path: ".env.local"}); const { createClient } = require("@supabase/supabase-js"); const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY); sb.from("operaciones").select("*").limit(1).then(({data}) => console.log(Object.keys(data[0])));

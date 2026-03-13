@@ -81,16 +81,22 @@ export async function getClientWithRelations(dni: string) {
 
         // 4. Get escrituras details
         // Clientes participan en operaciones, que tienen un carpeta_id, y las escrituras se agrupan por ese carpeta_id.
-        const carpetaIdsOps = operacionesData?.map((o: any) => o.carpeta_id).filter(Boolean) || [];
+        const carpetaIdsOps = Array.from(new Set(operacionesData?.map((o: any) => o.carpeta_id).filter(Boolean) || []));
+        const escrituraIdsOps = Array.from(new Set(operacionesData?.map((o: any) => o.escritura_id).filter(Boolean) || []));
         
-        // We also need to keep track of other ways escrituras might be linked, but carpeta_id is the main one.
         let escriturasData: any[] = [];
-        if (carpetaIdsOps.length > 0) {
-            const { data } = await supabase
-                .from("escrituras")
-                .select("*")
-                .in("carpeta_id", carpetaIdsOps)
-                .order("fecha_escritura", { ascending: false });
+        if (carpetaIdsOps.length > 0 || escrituraIdsOps.length > 0) {
+            let query = supabase.from("escrituras").select("*");
+            
+            if (carpetaIdsOps.length > 0 && escrituraIdsOps.length > 0) {
+                query = query.or(`carpeta_id.in.(${carpetaIdsOps.join(',')}),id.in.(${escrituraIdsOps.join(',')})`);
+            } else if (carpetaIdsOps.length > 0) {
+                query = query.in("carpeta_id", carpetaIdsOps);
+            } else {
+                query = query.in("id", escrituraIdsOps);
+            }
+            
+            const { data } = await query.order("fecha_escritura", { ascending: false });
             escriturasData = data || [];
         }
 
