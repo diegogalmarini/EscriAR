@@ -21,7 +21,7 @@ export async function getInmuebleWithRelations(id: string) {
         // 2. Find related Escrituras directly (Inmuebles are linked via escrituras.inmueble_princ_id)
         let { data: formalEscrituras } = await supabase
             .from("escrituras")
-            .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id")
+            .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id, detalles")
             .eq("inmueble_princ_id", id)
             .order("fecha_escritura", { ascending: false });
 
@@ -33,7 +33,7 @@ export async function getInmuebleWithRelations(id: string) {
             .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id, detalles")
             .order("fecha_escritura", { ascending: false });
 
-        const parts = inmueble.nomenclatura_catastral ? inmueble.nomenclatura_catastral.split(',').map((p: string) => p.trim().toUpperCase()) : [];
+        const parts = inmueble.nomenclatura ? inmueble.nomenclatura.split(',').map((p: string) => p.trim().toUpperCase()) : [];
         const part1 = parts[0] || '';
         const part2 = parts[1] || '';
 
@@ -41,8 +41,14 @@ export async function getInmuebleWithRelations(id: string) {
             if (!esc.detalles) return false;
             const rawText = JSON.stringify(esc.detalles).toUpperCase();
             
-            if (part1 && part2 && rawText.includes(part1) && rawText.includes(part2)) return true;
-            if (part1 && !part2 && part1.length > 5 && rawText.includes(part1)) return true;
+            // Normalize text to remove accents for better matching
+            const removeAccents = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const rawTextNoAccents = removeAccents(rawText);
+            const part1NoA = removeAccents(part1);
+            const part2NoA = removeAccents(part2);
+
+            if (part1NoA && part2NoA && rawTextNoAccents.includes(part1NoA) && rawTextNoAccents.includes(part2NoA)) return true;
+            if (part1NoA && !part2NoA && part1NoA.length > 5 && rawTextNoAccents.includes(part1NoA)) return true;
             return false;
         });
 
@@ -198,6 +204,49 @@ export async function getInmuebleWithRelations(id: string) {
 
                 if (allParticipantes && allParticipantes.length > 0) {
                     titularActual = allParticipantes.map((p: any) => p.persona).filter(Boolean);
+                }
+            }
+        }
+
+        // FALLBACK: If no titularActual found via operaciones, try to infer from the latest escritura's raw JSON
+        if ((!titularActual || titularActual.length === 0) && escriturasData.length > 0) {
+            // escriturasData is already sorted by fecha_escritura descending
+            const latestEscritura = escriturasData[0];
+            if (latestEscritura.detalles) {
+                const detalles = latestEscritura.detalles;
+                
+                // Prioritize buyers/acquirers from the JSON
+                let potentialTitulares: any[] = [];
+                
+                if (Array.isArray(detalles.compradores) && detalles.compradores.length > 0) {
+                    potentialTitulares = detalles.compradores;
+                } else if (Array.isArray(detalles.donatarios) && detalles.donatarios.length > 0) {
+                    potentialTitulares = detalles.donatarios;
+                } else if (Array.isArray(detalles.adquirentes) && detalles.adquirentes.length > 0) {
+                    potentialTitulares = detalles.adquirentes;
+                } else if (Array.isArray(detalles.titulares) && detalles.titulares.length > 0) {
+                    potentialTitulares = detalles.titulares;
+                } else if (Array.isArray(detalles.otorgantes) && detalles.otorgantes.length > 0) {
+                    potentialTitulares = detalles.otorgantes;
+                }
+
+                if (potentialTitulares.length > 0) {
+                    // Map the simple JSON objects to resemble the 'persona' structure expected by the UI
+                    titularActual = potentialTitulares.map((p: any) => {
+                        const nombres = p.nombre || p.nombres || '';
+                        const apellidos = p.apellido || p.apellidos || '';
+                        const nombreCompleto = nombres && apellidos ? `${apellidos}, ${nombres}` : (nombres || apellidos || 'Desconocido');
+
+                        return {
+                            id: 'inferido-' + Math.random().toString(36).substr(2, 9),
+                            nombres: nombres,
+                            apellidos: apellidos,
+                            nombre_completo: nombreCompleto,
+                            dni: p.dni || p.documento || '',
+                            cuit_cuil: p.cuit || p.cuil || '',
+                            _isInferidoFromJSON: true // Flag to indicate this is not a real DB persona
+                        };
+                    });
                 }
             }
         }
