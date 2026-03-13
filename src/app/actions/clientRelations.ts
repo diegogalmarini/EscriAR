@@ -80,11 +80,19 @@ export async function getClientWithRelations(dni: string) {
         console.log("[DEBUG] Operaciones:", operacionesData);
 
         // 4. Get escrituras details
-        const escrituraIds = operacionesData?.map((o: any) => o.escritura_id).filter(Boolean) || [];
-        const { data: escriturasData } = await supabase
-            .from("escrituras")
-            .select("*")
-            .in("id", escrituraIds);
+        // Clientes participan en operaciones, que tienen un carpeta_id, y las escrituras se agrupan por ese carpeta_id.
+        const carpetaIdsOps = operacionesData?.map((o: any) => o.carpeta_id).filter(Boolean) || [];
+        
+        // We also need to keep track of other ways escrituras might be linked, but carpeta_id is the main one.
+        let escriturasData: any[] = [];
+        if (carpetaIdsOps.length > 0) {
+            const { data } = await supabase
+                .from("escrituras")
+                .select("*")
+                .in("carpeta_id", carpetaIdsOps)
+                .order("fecha_escritura", { ascending: false });
+            escriturasData = data || [];
+        }
 
         const allCarpetaIds = escriturasData?.map((e: any) => e.carpeta_id).filter(Boolean) || [];
         const protoIds = escriturasData?.map((e: any) => e.protocolo_registro_id).filter(Boolean) || [];

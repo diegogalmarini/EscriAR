@@ -18,26 +18,25 @@ export async function getInmuebleWithRelations(id: string) {
             return { success: false, error: "No se encontró el inmueble" };
         }
 
-        // 2. Find related Escrituras (Link to Carpetas & Owners)
-        // We check if this inmueble is the 'princ' one in any escritura
-        // (Junction table 'inmuebles_escritura' does not exist in current schema)
+        // 2. Find related Escrituras via Operaciones
+        const { data: opInmuebles } = await supabase
+            .from("operaciones_inmuebles")
+            .select("operacion_id")
+            .eq("inmueble_id", id);
+        
+        const operacionIds = opInmuebles?.map((o: any) => o.operacion_id).filter(Boolean) || [];
 
-        let escrituraIds: string[] = [];
-
-        const { data: directEscrituras, error: directError } = await supabase
-            .from("escrituras")
-            .select("id")
-            .eq("inmueble_princ_id", id);
-
-        if (directError) {
-            console.error("Error fetching direct escrituras:", directError);
+        let carpetaIds: string[] = [];
+        if (operacionIds.length > 0) {
+            const { data: operacionesData } = await supabase
+                .from("operaciones")
+                .select("carpeta_id")
+                .in("id", operacionIds);
+            
+            carpetaIds = operacionesData?.map((o: any) => o.carpeta_id).filter(Boolean) || [];
         }
 
-        if (directEscrituras) {
-            escrituraIds = directEscrituras.map((e: any) => e.id);
-        }
-
-        if (escrituraIds.length === 0) {
+        if (carpetaIds.length === 0) {
             return {
                 success: true,
                 data: {
@@ -55,20 +54,20 @@ export async function getInmuebleWithRelations(id: string) {
             .select(`
                 id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id
             `)
-            .in("id", escrituraIds)
+            .in("carpeta_id", carpetaIds)
             .order("fecha_escritura", { ascending: false }); // Newest first
 
-        const carpetaIds = escriturasData?.map((e: any) => e.carpeta_id).filter(Boolean) || [];
+        const allCarpetaIds = escriturasData?.map((e: any) => e.carpeta_id).filter(Boolean) || [];
         const protoIds = escriturasData?.map((e: any) => e.protocolo_registro_id).filter(Boolean) || [];
 
         let protoRegistros: any[] = [];
-        if (carpetaIds.length > 0 || protoIds.length > 0) {
+        if (allCarpetaIds.length > 0 || protoIds.length > 0) {
             let query = supabase.from("protocolo_registros").select("id, carpeta_id, pdf_storage_path");
             
-            if (carpetaIds.length > 0 && protoIds.length > 0) {
-                query = query.or(`carpeta_id.in.(${carpetaIds.join(',')}),id.in.(${protoIds.join(',')})`);
-            } else if (carpetaIds.length > 0) {
-                query = query.in("carpeta_id", carpetaIds);
+            if (allCarpetaIds.length > 0 && protoIds.length > 0) {
+                query = query.or(`carpeta_id.in.(${allCarpetaIds.join(',')}),id.in.(${protoIds.join(',')})`);
+            } else if (allCarpetaIds.length > 0) {
+                query = query.in("carpeta_id", allCarpetaIds);
             } else {
                 query = query.in("id", protoIds);
             }
@@ -107,16 +106,15 @@ export async function getInmuebleWithRelations(id: string) {
 
         // 5. Infer Current Owner (Titular)
         // We look for the LATEST operation on these escrituras that is an ACQUISITION
-        // We need Operaciones linked to these Escrituras
+        // We already have operacionIds from the inmueble's relationships!
         const { data: operaciones } = await supabase
             .from("operaciones")
-            .select("id, escritura_id, tipo_acto, created_at")
-            .in("escritura_id", escrituraIds)
+            .select("id, tipo_acto, created_at")
+            .in("id", operacionIds)
             .order("created_at", { ascending: false });
 
         let titularActual = null;
 
-        console.log("Escritura IDs found:", escrituraIds);
         console.log("Operations found:", operaciones?.length);
         if (operaciones?.length) {
             console.log("Latest Op:", operaciones[0]);
