@@ -50,11 +50,36 @@ export async function getInmuebleWithRelations(id: string) {
         }
 
         // 3. Get Escrituras Details (to get Carpeta ID + PDF link)
-        const { data: escrituras } = await supabase
+        const { data: escriturasData } = await supabase
             .from("escrituras")
-            .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente")
+            .select(`
+                id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente,
+                protocolo_registro_parent:protocolo_registros!escrituras_protocolo_registro_id_fkey(pdf_storage_path),
+                protocolo_registro_child:protocolo_registros!protocolo_registros_escritura_id_fkey(pdf_storage_path)
+            `)
             .in("id", escrituraIds)
             .order("fecha_escritura", { ascending: false }); // Newest first
+
+        const escrituras = escriturasData?.map((esc: any) => {
+            let pdfUrl = esc.pdf_url;
+            if (!pdfUrl) {
+                const protoParentPath = esc.protocolo_registro_parent?.pdf_storage_path;
+                const protoChildPath = esc.protocolo_registro_child?.[0]?.pdf_storage_path;
+                const path = protoParentPath || protoChildPath;
+                if (path) {
+                    if (path.startsWith('http')) {
+                        pdfUrl = path;
+                    } else {
+                        const { data: publicUrlData } = supabase.storage.from("escrituras").getPublicUrl(path);
+                        pdfUrl = publicUrlData.publicUrl;
+                    }
+                }
+            }
+            return {
+                ...esc,
+                pdf_url: pdfUrl
+            };
+        });
 
         const carpetaIds = escrituras?.map((e: any) => e.carpeta_id).filter(Boolean) || [];
 

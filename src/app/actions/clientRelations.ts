@@ -83,7 +83,11 @@ export async function getClientWithRelations(dni: string) {
         const escrituraIds = operacionesData?.map((o: any) => o.escritura_id).filter(Boolean) || [];
         const { data: escriturasData } = await supabase
             .from("escrituras")
-            .select("*")
+            .select(`
+                *,
+                protocolo_registro_parent:protocolo_registros!escrituras_protocolo_registro_id_fkey(pdf_storage_path),
+                protocolo_registro_child:protocolo_registros!protocolo_registros_escritura_id_fkey(pdf_storage_path)
+            `)
             .in("id", escrituraIds);
 
         console.log("[DEBUG] Escrituras:", escriturasData);
@@ -190,6 +194,21 @@ export async function getClientWithRelations(dni: string) {
             let fechaEscritura = esc.fecha_escritura;
             let registro = esc.registro;
             let notario = esc.notario_interviniente;
+
+            // Resolve Protocolo PDF if applicable
+            if (!pdfUrl) {
+                const protoParentPath = esc.protocolo_registro_parent?.pdf_storage_path;
+                const protoChildPath = esc.protocolo_registro_child?.[0]?.pdf_storage_path;
+                const path = protoParentPath || protoChildPath;
+                if (path) {
+                    if (path.startsWith('http')) {
+                        pdfUrl = path;
+                    } else {
+                        const { data: publicUrlData } = supabase.storage.from("escrituras").getPublicUrl(path);
+                        pdfUrl = publicUrlData.publicUrl;
+                    }
+                }
+            }
 
             if (esc.source === 'TRAMITE' && esc.carpeta_id) {
                 const ingesta = ingestaEscrituras.find((i: any) => i.carpeta_id === esc.carpeta_id);

@@ -1,5 +1,17 @@
 # EscriAR — La Biblia del Proyecto
 
+## Sesión 24: Fix Trazabilidad Documental y URLs PDF
+**Fecha:** 2026-03-13
+**Objetivo:** Reparar el bug crítico de "Documentos Relacionados" (Trazabilidad) en Inmuebles y Clientes donde las resoluciones de fuentes PROTOCOLO y literales perdían el vínculo al PDF de almacenamiento.
+
+### Problema resuelto
+- Las extracciones de los documentos de PROTOCOLO o historiales de TRAMITE (cuyos PDFs quedaron vinculados a través de `protocolo_registros`) arrojaban `null` o vacío cuando se visualizaban en la entidad `Cliente` o `Inmueble`, imposibilitando la visualización del archivo escaneado original.
+- El UI (Frontend) etiquetaba la fuente equivocadamente o mostraba `Desconocido` en lugar de la procedencia.
+
+### Cambios realizados
+- `src/app/actions/clientRelations.ts`: Se expandió la consulta de `escrituras` a Supabase incluyendo la selección relacional bidireccional `protocolo_registro_parent/child:protocolo_registros(...)`. Se implementó un mapeo seguro para resolver rutas del bucket de *escrituras* para entregar URLs completas `publicUrl`.
+- `src/app/actions/inmuebleRelations.ts`: Implementado el mismo motor de resolución dual (parent/child) vía FK de Supabase, habilitando el botón de "Ver PDF" para historiales y extracciones literales provenientes de Protocolo.
+- `src/app/inmuebles/[id]/page.tsx`: Modificada la capa de presentación para procesar y renderizar "Protocolo" o "Trámite" en lugar del fallback por defecto.
 ## Sesión 23: Trazabilidad Completa Protocolo → Escritura + Dedup con Sugerencias
 **Fecha:** 2026-03-13
 **Agente:** Claude Opus 4.6

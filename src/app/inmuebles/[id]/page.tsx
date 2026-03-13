@@ -207,7 +207,7 @@ export default async function InmuebleDetailPage({ params }: { params: Promise<{
                                                 )}
                                             </div>
                                             <p className="text-[10px] text-slate-400 pl-6">
-                                                Fuente: {esc.source === 'INGESTA' ? 'Extracción IA' : esc.source || 'Desconocido'}
+                                                Fuente: {esc.source === 'INGESTA' ? 'Extracción IA' : esc.source === 'PROTOCOLO' ? 'Protocolo' : esc.source === 'TRAMITE' ? 'Trámite' : esc.source || 'Desconocido'}
                                             </p>
                                         </div>
                                     ))}
