@@ -162,21 +162,54 @@ export async function getClientWithRelations(dni: string) {
             tipo: e.tipo // This might still be null, but let's keep it for now
         })) || [];
 
-        // 7b. Build enriched documentos for "Documentos Relacionados" tab
+        // 7b. For TRAMITE escrituras, fetch their INGESTA siblings to get pdf_url
+        const tramiteCarpetaIds = escriturasData
+            ?.filter((e: any) => e.source === 'TRAMITE' && e.carpeta_id && !e.pdf_url)
+            .map((e: any) => e.carpeta_id) || [];
+
+        let ingestaEscrituras: any[] = [];
+        if (tramiteCarpetaIds.length > 0) {
+            const { data: ingestaData } = await supabase
+                .from("escrituras")
+                .select("*")
+                .in("carpeta_id", tramiteCarpetaIds)
+                .eq("source", "INGESTA");
+            ingestaEscrituras = ingestaData || [];
+        }
+
+        // 7c. Build enriched documentos for "Documentos Relacionados" tab
         const documentos = escriturasData?.map((esc: any) => {
-            // Find the operacion and participant role for this escritura
             const relatedOps = operacionesData?.filter((o: any) => o.escritura_id === esc.id) || [];
             const opIds = relatedOps.map((o: any) => o.id);
             const part = participaciones?.find((p: any) => opIds.includes(p.operacion_id));
             const op = relatedOps[0];
+
+            // For TRAMITE escrituras without pdf_url, get it from the INGESTA sibling
+            let pdfUrl = esc.pdf_url;
+            let nroProtocolo = esc.nro_protocolo;
+            let fechaEscritura = esc.fecha_escritura;
+            let registro = esc.registro;
+            let notario = esc.notario_interviniente;
+
+            if (esc.source === 'TRAMITE' && esc.carpeta_id) {
+                const ingesta = ingestaEscrituras.find((i: any) => i.carpeta_id === esc.carpeta_id);
+                if (ingesta) {
+                    if (!pdfUrl) pdfUrl = ingesta.pdf_url;
+                    if (!nroProtocolo) nroProtocolo = ingesta.nro_protocolo;
+                    if (!fechaEscritura) fechaEscritura = ingesta.fecha_escritura;
+                    if (!registro) registro = ingesta.registro;
+                    if (!notario) notario = ingesta.notario_interviniente;
+                }
+            }
+
             return {
                 id: esc.id,
-                nro_protocolo: esc.nro_protocolo,
-                fecha_escritura: esc.fecha_escritura,
-                pdf_url: esc.pdf_url,
+                nro_protocolo: nroProtocolo,
+                fecha_escritura: fechaEscritura,
+                pdf_url: pdfUrl,
                 source: esc.source,
-                registro: esc.registro,
-                notario_interviniente: esc.notario_interviniente,
+                registro: registro,
+                notario_interviniente: notario,
                 carpeta_id: esc.carpeta_id,
                 tipo_acto: op?.tipo_acto || null,
                 rol: part?.rol || null,
