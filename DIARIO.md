@@ -1,5 +1,59 @@
 # EscriAR — La Biblia del Proyecto
 
+## Sesión 23: Trazabilidad Completa Protocolo → Escritura + Dedup con Sugerencias
+**Fecha:** 2026-03-13
+**Agente:** Claude Opus 4.6
+**Objetivo:** Crear cadena de trazabilidad completa desde upload en Protocolo hasta entidades (personas, inmuebles), implementar dedup inteligente con sugerencias, y agregar pestaña "Documentos" en ficha de cliente.
+
+### Problema resuelto
+- "Seguimiento de Escrituras" extraía datos livianos pero NO creaba la cadena persona ← participante ← operación ← escritura ← PDF.
+- El re-ingest batch creó 57 carpetas huérfanas con nombres de archivo PDF como carátula.
+- La dedup hacía upsert silencioso sobreescribiendo datos existentes sin avisar.
+- Los clientes no tenían pestaña "Documentos Relacionados" (los inmuebles sí).
+
+### Cambios realizados
+
+#### Migración 062: Schema trazabilidad
+- `escrituras.protocolo_registro_id` → enlace bidireccional con `protocolo_registros.escritura_id`
+- `sugerencias.carpeta_id` ahora nullable (protocolo no tiene carpeta)
+- `sugerencias.protocolo_registro_id` para vincular sugerencias a registros de protocolo
+
+#### Migración 063: Cleanup carpetas huérfanas
+- SELECT COUNT verificó 57 carpetas con carátula `.pdf` + estado COMPLETADO
+- DELETE ejecutado — carpetas reales de usuario no afectadas
+
+#### Worker: Trazabilidad completa en ESCRITURA_EXTRACT
+- Resolución de org_id via `organizaciones_users` para crear sugerencias
+- Dedup personas: compara nombre, estado_civil, nacionalidad, domicilio; crea `DEDUP_PERSONA` si hay diffs
+- Dedup inmuebles: compara nomenclatura y transcripcion_literal; crea `DEDUP_INMUEBLE` si hay diffs
+- Crea escritura (`source='PROTOCOLO'`, `carpeta_id=null`) + operación + participantes
+- Actualiza `protocolo_registros.escritura_id` back-reference
+
+#### applySuggestion: Handlers nuevos
+- `DEDUP_PERSONA`: actualiza persona con datos extraídos (manejo especial domicilio_real como `{literal}`)
+- `DEDUP_INMUEBLE`: actualiza inmueble con datos extraídos
+
+#### Clientes: Pestaña "Documentos"
+- `clientRelations.ts`: enriquece retorno con escrituras vinculadas, tipo_acto y rol del cliente
+- Nuevo componente `ClientDocumentosList.tsx` (cards con N° escritura, fecha, tipo acto, rol, PDF, carpeta, fuente)
+- `clientes/[dni]/page.tsx`: 5ta pestaña "Documentos" con badge count
+
+### Archivos creados/modificados
+- `supabase_migrations/062_protocolo_traceability.sql` — NUEVO
+- `supabase_migrations/063_cleanup_orphan_carpetas.sql` — NUEVO
+- `worker/src/index.ts` — trazabilidad + dedup
+- `src/lib/deterministic/applySuggestion.ts` — handlers DEDUP
+- `src/app/actions/clientRelations.ts` — documentos en retorno
+- `src/components/ClientDocumentosList.tsx` — NUEVO
+- `src/app/clientes/[dni]/page.tsx` — pestaña Documentos
+
+### Pendientes identificados
+- [ ] Dedup con sugerencias en `persistIngestedData` (flujo MagicDropzone) — solo worker tiene dedup
+- [ ] RLS para escrituras con `carpeta_id=null` (source=PROTOCOLO) — policies actuales filtran por carpeta.org_id
+- [ ] Vista global de sugerencias pendientes (las de protocolo no tienen carpeta, no aparecen en ApuntesTab)
+
+---
+
 ## Sesión 22: Limpieza Final ITI y Reorganización de Terminología
 **Fecha:** 2026-03-12
 **Objetivo:** Finalizar la derogación del ITI y actualizar la terminología de Actos.
@@ -1466,6 +1520,12 @@ Ambos caminos están cubiertos.
 - [ ] Wiring del botón "Borrador IA" (Path A con Gemini)
 - [ ] Persistencia de campos faltantes en BD: forma_pago, título_antecedente estructurado, vehículo, etc.
 
+### Trazabilidad y Dedup
+- [ ] Dedup con sugerencias en `persistIngestedData` (flujo MagicDropzone aún hace upsert silencioso)
+- [ ] RLS para escrituras sin carpeta (`source='PROTOCOLO'`, `carpeta_id=null`) — necesita policy alternativa
+- [ ] Vista global de sugerencias pendientes (las de protocolo no tienen carpeta)
+- [ ] Verificar FK `escrituras.carpeta_id` → confirmar si es CASCADE, SET NULL o RESTRICT
+
 ### Deuda técnica
 - [ ] Integración con Resend para emails transaccionales
 
@@ -1521,5 +1581,5 @@ Actualizar el sistema para reflejar la derogación definitiva del Impuesto a la 
 
 ---
 
-> **Última actualización**: 2026-03-12 — Antigravity (Cierre de Limpieza ITI y Terminología)
+> **Última actualización**: 2026-03-13 — Claude Opus 4.6 (Trazabilidad Protocolo + Dedup Sugerencias + Documentos en Clientes)
 

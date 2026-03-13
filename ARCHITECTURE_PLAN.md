@@ -42,7 +42,9 @@ Implementar la Carpeta notarial con:
 | ET16 — Compartir Presupuesto | ✅ COMPLETADA | — | `CompartirPresupuestoDialog`: envío por WhatsApp (`wa.me/`), Email (`mailto:`), copiar al portapapeles. Selector de destinatario con contactos de la carpeta. Integrado en `PresupuestoTab`. |
 | ET17 — Pre-carga automática Presupuesto | ✅ COMPLETADA | — | Pre-carga automática de tipo_acto, monto, moneda, cotización, valuación fiscal, tipo inmueble, cantidad de inmuebles, cantidad de personas, partido/jurisdicción, vivienda única, banco provincia, fecha adquisición, certificado no retención, urgencia, honorarios, legalizaciones, apostillas. |
 
-Total: **52 migraciones SQL**, **20+ componentes principales**, **17 de 18 etapas completadas**.
+| ET18 — Trazabilidad Protocolo + Dedup | ✅ COMPLETADA | 062, 063 | Worker crea escritura+operación+participantes desde ESCRITURA_EXTRACT sin carpeta. Dedup inteligente con sugerencias DEDUP_PERSONA/DEDUP_INMUEBLE. Pestaña "Documentos" en ficha de cliente. Cleanup 57 carpetas huérfanas. |
+
+Total: **54 migraciones SQL**, **21+ componentes principales**, **18 de 19 etapas completadas**.
 
 ### Nota de alineación (2026-03-12 08:07)
 - El estado de ET13/ET17 en este documento refleja **implementación técnica base completada**.

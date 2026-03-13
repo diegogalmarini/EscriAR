@@ -48,7 +48,9 @@ Lo que ya está construido y funcionando en producción:
 - [x] Dedup escrituras por protocolo+registro
 - [x] Normalización: partido Title Case sin tildes, partida sin puntos
 - [x] Split de partidas múltiples ("X / Y" → 2 inmuebles)
-- [x] Migraciones 001–029 ejecutadas
+- [x] Dedup inteligente con sugerencias: worker compara datos existentes vs extraídos, crea `DEDUP_PERSONA` / `DEDUP_INMUEBLE` si hay diferencias (en vez de sobreescribir)
+- [x] Trazabilidad completa: protocolo upload → escritura + operación + participantes (sin crear carpeta)
+- [x] Migraciones 001–029, 062-063 ejecutadas
 
 ### UI
 - [x] Dashboard, Carpetas, Clientes, Inmuebles, Tabla de Actos
@@ -409,4 +411,4 @@ Para avanzar en las etapas necesitamos:
 
 ---
 
-> **Última actualización**: 2026-03-12 — Antigravity (Reorganización de Sidebar / Nombres de Actos)
+> **Última actualización**: 2026-03-13 — Claude Opus 4.6 (Trazabilidad Protocolo + Dedup + Documentos en Clientes)

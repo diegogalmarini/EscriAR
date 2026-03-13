@@ -17,6 +17,8 @@ Cada archivo incluye PRECHECKS / APPLY / POSTCHECKS / ROLLBACK.
 | 045 | `supabase_migrations/045_search_carpetas_tramite_only.sql` | search_carpetas filtra solo TRAMITE | Ejecutada |
 | 046 | `supabase_migrations/046_fix_move_participants_to_tramite.sql` | Fix mover participantes a TRAMITE | Ejecutada |
 | 047 | `supabase_migrations/047_etapa_7__cert_extraction.sql` | ET7: Extender certificados con extraction_data, extraction_evidence, extraction_status, confirmed_by/at | **Pendiente** |
+| 062 | `supabase_migrations/062_protocolo_traceability.sql` | Enlace bidireccional escrituras↔protocolo_registros, sugerencias.carpeta_id nullable, sugerencias.protocolo_registro_id | Ejecutada |
+| 063 | `supabase_migrations/063_cleanup_orphan_carpetas.sql` | Cleanup 57 carpetas huérfanas del re-ingest (caratula LIKE '%.pdf') | Ejecutada |
 
 ## Instrucciones
 
