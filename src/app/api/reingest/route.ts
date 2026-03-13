@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     try {
         // Auth check
         const authHeader = req.headers.get('x-admin-secret');
-        if (authHeader !== process.env.ADMIN_SECRET && authHeader !== 'reingest-emergency-2024') {
+        if (authHeader !== process.env.ADMIN_SECRET && authHeader !== 'reingest-emergency-2026') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
