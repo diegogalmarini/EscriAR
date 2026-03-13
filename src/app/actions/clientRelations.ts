@@ -83,12 +83,26 @@ export async function getClientWithRelations(dni: string) {
         const escrituraIds = operacionesData?.map((o: any) => o.escritura_id).filter(Boolean) || [];
         const { data: escriturasData } = await supabase
             .from("escrituras")
-            .select(`
-                *,
-                protocolo_registro_parent:protocolo_registros!escrituras_protocolo_registro_id_fkey(pdf_storage_path),
-                protocolo_registro_child:protocolo_registros!protocolo_registros_escritura_id_fkey(pdf_storage_path)
-            `)
+            .select("*")
             .in("id", escrituraIds);
+
+        const allCarpetaIds = escriturasData?.map((e: any) => e.carpeta_id).filter(Boolean) || [];
+        const protoIds = escriturasData?.map((e: any) => e.protocolo_registro_id).filter(Boolean) || [];
+
+        let protoRegistros: any[] = [];
+        if (allCarpetaIds.length > 0 || protoIds.length > 0) {
+            let query = supabase.from("protocolo_registros").select("id, carpeta_id, pdf_storage_path");
+            
+            if (allCarpetaIds.length > 0 && protoIds.length > 0) {
+                query = query.or(`carpeta_id.in.(${allCarpetaIds.join(',')}),id.in.(${protoIds.join(',')})`);
+            } else if (allCarpetaIds.length > 0) {
+                query = query.in("carpeta_id", allCarpetaIds);
+            } else {
+                query = query.in("id", protoIds);
+            }
+            const { data } = await query;
+            protoRegistros = data || [];
+        }
 
         console.log("[DEBUG] Escrituras:", escriturasData);
 
@@ -197,14 +211,16 @@ export async function getClientWithRelations(dni: string) {
 
             // Resolve Protocolo PDF if applicable
             if (!pdfUrl) {
-                const protoParentPath = esc.protocolo_registro_parent?.pdf_storage_path;
-                const protoChildPath = esc.protocolo_registro_child?.[0]?.pdf_storage_path;
-                const path = protoParentPath || protoChildPath;
+                const protoReg = protoRegistros.find((p: any) => 
+                    (esc.carpeta_id && p.carpeta_id === esc.carpeta_id) || 
+                    (esc.protocolo_registro_id && p.id === esc.protocolo_registro_id)
+                );
+                const path = protoReg?.pdf_storage_path;
                 if (path) {
                     if (path.startsWith('http')) {
                         pdfUrl = path;
                     } else {
-                        const { data: publicUrlData } = supabase.storage.from("escrituras").getPublicUrl(path);
+                        const { data: publicUrlData } = supabase.storage.from("protocolo").getPublicUrl(path);
                         pdfUrl = publicUrlData.publicUrl;
                     }
                 }

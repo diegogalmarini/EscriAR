@@ -53,24 +53,42 @@ export async function getInmuebleWithRelations(id: string) {
         const { data: escriturasData } = await supabase
             .from("escrituras")
             .select(`
-                id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente,
-                protocolo_registro_parent:protocolo_registros!escrituras_protocolo_registro_id_fkey(pdf_storage_path),
-                protocolo_registro_child:protocolo_registros!protocolo_registros_escritura_id_fkey(pdf_storage_path)
+                id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id
             `)
             .in("id", escrituraIds)
             .order("fecha_escritura", { ascending: false }); // Newest first
 
+        const carpetaIds = escriturasData?.map((e: any) => e.carpeta_id).filter(Boolean) || [];
+        const protoIds = escriturasData?.map((e: any) => e.protocolo_registro_id).filter(Boolean) || [];
+
+        let protoRegistros: any[] = [];
+        if (carpetaIds.length > 0 || protoIds.length > 0) {
+            let query = supabase.from("protocolo_registros").select("id, carpeta_id, pdf_storage_path");
+            
+            if (carpetaIds.length > 0 && protoIds.length > 0) {
+                query = query.or(`carpeta_id.in.(${carpetaIds.join(',')}),id.in.(${protoIds.join(',')})`);
+            } else if (carpetaIds.length > 0) {
+                query = query.in("carpeta_id", carpetaIds);
+            } else {
+                query = query.in("id", protoIds);
+            }
+            const { data } = await query;
+            protoRegistros = data || [];
+        }
+
         const escrituras = escriturasData?.map((esc: any) => {
             let pdfUrl = esc.pdf_url;
             if (!pdfUrl) {
-                const protoParentPath = esc.protocolo_registro_parent?.pdf_storage_path;
-                const protoChildPath = esc.protocolo_registro_child?.[0]?.pdf_storage_path;
-                const path = protoParentPath || protoChildPath;
+                const protoReg = protoRegistros.find((p: any) => 
+                    (esc.carpeta_id && p.carpeta_id === esc.carpeta_id) || 
+                    (esc.protocolo_registro_id && p.id === esc.protocolo_registro_id)
+                );
+                const path = protoReg?.pdf_storage_path;
                 if (path) {
                     if (path.startsWith('http')) {
                         pdfUrl = path;
                     } else {
-                        const { data: publicUrlData } = supabase.storage.from("escrituras").getPublicUrl(path);
+                        const { data: publicUrlData } = supabase.storage.from("protocolo").getPublicUrl(path);
                         pdfUrl = publicUrlData.publicUrl;
                     }
                 }
@@ -80,8 +98,6 @@ export async function getInmuebleWithRelations(id: string) {
                 pdf_url: pdfUrl
             };
         });
-
-        const carpetaIds = escrituras?.map((e: any) => e.carpeta_id).filter(Boolean) || [];
 
         // 4. Get Carpetas Linked
         const { data: carpetas } = await supabase
