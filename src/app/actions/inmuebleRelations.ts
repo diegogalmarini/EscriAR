@@ -19,13 +19,41 @@ export async function getInmuebleWithRelations(id: string) {
         }
 
         // 2. Find related Escrituras directly (Inmuebles are linked via escrituras.inmueble_princ_id)
-        const { data: escriturasData } = await supabase
+        let { data: formalEscrituras } = await supabase
             .from("escrituras")
             .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id")
             .eq("inmueble_princ_id", id)
             .order("fecha_escritura", { ascending: false });
 
-        if (!escriturasData || escriturasData.length === 0) {
+        let escriturasData = formalEscrituras || [];
+
+        // --- INICIO: Búsqueda Híbrida 360 (Documentos sueltos de INGESTA/PROTOCOLOS) ---
+        const { data: rawEscrituras } = await supabase
+            .from("escrituras")
+            .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id, detalles")
+            .order("fecha_escritura", { ascending: false });
+
+        const parts = inmueble.nomenclatura_catastral ? inmueble.nomenclatura_catastral.split(',').map((p: string) => p.trim().toUpperCase()) : [];
+        const part1 = parts[0] || '';
+        const part2 = parts[1] || '';
+
+        const ingestasMatched = (rawEscrituras || []).filter((esc: any) => {
+            if (!esc.detalles) return false;
+            const rawText = JSON.stringify(esc.detalles).toUpperCase();
+            
+            if (part1 && part2 && rawText.includes(part1) && rawText.includes(part2)) return true;
+            if (part1 && !part2 && part1.length > 5 && rawText.includes(part1)) return true;
+            return false;
+        });
+
+        for (const ing of ingestasMatched) {
+            if (!escriturasData.some(e => e.id === ing.id)) {
+                escriturasData.push(ing);
+            }
+        }
+        // --- FIN: Búsqueda Híbrida 360 ---
+
+        if (escriturasData.length === 0) {
             return {
                 success: true,
                 data: {

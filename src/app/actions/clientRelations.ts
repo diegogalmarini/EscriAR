@@ -100,6 +100,36 @@ export async function getClientWithRelations(dni: string) {
             escriturasData = data || [];
         }
 
+        // --- INICIO: Búsqueda Híbrida 360 (Documentos sueltos de INGESTA/PROTOCOLOS) ---
+        const { data: rawEscrituras } = await supabase
+            .from("escrituras")
+            .select("*") // Need all fields because it gets merged with escriturasData
+            .order("fecha_escritura", { ascending: false });
+
+        const searchDNI = dni ? dni.toString().trim() : 'NO_DNI';
+        const searchName = persona.nombre_completo ? persona.nombre_completo.toUpperCase().trim() : 'NO_NAME';
+
+        const ingestasMatched = (rawEscrituras || []).filter((esc: any) => {
+            const rawText = JSON.stringify([
+                esc.vendedores, esc.compradores, esc.titulares, 
+                esc.otorgantes, esc.poderdantes
+            ]).toUpperCase();
+            
+            if (searchDNI !== 'NO_DNI' && rawText.includes(searchDNI)) return true;
+            if (searchName !== 'NO_NAME' && searchName.length > 4 && rawText.includes(searchName)) return true;
+            return false;
+        });
+
+        // Combinar formales con ingestas semánticas evitando duplicados
+        const combinedEscrituras = [...escriturasData];
+        for (const ing of ingestasMatched) {
+            if (!combinedEscrituras.some(e => e.id === ing.id)) {
+                combinedEscrituras.push(ing);
+            }
+        }
+        escriturasData = combinedEscrituras;
+        // --- FIN: Búsqueda Híbrida 360 --- 
+
         const allCarpetaIds = escriturasData?.map((e: any) => e.carpeta_id).filter(Boolean) || [];
         const protoIds = escriturasData?.map((e: any) => e.protocolo_registro_id).filter(Boolean) || [];
 
