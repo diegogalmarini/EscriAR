@@ -1,6 +1,16 @@
 # EscriAR — La Biblia del Proyecto
 
-## Sesión 24: Fix Trazabilidad Documental y URLs PDF
+## Sesión 25: Corrección de Login OAuth (Google) y Flujo PKCE SSR
+**Fecha:** 2026-03-13
+**Objetivo:** Resolver el error `PKCE code verifier not found in storage` emitido por `@supabase/ssr` durante el proceso de autenticación con Google Auth.
+
+### Problema resuelto
+El entorno CSR usaba el `implicit` Auth Flow de Supabase dentro del cliente `supabaseClient.ts`, lo que rompía la lógica de cookies de servidor (PKCE) necesaria por Next.js SSR Routing y Middleware. Al usar Google Login, la redirección se enviaba a un fallback de cliente `callback-client`, el cual no tenía acceso al Code Verifier para validar con Supabase.
+
+### Cambios realizados
+- **Client Supabase:** Se eliminó `flowType: 'implicit'` de `src/lib/supabaseClient.ts`, restaurando el modo PKCE por default.
+- **Login/Signup Pages:** Se modificaron las rutas redirigidas `signInWithOAuth` en `src/app/login/page.tsx` y `src/app/signup/page.tsx` para usar la ruta oficial de Servidor `/auth/callback`, permitiéndole al Router App Server configurar correctamente las cookies seguras.
+- **Limpieza de Código:** Se eliminó la carpeta obsoleta de enrutamiento en cliente `src/app/auth/callback-client` para forzar que el stack dependa 100% de Cookies gestionadas vía el paquete oficial `@supabase/ssr`.## Sesión 24: Fix Trazabilidad Documental y URLs PDF
 **Fecha:** 2026-03-13
 **Objetivo:** Reparar el bug crítico de "Documentos Relacionados" (Trazabilidad) en Inmuebles y Clientes donde las resoluciones de fuentes PROTOCOLO y literales perdían el vínculo al PDF de almacenamiento.
 

@@ -5,12 +5,9 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholde
 
 /**
  * Standard Supabase Browser Client.
+ * Uses default PKCE flow for SSR compatibility with NextJS.
  */
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-        flowType: 'implicit',
-    },
-});
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
 // Helper for dynamic access if needed (optional)
 export function getSupabaseBrowserClient() {

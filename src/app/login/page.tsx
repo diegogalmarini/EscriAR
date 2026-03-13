@@ -64,7 +64,7 @@ function LoginForm() {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: `${siteUrl}/auth/callback-client?redirectTo=${redirectTo}`,
+                redirectTo: `${siteUrl}/auth/callback?redirectTo=${redirectTo}`,
                 queryParams: {
                     access_type: 'offline',
                     prompt: 'consent',
