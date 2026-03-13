@@ -961,9 +961,23 @@ async function processEscrituraExtraction(job: any) {
 
         await supabase.from('protocolo_registros').update(updateData).eq('id', registroId);
 
-        // 5b. Upsert personas extraídas en tabla `personas`
+        // Resolve org_id for sugerencias (from user's org membership)
+        let orgId: string | null = null;
+        if (job.user_id) {
+            const { data: orgRow } = await supabase
+                .from('organizaciones_users')
+                .select('org_id')
+                .eq('user_id', job.user_id)
+                .limit(1)
+                .maybeSingle();
+            orgId = orgRow?.org_id || null;
+        }
+
+        // 5b. Upsert personas extraídas en tabla `personas` (con dedup inteligente)
+        const resolvedPersonas: { dniFinal: string; rol: string; nombre: string }[] = [];
         if (result.datos.personas && result.datos.personas.length > 0) {
             let personasOk = 0;
+            let personasDedup = 0;
             for (const persona of result.datos.personas) {
                 const rawDni = persona.dni?.replace(/[^a-zA-Z0-9]/g, '') || '';
                 const rawCuit = persona.cuit?.replace(/[^a-zA-Z0-9]/g, '') || '';
@@ -999,6 +1013,58 @@ async function processEscrituraExtraction(job: any) {
                     updated_at: new Date().toISOString(),
                 };
 
+                // Check if persona already exists for dedup
+                const { data: existingPersona } = await supabase
+                    .from('personas').select('*').eq('dni', dniFinal).maybeSingle();
+
+                if (existingPersona) {
+                    // Compare key fields — only create sugerencia if there are real differences
+                    const diffs: { campo: string; existente: any; extraido: any }[] = [];
+                    const compareFields: [string, string][] = [
+                        ['nombre_completo', 'nombre_completo'],
+                        ['estado_civil_detalle', 'estado_civil_detalle'],
+                        ['nacionalidad', 'nacionalidad'],
+                    ];
+                    for (const [dbField, newField] of compareFields) {
+                        const oldVal = (existingPersona as any)[dbField] || '';
+                        const newVal = (personaData as any)[newField] || '';
+                        if (newVal && oldVal && newVal.toUpperCase() !== oldVal.toUpperCase()) {
+                            diffs.push({ campo: dbField, existente: oldVal, extraido: newVal });
+                        }
+                    }
+                    // Compare domicilio
+                    const oldDom = existingPersona.domicilio_real?.literal || '';
+                    const newDom = personaData.domicilio_real?.literal || '';
+                    if (newDom && oldDom && newDom.toUpperCase() !== oldDom.toUpperCase()) {
+                        diffs.push({ campo: 'domicilio_real', existente: oldDom, extraido: newDom });
+                    }
+
+                    if (diffs.length > 0 && orgId) {
+                        // Create sugerencia instead of overwriting
+                        await supabase.from('sugerencias').insert({
+                            org_id: orgId,
+                            carpeta_id: null,
+                            protocolo_registro_id: registroId,
+                            tipo: 'DEDUP_PERSONA',
+                            estado: 'PROPOSED',
+                            confianza: 'MED',
+                            payload: {
+                                descripcion: `Datos diferentes para ${existingPersona.nombre_completo} (${dniFinal})`,
+                                persona_dni: dniFinal,
+                                diffs,
+                            },
+                            evidencia_texto: `Extraído del PDF: ${job.original_filename}`,
+                        });
+                        personasDedup++;
+                        console.log(`[WORKER] ⚠️ Dedup sugerencia para persona ${dniFinal}: ${diffs.length} diferencias`);
+                    }
+                    // Don't overwrite — keep existing data. Still track for participante linking.
+                    resolvedPersonas.push({ dniFinal, rol: persona.rol || 'PARTICIPANTE', nombre: persona.nombre_completo || '' });
+                    personasOk++;
+                    continue;
+                }
+
+                // New persona — insert normally
                 const { error: personaError } = await supabase.from('personas').upsert(
                     personaData,
                     { onConflict: 'dni' }
@@ -1009,11 +1075,13 @@ async function processEscrituraExtraction(job: any) {
                 } else {
                     personasOk++;
                 }
+                resolvedPersonas.push({ dniFinal, rol: persona.rol || 'PARTICIPANTE', nombre: persona.nombre_completo || '' });
             }
-            console.log(`[WORKER] ESCRITURA_EXTRACT: ${personasOk}/${result.datos.personas.length} personas upserted`);
+            console.log(`[WORKER] ESCRITURA_EXTRACT: ${personasOk}/${result.datos.personas.length} personas procesadas (${personasDedup} sugerencias dedup)`);
         }
 
-        // 5c. Upsert inmuebles extraídos en tabla `inmuebles`
+        // 5c. Upsert inmuebles extraídos en tabla `inmuebles` (con dedup inteligente)
+        let firstInmuebleId: string | null = null;
         if (result.datos.inmuebles && result.datos.inmuebles.length > 0) {
             const normPartido = (p: string) => {
                 const accentMap: Record<string, string> = { 'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ü': 'u' };
@@ -1025,6 +1093,7 @@ async function processEscrituraExtraction(job: any) {
             const normPartida = (p: string) => (p || '000000').trim().replace(/\./g, '');
 
             let inmueblesOk = 0;
+            let inmueblesDedup = 0;
             for (const inm of result.datos.inmuebles) {
                 const partidoId = normPartido(inm.partido || 'Sin Partido');
                 // Handle comma-separated partidas (e.g. "12345, 67890")
@@ -1035,16 +1104,45 @@ async function processEscrituraExtraction(job: any) {
 
                 for (const nroPartida of partidas) {
                     // Check if already exists
-                    let inmuebleId = null;
                     if (nroPartida && nroPartida !== '000000') {
                         const { data: existing } = await supabase.from('inmuebles')
-                            .select('id')
+                            .select('id, nomenclatura, transcripcion_literal')
                             .eq('partido_id', partidoId)
                             .eq('nro_partida', nroPartida)
                             .maybeSingle();
                         if (existing) {
-                            inmuebleId = existing.id;
-                            console.log(`[WORKER] ♻️ Inmueble ${partidoId}/${nroPartida} ya existe (${inmuebleId})`);
+                            if (!firstInmuebleId) firstInmuebleId = existing.id;
+
+                            // Check for differences to create sugerencia
+                            const diffs: { campo: string; existente: any; extraido: any }[] = [];
+                            const newNom = inm.nomenclatura || '';
+                            const newDesc = inm.descripcion || '';
+                            if (newNom && existing.nomenclatura && newNom !== existing.nomenclatura) {
+                                diffs.push({ campo: 'nomenclatura', existente: existing.nomenclatura, extraido: newNom });
+                            }
+                            if (newDesc && existing.transcripcion_literal && newDesc !== existing.transcripcion_literal) {
+                                diffs.push({ campo: 'transcripcion_literal', existente: existing.transcripcion_literal?.substring(0, 200), extraido: newDesc.substring(0, 200) });
+                            }
+                            if (diffs.length > 0 && orgId) {
+                                await supabase.from('sugerencias').insert({
+                                    org_id: orgId,
+                                    carpeta_id: null,
+                                    protocolo_registro_id: registroId,
+                                    tipo: 'DEDUP_INMUEBLE',
+                                    estado: 'PROPOSED',
+                                    confianza: 'MED',
+                                    payload: {
+                                        descripcion: `Datos diferentes para inmueble ${partidoId}/${nroPartida}`,
+                                        inmueble_id: existing.id,
+                                        diffs,
+                                    },
+                                    evidencia_texto: `Extraído del PDF: ${job.original_filename}`,
+                                });
+                                inmueblesDedup++;
+                                console.log(`[WORKER] ⚠️ Dedup sugerencia para inmueble ${partidoId}/${nroPartida}`);
+                            }
+
+                            console.log(`[WORKER] ♻️ Inmueble ${partidoId}/${nroPartida} ya existe (${existing.id})`);
                             inmueblesOk++;
                             continue;
                         }
@@ -1053,7 +1151,7 @@ async function processEscrituraExtraction(job: any) {
                     // Resolver códigos jurisdiccionales
                     const jurisdiccion2 = await resolveJurisdiction(partidoId);
 
-                    const { error: inmError } = await supabase.from('inmuebles').insert({
+                    const { data: inserted, error: inmError } = await supabase.from('inmuebles').insert({
                         partido_id: partidoId,
                         nro_partida: nroPartida,
                         nomenclatura: inm.nomenclatura || null,
@@ -1062,16 +1160,116 @@ async function processEscrituraExtraction(job: any) {
                             partido_code: jurisdiccion2.partyCode,
                             delegacion_code: jurisdiccion2.delegationCode,
                         }),
-                    });
+                    }).select('id').single();
 
                     if (inmError) {
                         console.warn(`[WORKER] Warning insertando inmueble ${partidoId}/${nroPartida}:`, inmError.message);
                     } else {
+                        if (!firstInmuebleId && inserted) firstInmuebleId = inserted.id;
                         inmueblesOk++;
                     }
                 }
             }
-            console.log(`[WORKER] ESCRITURA_EXTRACT: ${inmueblesOk} inmuebles upserted`);
+            console.log(`[WORKER] ESCRITURA_EXTRACT: ${inmueblesOk} inmuebles procesados (${inmueblesDedup} sugerencias dedup)`);
+        }
+
+        // 5d. Crear escritura + operación + participantes para trazabilidad completa
+        let escrituraId: string | null = null;
+        {
+            // Generate public URL for the PDF
+            const { data: urlData } = supabase.storage.from('protocolo').getPublicUrl(job.file_path);
+            const pdfUrl = urlData?.publicUrl || null;
+
+            // Parse fecha from extraction data
+            let fechaEscritura: string | null = null;
+            if (result.datos.fecha) {
+                fechaEscritura = result.datos.fecha; // Already YYYY-MM-DD from extractor
+            }
+
+            // Check if escritura already exists for this protocolo_registro
+            const { data: existingEsc } = await supabase.from('escrituras')
+                .select('id')
+                .eq('protocolo_registro_id', registroId)
+                .maybeSingle();
+
+            if (existingEsc) {
+                escrituraId = existingEsc.id;
+                console.log(`[WORKER] ♻️ Escritura ya existe para registro ${registroId}: ${escrituraId}`);
+            } else {
+                // Create new escritura (NO carpeta)
+                const { data: newEsc, error: escError } = await supabase.from('escrituras').insert({
+                    source: 'PROTOCOLO',
+                    carpeta_id: null,
+                    nro_protocolo: result.datos.nro_escritura || null,
+                    fecha_escritura: fechaEscritura,
+                    pdf_url: pdfUrl,
+                    inmueble_princ_id: firstInmuebleId,
+                    protocolo_registro_id: registroId,
+                    notario_interviniente: null, // Not in EscrituraExtractionSchema
+                    registro: null,
+                }).select('id').single();
+
+                if (escError) {
+                    console.error(`[WORKER] Error creando escritura para registro ${registroId}:`, escError.message);
+                } else {
+                    escrituraId = newEsc.id;
+                    console.log(`[WORKER] ✅ Escritura creada: ${escrituraId} (N° ${result.datos.nro_escritura || '?'})`);
+                }
+            }
+
+            // Create operacion + participantes if we have an escritura
+            if (escrituraId) {
+                // Upsert operacion
+                const { data: existingOps } = await supabase.from('operaciones')
+                    .select('id').eq('escritura_id', escrituraId).limit(1);
+
+                let operacionId: string | null = null;
+                if (existingOps && existingOps.length > 0) {
+                    operacionId = existingOps[0].id;
+                    await supabase.from('operaciones').update({
+                        tipo_acto: result.datos.tipo_acto || null,
+                        codigo: codigoResuelto || null,
+                        monto_operacion: result.datos.monto_ars || null,
+                    }).eq('id', operacionId);
+                } else {
+                    const { data: newOp, error: opError } = await supabase.from('operaciones').insert({
+                        escritura_id: escrituraId,
+                        tipo_acto: result.datos.tipo_acto || null,
+                        codigo: codigoResuelto || null,
+                        monto_operacion: result.datos.monto_ars || null,
+                    }).select('id').single();
+
+                    if (opError) {
+                        console.error(`[WORKER] Error creando operación:`, opError.message);
+                    } else {
+                        operacionId = newOp.id;
+                    }
+                }
+
+                // Link participantes
+                if (operacionId && resolvedPersonas.length > 0) {
+                    let partOk = 0;
+                    for (const rp of resolvedPersonas) {
+                        const { error: partError } = await supabase.from('participantes_operacion').upsert({
+                            operacion_id: operacionId,
+                            persona_id: rp.dniFinal,
+                            rol: rp.rol,
+                        }, { onConflict: 'operacion_id,persona_id', ignoreDuplicates: true });
+
+                        if (partError) {
+                            console.warn(`[WORKER] Warning linking participante ${rp.dniFinal}:`, partError.message);
+                        } else {
+                            partOk++;
+                        }
+                    }
+                    console.log(`[WORKER] ✅ ${partOk} participantes vinculados a operación ${operacionId}`);
+                }
+
+                // Update protocolo_registros with escritura_id back-reference
+                await supabase.from('protocolo_registros').update({
+                    escritura_id: escrituraId,
+                }).eq('id', registroId);
+            }
         }
 
         // 6. Marcar job como completed
@@ -1081,6 +1279,7 @@ async function processEscrituraExtraction(job: any) {
                 campos_extraidos: Object.keys(result.datos).filter(k => (result.datos as any)[k] !== null).length,
                 personas_upserted: result.datos.personas?.length || 0,
                 inmuebles_upserted: result.datos.inmuebles?.length || 0,
+                escritura_id: escrituraId,
             },
             finished_at: new Date().toISOString(),
         }).eq('id', job.id);

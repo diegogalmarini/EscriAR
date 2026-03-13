@@ -53,6 +53,8 @@ const handlers: Record<string, Handler> = {
     VERIFICAR_DATO: handleInformational,
     ACCION_REQUERIDA: handleInformational,
     TRAMITE_REQUERIDO: handleInformational,
+    DEDUP_PERSONA: handleDedupPersona,
+    DEDUP_INMUEBLE: handleDedupInmueble,
 };
 
 export async function applySuggestion(
@@ -931,5 +933,93 @@ async function handleInformational(
     return {
         success: true,
         applied_changes: { tipo: "informational", descripcion: payload.descripcion || "Aceptado por usuario" },
+    };
+}
+
+// ─── DEDUP_PERSONA ────────────────────────────────────────
+// Payload: { persona_dni, diffs: [{ campo, existente, extraido }] }
+async function handleDedupPersona(
+    _supabase: SupabaseClient,
+    payload: any,
+    _ctx: ApplyContext
+): Promise<ApplyResult> {
+    const dni = payload.persona_dni;
+    if (!dni) {
+        return { success: false, applied_changes: null, error: "persona_dni faltante en payload" };
+    }
+
+    const diffs: { campo: string; existente: any; extraido: any }[] = payload.diffs || [];
+    if (diffs.length === 0) {
+        return { success: true, applied_changes: { nota: "Sin diferencias que aplicar" } };
+    }
+
+    // Build update object from extracted values
+    const updateData: Record<string, any> = {};
+    for (const diff of diffs) {
+        if (diff.campo === 'domicilio_real') {
+            updateData.domicilio_real = { literal: diff.extraido };
+        } else {
+            updateData[diff.campo] = diff.extraido;
+        }
+    }
+    updateData.updated_at = new Date().toISOString();
+
+    const { error } = await supabaseAdmin
+        .from("personas")
+        .update(updateData)
+        .eq("dni", dni);
+
+    if (error) {
+        return { success: false, applied_changes: null, error: `Error actualizando persona: ${error.message}` };
+    }
+
+    return {
+        success: true,
+        applied_changes: {
+            persona_dni: dni,
+            campos_actualizados: diffs.map(d => d.campo),
+            valores_nuevos: updateData,
+        },
+    };
+}
+
+// ─── DEDUP_INMUEBLE ───────────────────────────────────────
+// Payload: { inmueble_id, diffs: [{ campo, existente, extraido }] }
+async function handleDedupInmueble(
+    _supabase: SupabaseClient,
+    payload: any,
+    _ctx: ApplyContext
+): Promise<ApplyResult> {
+    const inmuebleId = payload.inmueble_id;
+    if (!inmuebleId) {
+        return { success: false, applied_changes: null, error: "inmueble_id faltante en payload" };
+    }
+
+    const diffs: { campo: string; existente: any; extraido: any }[] = payload.diffs || [];
+    if (diffs.length === 0) {
+        return { success: true, applied_changes: { nota: "Sin diferencias que aplicar" } };
+    }
+
+    const updateData: Record<string, any> = {};
+    for (const diff of diffs) {
+        updateData[diff.campo] = diff.extraido;
+    }
+
+    const { error } = await supabaseAdmin
+        .from("inmuebles")
+        .update(updateData)
+        .eq("id", inmuebleId);
+
+    if (error) {
+        return { success: false, applied_changes: null, error: `Error actualizando inmueble: ${error.message}` };
+    }
+
+    return {
+        success: true,
+        applied_changes: {
+            inmueble_id: inmuebleId,
+            campos_actualizados: diffs.map(d => d.campo),
+            valores_nuevos: updateData,
+        },
     };
 }

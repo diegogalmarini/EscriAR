@@ -162,6 +162,27 @@ export async function getClientWithRelations(dni: string) {
             tipo: e.tipo // This might still be null, but let's keep it for now
         })) || [];
 
+        // 7b. Build enriched documentos for "Documentos Relacionados" tab
+        const documentos = escriturasData?.map((esc: any) => {
+            // Find the operacion and participant role for this escritura
+            const relatedOps = operacionesData?.filter((o: any) => o.escritura_id === esc.id) || [];
+            const opIds = relatedOps.map((o: any) => o.id);
+            const part = participaciones?.find((p: any) => opIds.includes(p.operacion_id));
+            const op = relatedOps[0];
+            return {
+                id: esc.id,
+                nro_protocolo: esc.nro_protocolo,
+                fecha_escritura: esc.fecha_escritura,
+                pdf_url: esc.pdf_url,
+                source: esc.source,
+                registro: esc.registro,
+                notario_interviniente: esc.notario_interviniente,
+                carpeta_id: esc.carpeta_id,
+                tipo_acto: op?.tipo_acto || null,
+                rol: part?.rol || null,
+            };
+        }) || [];
+
         // Mapear y deduplicar históricos otorgados
         const historicosOtorgados = (participacionesHistoricasOtorgadas || [])
             .filter((p: any, index: number, self: any[]) =>
@@ -216,6 +237,7 @@ export async function getClientWithRelations(dni: string) {
                 operaciones,
                 escrituras,
                 carpetas,
+                documentos,
                 poderesOtorgados,
                 poderesActivos
             }

@@ -2,6 +2,7 @@ import { getClientWithRelations } from "@/app/actions/clientRelations";
 import { ClientDetailHeader } from "@/components/ClientDetailHeader";
 import { ClientRelationsList } from "@/components/ClientRelationsList";
 import { ClientPoderesList } from "@/components/ClientPoderesList";
+import { ClientDocumentosList } from "@/components/ClientDocumentosList";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Folder, FileText, Activity, FileSignature } from "lucide-react";
@@ -19,7 +20,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ d
         redirect('/clientes');
     }
 
-    const { persona, operaciones, escrituras, carpetas, poderesOtorgados = [], poderesActivos = [] } = result.data;
+    const { persona, operaciones, escrituras, carpetas, documentos = [], poderesOtorgados = [], poderesActivos = [] } = result.data;
 
     return (
         <div className="p-8 space-y-6 animate-in fade-in duration-500">
@@ -28,7 +29,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ d
 
             {/* Tabs */}
             <Tabs defaultValue="datos" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 lg:w-[800px]">
+                <TabsList className="grid w-full grid-cols-5 lg:w-[900px]">
                     <TabsTrigger value="datos" className="flex items-center gap-2">
                         <User size={16} />
                         <span>Datos Personales</span>
@@ -51,6 +52,17 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ d
                             {(poderesActivos.length > 0 || poderesOtorgados.length > 0) && (
                                 <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-slate-200 text-slate-700">
                                     {poderesActivos.length + poderesOtorgados.length}
+                                </span>
+                            )}
+                        </span>
+                    </TabsTrigger>
+                    <TabsTrigger value="documentos" className="flex items-center gap-2">
+                        <FileText size={16} />
+                        <span className="flex items-center gap-1.5">
+                            Documentos
+                            {documentos.length > 0 && (
+                                <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-slate-200 text-slate-700">
+                                    {documentos.length}
                                 </span>
                             )}
                         </span>
@@ -184,6 +196,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ d
                 {/* Tab: Poderes */}
                 <TabsContent value="poderes" className="mt-6">
                     <ClientPoderesList poderesActivos={poderesActivos} poderesOtorgados={poderesOtorgados} />
+                </TabsContent>
+
+                {/* Tab: Documentos Relacionados */}
+                <TabsContent value="documentos" className="mt-6">
+                    <ClientDocumentosList documentos={documentos} />
                 </TabsContent>
 
                 {/* Tab: Actividad */}
