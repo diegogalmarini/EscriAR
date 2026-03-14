@@ -9,9 +9,9 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
  * - Pro: Para lectura jurídica profunda, extracción de hipotecas y redacción compleja (Razonamiento Superior).
  */
 export const MODEL_MAPPING = {
-    fast: "gemini-2.5-flash",      // Clasificación, UI, Extracción simple
-    complex: "gemini-2.5-pro",     // Lectura de Escrituras (24.pdf), Hipotecas, Sociedades
-    vision: "gemini-2.5-flash"      // OCR con ruido, DNI, Planos
+    fast: "gemini-3.1-flash",      // Clasificación, UI, Extracción simple
+    complex: "gemini-3.1-pro",     // Lectura de Escrituras (24.pdf), Hipotecas, Sociedades
+    vision: "gemini-3.1-flash"      // OCR con ruido, DNI, Planos
 };
 
 // Mantenemos esto por compatibilidad, pero apuntando a FLASH como prioridad para evitar timeouts
