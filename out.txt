@@ -1,0 +1,21 @@
+[dotenv@17.3.1] injecting env (8) from .env.local -- tip: ­ƒöÉ prevent building .env in docker: https://dotenvx.com/prebuild
+COLUMNAS DE ESCRITURA:
+[
+  'id',
+  'carpeta_id',
+  'nro_protocolo',
+  'fecha_escritura',
+  'notario_interviniente',
+  'inmueble_princ_id',
+  'pdf_url',
+  'created_at',
+  'contenido_borrador',
+  'fecha_firma_real',
+  'fecha_vencimiento_inscripcion',
+  'nro_entrada_registro',
+  'estado_inscripcion',
+  'registro',
+  'analysis_metadata',
+  'source',
+  'protocolo_registro_id'
+]

@@ -21,7 +21,7 @@ export async function getInmuebleWithRelations(id: string) {
         // 2. Find related Escrituras directly (Inmuebles are linked via escrituras.inmueble_princ_id)
         let { data: formalEscrituras } = await supabase
             .from("escrituras")
-            .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id, detalles")
+            .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id, analysis_metadata")
             .eq("inmueble_princ_id", id)
             .order("fecha_escritura", { ascending: false });
 
@@ -30,26 +30,40 @@ export async function getInmuebleWithRelations(id: string) {
         // --- INICIO: Búsqueda Híbrida 360 (Documentos sueltos de INGESTA/PROTOCOLOS) ---
         const { data: rawEscrituras } = await supabase
             .from("escrituras")
-            .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id, detalles")
+            .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id, analysis_metadata")
             .order("fecha_escritura", { ascending: false });
 
-        const parts = inmueble.nomenclatura ? inmueble.nomenclatura.split(',').map((p: string) => p.trim().toUpperCase()) : [];
-        const part1 = parts[0] || '';
-        const part2 = parts[1] || '';
+        const parts = inmueble.nomenclatura ? inmueble.nomenclatura.split(/[;,]/).map((p: string) => p.trim().toUpperCase()) : [];
+        
+        // Find the most identifying parts (usually the ones with numbers: Manzana 99, Parcela 4, UF 16)
+        const identifyingParts = parts.filter((p: string) => /\d/.test(p));
+        // If no numbers, just use the first two
+        const searchParts = identifyingParts.length > 0 ? identifyingParts : parts.slice(0, 2);
 
         const ingestasMatched = (rawEscrituras || []).filter((esc: any) => {
-            if (!esc.detalles) return false;
-            const rawText = JSON.stringify(esc.detalles).toUpperCase();
+            if (!esc.analysis_metadata) return false;
+            const rawText = JSON.stringify(esc.analysis_metadata).toUpperCase();
             
             // Normalize text to remove accents for better matching
             const removeAccents = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             const rawTextNoAccents = removeAccents(rawText);
-            const part1NoA = removeAccents(part1);
-            const part2NoA = removeAccents(part2);
-
-            if (part1NoA && part2NoA && rawTextNoAccents.includes(part1NoA) && rawTextNoAccents.includes(part2NoA)) return true;
-            if (part1NoA && !part2NoA && part1NoA.length > 5 && rawTextNoAccents.includes(part1NoA)) return true;
-            return false;
+            
+            // A match is valid if at least 2 of the identifying parts are found (e.g., Manzana + Parcela)
+            // or if there's only 1 part, it must match that one.
+            let matchesCount = 0;
+            for (const part of searchParts) {
+                const partNoA = removeAccents(part);
+                if (partNoA.length > 3 && rawTextNoAccents.includes(partNoA)) {
+                    matchesCount++;
+                }
+            }
+            
+            // If we have multiple identifying parts, we require at least 2 to match
+            // (e.g. Manzana 99 AND Parcela 4) to avoid false positives. 
+            // If we only have 1, we require 1.
+            const requiredMatches = searchParts.length >= 2 ? 2 : 1;
+            
+            return matchesCount >= requiredMatches;
         });
 
         for (const ing of ingestasMatched) {
@@ -212,8 +226,8 @@ export async function getInmuebleWithRelations(id: string) {
         if ((!titularActual || titularActual.length === 0) && escriturasData.length > 0) {
             // escriturasData is already sorted by fecha_escritura descending
             const latestEscritura = escriturasData[0];
-            if (latestEscritura.detalles) {
-                const detalles = latestEscritura.detalles;
+            if (latestEscritura.analysis_metadata) {
+                const detalles = latestEscritura.analysis_metadata;
                 
                 // Prioritize buyers/acquirers from the JSON
                 let potentialTitulares: any[] = [];

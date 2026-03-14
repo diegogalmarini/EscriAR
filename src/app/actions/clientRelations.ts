@@ -103,20 +103,24 @@ export async function getClientWithRelations(dni: string) {
         // --- INICIO: Búsqueda Híbrida 360 (Documentos sueltos de INGESTA/PROTOCOLOS) ---
         const { data: rawEscrituras } = await supabase
             .from("escrituras")
-            .select("*") // Need all fields because it gets merged with escriturasData
+            .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id, analysis_metadata")
             .order("fecha_escritura", { ascending: false });
 
-        const searchDNI = dni ? dni.toString().trim() : 'NO_DNI';
-        const searchName = persona.nombre_completo ? persona.nombre_completo.toUpperCase().trim() : 'NO_NAME';
+        const searchTerms = [
+            persona.dni?.toLowerCase(), 
+            persona.nombre?.toLowerCase(), 
+            persona.apellido?.toLowerCase()
+        ].filter(Boolean);
 
         const ingestasMatched = (rawEscrituras || []).filter((esc: any) => {
-            const rawText = JSON.stringify([
-                esc.vendedores, esc.compradores, esc.titulares, 
-                esc.otorgantes, esc.poderdantes
-            ]).toUpperCase();
+            if (!esc.analysis_metadata) return false;
+            const rawText = JSON.stringify(esc.analysis_metadata).toLowerCase();
             
-            if (searchDNI !== 'NO_DNI' && rawText.includes(searchDNI)) return true;
-            if (searchName !== 'NO_NAME' && searchName.length > 4 && rawText.includes(searchName)) return true;
+            for (const term of searchTerms) {
+                if (term && term.length > 3 && rawText.includes(term)) {
+                    return true;
+                }
+            }
             return false;
         });
 
