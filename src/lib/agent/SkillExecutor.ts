@@ -180,6 +180,7 @@ export class SkillExecutor {
         const config = await import("../aiConfig");
         if (skillSlug === 'notary-entity-extractor') contextData.responseSchema = config.ACTA_EXTRACCION_PARTES_SCHEMA;
         if (skillSlug === 'notary-mortgage-reader') contextData.responseSchema = config.NOTARY_MORTGAGE_READER_SCHEMA;
+        if (skillSlug === 'notary-relation-auditor') contextData.responseSchema = config.NOTARY_RELATION_AUDITOR_SCHEMA;
 
         // Check for mega-document (text content in contextData)
         const textContent = contextData.extractedText || contextData.content || "";
@@ -272,12 +273,13 @@ export class SkillExecutor {
         ragContext: string = ""
     ): Promise<any> {
         // FLASH NO USA THINKING MODE
-        const { ACTA_EXTRACCION_PARTES_SCHEMA, NOTARY_MORTGAGE_READER_SCHEMA } = await import("../aiConfig");
+        const { ACTA_EXTRACCION_PARTES_SCHEMA, NOTARY_MORTGAGE_READER_SCHEMA, NOTARY_RELATION_AUDITOR_SCHEMA } = await import("../aiConfig");
 
         const generationConfig: any = {
             responseMimeType: "application/json",
             responseSchema: skillSlug === "notary-entity-extractor" ? ACTA_EXTRACCION_PARTES_SCHEMA :
-                skillSlug === "notary-mortgage-reader" ? NOTARY_MORTGAGE_READER_SCHEMA : undefined
+                skillSlug === "notary-mortgage-reader" ? NOTARY_MORTGAGE_READER_SCHEMA :
+                skillSlug === "notary-relation-auditor" ? NOTARY_RELATION_AUDITOR_SCHEMA : undefined
         };
 
         const modelConfig: any = { model: modelName, generationConfig };

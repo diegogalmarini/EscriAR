@@ -399,6 +399,41 @@ export const NOTARY_MORTGAGE_READER_SCHEMA: any = {
 };
 
 /**
+ * NOTARY_RELATION_AUDITOR_SCHEMA
+ * Schema for data integrity audit skill.
+ */
+export const NOTARY_RELATION_AUDITOR_SCHEMA: any = {
+    type: SchemaType.OBJECT,
+    properties: {
+        validacion_global: {
+            type: SchemaType.OBJECT,
+            properties: {
+                es_valida: { type: SchemaType.BOOLEAN, description: "True si no hay errores críticos. Advertencias no invalidan." },
+                resumen: { type: SchemaType.STRING }
+            },
+            required: ["es_valida", "resumen"]
+        },
+        alertas_y_errores: {
+            type: SchemaType.OBJECT,
+            properties: {
+                errores_criticos: {
+                    type: SchemaType.ARRAY,
+                    items: { type: SchemaType.STRING },
+                    description: "Errores bloqueantes como falta de DNI/CUIT o Nomenclatura."
+                },
+                advertencias: {
+                    type: SchemaType.ARRAY,
+                    items: { type: SchemaType.STRING },
+                    description: "Avisos como falta de estado civil, email o teléfono."
+                }
+            },
+            required: ["errores_criticos", "advertencias"]
+        }
+    },
+    required: ["validacion_global", "alertas_y_errores"]
+};
+
+/**
  * getLatestModel: Inteligencia de Selección de Modelo.
  * - INGEST (Lectura): Usa PRO para entender estructuras complejas (Bancos, Poderes).
  * - DRAFT (Redacción): Usa PRO para garantizar precisión legal.

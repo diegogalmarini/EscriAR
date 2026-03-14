@@ -282,16 +282,7 @@ export async function POST(req: Request) {
                     const classification = await classifyDocument(file, extractedText);
                     const docType = classification?.document_type || 'ESCRITURA';
 
-                    const aiData = await runExtractionPipeline(docType, file, extractedText);
-                    const result = await persistIngestedData(aiData, file, buffer, carpeta.id);
-
-                    await supabaseAdmin.from('carpetas').update({
-                        ingesta_estado: result.success ? 'COMPLETADO' : 'ERROR',
-                        ingesta_paso: result.success
-                            ? `IA: ${result.persistedClients || 0} personas, ${aiData.inmuebles?.length || 0} inmuebles`
-                            : `Error: ${result.error || 'Ver logs'}`,
-                        resumen_ia: result.success ? `${aiData.resumen_acto || 'Extracción Background'}` : null
-                    }).eq('id', carpeta.id);
+                    await finalizeIngestion(docType, file, extractedText, buffer, carpeta.id, true);
 
                     revalidatePath('/carpetas');
                     revalidatePath('/dashboard');
@@ -319,23 +310,14 @@ export async function POST(req: Request) {
         const classification = await classifyDocument(file, extractedText);
         const docType = classification?.document_type || 'ESCRITURA';
 
-        const aiData = await runExtractionPipeline(docType, file, extractedText);
-        const result = await persistIngestedData(aiData, file, buffer, carpeta.id);
-
-        await supabaseAdmin.from('carpetas').update({
-            ingesta_estado: result.success ? 'COMPLETADO' : 'ERROR',
-            ingesta_paso: result.success
-                ? `IA: ${result.persistedClients || 0} personas, ${aiData.inmuebles?.length || 0} inmuebles`
-                : `Error: ${result.error || 'Ver logs'}`,
-            resumen_ia: result.success ? `${aiData.resumen_acto || 'Extracción Flash'}` : null
-        }).eq('id', carpeta.id);
+        const { aiData, result, finalState } = await finalizeIngestion(docType, file, extractedText, buffer, carpeta.id, false);
 
         revalidatePath('/carpetas');
         revalidatePath('/dashboard');
 
         return NextResponse.json({
             success: result.success,
-            status: result.success ? 'COMPLETED' : 'PARTIAL_ERROR',
+            status: finalState,
             folderId: result.folderId,
             extractedData: aiData,
             debug: {
@@ -355,6 +337,56 @@ export async function POST(req: Request) {
             error: 'Error interno en la ingesta. Reintente o contacte soporte.'
         }, { status: 500 });
     }
+}
+
+async function finalizeIngestion(docType: string, file: File, extractedText: string, buffer: Buffer, carpetaId: string, isBackground: boolean) {
+    const aiData = await runExtractionPipeline(docType, file, extractedText);
+    
+    // --- AUDITAR ENTIDADES EXTRAÍDAS ---
+    let auditResult = null;
+    if (aiData) {
+        try {
+            console.log(`[AUDIT] Evaluando integridad de extracción para ${file.name}...`);
+            auditResult = await SkillExecutor.execute('notary-relation-auditor', undefined, { extractedEntities: aiData });
+            console.log(`[AUDIT] Resultado: Valida? ${auditResult?.validacion_global?.es_valida}`);
+        } catch(e) {
+            console.error(`[AUDIT] Error al ejecutar el auditor:`, e);
+        }
+    }
+    
+    // Persist data
+    const result = await persistIngestedData(aiData, file, buffer, carpetaId);
+
+    // Determine final status
+    let finalState = result.hasConflicts ? 'REVISION_REQUERIDA' : (result.success ? 'COMPLETADO' : 'ERROR');
+    let auditResumen = null;
+
+    if (finalState === 'COMPLETADO' && auditResult && auditResult.validacion_global?.es_valida === false) {
+        finalState = 'COMPLETADO_CON_OBSERVACIONES';
+        const numC = auditResult.alertas_y_errores?.errores_criticos?.length || 0;
+        const numW = auditResult.alertas_y_errores?.advertencias?.length || 0;
+        auditResumen = `Auditoría: ${numC} críticos, ${numW} ads`;
+    }
+
+    // Merge metadata
+    const { data: currFolder } = await supabaseAdmin.from('carpetas').select('ingesta_metadata').eq('id', carpetaId).single();
+    const mergedMetadata = {
+        ...(currFolder?.ingesta_metadata || {}),
+        ...(auditResult ? { auditoria: auditResult } : {})
+    };
+
+    const pasoTexto = result.success 
+        ? `IA: ${result.persistedClients || 0} personas, ${aiData.inmuebles?.length || 0} inms${auditResumen ? ` | ${auditResumen}` : ''}`
+        : `Error: ${result.error || 'Ver logs'}`;
+
+    await supabaseAdmin.from('carpetas').update({
+        ingesta_estado: finalState,
+        ingesta_paso: pasoTexto,
+        resumen_ia: result.success ? `${aiData.resumen_acto || (isBackground ? 'Extracción Background' : 'Extracción Flash')}` : null,
+        ingesta_metadata: mergedMetadata
+    }).eq('id', carpetaId);
+
+    return { aiData, result, finalState, auditResult };
 }
 
 async function runExtractionPipeline(docType: string, file: File, extractedText: string) {
