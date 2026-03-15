@@ -132,7 +132,57 @@ export async function getClientWithRelations(dni: string) {
             }
         }
         escriturasData = combinedEscrituras;
-        // --- FIN: Búsqueda Híbrida 360 --- 
+        // --- FIN: Búsqueda Híbrida 360 sobre Escrituras --- 
+        
+        // --- INICIO: Búsqueda Híbrida sobre PROTOCOLO (Los PDFs extraídos por IA) ---
+        // Buscamos sobre protocolo_registros que coincidan por nombre o DNI en extraction_data o campos planos
+        const { data: rawProtocoloRegistros } = await supabase
+            .from("protocolo_registros")
+            .select("id, anio, nro_escritura, tipo_acto, vendedor_acreedor, comprador_deudor, pdf_storage_path, extraction_data")
+            .order("anio", { ascending: false })
+            .order("nro_escritura", { ascending: false });
+
+        let matchedProtocoloDocumentos: any[] = [];
+        
+        if (rawProtocoloRegistros && rawProtocoloRegistros.length > 0) {
+            const protoMatched = rawProtocoloRegistros.filter((pr: any) => {
+                const searchString = `
+                    ${pr.vendedor_acreedor || ''} 
+                    ${pr.comprador_deudor || ''} 
+                    ${JSON.stringify(pr.extraction_data || {})}
+                `.toLowerCase();
+
+                for (const term of searchTerms) {
+                    if (term && term.length > 3 && searchString.includes(term)) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            // Mapearlos al formato de "documentos" de la UI
+            matchedProtocoloDocumentos = protoMatched.map((pr: any) => {
+                let publicUrl = null;
+                if (pr.pdf_storage_path) {
+                    const { data: publicUrlData } = supabase.storage.from("protocolo").getPublicUrl(pr.pdf_storage_path);
+                    publicUrl = publicUrlData.publicUrl;
+                }
+
+                return {
+                    id: `proto-ingest-${pr.id}`,
+                    nro_protocolo: pr.nro_escritura || null,
+                    fecha_escritura: null, // Si necesitamos fecha, extraerla de extraction_data
+                    pdf_url: publicUrl,
+                    source: "PROTOCOLO",
+                    registro: null,
+                    notario_interviniente: null,
+                    carpeta_id: null,
+                    tipo_acto: pr.tipo_acto || "Acto S/D (Protocolo Histórico)",
+                    rol: "Mención Histórica Documentada"
+                };
+            });
+        }
+        // --- FIN: Búsqueda Híbrida sobre PROTOCOLO ---
 
         const allCarpetaIds = escriturasData?.map((e: any) => e.carpeta_id).filter(Boolean) || [];
         const protoIds = escriturasData?.map((e: any) => e.protocolo_registro_id).filter(Boolean) || [];
@@ -247,7 +297,7 @@ export async function getClientWithRelations(dni: string) {
         }
 
         // 7c. Build enriched documentos for "Documentos Relacionados" tab
-        const documentos = escriturasData?.map((esc: any) => {
+        const documentosFormales = escriturasData?.map((esc: any) => {
             const relatedOps = operacionesData?.filter((o: any) => 
                 (o.escritura_id && o.escritura_id === esc.id) || 
                 (o.carpeta_id && esc.carpeta_id && o.carpeta_id === esc.carpeta_id)
@@ -304,6 +354,9 @@ export async function getClientWithRelations(dni: string) {
                 rol: part?.rol || null,
             };
         }) || [];
+
+        // Unimos los formales con los hallazgos de protocolo híbridos
+        const documentos = [...documentosFormales, ...matchedProtocoloDocumentos];
 
         // Mapear y deduplicar históricos otorgados
         const historicosOtorgados = (participacionesHistoricasOtorgadas || [])
