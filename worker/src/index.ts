@@ -522,6 +522,23 @@ async function workerLoop() {
                         const { data: existingByCuit } = await supabase.from('personas').select('dni').eq('cuit', rawCuit).maybeSingle();
                         if (existingByCuit) dniFinal = existingByCuit.dni;
                     }
+                    
+                    // NUEVO: Fallback por nombre para evitar duplicar "FIDEICOMISO ARES" sin CUIT
+                    if (!dniFinal && cliente.nombre_completo) {
+                        let searchName = cliente.nombre_completo.replace('S.A.', '').replace('S.R.L.', '').replace('SA', '').replace('SRL', '').replace(',', '').trim();
+                        if(searchName.length > 4) {
+                            const { data: existingByName } = await supabase.from('personas')
+                                .select('dni')
+                                .ilike('nombre_completo', `%${searchName}%`)
+                                .not('dni', 'like', 'SIN_DNI_%')
+                                .not('dni', 'like', 'TEMP-%')
+                                .limit(1)
+                                .maybeSingle();
+                                
+                            if (existingByName) dniFinal = existingByName.dni;
+                        }
+                    }
+
                     if (!dniFinal) {
                         dniFinal = `SIN_DNI_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
                     }
