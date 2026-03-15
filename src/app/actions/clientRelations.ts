@@ -110,6 +110,8 @@ export async function getClientWithRelations(dni: string) {
         const searchCuit = persona.cuit ? persona.cuit.replace(/\D/g, '') : null;
         const searchFullName = persona.nombre_completo ? persona.nombre_completo.trim().toLowerCase() : null;
 
+        const searchNameParts = searchFullName ? searchFullName.split(/[\s,]+/).filter(Boolean) : [];
+
         const ingestasMatched = (rawEscrituras || []).filter((esc: any) => {
             if (!esc.analysis_metadata || !esc.analysis_metadata.clientes) return false;
             
@@ -117,7 +119,10 @@ export async function getClientWithRelations(dni: string) {
             const matchInClients = esc.analysis_metadata.clientes.some((c: any) => {
                 if (searchDni && c.dni && c.dni.replace(/\D/g, '') === searchDni) return true;
                 if (searchCuit && c.cuit && c.cuit.replace(/\D/g, '') === searchCuit) return true;
-                if (searchFullName && c.nombre_completo && c.nombre_completo.trim().toLowerCase() === searchFullName) return true;
+                if (searchNameParts.length > 0 && c.nombre_completo) {
+                    const cName = c.nombre_completo.toLowerCase();
+                    if (searchNameParts.every((part: string) => cName.includes(part))) return true;
+                }
                 return false;
             });
             return matchInClients;
@@ -149,7 +154,10 @@ export async function getClientWithRelations(dni: string) {
                      const matchInExtraction = pr.extraction_data.clientes.some((c: any) => {
                         if (searchDni && c.dni && c.dni.replace(/\D/g, '') === searchDni) return true;
                         if (searchCuit && c.cuit && c.cuit.replace(/\D/g, '') === searchCuit) return true;
-                        if (searchFullName && c.nombre_completo && c.nombre_completo.trim().toLowerCase() === searchFullName) return true;
+                        if (searchNameParts.length > 0 && c.nombre_completo) {
+                            const cName = c.nombre_completo.toLowerCase();
+                            if (searchNameParts.every((part: string) => cName.includes(part))) return true;
+                        }
                         return false;
                     });
                     if (matchInExtraction) return true;
@@ -157,8 +165,12 @@ export async function getClientWithRelations(dni: string) {
 
                 // 2. Check strict match in flat fields
                 if (searchFullName) {
-                    if (pr.vendedor_acreedor && pr.vendedor_acreedor.toLowerCase().includes(searchFullName)) return true;
-                    if (pr.comprador_deudor && pr.comprador_deudor.toLowerCase().includes(searchFullName)) return true;
+                    const searchNameParts = searchFullName.split(/[\s,]+/).filter(Boolean);
+                    if (searchNameParts.length > 0) {
+                        const matchVendedor = pr.vendedor_acreedor && searchNameParts.every((part: string) => pr.vendedor_acreedor.toLowerCase().includes(part));
+                        const matchComprador = pr.comprador_deudor && searchNameParts.every((part: string) => pr.comprador_deudor.toLowerCase().includes(part));
+                        if (matchVendedor || matchComprador) return true;
+                    }
                 }
                 
                 return false;
@@ -229,11 +241,18 @@ export async function getClientWithRelations(dni: string) {
         // Buscamos en participantes_operacion donde datos_representacion->>representa_a contiene el nombre de este cliente
         // Esto es un poco más complejo porque requiere buscar por nombre en el JSON. 
         // Lo simplificaremos buscando todas las participaciones con rol APODERADO en las operaciones donde este cliente participa, o buscando textualmente
-        const { data: participacionesHistoricasOtorgadas } = await supabase
+        let queryOtorgadas = supabase
             .from("participantes_operacion")
             .select("*, persona:personas!participantes_operacion_persona_id_fkey(*)")
-            .ilike("rol", "%APODERADO%")
-            .filter("datos_representacion->>representa_a", "ilike", `%${persona.nombre_completo}%`);
+            .ilike("rol", "%APODERADO%");
+
+        if (searchNameParts.length > 0) {
+            searchNameParts.forEach((part: string) => {
+                queryOtorgadas = queryOtorgadas.filter("datos_representacion->>representa_a", "ilike", `%${part}%`);
+            });
+        }
+
+        const { data: participacionesHistoricasOtorgadas } = await queryOtorgadas;
 
         const { data: poderesActivosData } = await supabase
             .from("poderes")
