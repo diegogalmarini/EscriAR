@@ -100,30 +100,27 @@ export async function getClientWithRelations(dni: string) {
             escriturasData = data || [];
         }
 
-        // --- INICIO: Búsqueda Híbrida 360 (Documentos sueltos de INGESTA/PROTOCOLOS) ---
+        // --- INICIO: Búsqueda Híbrida 360 SEGURA (Documentos sueltos de INGESTA) ---
         const { data: rawEscrituras } = await supabase
             .from("escrituras")
             .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id, analysis_metadata")
             .order("fecha_escritura", { ascending: false });
 
-        const searchTerms = [
-            persona.dni?.toLowerCase(), 
-            persona.nombre?.toLowerCase(), 
-            persona.apellido?.toLowerCase(),
-            ...(persona.nombre_completo ? persona.nombre_completo.toLowerCase().split(' ') : [])
-        ].filter(Boolean);
+        const searchDni = persona.dni ? persona.dni.replace(/\D/g, '') : null;
+        const searchCuit = persona.cuit ? persona.cuit.replace(/\D/g, '') : null;
+        const searchFullName = persona.nombre_completo ? persona.nombre_completo.trim().toLowerCase() : null;
 
         const ingestasMatched = (rawEscrituras || []).filter((esc: any) => {
-            if (!esc.analysis_metadata) return false;
-            // Quitamos puntos y comas del json crudo para facilitar match de DNIs con formato 12.345.678
-            const rawText = JSON.stringify(esc.analysis_metadata).toLowerCase().replace(/[.,]/g, '');
+            if (!esc.analysis_metadata || !esc.analysis_metadata.clientes) return false;
             
-            for (const term of searchTerms) {
-                if (term && term.length > 3 && rawText.includes(term.replace(/[.,]/g, ''))) {
-                    return true;
-                }
-            }
-            return false;
+            // Match in structured clients array from IA
+            const matchInClients = esc.analysis_metadata.clientes.some((c: any) => {
+                if (searchDni && c.dni && c.dni.replace(/\D/g, '') === searchDni) return true;
+                if (searchCuit && c.cuit && c.cuit.replace(/\D/g, '') === searchCuit) return true;
+                if (searchFullName && c.nombre_completo && c.nombre_completo.trim().toLowerCase() === searchFullName) return true;
+                return false;
+            });
+            return matchInClients;
         });
 
         // Combinar formales con ingestas semánticas evitando duplicados
@@ -136,8 +133,7 @@ export async function getClientWithRelations(dni: string) {
         escriturasData = combinedEscrituras;
         // --- FIN: Búsqueda Híbrida 360 sobre Escrituras --- 
         
-        // --- INICIO: Búsqueda Híbrida sobre PROTOCOLO (Los PDFs extraídos por IA) ---
-        // Buscamos sobre protocolo_registros que coincidan por nombre o DNI en extraction_data o campos planos
+        // --- INICIO: Búsqueda Híbrida sobre PROTOCOLO HISTÓRICO ---
         const { data: rawProtocoloRegistros } = await supabase
             .from("protocolo_registros")
             .select("id, anio, nro_escritura, tipo_acto, vendedor_acreedor, comprador_deudor, pdf_storage_path, extraction_data")
@@ -148,23 +144,31 @@ export async function getClientWithRelations(dni: string) {
         
         if (rawProtocoloRegistros && rawProtocoloRegistros.length > 0) {
             const protoMatched = rawProtocoloRegistros.filter((pr: any) => {
-                const searchString = `
-                    ${pr.vendedor_acreedor || ''} 
-                    ${pr.comprador_deudor || ''} 
-                    ${JSON.stringify(pr.extraction_data || {})}
-                `.toLowerCase().replace(/[.,]/g, ''); // Ignoramos puntos para matchear DNI ej: 20.561.803 == 20561803
-
-                for (const term of searchTerms) {
-                    if (term && term.length > 3 && searchString.includes(term.replace(/[.,]/g, ''))) {
-                        return true;
-                    }
+                // 1. Check in extraction_data if available
+                if (pr.extraction_data && pr.extraction_data.clientes) {
+                     const matchInExtraction = pr.extraction_data.clientes.some((c: any) => {
+                        if (searchDni && c.dni && c.dni.replace(/\D/g, '') === searchDni) return true;
+                        if (searchCuit && c.cuit && c.cuit.replace(/\D/g, '') === searchCuit) return true;
+                        if (searchFullName && c.nombre_completo && c.nombre_completo.trim().toLowerCase() === searchFullName) return true;
+                        return false;
+                    });
+                    if (matchInExtraction) return true;
                 }
+
+                // 2. Check strict match in flat fields
+                if (searchFullName) {
+                    if (pr.vendedor_acreedor && pr.vendedor_acreedor.toLowerCase().includes(searchFullName)) return true;
+                    if (pr.comprador_deudor && pr.comprador_deudor.toLowerCase().includes(searchFullName)) return true;
+                }
+                
                 return false;
             });
 
             // Mapearlos al formato de "documentos" de la UI
             matchedProtocoloDocumentos = protoMatched.map((pr: any) => {
                 let publicUrl = null;
+                // Intentamos primero con bucket protocolos, pero puede que no haya sido subido allí.
+                // En futuras refactorizaciones del Storage esto debería unificarse. 
                 if (pr.pdf_storage_path) {
                     const { data: publicUrlData } = supabase.storage.from("protocolo").getPublicUrl(pr.pdf_storage_path);
                     publicUrl = publicUrlData.publicUrl;
@@ -173,14 +177,14 @@ export async function getClientWithRelations(dni: string) {
                 return {
                     id: `proto-ingest-${pr.id}`,
                     nro_protocolo: pr.nro_escritura || null,
-                    fecha_escritura: null, // Si necesitamos fecha, extraerla de extraction_data
+                    fecha_escritura: null, 
                     pdf_url: publicUrl,
                     source: "PROTOCOLO",
                     registro: null,
                     notario_interviniente: null,
                     carpeta_id: null,
-                    tipo_acto: pr.tipo_acto || "Acto S/D (Protocolo Histórico)",
-                    rol: "Mención Histórica Documentada"
+                    tipo_acto: pr.tipo_acto || "Acto S/D (Protocolo)",
+                    rol: "Mención Documentada"
                 };
             });
         }
