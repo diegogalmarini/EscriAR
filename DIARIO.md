@@ -1,5 +1,21 @@
 # EscriAR — La Biblia del Proyecto
 
+## Sesión 26: Fix Falsos Positivos de Protocolo y Enlaces Rotos
+**Fecha:** 2026-03-15
+**Agente:** Antigravity AI
+**Objetivo:** Resolver el bug crítico donde clientes exhibían decenas de documentos "Fuente: Protocolo" irrelevantes por matcheos parciales de nombre, y reparar los enlaces `pdf_url` rotos.
+
+### Problema resuelto
+- La lógica de "Hybrid Search 360" en `src/app/actions/clientRelations.ts` usaba un simple chequeo `.includes()` o un Regex muy permisivo sobre la versión stringificada de la data JSON (`analysis_metadata` y `extraction_data`). Esto causaba que un cliente llamado "Adriana Cristina FARINA" matcheara con documentos que mencionaban la "calle Farina", llenando su pestaña de documentos de basura (Falsos Positivos).
+- Los documentos provenientes de `protocolo_registros` apuntaban a un storage bucket equivocado ("protocolo") causando errores 404, en vez de apuntar a donde la ingesta IA depositaba los PDFs procesados ("escrituras").
+
+### Cambios realizados
+- `src/app/actions/clientRelations.ts`: Se refactorizó la lógica de búsqueda de protocolo. Ahora, un cliente solo matchea con un documento de Protocolo si su DNI, su CUIT, o la totalidad de su nombre coincide de forma **ESTRICTA** contra los arrays de `entidades` o `clientes` extraídos por la IA y almacenados en los JSON. Se eliminó la búsqueda laxa e irresponsable.
+- Visualización de PDFs: Las views o retornos del servidor se ajustaron para apuntar los PDFs relacionados al bucket correcto unificado.
+- Verificación humana-like: Un agente de navegador (browser subagent) comprobó las vistas "Documentos" de múltiples clientes en el servidor local sin encontrar falsos positivos y confirmando que los "Ver PDF" funcionaban.
+
+---
+
 ## Sesión 25: Corrección de Login OAuth (Google) y Flujo PKCE SSR
 **Fecha:** 2026-03-13
 **Objetivo:** Resolver el error `PKCE code verifier not found in storage` emitido por `@supabase/ssr` durante el proceso de autenticación con Google Auth.
