@@ -302,6 +302,7 @@ EscriAR/
 │   ├── notary-*/                     # 19 skills notariales
 │   └── skill-creator/                # Meta-skill para crear nuevos skills
 │
+├── CONTEXTO_PARA_AGENTES.md          # 🧠 Qué es EscriAR (Arquitectura y Dominio)
 ├── DIARIO.md                         # ← ESTE ARCHIVO (la Biblia)
 ├── ROADMAP.md                        # Plan de desarrollo en 3 etapas
 └── CLAUDE.md                         # Instrucciones para Claude Code
@@ -930,6 +931,12 @@ Pipeline dual (frontend sync + worker async Railway) 100% funcional y estabiliza
 ---
 
 ## 17. Changelog
+
+### 2026-03-15 (Copilot) — Creación de Documento Onboarding para Agentes y Corrección CESBA
+- Se detectó un error crítico en los códigos CESBA para actos que no tributan sellos (Actas, Certificacioones, Poderes, etc.). Todo el sistema, desde el Template Builder, les asignaba \800-02\ (Actos con Objetos Varios, gravado 1.2%) en vez de \800-32\ (No Gravados).
+- **Template Builder**: Modificado \src/act_codes.py\ forzando todos los actos no gravados a usar \800-32\. Cero ocurrencias restantes de \800-02\.
+- **SaaS**: Creado script \C:\Users\diego\EscriAR\fix_cesba_codes.sql\ para actualizar en la tabla \modelos_actos\ todos los templates que ya fueron importados con la mala parametrización, y corregido el código \metadata\.
+- **Organización de AI**: Creado el documento abstracto \CONTEXTO_PARA_AGENTES.md\ con la vista 10,000 pies de la arquitectura (por qué, cómo, para quién). Indicado en la estructura de este DIARIO para que todos lo lean antes de tocar la BD o sugerir lógicas espurias.
 
 ### 2026-03-12 08:07 — Alineación de Prioridades (Notario)
 
@@ -1604,4 +1611,20 @@ Actualizar el sistema para reflejar la derogación definitiva del Impuesto a la 
 ---
 
 > **Última actualización**: 2026-03-13 — Claude Opus 4.6 (Trazabilidad Protocolo + Dedup Sugerencias + Documentos en Clientes)
+
+### 2026-05-14 (Antigravity) – Entendimiento Consolidado de Flujos y Arquitectura de Datos
+
+#### Objetivo
+Consolidar, documentar de forma inamovible y explicar detalladamente los cuatro flujos principales de ingreso y creación de datos en el SaaS EscriAR (Ingesta de Trámite, Creación Manual, Registro Histórico y Borradores).
+
+#### Acciones y Flujos Documentados
+Se auditó la lógica del front-end (`DashboardActions.tsx`, `api/ingest/route.ts`, tablas `borradores`, `protocolo_registros`) y se dejó constancia oficial en la Arquitectura de Datos:
+1.  **Ingesta de Nuevo Trámite (Desde "Inicio"):** Subir PDF/DOCX -> Crea `Carpeta` (PROCESANDO) -> Extrae entidades (Clientes, Inmuebles, Operación) y las enlaza a la nueva la carpeta.
+2.  **Creación Manual de Entidades:** Clic en "+ Nueva Carpeta", "+ Nuevo Cliente", etc -> Crea la entidad vacía y aislada, a la espera de vinculación manual.
+3.  **Registro Histórico e Índice (Desde "Protocolo"):** Subir PDF -> **NO crea Carpeta**. Inyecta metadata a `protocolo_registros` -> Alimenta automáticamente el "Índice del Protocolo" y se usa de matriz RAG para inferir Titulares Actuales en futuros trámites.
+4.  **Borradores (Drafts) Temporales:** Clic en "+ Nuevo Documento" / "+ Nuevo Presupuesto" -> Crea un registro en tabla `borradores` (estado DRAFT, `carpeta_id` null). Queda autónomo esperando asignación a una Carpeta formal.
+
+#### Archivos Modificados
+- `C:\Users\diego\.gemini\antigravity\brain\...\arquitectura_datos_escriar.md`
+- `DIARIO.md`
 
