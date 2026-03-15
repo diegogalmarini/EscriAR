@@ -109,15 +109,17 @@ export async function getClientWithRelations(dni: string) {
         const searchTerms = [
             persona.dni?.toLowerCase(), 
             persona.nombre?.toLowerCase(), 
-            persona.apellido?.toLowerCase()
+            persona.apellido?.toLowerCase(),
+            ...(persona.nombre_completo ? persona.nombre_completo.toLowerCase().split(' ') : [])
         ].filter(Boolean);
 
         const ingestasMatched = (rawEscrituras || []).filter((esc: any) => {
             if (!esc.analysis_metadata) return false;
-            const rawText = JSON.stringify(esc.analysis_metadata).toLowerCase();
+            // Quitamos puntos y comas del json crudo para facilitar match de DNIs con formato 12.345.678
+            const rawText = JSON.stringify(esc.analysis_metadata).toLowerCase().replace(/[.,]/g, '');
             
             for (const term of searchTerms) {
-                if (term && term.length > 3 && rawText.includes(term)) {
+                if (term && term.length > 3 && rawText.includes(term.replace(/[.,]/g, ''))) {
                     return true;
                 }
             }
@@ -150,10 +152,10 @@ export async function getClientWithRelations(dni: string) {
                     ${pr.vendedor_acreedor || ''} 
                     ${pr.comprador_deudor || ''} 
                     ${JSON.stringify(pr.extraction_data || {})}
-                `.toLowerCase();
+                `.toLowerCase().replace(/[.,]/g, ''); // Ignoramos puntos para matchear DNI ej: 20.561.803 == 20561803
 
                 for (const term of searchTerms) {
-                    if (term && term.length > 3 && searchString.includes(term)) {
+                    if (term && term.length > 3 && searchString.includes(term.replace(/[.,]/g, ''))) {
                         return true;
                     }
                 }

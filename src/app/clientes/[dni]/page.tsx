@@ -10,6 +10,9 @@ import { redirect } from "next/navigation";
 import { formatDateInstructions, formatCUIT } from "@/lib/utils";
 import { formatPersonName } from "@/lib/utils/normalization";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function ClientDetailPage({ params }: { params: Promise<{ dni: string }> }) {
     const { dni } = await params;
 
