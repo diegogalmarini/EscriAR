@@ -1,5 +1,45 @@
 # EscriAR — La Biblia del Proyecto
 
+## Sesión 27: Fix Bucle Infinito Subida Escritura + Workflow Health-Check
+**Fecha:** 2026-03-16
+**Agente:** Antigravity AI
+**Objetivo:** Resolver el bug donde subir un PDF en Protocolo dejaba el sistema en "Analizando documento con IA..." indefinidamente. Crear sistema de monitoreo de infraestructura.
+
+### Problema resuelto
+- Al subir una escritura PDF en la sección Protocolo, el sistema se quedaba en polling infinito. El flujo: `uploadEscrituraPdf()` → sube PDF → crea job `ESCRITURA_EXTRACT` en `ingestion_jobs` → el frontend hace polling cada 5s esperando `extraction_status = COMPLETADO`. **El worker de Railway estaba caído** → nadie procesaba el job → el status nunca cambiaba → bucle infinito.
+- Se encontró un registro stuck: escritura #58 (`26f3870c`) con `extraction_status = PENDIENTE` indefinidamente. Se marcó como ERROR en Supabase directamente para desbloquear el frontend.
+
+### Error del agente (corregido)
+- **Intento erróneo**: Se creó un endpoint inline `/api/protocolo/extract` que intentaba ejecutar la extracción con Gemini directamente desde Vercel. Esto habría fallado porque **Vercel tiene timeout de ~60 segundos** y la extracción IA puede tardar 30-60+ segundos en PDFs complejos.
+- **Corrección**: Se revirtió completamente el endpoint inline y los fire-and-forget en `protocolo.ts`. La extracción debe ejecutarse **exclusivamente en Railway**, que no tiene timeout corto.
+
+### ⚠️ REGLA DE ARQUITECTURA CRÍTICA (grabada a fuego)
+
+| Servicio | Responsabilidad | Timeout |
+|----------|----------------|---------|
+| **Vercel** | Frontend + API Routes livianas | ~60s (serverless) |
+| **Railway** | Worker de extracción pesada (Gemini, PDFs, OCR) | Sin límite |
+| **GitHub** | Fuente de verdad — ambos despliegan desde `main` | N/A |
+
+> **NUNCA** poner lógica de extracción IA pesada (Gemini) en API Routes de Vercel.
+> **NUNCA** se verá un cambio si no se actualiza GitHub.
+> Si Railway cae, TODAS las extracciones de escrituras se quedan en bucle infinito.
+
+### Workflow `/health-check` creado
+- `.agent/workflows/health-check.md`: verifica los 3 servicios críticos:
+  1. **GitHub**: commits sin pushear, archivos sin commitear
+  2. **Vercel**: que el frontend responda sin errores 500
+  3. **Railway**: que el worker esté corriendo (healthcheck HTTP)
+  4. **Supabase**: queries SQL para detectar jobs y registros stuck
+
+### Cambios realizados
+- `src/app/actions/protocolo.ts`: limpio, sin fire-and-forget (solo crea job → Railway lo procesa)
+- `.agent/workflows/health-check.md`: NUEVO — workflow de monitoreo de infraestructura
+- Eliminado: `src/app/api/protocolo/extract/` (endpoint inline peligroso)
+- DB fix directo: escritura #58 marcada como ERROR para desbloquear polling
+
+---
+
 ## Sesión 26: Fix Falsos Positivos de Protocolo y Enlaces Rotos
 **Fecha:** 2026-03-15
 **Agente:** Antigravity AI
@@ -947,6 +987,14 @@ Pipeline dual (frontend sync + worker async Railway) 100% funcional y estabiliza
 ---
 
 ## 17. Changelog
+
+### 2026-03-16 (Antigravity) — Fix Bucle Infinito Escritura + Health-Check Workflow
+- **Bug**: subir PDF en Protocolo → sistema en polling infinito. Causa: **Railway worker caído**.
+- **Error del agente**: se creó un endpoint inline en Vercel para extracción → revertido porque Vercel tiene timeout ~60s, insuficiente para Gemini.
+- **Corrección**: Railway reiniciado por usuario. Código revertido a depender 100% de Railway para extracción.
+- **DB fix**: escritura #58 stuck con `PENDIENTE` → marcada como `ERROR`.
+- **Nuevo**: `.agent/workflows/health-check.md` — verifica GitHub + Vercel + Railway + Supabase.
+- **Regla**: NUNCA poner extracción IA pesada en Vercel. Railway = worker sin timeout.
 
 ### 2026-03-15 (Copilot) — Creación de Documento Onboarding para Agentes y Corrección CESBA
 - Se detectó un error crítico en los códigos CESBA para actos que no tributan sellos (Actas, Certificacioones, Poderes, etc.). Todo el sistema, desde el Template Builder, les asignaba \800-02\ (Actos con Objetos Varios, gravado 1.2%) en vez de \800-32\ (No Gravados).
