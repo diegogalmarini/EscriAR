@@ -215,24 +215,6 @@ export async function uploadEscrituraPdf(
         console.error("Error creando job ESCRITURA_EXTRACT:", jobErr);
     }
 
-    // Fire-and-forget: trigger inline extraction without waiting
-    // This ensures extraction happens even if the Railway worker is down
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://escriar.com";
-    fetch(`${appUrl}/api/protocolo/extract`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "x-internal-secret": process.env.SUPABASE_SERVICE_ROLE_KEY || "",
-        },
-        body: JSON.stringify({
-            registroId,
-            storagePath,
-            originalFilename: file.name,
-        }),
-    }).catch((err) => {
-        console.error("[EXTRACT] Error disparando extracción inline:", err.message);
-    });
-
     return updated as ProtocoloRegistro;
 }
 
@@ -325,23 +307,6 @@ export async function retryEscrituraExtraction(registroId: string): Promise<Prot
     if (jobErr) {
         console.error("Error creando job retry:", jobErr);
     }
-
-    // Fire-and-forget: trigger inline extraction without waiting
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://escriar.com";
-    fetch(`${appUrl}/api/protocolo/extract`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "x-internal-secret": process.env.SUPABASE_SERVICE_ROLE_KEY || "",
-        },
-        body: JSON.stringify({
-            registroId,
-            storagePath: registro.pdf_storage_path,
-            originalFilename: registro.pdf_storage_path.split("/").pop(),
-        }),
-    }).catch((err) => {
-        console.error("[EXTRACT] Error disparando retry extracción inline:", err.message);
-    });
 
     return updated as ProtocoloRegistro;
 }
