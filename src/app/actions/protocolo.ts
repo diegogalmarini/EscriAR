@@ -142,7 +142,7 @@ export async function uploadEscrituraPdf(
     registroId: string,
     formData: FormData
 ): Promise<ProtocoloRegistro> {
-    const { orgId } = await requireOrgMembership();
+    const { orgId, userId } = await requireOrgMembership();
     const supabase = await createClient();
 
     const file = formData.get("file") as File;
@@ -199,6 +199,7 @@ export async function uploadEscrituraPdf(
     const { error: jobErr } = await supabase
         .from("ingestion_jobs")
         .insert({
+            user_id: userId,
             carpeta_id: null, // Protocolo registros may not have a carpeta
             job_type: "ESCRITURA_EXTRACT",
             status: "pending",
@@ -259,7 +260,7 @@ export async function confirmEscrituraExtraction(
 // ── Retry Extraction ──
 
 export async function retryEscrituraExtraction(registroId: string): Promise<ProtocoloRegistro> {
-    await requireOrgMembership();
+    const { userId } = await requireOrgMembership();
     const supabase = await createClient();
 
     // Get current registro
@@ -291,6 +292,7 @@ export async function retryEscrituraExtraction(registroId: string): Promise<Prot
     const { error: jobErr } = await supabase
         .from("ingestion_jobs")
         .insert({
+            user_id: userId,
             carpeta_id: null,
             job_type: "ESCRITURA_EXTRACT",
             status: "pending",

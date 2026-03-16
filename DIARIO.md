@@ -1644,3 +1644,22 @@ Se auditó la lógica del front-end (`DashboardActions.tsx`, `api/ingest/route.t
 - `C:\Users\diego\.gemini\antigravity\brain\...\arquitectura_datos_escriar.md`
 - `DIARIO.md`
 
+### 2026-03-15 (Antigravity) – Cacería de "Super Bugs": El Retorno de la Identidad
+
+**Problema 1: Frontend Ciego (Bug Documentos)**
+- **Síntoma:** Los clientes no mostraban documentos del Protocolo 2026 en su perfil (Aparecía "No hay documentos vinculados" y el contador en 0).
+- **Causa:** La API `getClientWithRelations` sólo buscaba coincidencias de nombres dentro de la metadata de la tabla `escrituras` huérfanas, pero **no** consultaba la nueva tabla `protocolo_registros`.
+- **Solución:**
+  1. Se modificó `clientRelations.ts` para ejecutar una búsqueda semántica (`ilike`) sobre los campos `vendedor_acreedor`, `comprador_deudor` y `extraction_data` de todos los registros del Protocolo.
+  2. Los resultados se mapearon al array `documentos` simulando la estructura esperada por la UI, inyectándoles dinámicamente el tag `SOURCE: 'PROTOCOLO'`.
+  3. Ahora, cuando un cliente abre su ficha, el sistema "hila" en tiempo real todas sus menciones históricas.
+
+**Problema 2: El Multiplicador de Basura (Bug Duplicación Personas)**
+- **Síntoma:** Al subir múltiples escrituras que involucraban a una misma entidad jurídica (ej. FIDEICOMISO ARES o CODESUR), el sistema creaba decenas de perfiles basura con DNI `SIN_DNI_...` o `TEMP-...`.
+- **Causa:** La IA fallaba en extraer el CUIT de estos fideicomisos/empresas desde el PDF. El Worker de Ingesta, al no tener CUIT, intentaba buscar la entidad existente **sólo por CUIT**, fallaba, y creaba un perfil temporal nuevo por cada documento, asociando el documento a un fantasma en vez de al perfil canónico.
+- **Solución:**
+  1. **Limpieza Quirúrgica:** Se programó y ejecutó un script en producción (`dedup_personas.ts`) que rastreó todos los UUIDs temporales. Los agrupó por una versión "limpia" del nombre (sin S.A., S.R.L.), migró todas sus Operaciones hacia el perfil maestro y eliminó a todos los clones.
+  2. **Vacuna en Worker:** Se endureció la heurística en `worker/src/index.ts`. Ahora, si la extracción vuelve vacía de CUIT, el script ejecuta una _búsqueda difusa por nombre_ en la DB antes de rendirse. Si encuentra a la empresa por nombre, usa su DNI real, bloqueando la creación de clones.
+- **Validación:** Se comprobó vía navegador robotizado que _escriar.com_ ya no lista duplicados para entidades conocidas.
+
+## Fase V : Lanzamiento Oficial (En Proceso)

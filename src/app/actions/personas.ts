@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabaseServer";
 import { revalidatePath } from "next/cache";
-import { logAction } from "@/lib/logger";
 
 
 export async function createPersona(formData: {
@@ -45,7 +44,7 @@ export async function createPersona(formData: {
             throw error;
         }
 
-        await logAction('CREATE', 'PERSONA', { id: data.dni, dni: data.dni });
+
 
         revalidatePath('/clientes');
         return { success: true, data };
@@ -121,7 +120,7 @@ export async function updatePersona(identifier: string, formData: {
             throw new Error("No se encontró la persona para actualizar");
         }
 
-        await logAction('UPDATE', 'PERSONA', { id: identifier, dni: formData.dni || identifier });
+
 
         revalidatePath('/clientes');
         return { success: true, data: data[0] };
@@ -141,7 +140,7 @@ export async function deletePersona(dni: string) {
 
         if (error) throw error;
 
-        await logAction('DELETE', 'PERSONA', { id: dni, dni: dni });
+
 
         revalidatePath('/clientes');
         return { success: true };

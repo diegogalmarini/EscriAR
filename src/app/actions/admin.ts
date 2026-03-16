@@ -3,8 +3,6 @@
 import { createClient } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { revalidatePath } from "next/cache";
-import { logAction } from "@/lib/logger";
-
 const SUPER_ADMIN_EMAIL = "diegogalmarini@gmail.com";
 
 /**
@@ -93,8 +91,6 @@ export async function approveUser(userId: string) {
 
         if (error) throw error;
 
-        // Log action
-        await logAction('APPROVE_USER', 'USER_PROFILE', { userId });
 
         revalidatePath("/admin/users");
         return { success: true };
@@ -213,7 +209,6 @@ export async function preCreateUser(email: string, fullName: string) {
 
         if (error) throw error;
 
-        await logAction('INVITE_USER', 'USER_PROFILE', { email, fullName });
 
         revalidatePath("/admin/users");
         return { success: true };

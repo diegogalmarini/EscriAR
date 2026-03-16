@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabaseServer";
 import { revalidatePath } from "next/cache";
-import { logAction, logAuditEvent } from "@/lib/logger";
+import { logAuditEvent } from "@/lib/logger";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getUserOrgId } from "@/lib/auth/getOrg";
 import { publishToProtocolo } from "@/app/actions/protocolo";

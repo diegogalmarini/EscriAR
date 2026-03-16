@@ -1,0 +1,2 @@
+src/components/TimelineAuditoria.tsx(4,24): error TS2307: Cannot find module 'date-fns' or its corresponding type declarations.
+src/components/TimelineAuditoria.tsx(5,20): error TS2307: Cannot find module 'date-fns/locale' or its corresponding type declarations.
