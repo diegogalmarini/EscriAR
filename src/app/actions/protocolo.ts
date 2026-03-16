@@ -195,12 +195,13 @@ export async function uploadEscrituraPdf(
         .single();
     if (updateErr) throw new Error(updateErr.message);
 
-    // Create ESCRITURA_EXTRACT job
-    const { error: jobErr } = await supabase
+    // Create ESCRITURA_EXTRACT job (use admin client — RLS on ingestion_jobs
+    // requires carpeta_id, but protocolo registros have no carpeta)
+    const { error: jobErr } = await supabaseAdmin
         .from("ingestion_jobs")
         .insert({
             user_id: userId,
-            carpeta_id: null, // Protocolo registros may not have a carpeta
+            carpeta_id: null,
             job_type: "ESCRITURA_EXTRACT",
             status: "pending",
             original_filename: file.name,
@@ -288,8 +289,8 @@ export async function retryEscrituraExtraction(registroId: string): Promise<Prot
         .single();
     if (updateErr) throw new Error(updateErr.message);
 
-    // Create new job
-    const { error: jobErr } = await supabase
+    // Create new job (use admin — RLS requires carpeta_id, protocolo has none)
+    const { error: jobErr } = await supabaseAdmin
         .from("ingestion_jobs")
         .insert({
             user_id: userId,
