@@ -7,6 +7,7 @@ import { Home, MapPin, ArrowLeft, Ruler, Table2 } from "lucide-react";
 import Link from "next/link";
 
 import { DeleteInmuebleDialog } from "@/components/DeleteInmuebleDialog";
+import { TimelineAuditoria } from "@/components/TimelineAuditoria";
 
 interface InmuebleDetailHeaderProps {
     inmueble: any;
@@ -88,11 +89,14 @@ export async function InmuebleDetailHeader({ inmueble }: InmuebleDetailHeaderPro
                     </div>
 
                     {/* Right: Actions */}
-                    <DeleteInmuebleDialog
-                        inmuebleId={inmueble.id}
-                        nomenclatura={inmueble.nomenclatura}
-                        redirectTo="/inmuebles"
-                    />
+                    <div className="flex items-center gap-2">
+                        {inmueble.id && <TimelineAuditoria recordId={inmueble.id} entityName="Inmueble" />}
+                        <DeleteInmuebleDialog
+                            inmuebleId={inmueble.id}
+                            nomenclatura={inmueble.nomenclatura}
+                            redirectTo="/inmuebles"
+                        />
+                    </div>
                 </div>
             </Card>
         </div>

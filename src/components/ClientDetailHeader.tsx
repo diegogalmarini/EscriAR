@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { SendFichaDialog } from "./SendFichaDialog";
 import { EditarClienteDialog } from "./EditarClienteDialog";
 import { DeleteClienteDialog } from "./DeleteClienteDialog";
+import { TimelineAuditoria } from "./TimelineAuditoria";
 import { cn, formatDateInstructions } from "@/lib/utils";
 import { formatCUIT, isLegalEntity, formatPersonName } from "@/lib/utils/normalization";
 
@@ -128,6 +129,7 @@ export function ClientDetailHeader({ persona, onClienteUpdated }: ClientDetailHe
 
                     {/* Right: Action Buttons */}
                     <div className="flex items-center gap-2">
+                        {persona.dni && <TimelineAuditoria recordId={persona.dni} entityName="Cliente" />}
                         <SendFichaDialog persona={persona} />
                         <EditarClienteDialog persona={persona} />
                         <DeleteClienteDialog
