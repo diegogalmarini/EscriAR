@@ -97,8 +97,12 @@ TIPO DE ACTO (campo tipo_acto) — MUY IMPORTANTE:
   • Si hay renuncia de usufructo → "venta - renun. usuf"
   • Buscá SIEMPRE en el texto: usufructo (extinción, renuncia, consolidación), hipoteca (constitución, cancelación), tracto abreviado, poder especial irrevocable.
 - CESIONES — CRÍTICO: Diferenciá con PRECISIÓN usando abreviatura notarial:
-  • Si se ceden derechos hereditarios sobre un INMUEBLE y es ONEROSA (hay precio) → "ces der her.s/inm.oner." (código 720-00)
-  • Si se ceden derechos hereditarios en general (sin inmueble específico o gratuita) → "ces der her." (código 700-00)
+  • "ces der her.s/inm.oner." (720-00) = cesión de derechos hereditarios sobre inmueble onerosa. Usá ESTA clasificación cuando:
+    - Se ceden derechos hereditarios de un sucesorio/testamentaria Y
+    - Hay un inmueble involucrado (aunque no se describa en detalle) Y
+    - Se menciona CUALQUIER precio o monto (aunque una cláusula diga "gratuitamente", si hay precio real → ES ONEROSA)
+    - En la práctica notarial argentina, la GRAN MAYORÍA de cesiones hereditarias son "ces der her.s/inm.oner."
+  • "ces der her." (700-00) = cesión hereditaria PURAMENTE gratuita SIN inmueble. MUY RARO — solo usar si NO hay ningún precio ni inmueble.
   • Cesión de boleto → "ces bol."
   • Cesión de cuotas sociales → "ces cuot. soc."
   • Cesión de derechos y acciones → "ces der y acc."
