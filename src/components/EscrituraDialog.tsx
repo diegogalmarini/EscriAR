@@ -93,14 +93,14 @@ export function EscrituraDialog({ open, onOpenChange, registro, anio, nextNro, o
                     const ex = updated.extraction_data;
                     setFormData(prev => ({
                         ...prev,
-                        nro_escritura: prev.nro_escritura || ex.nro_escritura || prev.nro_escritura,
-                        tipo_acto: prev.tipo_acto || ex.tipo_acto || prev.tipo_acto,
-                        vendedor_acreedor: prev.vendedor_acreedor || ex.vendedor_acreedor || prev.vendedor_acreedor,
-                        comprador_deudor: prev.comprador_deudor || ex.comprador_deudor || prev.comprador_deudor,
-                        codigo_acto: prev.codigo_acto || ex.codigo_acto || prev.codigo_acto,
-                        folios: prev.folios || ex.folios || prev.folios,
-                        dia: prev.dia ?? (ex.fecha ? parseInt(ex.fecha.split("-")[2]) : null),
-                        mes: prev.mes ?? (ex.fecha ? parseInt(ex.fecha.split("-")[1]) : null),
+                        nro_escritura: ex.nro_escritura ?? prev.nro_escritura,
+                        tipo_acto: ex.tipo_acto || prev.tipo_acto,
+                        vendedor_acreedor: ex.vendedor_acreedor || prev.vendedor_acreedor,
+                        comprador_deudor: ex.comprador_deudor || prev.comprador_deudor,
+                        codigo_acto: ex.codigo_acto || prev.codigo_acto,
+                        folios: ex.folios || prev.folios,
+                        dia: ex.fecha ? parseInt(ex.fecha.split("-")[2]) : prev.dia,
+                        mes: ex.fecha ? parseInt(ex.fecha.split("-")[1]) : prev.mes,
                     }));
                 }
             } catch { /* ignore polling errors */ }
