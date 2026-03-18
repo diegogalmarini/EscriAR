@@ -69,6 +69,8 @@ const CLASSIFIER_RULES: ClassifierRule[] = [
     { pattern: /adj.*disol.*soc.*cony|disol.*soc.*cony/i, code: "709-00" },
     { pattern: /adj.*parti|partic.*herenc/i, code: "716-00" },
     { pattern: /ces.*der.*her.*s.*inm.*oner/i, code: "720-00" },
+    { pattern: /ces.*der.*her.*inmueble.*oner/i, code: "720-00" },
+    { pattern: /ces.*der.*her.*sobre.*inm/i, code: "720-00" },
     { pattern: /ces.*der.*her/i, code: "700-00" },
     { pattern: /declarator.*hered/i, code: "707-00" },
     { pattern: /renun.*herenc/i, code: "730-00" },

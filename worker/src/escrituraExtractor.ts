@@ -96,7 +96,13 @@ TIPO DE ACTO (campo tipo_acto) — MUY IMPORTANTE:
   • Si hay constitución de hipoteca simultánea → "venta - hip"
   • Si hay renuncia de usufructo → "venta - renun. usuf"
   • Buscá SIEMPRE en el texto: usufructo (extinción, renuncia, consolidación), hipoteca (constitución, cancelación), tracto abreviado, poder especial irrevocable.
-- CESIONES: Diferenciá entre cesión de derechos genérica, cesión de derechos hereditarios, cesión de derechos hereditarios sobre inmueble onerosa, cesión de boleto, cesión de cuotas sociales, etc.
+- CESIONES — CRÍTICO: Diferenciá con PRECISIÓN usando abreviatura notarial:
+  • Si se ceden derechos hereditarios sobre un INMUEBLE y es ONEROSA (hay precio) → "ces der her.s/inm.oner." (código 720-00)
+  • Si se ceden derechos hereditarios en general (sin inmueble específico o gratuita) → "ces der her." (código 700-00)
+  • Cesión de boleto → "ces bol."
+  • Cesión de cuotas sociales → "ces cuot. soc."
+  • Cesión de derechos y acciones → "ces der y acc."
+  • NUNCA uses descripciones largas como "Cesión de Derechos y Acciones Hereditarios". Usá la ABREVIATURA notarial.
 - HIPOTECAS: Diferenciá entre hipoteca simple, constitución de crédito con hipoteca (cont.cred. c/hip), cancelación de hipoteca, etc.
 - Lee con cuidado cuál es el acto PRINCIPAL de la escritura y TODOS los actos secundarios que se mencionan.
 
