@@ -464,7 +464,7 @@ export async function getClientWithRelations(dni: string) {
                 if (inmuebleIds.length > 0) {
                     const { data: inmData } = await supabaseAdmin
                         .from("inmuebles")
-                        .select("id, calle, numero, nomenclatura, partido_id, nro_partida, valuacion_fiscal")
+                        .select("id, nomenclatura, partido_id, nro_partida, valuacion_fiscal, transcripcion_literal")
                         .in("id", inmuebleIds);
 
                     inmuebles = (inmData || []).map((inm: any) => {

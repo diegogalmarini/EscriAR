@@ -7,12 +7,11 @@ import { useRouter } from "next/navigation";
 
 interface ClientInmueble {
     id: string;
-    calle: string | null;
-    numero: string | null;
     nomenclatura: string | null;
     partido_id: string | null;
     nro_partida: string | null;
     valuacion_fiscal: number | null;
+    transcripcion_literal: string | null;
     rol: string | null;
     tipo_acto: string | null;
     nro_escritura: number | null;
@@ -40,9 +39,12 @@ export function ClientInmueblesList({ inmuebles }: ClientInmueblesListProps) {
     return (
         <div className="grid gap-4 md:grid-cols-2">
             {inmuebles.map((inm) => {
-                const direccion = inm.calle
-                    ? `${inm.calle}${inm.numero ? ` ${inm.numero}` : ""}`
-                    : null;
+                // Extract address hint from transcripcion_literal (e.g. "calle Misiones número 776")
+                let direccion: string | null = null;
+                if (inm.transcripcion_literal) {
+                    const calleMatch = inm.transcripcion_literal.match(/calle\s+(.+?)(?:,|\.|$)/i);
+                    direccion = calleMatch ? calleMatch[1].trim() : null;
+                }
 
                 return (
                     <Card
