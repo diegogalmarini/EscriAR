@@ -78,10 +78,21 @@ REGLAS GENERALES:
 6. Confianza: HIGH si el dato es explícito y legible. MED si requiere inferencia. LOW si es ambiguo o poco legible.
 
 TIPO DE ACTO (campo tipo_acto) — MUY IMPORTANTE:
-- Usá EXACTAMENTE una de estas categorías estándar: "Compraventa", "Hipoteca", "Cancelación de Hipoteca", "Donación", "Cesión de Derechos", "Poder General", "Poder Especial", "Usufructo", "Fideicomiso", "Reglamento de PH", "División de Condominio", "Afectación Bien de Familia", "Acta", "Constitución de Sociedad".
-- Si el acto no encaja exactamente, usá la categoría más cercana.
-- NO inventes variantes. NO uses sinónimos libres.
-- IMPORTANTE: Lee con cuidado cuál es el acto PRINCIPAL de la escritura. Una compraventa con hipoteca simultánea son DOS actos, pero el principal es la compraventa.
+- Describí el acto con PRECISIÓN NOTARIAL tal como aparece en la escritura. NO simplifiques ni generalices.
+- Usá la terminología notarial exacta. Ejemplos correctos:
+  • "venta" (NO "Compraventa" genérico)
+  • "venta - ext. Usuf" (venta con extensión de usufructo — acto compuesto)
+  • "cont.cred. c/hip" (constitución de crédito con hipoteca)
+  • "ces der her.s/inm.oner." (cesión de derechos hereditarios sobre inmueble onerosa)
+  • "cancel. hip" (cancelación de hipoteca)
+  • "poder escrit" (poder por escritura)
+  • "transf a benef" (transferencia a beneficiario de fideicomiso)
+  • "venta - t.a." (venta con tracto abreviado)
+  • "donación", "acta", "reglam. PH", "afect. bien de familia"
+- ACTOS COMPUESTOS: Si la escritura contiene más de un acto (ej: venta + extensión de usufructo), describí ambos separados por " - " (ej: "venta - ext. Usuf").
+- CESIONES: Diferenciá entre cesión de derechos genérica, cesión de derechos hereditarios, cesión de derechos hereditarios sobre inmueble onerosa, cesión de boleto, cesión de cuotas sociales, etc.
+- HIPOTECAS: Diferenciá entre hipoteca simple, constitución de crédito con hipoteca (cont.cred. c/hip), cancelación de hipoteca, etc.
+- Lee con cuidado cuál es el acto PRINCIPAL de la escritura y todos los actos secundarios.
 
 CÓDIGO DE ACTO (campo codigo_acto):
 - SIEMPRE dejarlo NULL. El sistema lo asigna automáticamente.

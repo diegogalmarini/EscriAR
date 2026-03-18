@@ -27,6 +27,7 @@ import { classifyDocument } from '@/lib/skills/routing/documentClassifier';
 import { taxonomyService, ActIntent } from '@/lib/services/TaxonomyService';
 import { jurisdictionResolver } from '@/lib/services/JurisdictionResolver';
 import { getOrgIdForUser } from '@/lib/auth/getOrg';
+import { classifyActo } from '@/lib/actClassifier';
 
 // Helper to get CESBA code from tipo_acto
 // Direct code mappings for acts that don't follow baseCode-subcode pattern
@@ -39,62 +40,41 @@ const DIRECT_CODE_MAP: Record<string, string> = {
 };
 
 function getCESBACode(tipoActo: string, isFamilyHome: boolean = false): string | null {
+    if (!tipoActo) return null;
+
+    // 1. Try regex classifier first (147+ rules, handles abbreviations & compound acts)
+    const regexResult = classifyActo(tipoActo);
+    if (regexResult) return regexResult;
+
     const normalized = (tipoActo || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
 
-    // 1. Try direct code map (exact match)
+    // 2. Try direct code map (exact match for PH/condominio specials)
     if (DIRECT_CODE_MAP[normalized]) return DIRECT_CODE_MAP[normalized];
-
-    // 2. Try direct code map (partial match)
     for (const [key, code] of Object.entries(DIRECT_CODE_MAP)) {
         if (normalized.includes(key)) return code;
     }
 
-    // 3. Map common act types to operation types
+    // 3. Fallback: TaxonomyService intent-based lookup
     const operationMap: Record<string, ActIntent['operation_type']> = {
         'VENTA': 'COMPRAVENTA',
         'COMPRAVENTA': 'COMPRAVENTA',
-        'COMPRA': 'COMPRAVENTA',
-        'PRESTAMO': 'HIPOTECA',
-        'PRESTAMO BANCARIO': 'HIPOTECA',
-        'PRESTAMO HIPOTECARIO': 'HIPOTECA',
         'HIPOTECA': 'HIPOTECA',
-        'MUTUO HIPOTECARIO': 'HIPOTECA',
-        'MUTUO': 'HIPOTECA',
-        'CONTRATO DE CREDITO': 'HIPOTECA',
-        'CREDITO HIPOTECARIO': 'HIPOTECA',
-        'CANCELACION': 'CANCELACION_HIPOTECA',
-        'CANCELACION DE HIPOTECA': 'CANCELACION_HIPOTECA',
-        'LEVANTAMIENTO DE HIPOTECA': 'CANCELACION_HIPOTECA',
         'DONACION': 'DONACION',
         'CESION': 'CESION',
-        'CESION DE DERECHOS': 'CESION',
         'PODER': 'PODER',
-        'PODER GENERAL': 'PODER',
-        'PODER ESPECIAL': 'PODER',
         'ACTA': 'ACTA',
         'USUFRUCTO': 'USUFRUCTO',
         'FIDEICOMISO': 'FIDEICOMISO',
-        'AFECTACION BIEN DE FAMILIA': 'AFECTACION_BIEN_FAMILIA',
-        'SOCIEDAD': 'CONSTITUCION_SOCIEDAD',
-        'TRANSFERENCIA DE DOMINIO A BENEFICIARIO': 'FIDEICOMISO',
-        'ADJUDICACION DE FIDEICOMISO': 'FIDEICOMISO',
     };
 
-    const operationType = operationMap[normalized] || 'OTRO';
-
-    if (operationType === 'OTRO') {
-        // Try partial match
-        for (const [key, value] of Object.entries(operationMap)) {
-            if (normalized.includes(key)) {
-                const act = taxonomyService.findActByIntent({ operation_type: value, is_family_home: isFamilyHome });
-                return act?.code || null;
-            }
+    for (const [key, value] of Object.entries(operationMap)) {
+        if (normalized.includes(key)) {
+            const act = taxonomyService.findActByIntent({ operation_type: value, is_family_home: isFamilyHome });
+            return act?.code || null;
         }
-        return null;
     }
 
-    const act = taxonomyService.findActByIntent({ operation_type: operationType, is_family_home: isFamilyHome });
-    return act?.code || null;
+    return null;
 }
 
 export const maxDuration = 300;

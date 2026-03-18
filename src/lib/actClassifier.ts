@@ -35,7 +35,7 @@ const RULES: Rule[] = [
 
     // ── Hipotecas ──
     { pattern: /cancel.*hip[oó]t/i, code: "311-00" },
-    { pattern: /cont.*cr[eé]d.*hip|hip[oó]t.*cr[eé]d|const.*hip/i, code: "300-00" },
+    { pattern: /cont.*cr[eé]d.*hip|hip[oó]t.*cr[eé]d|const.*hip/i, code: "300-22" },
     { pattern: /hip[oó]t/i, code: "300-00" },
 
     // ── Usufructo ──
