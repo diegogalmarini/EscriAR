@@ -103,7 +103,7 @@ export async function getClientWithRelations(dni: string) {
         // --- INICIO: Búsqueda Híbrida 360 SEGURA (Documentos sueltos de INGESTA) ---
         const { data: rawEscrituras } = await supabase
             .from("escrituras")
-            .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id, analysis_metadata")
+            .select("id, carpeta_id, fecha_escritura, nro_protocolo, pdf_url, source, registro, notario_interviniente, protocolo_registro_id, inmueble_princ_id, analysis_metadata")
             .order("fecha_escritura", { ascending: false });
 
         const searchDni = persona.dni ? persona.dni.replace(/\D/g, '') : null;
