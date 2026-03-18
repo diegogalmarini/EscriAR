@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabaseServer";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 function extractPoderData(text: string) {
     if (!text) return {
@@ -430,41 +431,57 @@ export async function getClientWithRelations(dni: string) {
         const poderesOtorgados = [...(poderesOtorgadosData || []), ...historicosOtorgados];
         const poderesActivos = [...(poderesActivosData || []), ...historicosActivos];
 
-        // 8. Get inmuebles linked to this client via escrituras
-        const inmuebleIds = Array.from(new Set(
-            escriturasData
-                ?.map((e: any) => e.inmueble_princ_id)
-                .filter(Boolean) || []
-        ));
+        // 8. Get inmuebles linked to this client
+        // Use admin client to bypass RLS — PROTOCOLO escrituras have carpeta_id=NULL
+        // which RLS blocks (policies require carpeta_id to join carpetas).
+        const { data: adminParticipaciones } = await supabaseAdmin
+            .from("participantes_operacion")
+            .select("operacion_id, rol")
+            .eq("persona_id", dni);
+
+        const adminOpIds = adminParticipaciones?.map((p: any) => p.operacion_id).filter(Boolean) || [];
 
         let inmuebles: any[] = [];
-        if (inmuebleIds.length > 0) {
-            const { data: inmData } = await supabase
-                .from("inmuebles")
-                .select("id, calle, numero, nomenclatura, partido_id, nro_partida, valuacion_fiscal")
-                .in("id", inmuebleIds);
+        if (adminOpIds.length > 0) {
+            const { data: adminOps } = await supabaseAdmin
+                .from("operaciones")
+                .select("id, escritura_id, tipo_acto")
+                .in("id", adminOpIds);
 
-            // Enrich each inmueble with the client's role and related escritura info
-            inmuebles = (inmData || []).map((inm: any) => {
-                const relEscrituras = escriturasData?.filter((e: any) => e.inmueble_princ_id === inm.id) || [];
-                const relOps = relEscrituras.flatMap((esc: any) =>
-                    (operacionesData || []).filter((o: any) =>
-                        (o.escritura_id && o.escritura_id === esc.id) ||
-                        (o.carpeta_id && esc.carpeta_id && o.carpeta_id === esc.carpeta_id)
-                    )
-                );
-                const relPart = relOps.flatMap((o: any) =>
-                    (participaciones || []).filter((p: any) => p.operacion_id === o.id)
-                );
+            const adminEscIds = adminOps?.map((o: any) => o.escritura_id).filter(Boolean) || [];
 
-                return {
-                    ...inm,
-                    rol: relPart[0]?.rol || null,
-                    tipo_acto: relOps[0]?.tipo_acto || null,
-                    nro_escritura: relEscrituras[0]?.nro_protocolo || null,
-                    fecha_escritura: relEscrituras[0]?.fecha_escritura || null,
-                };
-            });
+            if (adminEscIds.length > 0) {
+                const { data: adminEscs } = await supabaseAdmin
+                    .from("escrituras")
+                    .select("id, nro_protocolo, fecha_escritura, inmueble_princ_id")
+                    .in("id", adminEscIds)
+                    .not("inmueble_princ_id", "is", null);
+
+                const inmuebleIds = Array.from(new Set(
+                    adminEscs?.map((e: any) => e.inmueble_princ_id).filter(Boolean) || []
+                ));
+
+                if (inmuebleIds.length > 0) {
+                    const { data: inmData } = await supabaseAdmin
+                        .from("inmuebles")
+                        .select("id, calle, numero, nomenclatura, partido_id, nro_partida, valuacion_fiscal")
+                        .in("id", inmuebleIds);
+
+                    inmuebles = (inmData || []).map((inm: any) => {
+                        const relEsc = adminEscs?.find((e: any) => e.inmueble_princ_id === inm.id);
+                        const relOp = adminOps?.find((o: any) => o.escritura_id === relEsc?.id);
+                        const relPart = adminParticipaciones?.find((p: any) => p.operacion_id === relOp?.id);
+
+                        return {
+                            ...inm,
+                            rol: relPart?.rol || null,
+                            tipo_acto: relOp?.tipo_acto || null,
+                            nro_escritura: relEsc?.nro_protocolo || null,
+                            fecha_escritura: relEsc?.fecha_escritura || null,
+                        };
+                    });
+                }
+            }
         }
 
         return {
