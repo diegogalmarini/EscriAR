@@ -5,7 +5,7 @@ import { ClientPoderesList } from "@/components/ClientPoderesList";
 import { ClientDocumentosList } from "@/components/ClientDocumentosList";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Folder, FileText, Activity, FileSignature } from "lucide-react";
+import { User, Folder, FileText, FileSignature } from "lucide-react";
 import { redirect } from "next/navigation";
 import { formatDateInstructions, formatCUIT } from "@/lib/utils";
 import { formatPersonName } from "@/lib/utils/normalization";
@@ -69,10 +69,6 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ d
                                 </span>
                             )}
                         </span>
-                    </TabsTrigger>
-                    <TabsTrigger value="actividad" className="flex items-center gap-2">
-                        <Activity size={16} />
-                        <span>Actividad</span>
                     </TabsTrigger>
                 </TabsList>
 
@@ -206,15 +202,6 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ d
                     <ClientDocumentosList documentos={documentos} />
                 </TabsContent>
 
-                {/* Tab: Actividad */}
-                <TabsContent value="actividad" className="mt-6">
-                    <Card className="border-slate-200 shadow-sm">
-                        <CardContent className="py-12 text-center">
-                            <Activity className="mx-auto h-12 w-12 opacity-20 text-slate-400 mb-4" />
-                            <p className="text-slate-500 text-sm">El historial de actividad estará disponible próximamente.</p>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
             </Tabs>
         </div>
     );
