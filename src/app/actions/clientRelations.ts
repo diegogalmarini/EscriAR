@@ -430,6 +430,43 @@ export async function getClientWithRelations(dni: string) {
         const poderesOtorgados = [...(poderesOtorgadosData || []), ...historicosOtorgados];
         const poderesActivos = [...(poderesActivosData || []), ...historicosActivos];
 
+        // 8. Get inmuebles linked to this client via escrituras
+        const inmuebleIds = Array.from(new Set(
+            escriturasData
+                ?.map((e: any) => e.inmueble_princ_id)
+                .filter(Boolean) || []
+        ));
+
+        let inmuebles: any[] = [];
+        if (inmuebleIds.length > 0) {
+            const { data: inmData } = await supabase
+                .from("inmuebles")
+                .select("id, calle, numero, nomenclatura, partido_id, nro_partida, valuacion_fiscal")
+                .in("id", inmuebleIds);
+
+            // Enrich each inmueble with the client's role and related escritura info
+            inmuebles = (inmData || []).map((inm: any) => {
+                const relEscrituras = escriturasData?.filter((e: any) => e.inmueble_princ_id === inm.id) || [];
+                const relOps = relEscrituras.flatMap((esc: any) =>
+                    (operacionesData || []).filter((o: any) =>
+                        (o.escritura_id && o.escritura_id === esc.id) ||
+                        (o.carpeta_id && esc.carpeta_id && o.carpeta_id === esc.carpeta_id)
+                    )
+                );
+                const relPart = relOps.flatMap((o: any) =>
+                    (participaciones || []).filter((p: any) => p.operacion_id === o.id)
+                );
+
+                return {
+                    ...inm,
+                    rol: relPart[0]?.rol || null,
+                    tipo_acto: relOps[0]?.tipo_acto || null,
+                    nro_escritura: relEscrituras[0]?.nro_protocolo || null,
+                    fecha_escritura: relEscrituras[0]?.fecha_escritura || null,
+                };
+            });
+        }
+
         return {
             success: true,
             data: {
@@ -439,7 +476,8 @@ export async function getClientWithRelations(dni: string) {
                 carpetas,
                 documentos,
                 poderesOtorgados,
-                poderesActivos
+                poderesActivos,
+                inmuebles
             }
         };
     } catch (error: any) {

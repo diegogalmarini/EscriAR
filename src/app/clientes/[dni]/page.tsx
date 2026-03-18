@@ -3,9 +3,10 @@ import { ClientDetailHeader } from "@/components/ClientDetailHeader";
 import { ClientRelationsList } from "@/components/ClientRelationsList";
 import { ClientPoderesList } from "@/components/ClientPoderesList";
 import { ClientDocumentosList } from "@/components/ClientDocumentosList";
+import { ClientInmueblesList } from "@/components/ClientInmueblesList";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Folder, FileText, FileSignature } from "lucide-react";
+import { User, Folder, FileText, FileSignature, Building2 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { formatDateInstructions, formatCUIT } from "@/lib/utils";
 import { formatPersonName } from "@/lib/utils/normalization";
@@ -23,7 +24,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ d
         redirect('/clientes');
     }
 
-    const { persona, operaciones, escrituras, carpetas, documentos = [], poderesOtorgados = [], poderesActivos = [] } = result.data;
+    const { persona, operaciones, escrituras, carpetas, documentos = [], poderesOtorgados = [], poderesActivos = [], inmuebles = [] } = result.data;
 
     return (
         <div className="p-8 space-y-6 animate-in fade-in duration-500">
@@ -44,6 +45,17 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ d
                             {carpetas.length > 0 && (
                                 <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-slate-200 text-slate-700">
                                     {carpetas.length}
+                                </span>
+                            )}
+                        </span>
+                    </TabsTrigger>
+                    <TabsTrigger value="inmuebles" className="flex items-center gap-2">
+                        <Building2 size={16} />
+                        <span className="flex items-center gap-1.5">
+                            Inmuebles
+                            {inmuebles.length > 0 && (
+                                <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-slate-200 text-slate-700">
+                                    {inmuebles.length}
                                 </span>
                             )}
                         </span>
@@ -190,6 +202,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ d
                 {/* Tab: Carpetas y Relaciones */}
                 <TabsContent value="relaciones" className="mt-6">
                     <ClientRelationsList operaciones={operaciones} carpetas={carpetas} />
+                </TabsContent>
+
+                {/* Tab: Inmuebles */}
+                <TabsContent value="inmuebles" className="mt-6">
+                    <ClientInmueblesList inmuebles={inmuebles} />
                 </TabsContent>
 
                 {/* Tab: Poderes */}
