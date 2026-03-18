@@ -89,10 +89,16 @@ TIPO DE ACTO (campo tipo_acto) — MUY IMPORTANTE:
   • "transf a benef" (transferencia a beneficiario de fideicomiso)
   • "venta - t.a." (venta con tracto abreviado)
   • "donación", "acta", "reglam. PH", "afect. bien de familia"
-- ACTOS COMPUESTOS: Si la escritura contiene más de un acto (ej: venta + extensión de usufructo), describí ambos separados por " - " (ej: "venta - ext. Usuf").
+- ACTOS COMPUESTOS — CRÍTICO: Muchas escrituras contienen MÁS DE UN acto. Describí TODOS separados por " - ". Detectá estos patrones:
+  • Si se vende un inmueble cuyo dominio proviene de donación con reserva de usufructo que se extinguió → "venta - ext. Usuf" (la extinción/consolidación del usufructo ES un acto separado)
+  • Si la venta incluye tracto abreviado → "venta - t.a."
+  • Si se cancela una hipoteca en la misma escritura → "venta - cancel. hip"
+  • Si hay constitución de hipoteca simultánea → "venta - hip"
+  • Si hay renuncia de usufructo → "venta - renun. usuf"
+  • Buscá SIEMPRE en el texto: usufructo (extinción, renuncia, consolidación), hipoteca (constitución, cancelación), tracto abreviado, poder especial irrevocable.
 - CESIONES: Diferenciá entre cesión de derechos genérica, cesión de derechos hereditarios, cesión de derechos hereditarios sobre inmueble onerosa, cesión de boleto, cesión de cuotas sociales, etc.
 - HIPOTECAS: Diferenciá entre hipoteca simple, constitución de crédito con hipoteca (cont.cred. c/hip), cancelación de hipoteca, etc.
-- Lee con cuidado cuál es el acto PRINCIPAL de la escritura y todos los actos secundarios.
+- Lee con cuidado cuál es el acto PRINCIPAL de la escritura y TODOS los actos secundarios que se mencionan.
 
 CÓDIGO DE ACTO (campo codigo_acto):
 - SIEMPRE dejarlo NULL. El sistema lo asigna automáticamente.

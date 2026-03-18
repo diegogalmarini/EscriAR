@@ -1052,22 +1052,28 @@ async function processEscrituraExtraction(job: any) {
             extraction_error: null,
         };
 
-        // Auto-rellenar campos canónicos SOLO si están vacíos
+        // Auto-rellenar campos canónicos.
+        // En re-extracción (ya tenía extraction_data), SIEMPRE sobreescribir tipo_acto y codigo_acto
+        // porque la nueva extracción es más precisa. Otros campos solo si están vacíos.
         const { data: currentReg } = await supabase.from('protocolo_registros')
-            .select('tipo_acto, vendedor_acreedor, comprador_deudor, codigo_acto, monto_ars, monto_usd, folios')
+            .select('tipo_acto, vendedor_acreedor, comprador_deudor, codigo_acto, monto_ars, monto_usd, folios, extraction_data')
             .eq('id', registroId).single();
 
-        if (!currentReg?.tipo_acto && result.datos.tipo_acto) {
+        const isReExtraction = !!currentReg?.extraction_data;
+
+        // tipo_acto y codigo_acto: SIEMPRE actualizar (la nueva extracción es más precisa)
+        if (result.datos.tipo_acto) {
             updateData.tipo_acto = result.datos.tipo_acto;
         }
-        if (!currentReg?.vendedor_acreedor && result.datos.vendedor_acreedor) {
+        if (codigoResuelto) {
+            updateData.codigo_acto = codigoResuelto;
+        }
+        // Otros campos: sobreescribir en re-extracción, o llenar si vacíos
+        if ((isReExtraction || !currentReg?.vendedor_acreedor) && result.datos.vendedor_acreedor) {
             updateData.vendedor_acreedor = result.datos.vendedor_acreedor;
         }
-        if (!currentReg?.comprador_deudor && result.datos.comprador_deudor) {
+        if ((isReExtraction || !currentReg?.comprador_deudor) && result.datos.comprador_deudor) {
             updateData.comprador_deudor = result.datos.comprador_deudor;
-        }
-        if (!currentReg?.codigo_acto) {
-            updateData.codigo_acto = codigoResuelto;
         }
         if (!currentReg?.monto_ars && result.datos.monto_ars) {
             updateData.monto_ars = result.datos.monto_ars;
