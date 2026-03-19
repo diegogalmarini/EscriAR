@@ -38,7 +38,7 @@ const EscrituraExtractionSchema = z.object({
     tipo_acto: z.string().nullable().describe('Tipo de acto notarial (ej: Compraventa, Hipoteca, Poder General, Donación, Constitución de Sociedad)'),
     vendedor_acreedor: z.string().nullable().describe('Nombre completo del vendedor, acreedor, poderdante o parte A. Si hay varios, separar con " y " (ej: "PÉREZ, Juan Carlos y GARCÍA, María")'),
     comprador_deudor: z.string().nullable().describe('Nombre completo del comprador, deudor, apoderado o parte B. Si hay varios, separar con " y "'),
-    codigo_acto: z.string().nullable().describe('Código CESBA del acto. DEJARLO SIEMPRE NULL — el sistema lo asigna automáticamente a partir del tipo_acto.'),
+    codigo_acto: z.string().nullable().describe('Código CESBA del acto en formato NNN-SS (ej: "100-00", "121-51"). Determinalo según el contenido de la escritura. Algunos códigos frecuentes: 100-00 compraventa, 100-20 compraventa exenta sellos, 121-00 transf dominio benef fideicomiso, 121-51 transf dominio benef fideicomiso VIVIENDA ÚNICA (exento sellos), 200-30 donación, 300-22 hipoteca, 414-30 renuncia usufructo, 700-00 cesión hereditaria, 720-00 ces der her s/inm onerosa, 800-32 poder. Si el texto menciona "vivienda única" o "vivienda familiar" usá el subcódigo -51 (exención total sellos). Si no podés determinarlo con certeza, dejarlo null.'),
     monto_ars: z.number().nullable().describe('Monto de la operación en pesos argentinos. Sin puntos de miles.'),
     monto_usd: z.number().nullable().describe('Monto de la operación en dólares estadounidenses. Sin puntos de miles.'),
     inmueble_descripcion: z.string().nullable().describe('Descripción breve del inmueble: ubicación, nomenclatura catastral, matrícula si aparece'),
@@ -111,7 +111,12 @@ TIPO DE ACTO (campo tipo_acto) — MUY IMPORTANTE:
 - Lee con cuidado cuál es el acto PRINCIPAL de la escritura y TODOS los actos secundarios que se mencionan.
 
 CÓDIGO DE ACTO (campo codigo_acto):
-- SIEMPRE dejarlo NULL. El sistema lo asigna automáticamente.
+- Determiná el código CESBA según el contenido de la escritura.
+- Formato: NNN-SS (ej: "100-00", "121-51", "300-22").
+- El sufijo indica beneficios fiscales: -00 normal, -20 exento sellos, -51 vivienda única exención total sellos.
+- CLAVE: Si la escritura menciona "vivienda única", "vivienda familiar", "ocupación permanente" → usá el subcódigo -51 que indica exención de sellos por vivienda única.
+- Ejemplos: 100-00 compraventa, 121-00 transf benef fideicomiso, 121-51 transf benef fideicomiso vivienda única, 200-30 donación, 300-22 hipoteca, 720-00 ces der her s/inm onerosa, 800-32 poder.
+- Si no podés determinarlo con certeza, dejalo null y el sistema lo asignará.
 
 PARTICIPANTES:
 7. Nombres en formato "APELLIDO, Nombre" (ej: "PÉREZ, Juan Carlos").

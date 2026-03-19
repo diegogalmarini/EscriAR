@@ -1039,16 +1039,31 @@ async function processEscrituraExtraction(job: any) {
 
         console.log(`[WORKER] ESCRITURA_EXTRACT: Extracción exitosa. Campos: ${Object.keys(result.datos).filter(k => (result.datos as any)[k] !== null).join(', ')}`);
 
-        // 4b. Resolver código CESBA determinísticamente (la IA no conoce la tabla oficial)
-        const codigoClasificador = getCESBACode(result.datos.tipo_acto || '') || result.datos.codigo_acto;
-        // El clasificador regex solo asigna el código base (ej 121-00), pero el spreadsheet
-        // puede tener un subcódigo más preciso (ej 121-51 = vivienda única, exento de sellos).
-        // NUNCA sobreescribir un código válido existente con uno menos preciso.
-        const codigoResuelto = codigoClasificador;
-        if (codigoResuelto && codigoResuelto !== result.datos.codigo_acto) {
-            console.log(`[WORKER] ESCRITURA_EXTRACT: Código CESBA clasificador: "${result.datos.codigo_acto}" → "${codigoResuelto}" (tipo_acto: ${result.datos.tipo_acto})`);
-            result.datos.codigo_acto = codigoResuelto;
+        // 4b. Resolver código CESBA: priorizar IA > clasificador regex
+        // La IA puede determinar subcódigos precisos (ej 121-51 vivienda única) leyendo el texto,
+        // mientras que el clasificador regex solo asigna el código base (ej 121-00).
+        const codigoIA = result.datos.codigo_acto;
+        const codigoClasificador = getCESBACode(result.datos.tipo_acto || '');
+        const validCodeFormat = /^\d{3}-\d{2}(\s*\/\s*\d{3}-\d{2})*$/;
+
+        // Validar código de la IA contra taxonomía
+        const codigoIAValido = codigoIA && validCodeFormat.test(codigoIA) && (actsData as Record<string, any>)[codigoIA];
+
+        let codigoResuelto: string | null;
+        if (codigoIAValido) {
+            // IA determinó un código válido — usarlo (puede tener subcódigo preciso)
+            codigoResuelto = codigoIA;
+            if (codigoClasificador && codigoClasificador !== codigoIA) {
+                console.log(`[WORKER] ESCRITURA_EXTRACT: Usando código IA "${codigoIA}" (clasificador sugirió "${codigoClasificador}", tipo_acto: ${result.datos.tipo_acto})`);
+            }
+        } else {
+            // IA no pudo o dio código inválido — usar clasificador como fallback
+            codigoResuelto = codigoClasificador || codigoIA;
+            if (codigoIA && codigoIA !== codigoResuelto) {
+                console.log(`[WORKER] ESCRITURA_EXTRACT: Código IA "${codigoIA}" inválido, usando clasificador "${codigoResuelto}" (tipo_acto: ${result.datos.tipo_acto})`);
+            }
         }
+        result.datos.codigo_acto = codigoResuelto;
 
         // 5. Guardar resultados en protocolo_registros
         const updateData: Record<string, any> = {
@@ -1072,16 +1087,13 @@ async function processEscrituraExtraction(job: any) {
             updateData.tipo_acto = result.datos.tipo_acto;
         }
         // codigo_acto: preservar el existente si ya tiene un código válido (ej del spreadsheet).
-        // El código del spreadsheet suele tener subcódigos más precisos (121-51 vivienda única)
-        // que el clasificador regex no puede determinar (solo asigna 121-00 genérico).
         // Solo asignar automáticamente si no hay código previo.
         const existingCode = currentReg?.codigo_acto;
-        const validCodeFormat = /^\d{3}-\d{2}(\s*\/\s*\d{3}-\d{2})*$/;
         if (existingCode && validCodeFormat.test(existingCode)) {
             // Ya tiene código válido — preservarlo, NO sobreescribir
-            console.log(`[WORKER] ESCRITURA_EXTRACT: Preservando codigo_acto existente "${existingCode}" (clasificador sugirió "${codigoResuelto}")`);
+            console.log(`[WORKER] ESCRITURA_EXTRACT: Preservando codigo_acto existente "${existingCode}" (resuelto: "${codigoResuelto}")`);
         } else if (codigoResuelto) {
-            // No tiene código o es inválido — usar el clasificador
+            // No tiene código o es inválido — usar el resuelto (IA > clasificador)
             updateData.codigo_acto = codigoResuelto;
         }
         // Otros campos: sobreescribir en re-extracción, o llenar si vacíos
