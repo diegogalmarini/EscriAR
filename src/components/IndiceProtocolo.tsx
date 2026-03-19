@@ -54,8 +54,8 @@ function formatFecha(dia: number | null, mes: number | null, anio: number): stri
 
 function capitalizeActo(acto: string): string {
     if (!acto) return "";
-    // Capitalize first letter of each word
-    return acto.replace(/\b\w/g, c => c.toUpperCase());
+    // Solo capitalizar la primera letra del string, el resto tal cual viene
+    return acto.charAt(0).toUpperCase() + acto.slice(1);
 }
 
 /**

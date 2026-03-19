@@ -135,6 +135,15 @@ PARTICIPANTES:
 10. comprador_deudor = comprador, deudor, apoderado, donatario, cesionario (la parte B).
 11. PERSONAS array: Para CADA persona interviniente extraé nombre completo, DNI, CUIT, rol, tipo_persona, estado civil, domicilio y nacionalidad.
 
+FIDEICOMISOS — CRÍTICO para vendedor_acreedor:
+- En transferencias a beneficiario de fideicomiso, el transmitente es el FIDEICOMISO, NO la sociedad fiduciaria.
+- El fiduciario (sociedad anónima) es solo el administrador/representante legal. El dominio pertenece al patrimonio fideicomitido.
+- Poné el NOMBRE DEL FIDEICOMISO como vendedor_acreedor, entre comillas.
+- Ejemplo: si la escritura dice 'SOMAJOFA S.A., fiduciario del FIDEICOMISO V8, transfiere a MASELLI...'
+  → vendedor_acreedor = '"FIDEICOMISO V8"' (NO "SOMAJOFA S.A.")
+  → En el array personas, incluí tanto al fideicomiso (tipo_persona: FIDEICOMISO, rol: FIDUCIARIO) como a la sociedad fiduciaria (tipo_persona: JURIDICA, rol: REPRESENTANTE).
+- Lo mismo aplica para "DUBAI S.A. fiduciario del FIDEICOMISO ARES" → vendedor = '"FIDEICOMISO ARES"'
+
 INMUEBLES:
 12. partido: SOLO el nombre del partido/departamento (ej: "Bahia Blanca", "Monte Hermoso"). SIN códigos numéricos, SIN paréntesis.
 13. partida_inmobiliaria: Solo dígitos sin puntos (ej: "115745", no "115.745").
