@@ -95,7 +95,9 @@ TIPO DE ACTO (campo tipo_acto) — MUY IMPORTANTE:
   • Si se cancela una hipoteca en la misma escritura → "venta - cancel. hip"
   • Si hay constitución de hipoteca simultánea → "venta - hip"
   • Si hay renuncia de usufructo → "venta - renun. usuf"
-  • Buscá SIEMPRE en el texto: usufructo (extinción, renuncia, consolidación), hipoteca (constitución, cancelación), tracto abreviado, poder especial irrevocable.
+  • Si la escritura rectifica datos de una escritura anterior → agregar " - rectif" (ej: "transf a benef - rectif", "venta - rectif")
+  • Si hay poder especial irrevocable otorgado en la misma escritura → agregar " - poder esp. irrev."
+  • Buscá SIEMPRE en el texto: usufructo (extinción, renuncia, consolidación), hipoteca (constitución, cancelación), tracto abreviado, poder especial irrevocable, rectificación/rectificativa.
 - CESIONES — CRÍTICO: Diferenciá con PRECISIÓN usando abreviatura notarial:
   • "ces der her.s/inm.oner." (720-00) = cesión de derechos hereditarios sobre inmueble onerosa. Usá ESTA clasificación cuando:
     - Se ceden derechos hereditarios de un sucesorio/testamentaria Y
