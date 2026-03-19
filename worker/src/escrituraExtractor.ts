@@ -92,15 +92,19 @@ TIPO DE ACTO (campo tipo_acto) — MUY IMPORTANTE:
   • "Poder Especial Recíproco de Venta"
   • "Renuncia de Usufructo"
   • "Constitución de Sociedad"
-- ACTOS COMPUESTOS — CRÍTICO: Muchas escrituras contienen MÁS DE UN acto. Describí TODOS separados por " - ". Detectá estos patrones:
+- NOMBRE DEL ACTO — CRÍTICO: Usá el nombre del acto PRINCIPAL, conciso y claro. NO enumeres todas las cláusulas jurídicas.
+  • CORRECTO: "Ratificación" — INCORRECTO: "Ratificación, Confirmación, Cesión de Derechos y Renuncia de Acciones"
+  • CORRECTO: "Compraventa" — INCORRECTO: "Compraventa, Transferencia de Dominio y Constitución de Posesión"
+  • El tipo_acto es un NOMBRE CORTO para clasificar, no una descripción exhaustiva. Los detalles van en observaciones_ia.
+- ACTOS COMPUESTOS — CRÍTICO: Solo agregar actos secundarios cuando son ACTOS NOTARIALES SEPARADOS con efecto jurídico propio, separados por " - ". Detectá estos patrones:
   • Si se vende un inmueble cuyo dominio proviene de donación con reserva de usufructo que se extinguió → "Compraventa - Extinción de Usufructo"
   • Si la venta incluye tracto abreviado → "Compraventa - Tracto Abreviado"
   • Si se cancela una hipoteca en la misma escritura → "Compraventa - Cancelación de Hipoteca"
   • Si hay constitución de hipoteca simultánea → "Compraventa - Hipoteca"
   • Si hay renuncia de usufructo → "Compraventa - Renuncia de Usufructo"
-  • Si la escritura rectifica datos de una escritura anterior → agregar " - Rectificación" (ej: "Transferencia a Beneficiario - Rectificación")
   • Si hay poder especial irrevocable otorgado en la misma escritura → agregar " - Poder Especial Irrevocable"
-  • Buscá SIEMPRE en el texto: usufructo (extinción, renuncia, consolidación), hipoteca (constitución, cancelación), tracto abreviado, poder especial irrevocable, rectificación/rectificativa.
+  • Buscá SIEMPRE en el texto: usufructo (extinción, renuncia, consolidación), hipoteca (constitución, cancelación), tracto abreviado, poder especial irrevocable.
+- RECTIFICACIÓN — CUIDADO: Solo agregar " - Rectificación" cuando la escritura ES PRINCIPALMENTE una rectificación de una ESCRITURA ANTERIOR. NO agregar " - Rectificación" cuando simplemente se corrige un dato registral (matrícula, partida, nomenclatura) como parte accesoria del acto principal. Correcciones registrales menores son parte normal de la compraventa y van en observaciones_ia.
 - CESIONES — CRÍTICO: Diferenciá con PRECISIÓN:
   • "Cesión de Derechos Hereditarios sobre Inmueble Onerosa" (720-00). Usá ESTA clasificación cuando:
     - Se ceden derechos hereditarios de un sucesorio/testamentaria Y
@@ -136,6 +140,12 @@ PARTICIPANTES:
 9. vendedor_acreedor = vendedor, acreedor, poderdante, donante, cedente (la parte A).
 10. comprador_deudor = comprador, deudor, apoderado, donatario, cesionario (la parte B).
 11. PERSONAS array: Para CADA persona interviniente extraé nombre completo, DNI, CUIT, rol, tipo_persona, estado civil, domicilio y nacionalidad.
+
+ACTAS — CRÍTICO para vendedor_acreedor:
+- En actas (constatación, comprobación, notificación, etc.), el vendedor_acreedor es la ENTIDAD O PERSONA que es OBJETO del acta, NO quien la solicita.
+- El síndico, abogado o representante que solicita el acta NO es la parte principal — es un solicitante.
+- Ejemplo: Acta de constatación de la quiebra de "FRIGORIFICO ANSELMO S.A." solicitada por el síndico BENEDETTI → vendedor_acreedor = '"FRIGORIFICO ANSELMO S.A."' (la empresa fallida), NO "BENEDETTI, Hugo Gustavo" (el síndico).
+- En el array personas, incluí al síndico/solicitante con rol: SOLICITANTE y a la entidad con rol: REQUIRENTE o FALLIDA según corresponda.
 
 FIDEICOMISOS — CRÍTICO para vendedor_acreedor:
 - En transferencias a beneficiario de fideicomiso, el transmitente es el FIDEICOMISO, NO la sociedad fiduciaria.
