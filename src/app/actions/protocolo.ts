@@ -116,6 +116,14 @@ export async function deleteProtocoloRegistro(id: string): Promise<void> {
         await supabaseAdmin.storage.from("protocolo").remove([row.pdf_storage_path]);
     }
 
+    // Clear FK references that would block deletion
+    await supabaseAdmin.from("escrituras")
+        .update({ protocolo_registro_id: null })
+        .eq("protocolo_registro_id", id);
+    await supabaseAdmin.from("sugerencias")
+        .update({ protocolo_registro_id: null })
+        .eq("protocolo_registro_id", id);
+
     const { error } = await supabase
         .from("protocolo_registros")
         .delete()
