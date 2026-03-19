@@ -125,7 +125,9 @@ CÓDIGO DE ACTO (campo codigo_acto):
 - Formato: NNN-SS (ej: "100-00", "121-51", "300-22").
 - El sufijo indica beneficios fiscales: -00 normal, -20 exento sellos, -51 vivienda única exención total sellos.
 - CLAVE: Si la escritura menciona "vivienda única", "vivienda familiar", "ocupación permanente" → usá el subcódigo -51 que indica exención de sellos por vivienda única.
-- Ejemplos: 100-00 compraventa, 121-00 transf benef fideicomiso, 121-51 transf benef fideicomiso vivienda única, 200-30 donación, 300-22 hipoteca, 720-00 ces der her s/inm onerosa, 800-32 poder.
+- ACTOS COMPUESTOS: Si la escritura tiene más de un acto, usá códigos separados por " / ". Ejemplo: "100-00 / 713-00" para compraventa con tracto abreviado.
+- TRACTO ABREVIADO (713-00): Cuando la venta se realiza por tracto abreviado (sucesiones, subastas judiciales) → código compuesto "100-00 / 713-00". Buscá en el texto: "tracto abreviado", "juicio sucesorio", "subasta", "adjudicación judicial".
+- Ejemplos: 100-00 compraventa, 100-00 / 713-00 compraventa con tracto abreviado, 121-00 transf benef fideicomiso, 121-51 transf benef fideicomiso vivienda única, 200-30 donación, 300-22 hipoteca con const. crédito, 311-00 cancelación de hipoteca, 414-30 renuncia usufructo, 600-20 constitución sociedad, 720-00 ces der her s/inm onerosa, 800-32 poder.
 - Si no podés determinarlo con certeza, dejalo null y el sistema lo asignará.
 
 PARTICIPANTES:

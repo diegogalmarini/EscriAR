@@ -1046,8 +1046,10 @@ async function processEscrituraExtraction(job: any) {
         const codigoClasificador = getCESBACode(result.datos.tipo_acto || '');
         const validCodeFormat = /^\d{3}-\d{2}(\s*\/\s*\d{3}-\d{2})*$/;
 
-        // Validar código de la IA contra taxonomía
-        const codigoIAValido = codigoIA && validCodeFormat.test(codigoIA) && (actsData as Record<string, any>)[codigoIA];
+        // Validar código de la IA contra taxonomía (soporta compuestos como "100-00 / 713-00")
+        const acts = actsData as Record<string, any>;
+        const codigoIAValido = codigoIA && validCodeFormat.test(codigoIA) &&
+            codigoIA.split(/\s*\/\s*/).every(code => acts[code]);
 
         let codigoResuelto: string | null;
         if (codigoIAValido) {
