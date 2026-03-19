@@ -78,39 +78,47 @@ REGLAS GENERALES:
 6. Confianza: HIGH si el dato es explícito y legible. MED si requiere inferencia. LOW si es ambiguo o poco legible.
 
 TIPO DE ACTO (campo tipo_acto) — MUY IMPORTANTE:
-- Describí el acto con PRECISIÓN NOTARIAL tal como aparece en la escritura. NO simplifiques ni generalices.
-- Usá la terminología notarial exacta. Ejemplos correctos:
-  • "venta" (NO "Compraventa" genérico)
-  • "venta - ext. Usuf" (venta con extensión de usufructo — acto compuesto)
-  • "cont.cred. c/hip" (constitución de crédito con hipoteca)
-  • "ces der her.s/inm.oner." (cesión de derechos hereditarios sobre inmueble onerosa)
-  • "cancel. hip" (cancelación de hipoteca)
-  • "poder escrit" (poder por escritura)
-  • "transf a benef" (transferencia a beneficiario de fideicomiso)
-  • "venta - t.a." (venta con tracto abreviado)
-  • "donación", "acta", "reglam. PH", "afect. bien de familia"
+- Usá NOMBRES COMPLETOS Y DESCRIPTIVOS, NO abreviaturas. El sistema es digital con buscador, la claridad es prioritaria.
+- Ejemplos correctos:
+  • "Compraventa" (NO "venta")
+  • "Compraventa - Extinción de Usufructo" (acto compuesto)
+  • "Constitución de Crédito con Hipoteca" (NO "cont.cred. c/hip")
+  • "Cesión de Derechos Hereditarios sobre Inmueble Onerosa" (NO "ces der her.s/inm.oner.")
+  • "Cancelación de Hipoteca"
+  • "Poder por Escritura" (NO "poder escrit")
+  • "Transferencia a Beneficiario de Fideicomiso" (NO "transf a benef")
+  • "Compraventa - Tracto Abreviado" (NO "venta - t.a.")
+  • "Donación", "Acta", "Reglamento de Propiedad Horizontal", "Afectación a Bien de Familia"
+  • "Poder Especial Recíproco de Venta"
+  • "Renuncia de Usufructo"
+  • "Constitución de Sociedad"
 - ACTOS COMPUESTOS — CRÍTICO: Muchas escrituras contienen MÁS DE UN acto. Describí TODOS separados por " - ". Detectá estos patrones:
-  • Si se vende un inmueble cuyo dominio proviene de donación con reserva de usufructo que se extinguió → "venta - ext. Usuf" (la extinción/consolidación del usufructo ES un acto separado)
-  • Si la venta incluye tracto abreviado → "venta - t.a."
-  • Si se cancela una hipoteca en la misma escritura → "venta - cancel. hip"
-  • Si hay constitución de hipoteca simultánea → "venta - hip"
-  • Si hay renuncia de usufructo → "venta - renun. usuf"
-  • Si la escritura rectifica datos de una escritura anterior → agregar " - rectif" (ej: "transf a benef - rectif", "venta - rectif")
-  • Si hay poder especial irrevocable otorgado en la misma escritura → agregar " - poder esp. irrev."
+  • Si se vende un inmueble cuyo dominio proviene de donación con reserva de usufructo que se extinguió → "Compraventa - Extinción de Usufructo"
+  • Si la venta incluye tracto abreviado → "Compraventa - Tracto Abreviado"
+  • Si se cancela una hipoteca en la misma escritura → "Compraventa - Cancelación de Hipoteca"
+  • Si hay constitución de hipoteca simultánea → "Compraventa - Hipoteca"
+  • Si hay renuncia de usufructo → "Compraventa - Renuncia de Usufructo"
+  • Si la escritura rectifica datos de una escritura anterior → agregar " - Rectificación" (ej: "Transferencia a Beneficiario - Rectificación")
+  • Si hay poder especial irrevocable otorgado en la misma escritura → agregar " - Poder Especial Irrevocable"
   • Buscá SIEMPRE en el texto: usufructo (extinción, renuncia, consolidación), hipoteca (constitución, cancelación), tracto abreviado, poder especial irrevocable, rectificación/rectificativa.
-- CESIONES — CRÍTICO: Diferenciá con PRECISIÓN usando abreviatura notarial:
-  • "ces der her.s/inm.oner." (720-00) = cesión de derechos hereditarios sobre inmueble onerosa. Usá ESTA clasificación cuando:
+- CESIONES — CRÍTICO: Diferenciá con PRECISIÓN:
+  • "Cesión de Derechos Hereditarios sobre Inmueble Onerosa" (720-00). Usá ESTA clasificación cuando:
     - Se ceden derechos hereditarios de un sucesorio/testamentaria Y
     - Hay un inmueble involucrado (aunque no se describa en detalle) Y
     - Se menciona CUALQUIER precio o monto (aunque una cláusula diga "gratuitamente", si hay precio real → ES ONEROSA)
-    - En la práctica notarial argentina, la GRAN MAYORÍA de cesiones hereditarias son "ces der her.s/inm.oner."
-  • "ces der her." (700-00) = cesión hereditaria PURAMENTE gratuita SIN inmueble. MUY RARO — solo usar si NO hay ningún precio ni inmueble.
-  • Cesión de boleto → "ces bol."
-  • Cesión de cuotas sociales → "ces cuot. soc."
-  • Cesión de derechos y acciones → "ces der y acc."
-  • NUNCA uses descripciones largas como "Cesión de Derechos y Acciones Hereditarios". Usá la ABREVIATURA notarial.
-- HIPOTECAS: Diferenciá entre hipoteca simple, constitución de crédito con hipoteca (cont.cred. c/hip), cancelación de hipoteca, etc.
+    - En la práctica notarial argentina, la GRAN MAYORÍA de cesiones hereditarias son onerosas sobre inmueble.
+  • "Cesión de Derechos Hereditarios" (700-00) = cesión hereditaria PURAMENTE gratuita SIN inmueble. MUY RARO.
+  • "Cesión de Boleto"
+  • "Cesión de Cuotas Sociales"
+  • "Cesión de Derechos y Acciones"
+- HIPOTECAS: Diferenciá entre Hipoteca, Constitución de Crédito con Hipoteca, Cancelación de Hipoteca, etc.
 - Lee con cuidado cuál es el acto PRINCIPAL de la escritura y TODOS los actos secundarios que se mencionan.
+/* REFERENCIA ABREVIATURAS NOTARIALES (comentado — no usar, solo para referencia):
+  venta, venta - ext. Usuf, cont.cred. c/hip, ces der her.s/inm.oner.,
+  cancel. hip, poder escrit, transf a benef, venta - t.a., donación, acta,
+  reglam. PH, afect. bien de familia, ces bol., ces cuot. soc., ces der y acc.,
+  poder recp venta, renun. usuf, const. sociedad
+*/
 
 CÓDIGO DE ACTO (campo codigo_acto):
 - Determiná el código CESBA según el contenido de la escritura.
