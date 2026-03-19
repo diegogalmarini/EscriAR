@@ -1040,9 +1040,13 @@ async function processEscrituraExtraction(job: any) {
         console.log(`[WORKER] ESCRITURA_EXTRACT: Extracción exitosa. Campos: ${Object.keys(result.datos).filter(k => (result.datos as any)[k] !== null).join(', ')}`);
 
         // 4b. Resolver código CESBA determinísticamente (la IA no conoce la tabla oficial)
-        const codigoResuelto = getCESBACode(result.datos.tipo_acto || '') || result.datos.codigo_acto;
+        const codigoClasificador = getCESBACode(result.datos.tipo_acto || '') || result.datos.codigo_acto;
+        // El clasificador regex solo asigna el código base (ej 121-00), pero el spreadsheet
+        // puede tener un subcódigo más preciso (ej 121-51 = vivienda única, exento de sellos).
+        // NUNCA sobreescribir un código válido existente con uno menos preciso.
+        const codigoResuelto = codigoClasificador;
         if (codigoResuelto && codigoResuelto !== result.datos.codigo_acto) {
-            console.log(`[WORKER] ESCRITURA_EXTRACT: Código CESBA corregido: "${result.datos.codigo_acto}" → "${codigoResuelto}" (tipo_acto: ${result.datos.tipo_acto})`);
+            console.log(`[WORKER] ESCRITURA_EXTRACT: Código CESBA clasificador: "${result.datos.codigo_acto}" → "${codigoResuelto}" (tipo_acto: ${result.datos.tipo_acto})`);
             result.datos.codigo_acto = codigoResuelto;
         }
 
@@ -1055,19 +1059,29 @@ async function processEscrituraExtraction(job: any) {
         };
 
         // Auto-rellenar campos canónicos.
-        // En re-extracción (ya tenía extraction_data), SIEMPRE sobreescribir tipo_acto y codigo_acto
-        // porque la nueva extracción es más precisa. Otros campos solo si están vacíos.
+        // En re-extracción, sobreescribir tipo_acto y campos vacíos.
+        // codigo_acto: preservar si ya tiene uno válido (puede ser más preciso que el clasificador).
         const { data: currentReg } = await supabase.from('protocolo_registros')
             .select('tipo_acto, vendedor_acreedor, comprador_deudor, codigo_acto, monto_ars, monto_usd, folios, extraction_data')
             .eq('id', registroId).single();
 
         const isReExtraction = !!currentReg?.extraction_data;
 
-        // tipo_acto y codigo_acto: SIEMPRE actualizar (la nueva extracción es más precisa)
+        // tipo_acto: siempre actualizar con la extracción
         if (result.datos.tipo_acto) {
             updateData.tipo_acto = result.datos.tipo_acto;
         }
-        if (codigoResuelto) {
+        // codigo_acto: preservar el existente si ya tiene un código válido (ej del spreadsheet).
+        // El código del spreadsheet suele tener subcódigos más precisos (121-51 vivienda única)
+        // que el clasificador regex no puede determinar (solo asigna 121-00 genérico).
+        // Solo asignar automáticamente si no hay código previo.
+        const existingCode = currentReg?.codigo_acto;
+        const validCodeFormat = /^\d{3}-\d{2}(\s*\/\s*\d{3}-\d{2})*$/;
+        if (existingCode && validCodeFormat.test(existingCode)) {
+            // Ya tiene código válido — preservarlo, NO sobreescribir
+            console.log(`[WORKER] ESCRITURA_EXTRACT: Preservando codigo_acto existente "${existingCode}" (clasificador sugirió "${codigoResuelto}")`);
+        } else if (codigoResuelto) {
+            // No tiene código o es inválido — usar el clasificador
             updateData.codigo_acto = codigoResuelto;
         }
         // Otros campos: sobreescribir en re-extracción, o llenar si vacíos
