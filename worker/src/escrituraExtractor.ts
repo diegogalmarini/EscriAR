@@ -141,6 +141,15 @@ PARTICIPANTES:
 10. comprador_deudor = comprador, deudor, apoderado, donatario, cesionario (la parte B).
 11. PERSONAS array: Para CADA persona interviniente extraé nombre completo, DNI, CUIT, rol, tipo_persona, estado civil, domicilio y nacionalidad.
 
+APODERADOS — CRÍTICO para vendedor_acreedor/comprador_deudor:
+- Cuando una persona actúa EN REPRESENTACIÓN de otra (apoderado, representante legal), el vendedor_acreedor o comprador_deudor debe ser QUIEN COMPARECE (el apoderado/representante), NO el titular del dominio que no está presente.
+- Esto sigue el criterio del índice notarial oficial: se registra quien firma la escritura.
+- Ejemplo: Si Victoria CAMPOS comparece como apoderada de Miguel Angel CAMPOS y Marta ZALBA (los titulares) para vender a ARDITTI:
+  → vendedor_acreedor = "CAMPOS, Victoria" (quien comparece)
+  → En el array personas, incluí a Victoria con rol: APODERADO/VENDEDOR, y a Miguel Angel y Marta con rol: PODERDANTE/TITULAR.
+  → Los titulares reales se mencionan en observaciones_ia.
+- EXCEPCIÓN: Sociedades y personas jurídicas. Si el presidente de una S.A. comparece en representación de la sociedad, el vendedor es la SOCIEDAD, no el presidente. El presidente es solo el representante legal.
+
 ACTAS — CRÍTICO para vendedor_acreedor:
 - En actas (constatación, comprobación, notificación, etc.), el vendedor_acreedor es la ENTIDAD O PERSONA que es OBJETO del acta, NO quien la solicita.
 - El síndico, abogado o representante que solicita el acta NO es la parte principal — es un solicitante.
