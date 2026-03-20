@@ -23,7 +23,34 @@ export default function ActoFormFields({ acto, onChange }: ActoFormFieldsProps) 
   };
 
   const updateNum = (field: keyof ActoFormState, raw: string) => {
-    update(field, parseFloat(raw) || 0);
+    const val = parseFloat(raw) || 0;
+
+    // Auto-convert USD ↔ ARS
+    if (field === "montoEscrituraUsd") {
+      onChange({
+        montoEscrituraUsd: val,
+        montoEscrituraArs: Math.round(val * acto.cotizacionUsd),
+      });
+      return;
+    }
+    if (field === "montoRealUsd") {
+      onChange({
+        montoRealUsd: val,
+        montoRealArs: Math.round(val * acto.cotizacionUsd),
+      });
+      return;
+    }
+    if (field === "cotizacionUsd") {
+      const updates: Partial<ActoFormState> = { cotizacionUsd: val };
+      if (acto.montoEscrituraUsd > 0)
+        updates.montoEscrituraArs = Math.round(acto.montoEscrituraUsd * val);
+      if (acto.montoRealUsd > 0)
+        updates.montoRealArs = Math.round(acto.montoRealUsd * val);
+      onChange(updates);
+      return;
+    }
+
+    update(field, val);
   };
 
   const resetField = (field: keyof ActoFormState, defaultValue: number) => {
