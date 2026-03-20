@@ -1,30 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { ChevronDown, ChevronRight, ChevronsUpDown, Check, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { ActoFormState } from "@/lib/presupuesto/types";
 import type { LineaConIVA } from "@/lib/presupuesto/types";
+import { CESBA_ACTOS, cesbaCodeToTipoActo } from "@/lib/presupuesto/cesbaActos";
 import ActoFormFields from "./ActoFormFields";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
 
-const TIPOS_ACTO = [
-  { value: "COMPRAVENTA", label: "Compraventa" },
-  { value: "HIPOTECA", label: "Hipoteca" },
-  { value: "DONACION", label: "Donación" },
-  { value: "CESION", label: "Cesión" },
-  { value: "PODER", label: "Poder" },
-  { value: "ACTA", label: "Acta" },
-  { value: "DIVISION_CONDOMINIO", label: "División de Condominio" },
-  { value: "AFECTACION_BIEN_FAMILIA", label: "Afectación Bien de Familia" },
-  { value: "USUFRUCTO", label: "Usufructo" },
-  { value: "FIDEICOMISO", label: "Fideicomiso" },
-  { value: "CANCELACION_HIPOTECA", label: "Cancelación de Hipoteca" },
-];
+// Group CESBA actos by their group label for the combobox
+const GROUPED_ACTOS = (() => {
+  const groups = new Map<string, typeof CESBA_ACTOS>();
+  for (const acto of CESBA_ACTOS) {
+    const list = groups.get(acto.group) ?? [];
+    list.push(acto);
+    groups.set(acto.group, list);
+  }
+  return groups;
+})();
 
 interface ActoPresupuestoItemProps {
   index: number;
@@ -44,6 +44,27 @@ export default function ActoPresupuestoItem({
   onDelete,
 }: ActoPresupuestoItemProps) {
   const [isOpen, setIsOpen] = useState(true);
+  const [comboOpen, setComboOpen] = useState(false);
+
+  // Find current CESBA acto for display
+  const currentCesba = useMemo(
+    () => CESBA_ACTOS.find(a => a.code === acto.codigoCesba),
+    [acto.codigoCesba]
+  );
+
+  const displayLabel = currentCesba
+    ? `${currentCesba.code} — ${currentCesba.label}`
+    : acto.tipoActo;
+
+  const handleSelectActo = (cesbaCode: string) => {
+    const cesba = CESBA_ACTOS.find(a => a.code === cesbaCode);
+    if (!cesba) return;
+    onChange({
+      codigoCesba: cesbaCode,
+      tipoActo: cesbaCodeToTipoActo(cesbaCode),
+    });
+    setComboOpen(false);
+  };
 
   return (
     <div className="border border-border rounded-lg bg-background overflow-hidden">
@@ -62,24 +83,51 @@ export default function ActoPresupuestoItem({
           Acto {index + 1}
         </span>
 
-        {/* Tipo de acto selector in header */}
-        <div className="w-48" onClick={e => e.stopPropagation()}>
-          <Select value={acto.tipoActo} onValueChange={v => onChange({ tipoActo: v })}>
-            <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {TIPOS_ACTO.map(t => (
-                <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* CESBA act combobox */}
+        <div onClick={e => e.stopPropagation()}>
+          <Popover open={comboOpen} onOpenChange={setComboOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={comboOpen}
+                className="h-7 w-[280px] justify-between text-xs font-normal"
+              >
+                <span className="truncate">{displayLabel}</span>
+                <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[400px] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Buscar acto por código o nombre..." className="text-xs" />
+                <CommandList>
+                  <CommandEmpty>No se encontró el acto.</CommandEmpty>
+                  {Array.from(GROUPED_ACTOS.entries()).map(([group, actos]) => (
+                    <CommandGroup key={group} heading={group}>
+                      {actos.map(a => (
+                        <CommandItem
+                          key={a.code}
+                          value={`${a.code} ${a.label}`}
+                          onSelect={() => handleSelectActo(a.code)}
+                          className="text-xs"
+                        >
+                          <Check
+                            className={cn(
+                              "mr-1 h-3 w-3",
+                              acto.codigoCesba === a.code ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <span className="font-mono text-muted-foreground mr-2 shrink-0">{a.code}</span>
+                          <span className="truncate">{a.label}</span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  ))}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
-
-        {/* Código CESBA — derived, read-only */}
-        {acto.codigoCesba && (
-          <Badge variant="outline" className="text-[10px] font-mono">
-            {acto.codigoCesba}
-          </Badge>
-        )}
 
         <div className="flex-1" />
 
