@@ -22,7 +22,7 @@ export async function calcularPresupuestoAction(input: PresupuestoInput): Promis
 
 // ─── Guardar presupuesto ──────────────────────────────────
 
-export async function guardarPresupuesto(carpetaId: string, input: PresupuestoInput): Promise<{
+export async function guardarPresupuesto(carpetaId: string, input: PresupuestoInput, actosJson?: any[]): Promise<{
   success: boolean;
   presupuestoId?: string;
   error?: string;
@@ -72,6 +72,7 @@ export async function guardarPresupuesto(carpetaId: string, input: PresupuestoIn
         estado: "BORRADOR",
         alertas: result.alertas,
         valido_hasta: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        ...(actosJson ? { actos_json: actosJson } : {}),
       })
       .select("id")
       .single();
@@ -90,6 +91,7 @@ export async function guardarPresupuesto(carpetaId: string, input: PresupuestoIn
       pagador: l.pagador,
       notas: l.notas ?? null,
       orden: idx,
+      acto_index: 0,
     }));
 
     if (lineas.length > 0) {

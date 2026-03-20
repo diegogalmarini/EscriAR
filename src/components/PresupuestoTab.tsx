@@ -1,75 +1,77 @@
 "use client";
 
-import { useState, useMemo, useTransition, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useTransition, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Separator } from "@/components/ui/separator";
 import {
-  Calculator, Save, Send, AlertTriangle, CheckCircle2, Info, DollarSign,
-  FileText, Receipt, Download, Share2,
+  Calculator, Save, Send, AlertTriangle, CheckCircle2,
+  Download, Share2, Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   calcularPresupuestoAction,
   guardarPresupuesto,
   cambiarEstadoPresupuesto,
+  getPresupuesto,
 } from "@/app/actions/presupuestos";
-import type { PresupuestoInput, PresupuestoResult, LineaPresupuesto, Pagador } from "@/lib/services/PresupuestoEngine";
-import { generarPresupuestoPdf } from "@/lib/pdf/presupuestoPdf";
+import type { PresupuestoInput, PresupuestoResult } from "@/lib/services/PresupuestoEngine";
+import { generarPresupuestoMultiActPdf } from "@/lib/pdf/presupuestoPdf";
 import { CompartirPresupuestoDialog } from "@/components/CompartirPresupuestoDialog";
+import type { ActoFormState, PresupuestoMultiActResult, LineaConIVA } from "@/lib/presupuesto/types";
+import { DEFAULTS, calcDiligenciamientos, calcEstudioTitulos, classifyIVA } from "@/lib/presupuesto/types";
+import { aggregatePresupuesto, type ActoEngineResult } from "@/lib/presupuesto/actoAggregator";
+import ActoPresupuestoItem from "@/components/presupuesto/ActoPresupuestoItem";
+import ResumenPresupuesto from "@/components/presupuesto/ResumenPresupuesto";
+import DiscriminacionPartes from "@/components/presupuesto/DiscriminacionPartes";
 
 // ─── Helpers ──────────────────────────────────────────────
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
-const fmtUsd = (n: number) =>
-  new Intl.NumberFormat("es-AR", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+function createBlankActo(seed?: any): ActoFormState {
+  const montoArs = seed?.monto_operacion
+    ? (seed.moneda_operacion === "USD" && seed.cotizacion_usd
+      ? seed.monto_operacion * seed.cotizacion_usd
+      : seed.monto_operacion)
+    : 0;
 
-const PAGADOR_COLORS: Record<Pagador, string> = {
-  COMPRADOR: "bg-blue-100 text-blue-800",
-  VENDEDOR: "bg-orange-100 text-orange-800",
-  DEUDOR: "bg-blue-100 text-blue-800",
-  ACREEDOR: "bg-purple-100 text-purple-800",
-  NOTARIO: "bg-green-100 text-green-800",
-  COMUN: "bg-slate-100 text-slate-700",
-  ESCRIBANIA: "bg-emerald-100 text-emerald-800",
-};
+  return {
+    id: crypto.randomUUID(),
+    tipoActo: seed?.tipo_acto?.toUpperCase() ?? "COMPRAVENTA",
+    codigoCesba: seed?.codigo_cesba ?? "",
+    fechaEscritura: "",
+    cotizacionUsd: seed?.cotizacion_usd ?? 1200,
+    montoEscrituraArs: montoArs,
+    montoEscrituraUsd: seed?.moneda_operacion === "USD" ? (seed?.monto_operacion ?? 0) : 0,
+    valuacionFiscal: seed?.inmuebles?.[0]?.valuacion_fiscal ?? 0,
+    valuacionFiscalAlActo: 0,
+    montoRealArs: montoArs,
+    montoRealUsd: seed?.moneda_operacion === "USD" ? (seed?.monto_operacion ?? 0) : 0,
+    cantidadInmuebles: seed?.inmuebles?.length ?? DEFAULTS.cantidadInmuebles,
+    cantidadTransmitentes: seed?.participantes_operacion?.length ?? DEFAULTS.cantidadTransmitentes,
+    certificados: DEFAULTS.certificados,
+    certAdministrativos: DEFAULTS.certAdministrativosPorInmueble * (seed?.inmuebles?.length ?? 1),
+    selladosEscMatriz: DEFAULTS.selladosEscMatriz,
+    confeccionMatricula: DEFAULTS.confeccionMatriculaPorInmueble * (seed?.inmuebles?.length ?? 1),
+    diligenciamientos: calcDiligenciamientos(montoArs),
+    procuracion: DEFAULTS.procuracion,
+    estudioTitulos: calcEstudioTitulos(montoArs),
+    agenteRetencion: DEFAULTS.agenteRetencion,
+    tipoInmueble: seed?.inmuebles?.[0]?.tipo_inmueble ?? "EDIFICADO",
+    esViviendaUnica: !!seed?.es_vivienda_unica,
+    jurisdiccion: "PBA",
+    honorariosPct: DEFAULTS.honorariosPct,
+    honorariosFijo: null,
+    overrides: new Set(),
+  };
+}
 
-const CATEGORIA_ICONS: Record<string, typeof Calculator> = {
-  IMPUESTO: Receipt,
-  TASA: FileText,
-  HONORARIO: DollarSign,
-  APORTE: Receipt,
-  CERTIFICADO: FileText,
-  GASTO_ADMIN: FileText,
-};
-
-const HONORARIOS_OPCIONES = [
-  { value: "0.01", label: "1%" },
-  { value: "0.015", label: "1.5%" },
-  { value: "0.02", label: "2% (Colegio)" },
-  { value: "custom", label: "Monto fijo" },
-];
-
-const TIPOS_ACTO = [
-  { value: "COMPRAVENTA", label: "Compraventa" },
-  { value: "HIPOTECA", label: "Hipoteca" },
-  { value: "DONACION", label: "Donación" },
-  { value: "CESION", label: "Cesión" },
-  { value: "PODER", label: "Poder" },
-  { value: "ACTA", label: "Acta" },
-  { value: "DIVISION_CONDOMINIO", label: "División de Condominio" },
-  { value: "AFECTACION_BIEN_FAMILIA", label: "Afectación Bien de Familia" },
-  { value: "USUFRUCTO", label: "Usufructo" },
-  { value: "FIDEICOMISO", label: "Fideicomiso" },
-  { value: "CANCELACION_HIPOTECA", label: "Cancelación de Hipoteca" },
-];
+function restoreActoFromJson(saved: any): ActoFormState {
+  return {
+    ...saved,
+    overrides: new Set(saved.overrides ?? []),
+  };
+}
 
 // ─── Props ────────────────────────────────────────────────
 
@@ -82,124 +84,121 @@ interface PresupuestoTabProps {
 // ─── Component ────────────────────────────────────────────
 
 export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresupuesto }: PresupuestoTabProps) {
-  // Auto-seed from carpeta/operación/inmueble/participantes
-  const op = currentEscritura?.operaciones?.[0];
-  const inmueble = op?.inmuebles?.[0] ?? currentEscritura?.inmuebles?.[0];
-  const participantes = op?.participantes_operacion ?? [];
+  const ops = currentEscritura?.operaciones ?? [];
 
-  // ── Form State ──
-  const [tipoActo, setTipoActo] = useState("COMPRAVENTA");
-  const [monto, setMonto] = useState("");
-  const [moneda, setMoneda] = useState<"ARS" | "USD">("USD");
-  const [cotUsd, setCotUsd] = useState("1200");
-  const [vf, setVf] = useState("");
-  const [tipoInmueble, setTipoInmueble] = useState<"EDIFICADO" | "BALDIO" | "RURAL">("EDIFICADO");
-  const [jurisdiccion, setJurisdiccion] = useState<"PBA" | "CABA">("PBA");
-  const [esVU, setEsVU] = useState(false);
-  const [esBcoProv, setEsBcoProv] = useState(false);
-  const [fechaAdq, setFechaAdq] = useState("");
-  const [urgencia, setUrgencia] = useState<"simple" | "urgente" | "en_el_dia">("simple");
-  const [cantInmuebles, setCantInmuebles] = useState("1");
-  const [cantPersonas, setCantPersonas] = useState("2");
-  const [honorariosTipo, setHonorariosTipo] = useState("0.02");
-  const [honorariosFijo, setHonorariosFijo] = useState("");
-  const [cantLeg, setCantLeg] = useState("0");
-  const [cantApo, setCantApo] = useState("0");
-  const [cantFolios, setCantFolios] = useState("0");
-  const [cantTestimonios, setCantTestimonios] = useState("0");
-  const [parentescoItg, setParentescoItg] = useState<"FAMILIA" | "OTROS_ASC_DESC" | "COLATERALES_2DO" | "COLATERALES_3_4">("FAMILIA");
-
-  // ── Results ──
-  const [resultado, setResultado] = useState<PresupuestoResult | null>(null);
-  const [presupuestoGuardado, setPresupuestoGuardado] = useState(savedPresupuesto ?? null);
-  const [isPending, startTransition] = useTransition();
-
-  const [shareOpen, setShareOpen] = useState(false);
-
-  const esHipoteca = tipoActo === "HIPOTECA";
-  const esDonacion = tipoActo === "DONACION";
-
-  // ── Pre-carga automática ──
-  // Solo al montar, si no hay presupuesto guardado
-  useEffect(() => {
-    if (!presupuestoGuardado) {
-      // Tipo de acto
-      if (op?.tipo_acto) setTipoActo(op.tipo_acto.toUpperCase());
-      // Monto
-      if (op?.monto_operacion) setMonto(op.monto_operacion.toString());
-      // Moneda
-      if (op?.moneda_operacion) setMoneda(op.moneda_operacion);
-      // Cotización USD
-      if (op?.cotizacion_usd) setCotUsd(op.cotizacion_usd.toString());
-      // Valuación fiscal
-      if (inmueble?.valuacion_fiscal) setVf(inmueble.valuacion_fiscal.toString());
-      // Tipo inmueble
-      if (inmueble?.tipo_inmueble) setTipoInmueble(inmueble.tipo_inmueble);
-      // Cantidad de inmuebles
-      setCantInmuebles(op?.inmuebles?.length?.toString() || "1");
-      // Cantidad de personas
-      setCantPersonas(participantes.length?.toString() || "2");
-      // Partido/jurisdicción
-      if (inmueble?.partido_code) setJurisdiccion("PBA");
-      if (inmueble?.delegacion_code) setJurisdiccion("PBA");
-      // Vivienda única
-      if (op?.es_vivienda_unica) setEsVU(!!op.es_vivienda_unica);
-      // Banco Provincia
-      if (op?.es_banco_provincia) setEsBcoProv(!!op.es_banco_provincia);
-      // Fecha adquisición
-      if (op?.fecha_adquisicion_vendedor) setFechaAdq(op.fecha_adquisicion_vendedor);
-      // Urgencia
-      if (op?.urgencia_rpi) setUrgencia(op.urgencia_rpi);
-      // Honorarios
-      if (op?.honorarios_pct) setHonorariosTipo(op.honorarios_pct.toString());
-      if (op?.honorarios_fijo) setHonorariosFijo(op.honorarios_fijo.toString());
-      // Legalizaciones/apostillas
-      if (op?.cantidad_legalizaciones) setCantLeg(op.cantidad_legalizaciones.toString());
-      if (op?.cantidad_apostillas) setCantApo(op.cantidad_apostillas.toString());
-      if (op?.cantidad_folios) setCantFolios(op.cantidad_folios.toString());
-      if (op?.cantidad_testimonios) setCantTestimonios(op.cantidad_testimonios.toString());
-    }
-  }, [currentEscritura]);
-
-  // ── Build input ──
-  const buildInput = (): PresupuestoInput => ({
-    tipo_acto: tipoActo,
-    monto_operacion: parseFloat(monto) || 0,
-    moneda,
-    cotizacion_usd: moneda === "USD" ? parseFloat(cotUsd) || 1200 : undefined,
-    valuacion_fiscal: parseFloat(vf) || 0,
-    tipo_inmueble: tipoInmueble,
-    jurisdiccion,
-    es_vivienda_unica: esVU,
-    es_banco_provincia: esBcoProv,
-    fecha_adquisicion_vendedor: fechaAdq || undefined,
-    urgencia_rpi: urgencia,
-    cantidad_inmuebles: parseInt(cantInmuebles) || 1,
-    cantidad_personas: parseInt(cantPersonas) || 2,
-    honorarios_pct: honorariosTipo !== "custom" ? parseFloat(honorariosTipo) : undefined,
-    honorarios_fijo: honorariosTipo === "custom" ? parseFloat(honorariosFijo) || 0 : undefined,
-    cantidad_legalizaciones: parseInt(cantLeg) || 0,
-    cantidad_apostillas: parseInt(cantApo) || 0,
-    cantidad_folios: parseInt(cantFolios) || 0,
-    cantidad_testimonios: parseInt(cantTestimonios) || 0,
-    parentesco_itg: esDonacion ? parentescoItg : undefined,
+  const [actos, setActos] = useState<ActoFormState[]>(() => {
+    if (ops.length > 0) return ops.map((op: any) => createBlankActo(op));
+    return [createBlankActo()];
   });
 
-  // ── Actions ──
+  const [jurisdiccion, setJurisdiccion] = useState<"PBA" | "CABA">("PBA");
+  const [resultado, setResultado] = useState<PresupuestoMultiActResult | null>(null);
+  const [engineLinesByActo, setEngineLinesByActo] = useState<Map<number, LineaConIVA[]>>(new Map());
+  const [presupuestoGuardado, setPresupuestoGuardado] = useState(savedPresupuesto ?? null);
+  const [isPending, startTransition] = useTransition();
+  const [shareOpen, setShareOpen] = useState(false);
+
+  // ── Load saved presupuesto on mount ──
+  useEffect(() => {
+    getPresupuesto(carpetaId).then(res => {
+      if (res.success && res.data) {
+        setPresupuestoGuardado(res.data);
+        // Restore actos from actos_json if available
+        const savedActos = res.data.actos_json;
+        if (Array.isArray(savedActos) && savedActos.length > 0) {
+          setActos(savedActos.map(restoreActoFromJson));
+        }
+      }
+    });
+  }, [carpetaId]);
+
+  // ── Acto mutations ──
+
+  const updateActo = useCallback((index: number, updates: Partial<ActoFormState>) => {
+    setActos(prev => {
+      const next = [...prev];
+      const merged = { ...next[index], ...updates };
+
+      // Auto-recalc formulas when monto or cantidadInmuebles change
+      if ("montoEscrituraArs" in updates || "cantidadInmuebles" in updates) {
+        const ov = merged.overrides;
+        if (!ov.has("certAdministrativos"))
+          merged.certAdministrativos = DEFAULTS.certAdministrativosPorInmueble * merged.cantidadInmuebles;
+        if (!ov.has("confeccionMatricula"))
+          merged.confeccionMatricula = DEFAULTS.confeccionMatriculaPorInmueble * merged.cantidadInmuebles;
+        if (!ov.has("diligenciamientos"))
+          merged.diligenciamientos = calcDiligenciamientos(merged.montoEscrituraArs);
+        if (!ov.has("estudioTitulos"))
+          merged.estudioTitulos = calcEstudioTitulos(merged.montoEscrituraArs);
+      }
+
+      next[index] = merged;
+      return next;
+    });
+  }, []);
+
+  const addActo = () => setActos(prev => [...prev, createBlankActo()]);
+  const removeActo = (index: number) => setActos(prev => prev.filter((_, i) => i !== index));
+
+  // ── Build engine input ──
+
+  const buildEngineInput = (acto: ActoFormState): PresupuestoInput => ({
+    tipo_acto: acto.tipoActo,
+    codigo_cesba: acto.codigoCesba || undefined,
+    monto_operacion: acto.montoRealArs || acto.montoEscrituraArs,
+    moneda: "ARS",
+    valuacion_fiscal: acto.valuacionFiscal,
+    tipo_inmueble: acto.tipoInmueble,
+    es_vivienda_unica: acto.esViviendaUnica,
+    jurisdiccion,
+    urgencia_rpi: acto.certificados,
+    cantidad_inmuebles: acto.cantidadInmuebles,
+    cantidad_personas: acto.cantidadTransmitentes,
+    honorarios_pct: acto.honorariosFijo === null ? acto.honorariosPct : undefined,
+    honorarios_fijo: acto.honorariosFijo ?? undefined,
+  });
+
+  // ── Calculate ──
+
   const handleCalcular = () => {
     startTransition(async () => {
-      const res = await calcularPresupuestoAction(buildInput());
-      if (res.success && res.data) {
-        setResultado(res.data);
-      } else {
-        toast.error(res.error ?? "Error al calcular");
+      try {
+        const actosResults: ActoEngineResult[] = [];
+        const linesByActo = new Map<number, LineaConIVA[]>();
+
+        for (let i = 0; i < actos.length; i++) {
+          const input = buildEngineInput(actos[i]);
+          const res = await calcularPresupuestoAction(input);
+          if (!res.success || !res.data) {
+            toast.error(`Error en Acto ${i + 1}: ${res.error}`);
+            return;
+          }
+          actosResults.push({ actoIndex: i, acto: actos[i], engineResult: res.data });
+
+          const tagged: LineaConIVA[] = res.data.lineas.map(l => ({
+            ...l,
+            iva: classifyIVA(l.rubro),
+            actoIndex: i,
+          }));
+          linesByActo.set(i, tagged);
+        }
+
+        setResultado(aggregatePresupuesto(actosResults));
+        setEngineLinesByActo(linesByActo);
+      } catch (e: any) {
+        toast.error(e.message ?? "Error al calcular");
       }
     });
   };
 
+  // ── Save ──
+
   const handleGuardar = () => {
     startTransition(async () => {
-      const res = await guardarPresupuesto(carpetaId, buildInput());
+      const input = buildEngineInput(actos[0]);
+      // Serialize actos for multi-act persistence (strip Set for JSON compat)
+      const actosJson = actos.map(a => ({ ...a, overrides: [...a.overrides] }));
+      const res = await guardarPresupuesto(carpetaId, input, actosJson);
       if (res.success) {
         toast.success(`Presupuesto v${presupuestoGuardado ? (presupuestoGuardado.version ?? 0) + 1 : 1} guardado`);
         setPresupuestoGuardado({ id: res.presupuestoId, estado: "BORRADOR" });
@@ -235,11 +234,8 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
     });
   };
 
-  // ── Totals by pagador ──
-  const totalesPorPagador = useMemo(() => {
-    if (!resultado) return {};
-    return resultado.totales.por_pagador;
-  }, [resultado]);
+  // Legacy PresupuestoResult for PDF/share backward compat
+  const legacyResult = resultado?.actosResults[0]?.engineResult ?? null;
 
   // ─── RENDER ─────────────────────────────────────────────
 
@@ -260,182 +256,48 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
         )}
       </div>
 
-      {/* ── Formulario ── */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Datos de la Operación</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Tipo de Acto */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Tipo de Acto</Label>
-              <Select value={tipoActo} onValueChange={setTipoActo}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {TIPOS_ACTO.map(t => (
-                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Global config */}
+      <div className="flex items-end gap-4 flex-wrap">
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Jurisdicción</Label>
+          <Select value={jurisdiccion} onValueChange={(v: "PBA" | "CABA") => setJurisdiccion(v)}>
+            <SelectTrigger className="h-8 w-44 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PBA">Prov. Buenos Aires</SelectItem>
+              <SelectItem value="CABA">CABA</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-            {/* Monto */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Monto de la Operación</Label>
-              <div className="flex gap-2">
-                <Input type="number" placeholder="100000" value={monto} onChange={e => setMonto(e.target.value)} className="h-9 flex-1" />
-                <Select value={moneda} onValueChange={(v: "ARS" | "USD") => setMoneda(v)}>
-                  <SelectTrigger className="w-[75px] h-9"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="ARS">ARS</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+      {/* Actos list */}
+      <div className="space-y-3">
+        {actos.map((acto, i) => (
+          <ActoPresupuestoItem
+            key={acto.id}
+            index={i}
+            acto={acto}
+            engineLines={engineLinesByActo.get(i)}
+            canDelete={actos.length > 1}
+            onChange={updates => updateActo(i, updates)}
+            onDelete={() => removeActo(i)}
+          />
+        ))}
 
-            {/* Cotización */}
-            {moneda === "USD" && (
-              <div className="space-y-1.5">
-                <Label className="text-xs">Cotización USD</Label>
-                <Input type="number" value={cotUsd} onChange={e => setCotUsd(e.target.value)} className="h-9" />
-              </div>
-            )}
+        <Button variant="outline" size="sm" onClick={addActo} className="gap-1">
+          <Plus className="h-3.5 w-3.5" /> Agregar Acto
+        </Button>
+      </div>
 
-            {/* Valuación Fiscal */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Valuación Fiscal (ARS)</Label>
-              <Input type="number" value={vf} onChange={e => setVf(e.target.value)} placeholder="50000000" className="h-9" />
-            </div>
+      {/* Calculate button */}
+      <Button onClick={handleCalcular} disabled={isPending}>
+        <Calculator className="h-4 w-4 mr-2" />
+        {isPending ? "Calculando..." : `Calcular Presupuesto (${actos.length} acto${actos.length > 1 ? "s" : ""})`}
+      </Button>
 
-            {/* Tipo Inmueble */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Tipo de Inmueble</Label>
-              <Select value={tipoInmueble} onValueChange={(v: any) => setTipoInmueble(v)}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="EDIFICADO">Edificado</SelectItem>
-                  <SelectItem value="BALDIO">Baldío</SelectItem>
-                  <SelectItem value="RURAL">Rural</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Jurisdicción */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Jurisdicción</Label>
-              <Select value={jurisdiccion} onValueChange={(v: "PBA" | "CABA") => setJurisdiccion(v)}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PBA">Prov. Buenos Aires</SelectItem>
-                  <SelectItem value="CABA">CABA</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Honorarios */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Honorarios</Label>
-              <Select value={honorariosTipo} onValueChange={setHonorariosTipo}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {HONORARIOS_OPCIONES.map(h => (
-                    <SelectItem key={h.value} value={h.value}>{h.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {honorariosTipo === "custom" && (
-              <div className="space-y-1.5">
-                <Label className="text-xs">Honorarios fijo (ARS)</Label>
-                <Input type="number" value={honorariosFijo} onChange={e => setHonorariosFijo(e.target.value)} className="h-9" />
-              </div>
-            )}
-
-            {/* Urgencia / Cantidades */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Urgencia RPI</Label>
-              <Select value={urgencia} onValueChange={(v: any) => setUrgencia(v)}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="simple">Simple</SelectItem>
-                  <SelectItem value="urgente">Urgente</SelectItem>
-                  <SelectItem value="en_el_dia">En el día</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Cant. Inmuebles</Label>
-              <Input type="number" min={1} value={cantInmuebles} onChange={e => setCantInmuebles(e.target.value)} className="h-9" />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Cant. Personas</Label>
-              <Input type="number" min={1} value={cantPersonas} onChange={e => setCantPersonas(e.target.value)} className="h-9" />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Folios de Protocolo</Label>
-              <Input type="number" min={0} value={cantFolios} onChange={e => setCantFolios(e.target.value)} className="h-9" />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Testimonios</Label>
-              <Input type="number" min={0} value={cantTestimonios} onChange={e => setCantTestimonios(e.target.value)} className="h-9" />
-            </div>
-
-            {esDonacion && (
-              <div className="space-y-1.5">
-                <Label className="text-xs">Parentesco (ITG)</Label>
-                <Select value={parentescoItg} onValueChange={(v: any) => setParentescoItg(v)}>
-                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="FAMILIA">Padres/Hijos/Cónyuge</SelectItem>
-                    <SelectItem value="OTROS_ASC_DESC">Otros asc./desc.</SelectItem>
-                    <SelectItem value="COLATERALES_2DO">Colaterales 2do grado</SelectItem>
-                    <SelectItem value="COLATERALES_3_4">Colat. 3ro-4to / Extraños</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-
-          {/* Switches */}
-          <div className="flex flex-wrap gap-x-6 gap-y-3 pt-2">
-            <div className="flex items-center gap-2">
-              <Switch id="vu" checked={esVU} onCheckedChange={setEsVU} />
-              <Label htmlFor="vu" className="text-xs">Vivienda Única</Label>
-            </div>
-            {esHipoteca && (
-              <div className="flex items-center gap-2">
-                <Switch id="bcoprov" checked={esBcoProv} onCheckedChange={setEsBcoProv} />
-                <Label htmlFor="bcoprov" className="text-xs">Bco. Provincia</Label>
-              </div>
-            )}
-          </div>
-
-          {!esHipoteca && (
-            <div className="space-y-1.5 max-w-xs">
-              <Label className="text-xs">Fecha adquisición vendedor</Label>
-              <Input type="date" value={fechaAdq} onChange={e => setFechaAdq(e.target.value)} className="h-9" />
-            </div>
-          )}
-
-          {/* Botón Calcular */}
-          <Button onClick={handleCalcular} disabled={isPending} className="mt-2">
-            <Calculator className="h-4 w-4 mr-2" />
-            {isPending ? "Calculando..." : "Calcular Presupuesto"}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* ── Resultado ── */}
+      {/* ── Results ── */}
       {resultado && (
         <>
-          {/* Alertas */}
           {resultado.alertas.length > 0 && (
             <div className="space-y-2">
               {resultado.alertas.map((a, i) => (
@@ -447,95 +309,8 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
             </div>
           )}
 
-          {/* Tabla de desglose */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">
-                  Desglose — {resultado.metadata.descripcion_acto}
-                  <span className="text-xs text-muted-foreground ml-2">({resultado.metadata.codigo_acto})</span>
-                </CardTitle>
-                <Badge variant="outline" className="text-xs">
-                  Base: {fmt(resultado.metadata.base_imponible)}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[40%]">Concepto</TableHead>
-                    <TableHead className="text-right">Alícuota</TableHead>
-                    <TableHead className="text-right">Monto</TableHead>
-                    <TableHead>Pagador</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {resultado.lineas.map((l, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="text-sm">
-                        {l.concepto}
-                        {l.notas && (
-                          <p className="text-[10px] text-muted-foreground mt-0.5">{l.notas}</p>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {l.alicuota ? `${(l.alicuota * 100).toFixed(2)}%` : "Fijo"}
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-sm tabular-nums">
-                        {fmt(l.monto)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className={`text-[10px] ${PAGADOR_COLORS[l.pagador]}`}>
-                          {l.pagador}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-
-                  {/* Total row */}
-                  <TableRow className="font-bold border-t-2">
-                    <TableCell colSpan={2} className="text-right">TOTAL ESTIMADO</TableCell>
-                    <TableCell className="text-right text-base tabular-nums">
-                      {fmt(resultado.totales.total)}
-                    </TableCell>
-                    <TableCell />
-                  </TableRow>
-
-                  {moneda === "USD" && cotUsd && (
-                    <TableRow>
-                      <TableCell colSpan={2} className="text-right text-muted-foreground text-xs">
-                        Equiv. USD (BNA {cotUsd})
-                      </TableCell>
-                      <TableCell className="text-right text-xs tabular-nums text-muted-foreground">
-                        {fmtUsd(resultado.totales.total / (parseFloat(cotUsd) || 1))}
-                      </TableCell>
-                      <TableCell />
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-
-          {/* Resumen por Pagador */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Resumen por Pagador</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {Object.entries(totalesPorPagador).map(([pagador, monto]) => (
-                  <div key={pagador} className="rounded-lg border p-3 space-y-1">
-                    <Badge variant="secondary" className={`text-[10px] ${PAGADOR_COLORS[pagador as Pagador]}`}>
-                      {pagador}
-                    </Badge>
-                    <p className="text-lg font-semibold tabular-nums">{fmt(monto as number)}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <ResumenPresupuesto result={resultado} />
+          <DiscriminacionPartes discriminacion={resultado.discriminacion} />
 
           {/* Action buttons */}
           <div className="flex gap-3 flex-wrap">
@@ -546,8 +321,8 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
 
             <Button
               variant="outline"
-              onClick={() => generarPresupuestoPdf({
-                result: resultado!,
+              onClick={() => generarPresupuestoMultiActPdf({
+                result: resultado,
                 version: presupuestoGuardado?.version,
               })}
             >
@@ -558,43 +333,44 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
               <Share2 className="h-4 w-4 mr-2" /> Compartir
             </Button>
 
-            {presupuestoGuardado && presupuestoGuardado.estado === "BORRADOR" && (
+            {presupuestoGuardado?.estado === "BORRADOR" && (
               <Button onClick={handleEnviar} disabled={isPending} variant="secondary">
                 <Send className="h-4 w-4 mr-2" /> Marcar como Enviado
               </Button>
             )}
 
-            {presupuestoGuardado && presupuestoGuardado.estado === "ENVIADO" && (
+            {presupuestoGuardado?.estado === "ENVIADO" && (
               <Button onClick={handleAceptar} disabled={isPending} variant="secondary">
                 <CheckCircle2 className="h-4 w-4 mr-2" /> Cliente Aceptó
               </Button>
             )}
           </div>
 
-          {/* Footer */}
           <p className="text-[10px] text-muted-foreground">
             Valores según Ley Impositiva PBA 15.558, Tabla CESBA ENE 2026, RPI DTR 13/25.
             Presupuesto estimativo, sujeto a verificación de certificados y condiciones particulares.
           </p>
 
-          {/* Compartir Dialog */}
-          <CompartirPresupuestoDialog
-            open={shareOpen}
-            onOpenChange={setShareOpen}
-            resultado={resultado}
-            participantes={
-              (currentEscritura?.operaciones ?? []).flatMap((op: any) =>
-                (op.participantes_operacion ?? []).map((po: any) => {
-                  const persona = po.persona ?? po.personas;
-                  return {
-                    nombre_completo: persona?.nombre_completo ?? "Sin nombre",
-                    contacto: persona?.contacto,
-                    rol: po.rol ?? "PARTE",
-                  };
-                })
-              )
-            }
-          />
+          {legacyResult && (
+            <CompartirPresupuestoDialog
+              open={shareOpen}
+              onOpenChange={setShareOpen}
+              resultado={legacyResult}
+              multiActResult={resultado}
+              participantes={
+                (currentEscritura?.operaciones ?? []).flatMap((op: any) =>
+                  (op.participantes_operacion ?? []).map((po: any) => {
+                    const persona = po.persona ?? po.personas;
+                    return {
+                      nombre_completo: persona?.nombre_completo ?? "Sin nombre",
+                      contacto: persona?.contacto,
+                      rol: po.rol ?? "PARTE",
+                    };
+                  })
+                )
+              }
+            />
+          )}
         </>
       )}
     </div>

@@ -13,6 +13,7 @@ import { MessageCircle, Mail, Copy, Check, Phone, User, Share2 } from "lucide-re
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { PresupuestoResult, Pagador } from "@/lib/services/PresupuestoEngine";
+import type { PresupuestoMultiActResult } from "@/lib/presupuesto/types";
 
 /** Title-case a "GARCIA LOPEZ, JUAN MARTIN" → "García López, Juan Martín" style name */
 function formatPersonName(raw: string): string {
@@ -34,6 +35,7 @@ interface CompartirPresupuestoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   resultado: PresupuestoResult;
+  multiActResult?: PresupuestoMultiActResult;
   participantes: Participante[];
   escribania?: string;
 }
@@ -83,19 +85,52 @@ function buildResumenTexto(r: PresupuestoResult, escribania?: string): string {
   return lines.join("\n");
 }
 
+function buildResumenMultiActo(r: PresupuestoMultiActResult, escribania?: string): string {
+  const lines: string[] = [];
+
+  if (escribania) lines.push(`*${escribania}*`);
+  lines.push("*PRESUPUESTO DE GASTOS ESCRITURARIOS*");
+  lines.push("");
+
+  for (const acto of r.actosResults) {
+    const subtotal = acto.engineResult.totales.total +
+      acto.lineasFormulario.reduce((s, l) => s + l.monto, 0);
+    lines.push(`*Acto ${acto.actoIndex + 1}: ${acto.tipoActo}* — ${fmt(subtotal)}`);
+  }
+  lines.push("");
+
+  lines.push("*Exentos IVA:* " + fmt(r.ivaBreakdown.subtotalExentos));
+  lines.push("*Gravados:* " + fmt(r.ivaBreakdown.subtotalGravados));
+  lines.push("*IVA 21%:* " + fmt(r.ivaBreakdown.ivaAmount));
+  lines.push("");
+
+  lines.push(`*Vendedor:* ${fmt(r.discriminacion.vendedor.total)}`);
+  lines.push(`*Comprador:* ${fmt(r.discriminacion.comprador.total)}`);
+  lines.push("");
+
+  lines.push(`*TOTAL CON IVA: ${fmt(r.ivaBreakdown.totalConIva)}*`);
+  lines.push("");
+  lines.push("_Presupuesto orientativo sujeto a verificación. Fuentes: Ley Impositiva PBA 2026, DTR 13/25 (RPI), CESBA._");
+
+  return lines.join("\n");
+}
+
 // ─── Component ────────────────────────────────────────────
 
 export function CompartirPresupuestoDialog({
   open,
   onOpenChange,
   resultado,
+  multiActResult,
   participantes,
   escribania,
 }: CompartirPresupuestoDialogProps) {
   const [copied, setCopied] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
-  const resumenTexto = buildResumenTexto(resultado, escribania);
+  const resumenTexto = multiActResult
+    ? buildResumenMultiActo(multiActResult, escribania)
+    : buildResumenTexto(resultado, escribania);
 
   const contactos = participantes.filter(
     (p) => p.contacto?.telefono || p.contacto?.email
