@@ -16,7 +16,6 @@ import { getRecipe, evaluateRecipe } from "@/lib/presupuesto/recipeEngine";
 import type { RecipeResult } from "@/lib/presupuesto/recipeEngine";
 import ActoPresupuestoItem from "@/components/presupuesto/ActoPresupuestoItem";
 import ResumenPresupuesto from "@/components/presupuesto/ResumenPresupuesto";
-import DiscriminacionPartes from "@/components/presupuesto/DiscriminacionPartes";
 
 // ─── Helpers ──────────────────────────────────────────────
 
@@ -262,7 +261,6 @@ export default function PresupuestoStandalone() {
           )}
 
           <ResumenPresupuesto result={resultado} />
-          <DiscriminacionPartes discriminacion={resultado.discriminacion} />
 
           {/* Action buttons */}
           <div className="flex gap-3 flex-wrap">
