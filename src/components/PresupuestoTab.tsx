@@ -48,7 +48,7 @@ function createBlankActo(seed?: any): ActoFormState {
     montoRealArs: montoArs,
     montoRealUsd: seed?.moneda_operacion === "USD" ? (seed?.monto_operacion ?? 0) : 0,
     cantidadInmuebles: seed?.inmuebles?.length ?? DEFAULTS.cantidadInmuebles,
-    cantidadTransmitentes: seed?.participantes_operacion?.length ?? DEFAULTS.cantidadTransmitentes,
+    cantidadTransmitentes: seed?.participantes_operacion?.length || DEFAULTS.cantidadTransmitentes,
     certificados: DEFAULTS.certificados,
     certAdministrativos: DEFAULTS.certAdministrativosPorInmueble * (seed?.inmuebles?.length ?? 1),
     selladosEscMatriz: DEFAULTS.selladosEscMatriz,
