@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,13 +8,12 @@ import {
   Calculator, AlertTriangle, Download, Share2, Plus,
 } from "lucide-react";
 import { toast } from "sonner";
-import { calcularPresupuestoAction } from "@/app/actions/presupuestos";
-import type { PresupuestoInput } from "@/lib/services/PresupuestoEngine";
 import { generarPresupuestoMultiActPdf } from "@/lib/pdf/presupuestoPdf";
 import { CompartirPresupuestoDialog } from "@/components/CompartirPresupuestoDialog";
-import type { ActoFormState, PresupuestoMultiActResult, LineaConIVA } from "@/lib/presupuesto/types";
-import { DEFAULTS, calcDiligenciamientos, calcEstudioTitulos, classifyIVA } from "@/lib/presupuesto/types";
-import { aggregatePresupuesto, type ActoEngineResult } from "@/lib/presupuesto/actoAggregator";
+import type { ActoFormState, PresupuestoMultiActResult } from "@/lib/presupuesto/types";
+import { DEFAULTS, calcDiligenciamientos, calcEstudioTitulos } from "@/lib/presupuesto/types";
+import { getRecipe, evaluateRecipe } from "@/lib/presupuesto/recipeEngine";
+import type { RecipeResult } from "@/lib/presupuesto/recipeEngine";
 import ActoPresupuestoItem from "@/components/presupuesto/ActoPresupuestoItem";
 import ResumenPresupuesto from "@/components/presupuesto/ResumenPresupuesto";
 import DiscriminacionPartes from "@/components/presupuesto/DiscriminacionPartes";
@@ -36,6 +35,8 @@ function createBlankActo(): ActoFormState {
     montoRealUsd: 0,
     cantidadInmuebles: DEFAULTS.cantidadInmuebles,
     cantidadTransmitentes: DEFAULTS.cantidadTransmitentes,
+    cantidadCertificadosRpi: DEFAULTS.cantidadCertificadosRpi,
+    cantidadFojas: DEFAULTS.cantidadFojas,
     certificados: DEFAULTS.certificados,
     certAdministrativos: DEFAULTS.certAdministrativosPorInmueble,
     selladosEscMatriz: DEFAULTS.selladosEscMatriz,
@@ -49,7 +50,86 @@ function createBlankActo(): ActoFormState {
     jurisdiccion: "PBA",
     honorariosPct: DEFAULTS.honorariosPct,
     honorariosFijo: null,
+    rubroOverrides: new Map(),
     overrides: new Set(),
+  };
+}
+
+/** Convert recipe result to PresupuestoMultiActResult for display components */
+function recipeToMultiActResult(
+  actos: ActoFormState[],
+  recipeResults: RecipeResult[]
+): PresupuestoMultiActResult {
+  const allExentos: { concepto: string; monto: number }[] = [];
+  const allGravados: { concepto: string; monto: number }[] = [];
+  let totalExentos = 0;
+  let totalGravados = 0;
+  let totalIva = 0;
+
+  for (const rr of recipeResults) {
+    for (const r of rr.rubros) {
+      const entry = { concepto: r.label, monto: r.monto };
+      if (r.iva_class === "exento") {
+        allExentos.push(entry);
+        totalExentos += r.monto;
+      } else {
+        allGravados.push(entry);
+        totalGravados += r.monto;
+      }
+    }
+    totalIva += rr.iva;
+  }
+
+  const totalConIva = totalExentos + totalGravados + totalIva;
+
+  // Merge discrimination from all recipes
+  const vendedorItems: { concepto: string; monto: number }[] = [];
+  const compradorItems: { concepto: string; monto: number }[] = [];
+  let vendedorTotal = 0;
+
+  for (const rr of recipeResults) {
+    vendedorItems.push(...rr.discriminacion.vendedor.items);
+    compradorItems.push(...rr.discriminacion.comprador.items);
+    vendedorTotal += rr.discriminacion.vendedor.total;
+  }
+
+  return {
+    actosResults: actos.map((acto, i) => ({
+      actoIndex: i,
+      tipoActo: acto.tipoActo,
+      codigoCesba: acto.codigoCesba,
+      engineResult: {
+        lineas: [],
+        totales: { total: recipeResults[i].total, por_pagador: {}, por_categoria: {} },
+        metadata: {
+          codigo_acto: acto.codigoCesba,
+          descripcion_acto: acto.tipoActo,
+          base_imponible: acto.montoEscrituraArs,
+          moneda_operacion: "ARS",
+          cotizacion_usd: acto.cotizacionUsd,
+          es_vivienda_unica: acto.esViviendaUnica,
+          jurisdiccion: acto.jurisdiccion,
+          fecha_calculo: new Date().toISOString(),
+        },
+        alertas: [],
+      },
+      lineasFormulario: [],
+    })),
+    lineas: [],
+    ivaBreakdown: {
+      exentos: allExentos,
+      gravados: allGravados,
+      subtotalExentos: totalExentos,
+      subtotalGravados: totalGravados,
+      ivaAmount: totalIva,
+      totalConIva,
+    },
+    discriminacion: {
+      vendedor: { items: vendedorItems, total: vendedorTotal },
+      comprador: { items: compradorItems, total: totalConIva - vendedorTotal },
+    },
+    totalGeneral: totalConIva,
+    alertas: [],
   };
 }
 
@@ -59,8 +139,7 @@ export default function PresupuestoStandalone() {
   const [actos, setActos] = useState<ActoFormState[]>([createBlankActo()]);
   const [jurisdiccion, setJurisdiccion] = useState<"PBA" | "CABA">("PBA");
   const [resultado, setResultado] = useState<PresupuestoMultiActResult | null>(null);
-  const [engineLinesByActo, setEngineLinesByActo] = useState<Map<number, LineaConIVA[]>>(new Map());
-  const [isPending, startTransition] = useTransition();
+  const [recipeResults, setRecipeResults] = useState<RecipeResult[]>([]);
   const [shareOpen, setShareOpen] = useState(false);
 
   // ── Acto mutations ──
@@ -68,21 +147,7 @@ export default function PresupuestoStandalone() {
   const updateActo = useCallback((index: number, updates: Partial<ActoFormState>) => {
     setActos(prev => {
       const next = [...prev];
-      const merged = { ...next[index], ...updates };
-
-      if ("montoEscrituraArs" in updates || "cantidadInmuebles" in updates) {
-        const ov = merged.overrides;
-        if (!ov.has("certAdministrativos"))
-          merged.certAdministrativos = DEFAULTS.certAdministrativosPorInmueble * merged.cantidadInmuebles;
-        if (!ov.has("confeccionMatricula"))
-          merged.confeccionMatricula = DEFAULTS.confeccionMatriculaPorInmueble * merged.cantidadInmuebles;
-        if (!ov.has("diligenciamientos"))
-          merged.diligenciamientos = calcDiligenciamientos(merged.montoEscrituraArs);
-        if (!ov.has("estudioTitulos"))
-          merged.estudioTitulos = calcEstudioTitulos(merged.montoEscrituraArs);
-      }
-
-      next[index] = merged;
+      next[index] = { ...next[index], ...updates };
       return next;
     });
   }, []);
@@ -90,55 +155,40 @@ export default function PresupuestoStandalone() {
   const addActo = () => setActos(prev => [...prev, createBlankActo()]);
   const removeActo = (index: number) => setActos(prev => prev.filter((_, i) => i !== index));
 
-  // ── Build engine input ──
-
-  const buildEngineInput = (acto: ActoFormState): PresupuestoInput => ({
-    tipo_acto: acto.tipoActo,
-    codigo_cesba: acto.codigoCesba || undefined,
-    monto_operacion: acto.montoRealArs || acto.montoEscrituraArs,
-    moneda: "ARS",
-    valuacion_fiscal: acto.valuacionFiscal,
-    tipo_inmueble: acto.tipoInmueble,
-    es_vivienda_unica: acto.esViviendaUnica,
-    jurisdiccion,
-    urgencia_rpi: acto.certificados,
-    cantidad_inmuebles: acto.cantidadInmuebles,
-    cantidad_personas: acto.cantidadTransmitentes,
-    honorarios_pct: acto.honorariosFijo === null ? acto.honorariosPct : undefined,
-    honorarios_fijo: acto.honorariosFijo ?? undefined,
-  });
-
-  // ── Calculate ──
+  // ── Calculate using recipe engine ──
 
   const handleCalcular = () => {
-    startTransition(async () => {
-      try {
-        const actosResults: ActoEngineResult[] = [];
-        const linesByActo = new Map<number, LineaConIVA[]>();
+    try {
+      const results: RecipeResult[] = [];
 
-        for (let i = 0; i < actos.length; i++) {
-          const input = buildEngineInput(actos[i]);
-          const res = await calcularPresupuestoAction(input);
-          if (!res.success || !res.data) {
-            toast.error(`Error en Acto ${i + 1}: ${res.error}`);
-            return;
-          }
-          actosResults.push({ actoIndex: i, acto: actos[i], engineResult: res.data });
-
-          const tagged: LineaConIVA[] = res.data.lineas.map(l => ({
-            ...l,
-            iva: classifyIVA(l.rubro),
-            actoIndex: i,
-          }));
-          linesByActo.set(i, tagged);
+      for (const acto of actos) {
+        const recipe = getRecipe(acto.tipoActo);
+        if (!recipe) {
+          toast.error(`No hay receta definida para "${acto.tipoActo}". Solo Compraventa disponible por ahora.`);
+          return;
         }
 
-        setResultado(aggregatePresupuesto(actosResults));
-        setEngineLinesByActo(linesByActo);
-      } catch (e: any) {
-        toast.error(e.message ?? "Error al calcular");
+        const result = evaluateRecipe(
+          recipe,
+          {
+            jurisdiction: jurisdiccion,
+            escritura_ars: acto.montoEscrituraArs,
+            precio_real_usd: acto.montoRealUsd || (acto.montoRealArs / (acto.cotizacionUsd || 1)),
+            cotizacion_bna: acto.cotizacionUsd,
+            cant_inmuebles: acto.cantidadInmuebles,
+            cant_certificados_rpi: acto.cantidadCertificadosRpi,
+            cant_fojas: acto.cantidadFojas,
+          },
+          acto.rubroOverrides.size > 0 ? acto.rubroOverrides : undefined
+        );
+        results.push(result);
       }
-    });
+
+      setRecipeResults(results);
+      setResultado(recipeToMultiActResult(actos, results));
+    } catch (e: any) {
+      toast.error(e.message ?? "Error al calcular");
+    }
   };
 
   const legacyResult = resultado?.actosResults[0]?.engineResult ?? null;
@@ -179,7 +229,7 @@ export default function PresupuestoStandalone() {
             key={acto.id}
             index={i}
             acto={acto}
-            engineLines={engineLinesByActo.get(i)}
+            recipeResult={recipeResults[i]}
             canDelete={actos.length > 1}
             onChange={updates => updateActo(i, updates)}
             onDelete={() => removeActo(i)}
@@ -192,9 +242,9 @@ export default function PresupuestoStandalone() {
       </div>
 
       {/* Calculate button */}
-      <Button onClick={handleCalcular} disabled={isPending}>
+      <Button onClick={handleCalcular}>
         <Calculator className="h-4 w-4 mr-2" />
-        {isPending ? "Calculando..." : `Calcular Presupuesto (${actos.length} acto${actos.length > 1 ? "s" : ""})`}
+        Calcular Presupuesto ({actos.length} acto{actos.length > 1 ? "s" : ""})
       </Button>
 
       {/* ── Results ── */}
@@ -214,7 +264,7 @@ export default function PresupuestoStandalone() {
           <ResumenPresupuesto result={resultado} />
           <DiscriminacionPartes discriminacion={resultado.discriminacion} />
 
-          {/* Action buttons — no save/send for standalone */}
+          {/* Action buttons */}
           <div className="flex gap-3 flex-wrap">
             <Button
               variant="outline"

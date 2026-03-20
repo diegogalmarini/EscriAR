@@ -3,13 +3,14 @@
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { ChevronDown, ChevronRight, ChevronsUpDown, Check, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronsUpDown, Check, Trash2, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ActoFormState } from "@/lib/presupuesto/types";
-import type { LineaConIVA } from "@/lib/presupuesto/types";
 import { CESBA_ACTOS, cesbaCodeToTipoActo } from "@/lib/presupuesto/cesbaActos";
+import type { RecipeResult } from "@/lib/presupuesto/recipeEngine";
 import ActoFormFields from "./ActoFormFields";
 
 const fmt = (n: number) =>
@@ -29,7 +30,7 @@ const GROUPED_ACTOS = (() => {
 interface ActoPresupuestoItemProps {
   index: number;
   acto: ActoFormState;
-  engineLines?: LineaConIVA[];
+  recipeResult?: RecipeResult;
   canDelete: boolean;
   onChange: (updates: Partial<ActoFormState>) => void;
   onDelete: () => void;
@@ -38,7 +39,7 @@ interface ActoPresupuestoItemProps {
 export default function ActoPresupuestoItem({
   index,
   acto,
-  engineLines,
+  recipeResult,
   canDelete,
   onChange,
   onDelete,
@@ -65,6 +66,19 @@ export default function ActoPresupuestoItem({
       esViviendaUnica: cesba.esViviendaUnica,
     });
     setComboOpen(false);
+  };
+
+  // Handle rubro override
+  const handleRubroOverride = (rubroId: string, value: number) => {
+    const newOverrides = new Map(acto.rubroOverrides);
+    newOverrides.set(rubroId, value);
+    onChange({ rubroOverrides: newOverrides });
+  };
+
+  const handleRubroReset = (rubroId: string) => {
+    const newOverrides = new Map(acto.rubroOverrides);
+    newOverrides.delete(rubroId);
+    onChange({ rubroOverrides: newOverrides });
   };
 
   return (
@@ -139,10 +153,10 @@ export default function ActoPresupuestoItem({
           </Badge>
         )}
 
-        {/* Engine results badge */}
-        {engineLines && engineLines.length > 0 && (
+        {/* Recipe total badge */}
+        {recipeResult && (
           <Badge variant="secondary" className="text-[10px]">
-            {engineLines.length} items
+            Total: {fmt(recipeResult.total)}
           </Badge>
         )}
 
@@ -165,23 +179,127 @@ export default function ActoPresupuestoItem({
       {/* Body */}
       {isOpen && (
         <div className="p-4 space-y-4">
-          {/* 7-line form */}
+          {/* Form inputs */}
           <ActoFormFields acto={acto} onChange={onChange} />
 
-          {/* Engine-calculated items preview */}
-          {engineLines && engineLines.length > 0 && (
+          {/* Recipe-calculated rubros */}
+          {recipeResult && recipeResult.rubros.length > 0 && (
             <div className="border-t pt-3 space-y-1">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Items calculados por el motor:</p>
-              {engineLines.map((l, i) => (
-                <div key={i} className="flex items-center justify-between text-sm px-2 py-1 rounded hover:bg-muted/30">
-                  <span className="text-xs">{l.concepto}</span>
-                  <span className="text-xs font-medium tabular-nums">{fmt(l.monto)}</span>
+              <p className="text-xs font-medium text-muted-foreground mb-2">Rubros calculados:</p>
+
+              {/* Exentos */}
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mt-2 mb-1">
+                Exentos de IVA
+              </p>
+              {recipeResult.rubros
+                .filter(r => r.iva_class === "exento")
+                .map(r => (
+                  <RubroLine
+                    key={r.id}
+                    rubro={r}
+                    isOverridden={acto.rubroOverrides.has(r.id)}
+                    onOverride={(val) => handleRubroOverride(r.id, val)}
+                    onReset={() => handleRubroReset(r.id)}
+                  />
+                ))}
+
+              {/* Gravados */}
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mt-3 mb-1">
+                Gravados con IVA (21%)
+              </p>
+              {recipeResult.rubros
+                .filter(r => r.iva_class === "gravado")
+                .map(r => (
+                  <RubroLine
+                    key={r.id}
+                    rubro={r}
+                    isOverridden={acto.rubroOverrides.has(r.id)}
+                    onOverride={(val) => handleRubroOverride(r.id, val)}
+                    onReset={() => handleRubroReset(r.id)}
+                  />
+                ))}
+
+              {/* Totals */}
+              <div className="border-t mt-3 pt-2 space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Subtotal Exentos</span>
+                  <span className="tabular-nums">{fmt(recipeResult.subtotal_exento)}</span>
                 </div>
-              ))}
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Subtotal Gravados</span>
+                  <span className="tabular-nums">{fmt(recipeResult.subtotal_gravado)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">IVA 21%</span>
+                  <span className="tabular-nums">{fmt(recipeResult.iva)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-bold border-t pt-1">
+                  <span>TOTAL</span>
+                  <span className="tabular-nums">{fmt(recipeResult.total)}</span>
+                </div>
+              </div>
             </div>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Inline rubro line with override ─────────────────────
+
+interface RubroLineProps {
+  rubro: { id: string; label: string; monto: number };
+  isOverridden: boolean;
+  onOverride: (val: number) => void;
+  onReset: () => void;
+}
+
+function RubroLine({ rubro, isOverridden, onOverride, onReset }: RubroLineProps) {
+  const [editing, setEditing] = useState(false);
+
+  return (
+    <div className="flex items-center justify-between text-sm px-2 py-1 rounded hover:bg-muted/30 group">
+      <span className="text-xs flex-1">{rubro.label}</span>
+      <div className="flex items-center gap-1">
+        {editing ? (
+          <Input
+            type="number"
+            defaultValue={rubro.monto}
+            onBlur={(e) => {
+              const val = parseFloat(e.target.value) || 0;
+              onOverride(val);
+              setEditing(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+              if (e.key === "Escape") setEditing(false);
+            }}
+            className="h-6 w-32 text-xs text-right"
+            autoFocus
+          />
+        ) : (
+          <span
+            className={cn(
+              "text-xs font-medium tabular-nums cursor-pointer hover:underline",
+              isOverridden && "text-amber-600"
+            )}
+            onClick={() => setEditing(true)}
+            title="Click para editar"
+          >
+            {fmt(rubro.monto)}
+          </span>
+        )}
+        {isOverridden && (
+          <button
+            onClick={onReset}
+            className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Restaurar valor calculado"
+          >
+            <RotateCcw className="h-3 w-3" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }

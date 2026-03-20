@@ -13,37 +13,29 @@ export interface ActoFormState {
   tipoActo: string;         // "COMPRAVENTA", "HIPOTECA", etc.
   codigoCesba: string;       // "100-00"
 
-  // Line 1
+  // Inputs
   fechaEscritura: string;    // YYYY-MM-DD
   cotizacionUsd: number;
   montoEscrituraArs: number;
   montoEscrituraUsd: number;
-
-  // Line 2
   valuacionFiscal: number;
   valuacionFiscalAlActo: number;
   montoRealArs: number;
   montoRealUsd: number;
-
-  // Line 3
   cantidadInmuebles: number;       // default 1
   cantidadTransmitentes: number;   // default 2
+  cantidadCertificadosRpi: number; // default 3
+  cantidadFojas: number;           // default 7
   certificados: "simple" | "urgente" | "en_el_dia"; // default "urgente"
 
-  // Line 4
-  certAdministrativos: number;     // default: 90000 * cantInmuebles
-  selladosEscMatriz: number;       // default: 10962
-
-  // Line 5
-  confeccionMatricula: number;     // default: 125000 * cantInmuebles
-  diligenciamientos: number;       // formula with max
-
-  // Line 6
-  procuracion: number;             // default: 150000
-
-  // Line 7
-  estudioTitulos: number;          // formula, no max
-  agenteRetencion: number;         // default: 334125
+  // Legacy form-level costs (used by old engine fallback)
+  certAdministrativos: number;
+  selladosEscMatriz: number;
+  confeccionMatricula: number;
+  diligenciamientos: number;
+  procuracion: number;
+  estudioTitulos: number;
+  agenteRetencion: number;
 
   // Engine-related fields
   tipoInmueble: "EDIFICADO" | "BALDIO" | "RURAL";
@@ -51,6 +43,9 @@ export interface ActoFormState {
   jurisdiccion: "PBA" | "CABA";
   honorariosPct: number;           // 0.01, 0.015, 0.02
   honorariosFijo: number | null;   // fixed amount override
+
+  // Recipe rubro overrides (rubro_id → fixed amount)
+  rubroOverrides: Map<string, number>;
 
   // Overrides tracking (which fields were manually edited)
   overrides: Set<string>;
@@ -103,6 +98,8 @@ export interface PresupuestoMultiActResult {
 export const DEFAULTS = {
   cantidadInmuebles: 1,
   cantidadTransmitentes: 2,
+  cantidadCertificadosRpi: 3,
+  cantidadFojas: 7,
   certificados: "urgente" as const,
   certAdministrativosPorInmueble: 90000,
   selladosEscMatriz: 10962,  // $6,237 + $4,725

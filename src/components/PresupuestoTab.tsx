@@ -11,17 +11,17 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  calcularPresupuestoAction,
   guardarPresupuesto,
   cambiarEstadoPresupuesto,
   getPresupuesto,
 } from "@/app/actions/presupuestos";
-import type { PresupuestoInput, PresupuestoResult } from "@/lib/services/PresupuestoEngine";
+import type { PresupuestoInput } from "@/lib/services/PresupuestoEngine";
 import { generarPresupuestoMultiActPdf } from "@/lib/pdf/presupuestoPdf";
 import { CompartirPresupuestoDialog } from "@/components/CompartirPresupuestoDialog";
-import type { ActoFormState, PresupuestoMultiActResult, LineaConIVA } from "@/lib/presupuesto/types";
-import { DEFAULTS, calcDiligenciamientos, calcEstudioTitulos, classifyIVA } from "@/lib/presupuesto/types";
-import { aggregatePresupuesto, type ActoEngineResult } from "@/lib/presupuesto/actoAggregator";
+import type { ActoFormState, PresupuestoMultiActResult } from "@/lib/presupuesto/types";
+import { DEFAULTS, calcDiligenciamientos, calcEstudioTitulos } from "@/lib/presupuesto/types";
+import { getRecipe, evaluateRecipe } from "@/lib/presupuesto/recipeEngine";
+import type { RecipeResult } from "@/lib/presupuesto/recipeEngine";
 import ActoPresupuestoItem from "@/components/presupuesto/ActoPresupuestoItem";
 import ResumenPresupuesto from "@/components/presupuesto/ResumenPresupuesto";
 import DiscriminacionPartes from "@/components/presupuesto/DiscriminacionPartes";
@@ -49,6 +49,8 @@ function createBlankActo(seed?: any): ActoFormState {
     montoRealUsd: seed?.moneda_operacion === "USD" ? (seed?.monto_operacion ?? 0) : 0,
     cantidadInmuebles: seed?.inmuebles?.length ?? DEFAULTS.cantidadInmuebles,
     cantidadTransmitentes: seed?.participantes_operacion?.length || DEFAULTS.cantidadTransmitentes,
+    cantidadCertificadosRpi: DEFAULTS.cantidadCertificadosRpi,
+    cantidadFojas: DEFAULTS.cantidadFojas,
     certificados: DEFAULTS.certificados,
     certAdministrativos: DEFAULTS.certAdministrativosPorInmueble * (seed?.inmuebles?.length ?? 1),
     selladosEscMatriz: DEFAULTS.selladosEscMatriz,
@@ -62,6 +64,7 @@ function createBlankActo(seed?: any): ActoFormState {
     jurisdiccion: "PBA",
     honorariosPct: DEFAULTS.honorariosPct,
     honorariosFijo: null,
+    rubroOverrides: new Map(),
     overrides: new Set(),
   };
 }
@@ -69,7 +72,51 @@ function createBlankActo(seed?: any): ActoFormState {
 function restoreActoFromJson(saved: any): ActoFormState {
   return {
     ...saved,
+    cantidadCertificadosRpi: saved.cantidadCertificadosRpi ?? DEFAULTS.cantidadCertificadosRpi,
+    cantidadFojas: saved.cantidadFojas ?? DEFAULTS.cantidadFojas,
+    rubroOverrides: new Map(Object.entries(saved.rubroOverrides ?? {})),
     overrides: new Set(saved.overrides ?? []),
+  };
+}
+
+/** Convert recipe result to PresupuestoMultiActResult for display components */
+function recipeToMultiActResult(
+  actos: ActoFormState[],
+  recipeResults: RecipeResult[]
+): PresupuestoMultiActResult {
+  const allExentos: { concepto: string; monto: number }[] = [];
+  const allGravados: { concepto: string; monto: number }[] = [];
+  let totalExentos = 0, totalGravados = 0, totalIva = 0;
+  for (const rr of recipeResults) {
+    for (const r of rr.rubros) {
+      if (r.iva_class === "exento") { allExentos.push({ concepto: r.label, monto: r.monto }); totalExentos += r.monto; }
+      else { allGravados.push({ concepto: r.label, monto: r.monto }); totalGravados += r.monto; }
+    }
+    totalIva += rr.iva;
+  }
+  const totalConIva = totalExentos + totalGravados + totalIva;
+  const vendedorItems: { concepto: string; monto: number }[] = [];
+  const compradorItems: { concepto: string; monto: number }[] = [];
+  let vendedorTotal = 0;
+  for (const rr of recipeResults) {
+    vendedorItems.push(...rr.discriminacion.vendedor.items);
+    compradorItems.push(...rr.discriminacion.comprador.items);
+    vendedorTotal += rr.discriminacion.vendedor.total;
+  }
+  return {
+    actosResults: actos.map((acto, i) => ({
+      actoIndex: i, tipoActo: acto.tipoActo, codigoCesba: acto.codigoCesba,
+      engineResult: {
+        lineas: [], totales: { total: recipeResults[i].total, por_pagador: {}, por_categoria: {} },
+        metadata: { codigo_acto: acto.codigoCesba, descripcion_acto: acto.tipoActo, base_imponible: acto.montoEscrituraArs, moneda_operacion: "ARS", cotizacion_usd: acto.cotizacionUsd, es_vivienda_unica: acto.esViviendaUnica, jurisdiccion: acto.jurisdiccion, fecha_calculo: new Date().toISOString() },
+        alertas: [],
+      },
+      lineasFormulario: [],
+    })),
+    lineas: [],
+    ivaBreakdown: { exentos: allExentos, gravados: allGravados, subtotalExentos: totalExentos, subtotalGravados: totalGravados, ivaAmount: totalIva, totalConIva },
+    discriminacion: { vendedor: { items: vendedorItems, total: vendedorTotal }, comprador: { items: compradorItems, total: totalConIva - vendedorTotal } },
+    totalGeneral: totalConIva, alertas: [],
   };
 }
 
@@ -93,7 +140,7 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
 
   const [jurisdiccion, setJurisdiccion] = useState<"PBA" | "CABA">("PBA");
   const [resultado, setResultado] = useState<PresupuestoMultiActResult | null>(null);
-  const [engineLinesByActo, setEngineLinesByActo] = useState<Map<number, LineaConIVA[]>>(new Map());
+  const [recipeResults, setRecipeResults] = useState<RecipeResult[]>([]);
   const [presupuestoGuardado, setPresupuestoGuardado] = useState(savedPresupuesto ?? null);
   const [isPending, startTransition] = useTransition();
   const [shareOpen, setShareOpen] = useState(false);
@@ -140,7 +187,7 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
   const addActo = () => setActos(prev => [...prev, createBlankActo()]);
   const removeActo = (index: number) => setActos(prev => prev.filter((_, i) => i !== index));
 
-  // ── Build engine input ──
+  // ── Build engine input (for save compatibility) ──
 
   const buildEngineInput = (acto: ActoFormState): PresupuestoInput => ({
     tipo_acto: acto.tipoActo,
@@ -158,37 +205,40 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
     honorarios_fijo: acto.honorariosFijo ?? undefined,
   });
 
-  // ── Calculate ──
+  // ── Calculate using recipe engine ──
 
   const handleCalcular = () => {
-    startTransition(async () => {
-      try {
-        const actosResults: ActoEngineResult[] = [];
-        const linesByActo = new Map<number, LineaConIVA[]>();
+    try {
+      const results: RecipeResult[] = [];
 
-        for (let i = 0; i < actos.length; i++) {
-          const input = buildEngineInput(actos[i]);
-          const res = await calcularPresupuestoAction(input);
-          if (!res.success || !res.data) {
-            toast.error(`Error en Acto ${i + 1}: ${res.error}`);
-            return;
-          }
-          actosResults.push({ actoIndex: i, acto: actos[i], engineResult: res.data });
-
-          const tagged: LineaConIVA[] = res.data.lineas.map(l => ({
-            ...l,
-            iva: classifyIVA(l.rubro),
-            actoIndex: i,
-          }));
-          linesByActo.set(i, tagged);
+      for (const acto of actos) {
+        const recipe = getRecipe(acto.tipoActo);
+        if (!recipe) {
+          toast.error(`No hay receta para "${acto.tipoActo}". Solo Compraventa disponible.`);
+          return;
         }
 
-        setResultado(aggregatePresupuesto(actosResults));
-        setEngineLinesByActo(linesByActo);
-      } catch (e: any) {
-        toast.error(e.message ?? "Error al calcular");
+        const result = evaluateRecipe(
+          recipe,
+          {
+            jurisdiction: jurisdiccion,
+            escritura_ars: acto.montoEscrituraArs,
+            precio_real_usd: acto.montoRealUsd || (acto.montoRealArs / (acto.cotizacionUsd || 1)),
+            cotizacion_bna: acto.cotizacionUsd,
+            cant_inmuebles: acto.cantidadInmuebles,
+            cant_certificados_rpi: acto.cantidadCertificadosRpi,
+            cant_fojas: acto.cantidadFojas,
+          },
+          acto.rubroOverrides.size > 0 ? acto.rubroOverrides : undefined
+        );
+        results.push(result);
       }
-    });
+
+      setRecipeResults(results);
+      setResultado(recipeToMultiActResult(actos, results));
+    } catch (e: any) {
+      toast.error(e.message ?? "Error al calcular");
+    }
   };
 
   // ── Save ──
@@ -197,7 +247,11 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
     startTransition(async () => {
       const input = buildEngineInput(actos[0]);
       // Serialize actos for multi-act persistence (strip Set for JSON compat)
-      const actosJson = actos.map(a => ({ ...a, overrides: [...a.overrides] }));
+      const actosJson = actos.map(a => ({
+        ...a,
+        overrides: [...a.overrides],
+        rubroOverrides: Object.fromEntries(a.rubroOverrides),
+      }));
       const res = await guardarPresupuesto(carpetaId, input, actosJson);
       if (res.success) {
         toast.success(`Presupuesto v${presupuestoGuardado ? (presupuestoGuardado.version ?? 0) + 1 : 1} guardado`);
@@ -277,7 +331,7 @@ export default function PresupuestoTab({ carpetaId, currentEscritura, savedPresu
             key={acto.id}
             index={i}
             acto={acto}
-            engineLines={engineLinesByActo.get(i)}
+            recipeResult={recipeResults[i]}
             canDelete={actos.length > 1}
             onChange={updates => updateActo(i, updates)}
             onDelete={() => removeActo(i)}
