@@ -19,7 +19,6 @@ export function DashboardActions() {
     const router = useRouter();
     const [creatingFolder, setCreatingFolder] = useState(false);
     const [showDocDialog, setShowDocDialog] = useState(false);
-    const [showPresupDialog, setShowPresupDialog] = useState(false);
 
     // Nuevo Documento flow
     const [docStep, setDocStep] = useState<DocDialogStep>("choose-type");
@@ -151,7 +150,7 @@ export function DashboardActions() {
                 {/* +NUEVO PRESUPUESTO */}
                 <Button
                     variant="outline"
-                    onClick={() => setShowPresupDialog(true)}
+                    onClick={() => router.push("/presupuesto")}
                     className="h-14 text-base font-semibold border-2 border-slate-300 hover:border-slate-400 gap-2"
                 >
                     <Calculator className="h-5 w-5" />
@@ -273,23 +272,6 @@ export function DashboardActions() {
                 </DialogContent>
             </Dialog>
 
-            {/* ── Dialog: Nuevo Presupuesto (placeholder) ── */}
-            <Dialog open={showPresupDialog} onOpenChange={setShowPresupDialog}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Nuevo Presupuesto</DialogTitle>
-                    </DialogHeader>
-                    <div className="py-4 text-center">
-                        <Calculator className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-                        <p className="text-sm text-muted-foreground">
-                            Próximamente podrás crear presupuestos independientes desde aquí.
-                        </p>
-                        <p className="text-xs text-slate-400 mt-2">
-                            En desarrollo
-                        </p>
-                    </div>
-                </DialogContent>
-            </Dialog>
         </>
     );
 }
