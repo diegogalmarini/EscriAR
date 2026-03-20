@@ -3,7 +3,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { RotateCcw } from "lucide-react";
 import type { ActoFormState } from "@/lib/presupuesto/types";
 import { DEFAULTS, calcDiligenciamientos, calcEstudioTitulos } from "@/lib/presupuesto/types";
@@ -326,14 +325,6 @@ export default function ActoFormFields({ acto, onChange }: ActoFormFieldsProps) 
               />
             </div>
           )}
-          <div className="flex items-end gap-2 pb-1">
-            <Switch
-              id={`vu-${acto.id}`}
-              checked={acto.esViviendaUnica}
-              onCheckedChange={v => onChange({ esViviendaUnica: v })}
-            />
-            <Label htmlFor={`vu-${acto.id}`} className="text-xs">Vivienda Única</Label>
-          </div>
         </div>
       </div>
     </div>

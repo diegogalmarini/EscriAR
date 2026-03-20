@@ -1,18 +1,24 @@
 /**
- * Builds the list of CESBA base acts from the taxonomy JSON.
- * Used by the presupuesto Combobox to let the user pick any act.
+ * Builds the full list of CESBA acts (with subcodes) from the taxonomy JSON.
+ * Used by the presupuesto Combobox to let the user pick any act + variant.
  */
 import actsData from "@/data/acts_taxonomy_2026.json";
 
 export interface CesbaActo {
-  /** Base code, e.g. "100" */
+  /** Full code, e.g. "100-00" or "100-51" */
   code: string;
-  /** Primary description, e.g. "COMPRAVENTA" */
+  /** Base code, e.g. "100" */
+  baseCode: string;
+  /** Description, e.g. "COMPRAVENTA" */
   label: string;
   /** REGISTRABLE | NON_REGISTRABLE */
   category: string;
   /** Group label for UI sections */
   group: string;
+  /** Stamp duty rate from taxonomy */
+  stampDutyRate: number;
+  /** Whether this is a vivienda única variant */
+  esViviendaUnica: boolean;
 }
 
 const GROUP_LABELS: Record<number, string> = {
@@ -27,34 +33,42 @@ const GROUP_LABELS: Record<number, string> = {
   900: "Otros",
 };
 
-/** Sorted list of all CESBA base acts (one entry per base code). */
+/** Full list of all 822 CESBA acts with subcodes. */
 export const CESBA_ACTOS: CesbaActo[] = (() => {
-  const data = actsData as Record<string, { description: string; category: string }>;
-  const baseMap = new Map<string, CesbaActo>();
+  const data = actsData as Record<string, {
+    description: string;
+    category: string;
+    tax_variables: { stamp_duty_rate: number };
+  }>;
+
+  const result: CesbaActo[] = [];
 
   for (const fullCode of Object.keys(data)) {
-    const base = fullCode.split("-")[0];
-    if (baseMap.has(base)) continue;
-
     const entry = data[fullCode];
-    const groupKey = Math.floor(parseInt(base) / 100) * 100;
+    const baseCode = fullCode.split("-")[0];
+    const groupKey = Math.floor(parseInt(baseCode) / 100) * 100;
 
-    baseMap.set(base, {
-      code: base,
-      label: entry.description.split("(")[0].split("/")[0].trim(),
+    result.push({
+      code: fullCode,
+      baseCode,
+      label: entry.description,
       category: entry.category,
       group: GROUP_LABELS[groupKey] ?? "Otros",
+      stampDutyRate: entry.tax_variables.stamp_duty_rate,
+      esViviendaUnica: fullCode.endsWith("-51"),
     });
   }
 
-  return Array.from(baseMap.values()).sort(
-    (a, b) => parseInt(a.code) - parseInt(b.code)
-  );
+  return result.sort((a, b) => {
+    const baseA = parseInt(a.baseCode), baseB = parseInt(b.baseCode);
+    if (baseA !== baseB) return baseA - baseB;
+    return a.code.localeCompare(b.code);
+  });
 })();
 
 /**
- * Reverse map: given a CESBA base code, return the engine's operation_type.
- * Falls back to "OTRO" for codes not explicitly mapped.
+ * Reverse map: given a CESBA full code (e.g. "100-51"), return the engine's operation_type.
+ * Uses the base code (first 3 digits) for mapping.
  */
 const CODE_TO_TIPO: Record<string, string> = {
   "100": "COMPRAVENTA", "102": "COMPRAVENTA", "103": "COMPRAVENTA",
@@ -130,6 +144,7 @@ const CODE_TO_TIPO: Record<string, string> = {
   "904": "CESION", "999": "OTRO",
 };
 
-export function cesbaCodeToTipoActo(code: string): string {
-  return CODE_TO_TIPO[code] ?? "OTRO";
+export function cesbaCodeToTipoActo(fullCode: string): string {
+  const base = fullCode.split("-")[0];
+  return CODE_TO_TIPO[base] ?? "OTRO";
 }

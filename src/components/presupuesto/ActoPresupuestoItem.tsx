@@ -62,6 +62,7 @@ export default function ActoPresupuestoItem({
     onChange({
       codigoCesba: cesbaCode,
       tipoActo: cesbaCodeToTipoActo(cesbaCode),
+      esViviendaUnica: cesba.esViviendaUnica,
     });
     setComboOpen(false);
   };

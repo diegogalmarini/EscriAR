@@ -38,7 +38,7 @@ function createBlankActo(seed?: any): ActoFormState {
   return {
     id: crypto.randomUUID(),
     tipoActo: seed?.tipo_acto?.toUpperCase() ?? "COMPRAVENTA",
-    codigoCesba: seed?.codigo_cesba ?? "100",
+    codigoCesba: seed?.codigo_cesba ?? "100-00",
     fechaEscritura: "",
     cotizacionUsd: seed?.cotizacion_usd ?? 1200,
     montoEscrituraArs: montoArs,
