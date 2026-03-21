@@ -6,13 +6,14 @@ import { requireOrgMembership } from "@/lib/auth/getOrg";
 import { buildTemplateContext } from "@/lib/templates/buildTemplateContext";
 import { logAuditEvent } from "@/lib/logger";
 import {
-    getActiveTemplate,
+    getActiveTemplateWithResolver,
     downloadTemplate,
     renderDocx,
     generateHtmlPreview,
     uploadDocxToStorage,
     createSignedUrl,
 } from "@/lib/templates/docxRenderer";
+import { extractCounterpartyFromContext } from "@/lib/templates/modelResolver";
 import type { Actuacion } from "./actuaciones-types";
 
 function sanitizeFilenamePart(value: string): string {
@@ -152,42 +153,56 @@ export async function generateActuacion(
             .eq("id", actuacionId);
 
         try {
-            // 3. Buscar template activo
-            const template = await getActiveTemplate(actuacion.act_type);
-
-            // 4. Bajar template DOCX
-            const templateBuffer = await downloadTemplate(template.docx_path);
-
-            // 5. Construir contexto desde datos de la carpeta
+            // 3. Construir contexto desde datos de la carpeta (needed for counterparty detection)
             const context = await buildTemplateContext(actuacion.carpeta_id) as unknown as Record<string, unknown>;
 
-            // 6. Renderizar DOCX
+            // 4. Derive counterparty from context for smart model selection
+            const counterpartyName = extractCounterpartyFromContext(context);
+
+            // 5. Buscar template activo con prioridad por contraparte
+            const { template, resolverResult } = await getActiveTemplateWithResolver(
+                actuacion.act_type,
+                counterpartyName || undefined
+            );
+
+            // 6. Bajar template DOCX
+            const templateBuffer = await downloadTemplate(template.docx_path);
+
+            // 7. Renderizar DOCX
             const renderedBuffer = renderDocx(templateBuffer, context);
 
-            // 7. HTML preview
+            // 8. HTML preview
             const htmlPreview = await generateHtmlPreview(renderedBuffer);
 
-            // 8. Subir a storage
+            // 9. Subir a storage
             const storagePath = `carpetas/${actuacion.carpeta_id}/actuaciones/${actuacionId}.docx`;
             await uploadDocxToStorage(renderedBuffer, storagePath);
 
-            // 9. Snapshot del contexto de generación (fuentes)
+            // 10. Snapshot del contexto de generación (fuentes + model selection audit)
             const generationContext = {
                 template_id: template.id,
                 template_version: template.version,
                 act_type: actuacion.act_type,
                 generated_at: new Date().toISOString(),
                 escritura_numero: (context.escritura as any)?.numero || null,
-                // Resumen de fuentes usadas (sin datos sensibles completos)
                 sources: {
                     vendedores: (context.vendedores as any[])?.map((v: any) => v.nombre_completo).filter(Boolean) || [],
                     compradores: (context.compradores as any[])?.map((c: any) => c.nombre_completo).filter(Boolean) || [],
                     inmueble: (context.inmueble as any)?.partido || null,
                     monto: (context.operacion as any)?.precio_venta || null,
                 },
+                // Model selection audit
+                model_selection: resolverResult ? {
+                    suggested_model_id: resolverResult.model.id,
+                    chosen_model_id: template.id,
+                    reason: resolverResult.reason,
+                    scope: resolverResult.scope,
+                    counterparty_detected: counterpartyName || null,
+                    is_counterparty_match: resolverResult.isCounterpartyMatch,
+                } : null,
             };
 
-            // 10. Actualizar actuación a LISTO
+            // 11. Actualizar actuación a LISTO
             const { data: updated, error: updErr } = await supabase
                 .from("actuaciones")
                 .update({
@@ -201,6 +216,9 @@ export async function generateActuacion(
                         last_generation_end: new Date().toISOString(),
                         template_name: template.template_name,
                         total_variables: template.total_variables,
+                        model_scope: resolverResult?.scope || "generic_base",
+                        model_reason: resolverResult?.reason || null,
+                        requires_verbatim: template.metadata?.requires_verbatim || false,
                     },
                 })
                 .eq("id", actuacionId)

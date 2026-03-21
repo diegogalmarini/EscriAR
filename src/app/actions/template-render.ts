@@ -4,12 +4,14 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildTemplateContext } from "@/lib/templates/buildTemplateContext";
 import {
     getActiveTemplate,
+    getActiveTemplateWithResolver,
     downloadTemplate,
     renderDocx,
     generateHtmlPreview,
     uploadDocxToStorage,
     createSignedUrl,
 } from "@/lib/templates/docxRenderer";
+import { extractCounterpartyFromContext } from "@/lib/templates/modelResolver";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -46,16 +48,19 @@ export async function renderTemplate(
     contextOverrides?: Record<string, unknown>
 ): Promise<RenderResult> {
     try {
-        // 1. Buscar template activo
-        const template = await getActiveTemplate(actType);
-
-        // 2. Bajar .docx de storage como Buffer
-        const templateBuffer = await downloadTemplate(template.docx_path);
-
-        // 3. Construir context desde BD
+        // 1. Construir context desde BD (needed for counterparty detection)
         const context = await buildTemplateContext(carpetaId) as unknown as Record<string, unknown>;
 
-        // 4. Aplicar overrides (ej: datos que completa el escribano al firmar)
+        // 2. Derive counterparty for smart model selection
+        const counterpartyName = extractCounterpartyFromContext(context);
+
+        // 3. Buscar template activo con prioridad por contraparte
+        const template = await getActiveTemplate(actType, counterpartyName || undefined);
+
+        // 4. Bajar .docx de storage como Buffer
+        const templateBuffer = await downloadTemplate(template.docx_path);
+
+        // 5. Aplicar overrides (ej: datos que completa el escribano al firmar)
         if (contextOverrides) {
             for (const [key, value] of Object.entries(contextOverrides)) {
                 if (typeof value === "object" && value !== null && !Array.isArray(value)) {
@@ -66,7 +71,7 @@ export async function renderTemplate(
             }
         }
 
-        // 5. Renderizar DOCX con docxtemplater (JS — no requiere Python)
+        // 6. Renderizar DOCX con docxtemplater (JS — no requiere Python)
         const renderedBuffer = renderDocx(templateBuffer, context);
 
         // 6. Convertir a HTML para preview en el navegador

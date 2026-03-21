@@ -6,6 +6,7 @@
 
 import { createClient } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { resolveModel, type ResolverResult } from "./modelResolver";
 
 // @ts-ignore — no types for docxtemplater / pizzip / angular-expressions
 import Docxtemplater from "docxtemplater";
@@ -17,10 +18,23 @@ import mammoth from "mammoth";
 
 // ---------------------------------------------------------------------------
 // getActiveTemplate — busca el template activo para un act_type
-// Prioridad: entity_fixed de contraparte > personalizado de contraparte > generic_base
+// Uses modelResolver for priority: entity_fixed > adaptable_guided > generic_base
 // ---------------------------------------------------------------------------
 
+export interface TemplateSelection {
+    template: any;
+    resolverResult: ResolverResult | null;
+}
+
 export async function getActiveTemplate(actType: string, counterpartyName?: string) {
+    const result = await getActiveTemplateWithResolver(actType, counterpartyName);
+    return result.template;
+}
+
+export async function getActiveTemplateWithResolver(
+    actType: string,
+    counterpartyName?: string
+): Promise<TemplateSelection> {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from("modelos_actos")
@@ -33,25 +47,16 @@ export async function getActiveTemplate(actType: string, counterpartyName?: stri
         throw new Error(`No hay template activo para act_type="${actType}": ${error?.message}`);
     }
 
-    // If no counterparty specified, return first match (backward compat)
-    if (!counterpartyName) {
-        return data[0];
+    const resolved = resolveModel(data, { actType, counterpartyName });
+
+    if (!resolved) {
+        // Shouldn't happen since we checked data.length > 0, but just in case
+        return { template: data[0], resolverResult: null };
     }
 
-    // Priority: entity_fixed for counterparty > adaptable_guided for counterparty > generic_base
-    const entityFixed = data.find(
-        (m: any) => m.metadata?.model_scope === "entity_fixed" && m.metadata?.counterparty_name === counterpartyName
-    );
-    if (entityFixed) return entityFixed;
-
-    const adaptable = data.find(
-        (m: any) => m.metadata?.model_scope === "adaptable_guided" && m.metadata?.counterparty_name === counterpartyName
-    );
-    if (adaptable) return adaptable;
-
-    // Fallback to generic_base or any available
-    const generic = data.find((m: any) => !m.metadata?.model_scope || m.metadata?.model_scope === "generic_base");
-    return generic || data[0];
+    // Find the full record matching the resolved model id
+    const template = data.find((d: any) => d.id === resolved.model.id) || data[0];
+    return { template, resolverResult: resolved };
 }
 
 // ---------------------------------------------------------------------------
