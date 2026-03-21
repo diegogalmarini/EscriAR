@@ -142,12 +142,16 @@ PARTICIPANTES:
 11. PERSONAS array: Para CADA persona interviniente extraé nombre completo, DNI, CUIT, rol, tipo_persona, estado civil, domicilio y nacionalidad.
 
 APODERADOS — CRÍTICO para vendedor_acreedor/comprador_deudor:
-- Cuando una persona actúa EN REPRESENTACIÓN de otra (apoderado, representante legal), el vendedor_acreedor o comprador_deudor debe ser QUIEN COMPARECE (el apoderado/representante), NO el titular del dominio que no está presente.
-- Esto sigue el criterio del índice notarial oficial: se registra quien firma la escritura.
-- Ejemplo: Si Victoria CAMPOS comparece como apoderada de Miguel Angel CAMPOS y Marta ZALBA (los titulares) para vender a ARDITTI:
-  → vendedor_acreedor = "CAMPOS, Victoria" (quien comparece)
-  → En el array personas, incluí a Victoria con rol: APODERADO/VENDEDOR, y a Miguel Angel y Marta con rol: PODERDANTE/TITULAR.
-  → Los titulares reales se mencionan en observaciones_ia.
+- Cuando una persona actúa EN REPRESENTACIÓN de otra (apoderado, representante legal), el vendedor_acreedor o comprador_deudor debe ser el TITULAR DEL DOMINIO o PODERDANTE (la persona representada), NO el apoderado que comparece.
+- Esto sigue el criterio del protocolo notarial: se registra al TITULAR DEL DERECHO, no a quien firma en su nombre.
+- El apoderado/representante va en el array personas con rol: APODERADO, y se menciona en observaciones_ia.
+- Ejemplo: Si Fernando FREIJE comparece como apoderado de Laura HERNANDEZ (titular del dominio) para vender a MENDIETA:
+  → vendedor_acreedor = "HERNANDEZ, Laura" (titular del dominio)
+  → En el array personas, incluí a Laura con rol: VENDEDOR/TITULAR, y a Fernando con rol: APODERADO.
+  → En observaciones_ia mencioná que Freije actúa como apoderado.
+- Ejemplo 2: Si Victoria CAMPOS comparece como apoderada de Miguel Angel CAMPOS y Marta ZALBA (los titulares) para vender a ARDITTI:
+  → vendedor_acreedor = "CAMPOS, Miguel Angel y ZALBA, Marta" (los titulares)
+  → En el array personas, incluí a Victoria con rol: APODERADO, y a Miguel Angel y Marta con rol: VENDEDOR/TITULAR.
 - EXCEPCIÓN: Sociedades y personas jurídicas. Si el presidente de una S.A. comparece en representación de la sociedad, el vendedor es la SOCIEDAD, no el presidente. El presidente es solo el representante legal.
 
 ACTAS — CRÍTICO para vendedor_acreedor:
