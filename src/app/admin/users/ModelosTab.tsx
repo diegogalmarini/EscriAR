@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
     Card, CardContent, CardHeader, CardTitle, CardDescription,
 } from "@/components/ui/card";
@@ -18,9 +18,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
     Upload, Trash2, FileText, Loader2, Info, Eye, Archive,
-    RotateCcw, Package, ChevronDown, ChevronRight,
+    RotateCcw, Package, ChevronDown, ChevronRight, Building2, Puzzle, FileCode,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -28,6 +29,57 @@ import {
 } from "@/app/actions/modelos";
 import { type ModeloActo, type InstrumentCategory, SUPPORTED_ACT_TYPES, INSTRUMENT_CATEGORY_LABELS, getActTypesForCategory } from "@/app/actions/modelos-types";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
+
+// ---------------------------------------------------------------------------
+// Helpers for metadata-based profile
+// ---------------------------------------------------------------------------
+
+type ModelScope = "generic_base" | "entity_fixed" | "adaptable_guided";
+
+const SCOPE_LABELS: Record<ModelScope, string> = {
+    generic_base: "Genérico",
+    entity_fixed: "Fijo Entidad",
+    adaptable_guided: "Adaptable",
+};
+
+const SCOPE_COLORS: Record<ModelScope, string> = {
+    generic_base: "bg-slate-50 text-slate-700 border-slate-200",
+    entity_fixed: "bg-purple-50 text-purple-700 border-purple-200",
+    adaptable_guided: "bg-sky-50 text-sky-700 border-sky-200",
+};
+
+const SCOPE_ICONS: Record<ModelScope, React.ReactNode> = {
+    generic_base: <FileText size={12} />,
+    entity_fixed: <Building2 size={12} />,
+    adaptable_guided: <Puzzle size={12} />,
+};
+
+function getModelScope(modelo: ModeloActo): ModelScope {
+    return modelo.metadata?.model_scope || "generic_base";
+}
+
+function getCounterpartyName(modelo: ModeloActo): string | null {
+    return modelo.metadata?.counterparty_name || null;
+}
+
+function getBaseActType(modelo: ModeloActo): string | null {
+    return modelo.metadata?.base_act_type || modelo.act_type || null;
+}
+
+function getVariantKey(modelo: ModeloActo): string | null {
+    return modelo.metadata?.variant_key || null;
+}
+
+function getRequiresVerbatim(modelo: ModeloActo): boolean {
+    return modelo.metadata?.requires_verbatim ?? false;
+}
+
+function getProfileLabel(modelo: ModeloActo): string {
+    const scope = getModelScope(modelo);
+    const counterparty = getCounterpartyName(modelo);
+    const label = SCOPE_LABELS[scope];
+    return counterparty ? `${label} · ${counterparty}` : label;
+}
 
 // ---------------------------------------------------------------------------
 // Variable Detail View
@@ -54,50 +106,92 @@ function VariableDetail({ modelo }: { modelo: ModeloActo }) {
         });
     };
 
+    const variantKey = getVariantKey(modelo);
+    const requiresVerbatim = getRequiresVerbatim(modelo);
+    const scope = getModelScope(modelo);
+    const counterparty = getCounterpartyName(modelo);
+
     return (
-        <div className="space-y-2">
-            {Object.entries(grouped).map(([cat, vars]) => (
-                <div key={cat} className="border border-slate-200 rounded-lg overflow-hidden">
-                    <button
-                        onClick={() => toggleCat(cat)}
-                        className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
-                    >
-                        <div className="flex items-center gap-2">
-                            {expandedCats.has(cat) ? (
-                                <ChevronDown className="h-4 w-4 text-slate-400" />
-                            ) : (
-                                <ChevronRight className="h-4 w-4 text-slate-400" />
-                            )}
-                            <span className="font-medium text-sm">{vars[0]?.category_label || cat}</span>
-                            <Badge variant="secondary" className="text-xs">
-                                {vars.length}
-                            </Badge>
-                        </div>
-                    </button>
-                    {expandedCats.has(cat) && (
-                        <div className="divide-y divide-slate-100">
-                            {vars.map((v: any, i: number) => (
-                                <div key={i} className="px-4 py-2 flex items-start gap-4 text-sm">
-                                    <code className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 shrink-0">
-                                        {v.jinja_tag}
-                                    </code>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-slate-600">{v.description}</p>
-                                        {v.example && (
-                                            <p className="text-xs text-slate-400 mt-0.5">
-                                                Ej: {v.example}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <Badge variant="outline" className="text-xs shrink-0">
-                                        {v.type}
-                                    </Badge>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+        <div className="space-y-4">
+            {/* Metadata summary */}
+            <div className="flex flex-wrap gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Perfil:</span>
+                    <Badge className={`text-xs ${SCOPE_COLORS[scope]}`}>
+                        {SCOPE_LABELS[scope]}
+                    </Badge>
                 </div>
-            ))}
+                {counterparty && (
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Contraparte:</span>
+                        <Badge variant="outline" className="text-xs">
+                            <Building2 size={10} className="mr-1" />
+                            {counterparty}
+                        </Badge>
+                    </div>
+                )}
+                {variantKey && (
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Variante:</span>
+                        <Badge variant="outline" className="text-xs font-mono">
+                            <FileCode size={10} className="mr-1" />
+                            {variantKey}
+                        </Badge>
+                    </div>
+                )}
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Verbatim:</span>
+                    <Badge variant={requiresVerbatim ? "default" : "outline"} className={`text-xs ${requiresVerbatim ? "bg-amber-100 text-amber-800 border-amber-300" : ""}`}>
+                        {requiresVerbatim ? "Sí — texto exacto" : "No"}
+                    </Badge>
+                </div>
+            </div>
+
+            {/* Variables by category */}
+            <div className="space-y-2">
+                {Object.entries(grouped).map(([cat, vars]) => (
+                    <div key={cat} className="border border-slate-200 rounded-lg overflow-hidden">
+                        <button
+                            onClick={() => toggleCat(cat)}
+                            className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
+                        >
+                            <div className="flex items-center gap-2">
+                                {expandedCats.has(cat) ? (
+                                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                                ) : (
+                                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                                )}
+                                <span className="font-medium text-sm">{vars[0]?.category_label || cat}</span>
+                                <Badge variant="secondary" className="text-xs">
+                                    {vars.length}
+                                </Badge>
+                            </div>
+                        </button>
+                        {expandedCats.has(cat) && (
+                            <div className="divide-y divide-slate-100">
+                                {vars.map((v: any, i: number) => (
+                                    <div key={i} className="px-4 py-2 flex items-start gap-4 text-sm">
+                                        <code className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 shrink-0">
+                                            {v.jinja_tag}
+                                        </code>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-slate-600">{v.description}</p>
+                                            {v.example && (
+                                                <p className="text-xs text-slate-400 mt-0.5">
+                                                    Ej: {v.example}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <Badge variant="outline" className="text-xs shrink-0">
+                                            {v.type}
+                                        </Badge>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }
@@ -126,6 +220,12 @@ export function ModelosTab({ instrumentCategory }: ModelosTabProps) {
     const [deleteTarget, setDeleteTarget] = useState<ModeloActo | null>(null);
     const [deleting, setDeleting] = useState(false);
 
+    // Filters
+    const [showArchived, setShowArchived] = useState(false);
+    const [filterScope, setFilterScope] = useState<string>("all");
+    const [filterCounterparty, setFilterCounterparty] = useState<string>("all");
+    const [filterActType, setFilterActType] = useState<string>("all");
+
     const loadModelos = async () => {
         setLoading(true);
         try {
@@ -143,6 +243,52 @@ export function ModelosTab({ instrumentCategory }: ModelosTabProps) {
     useEffect(() => {
         loadModelos();
     }, [instrumentCategory]);
+
+    // Derive unique counterparties and act types for filter dropdowns
+    const uniqueCounterparties = useMemo(() => {
+        const set = new Set<string>();
+        for (const m of modelos) {
+            const cp = getCounterpartyName(m);
+            if (cp) set.add(cp);
+        }
+        return Array.from(set).sort();
+    }, [modelos]);
+
+    const uniqueActTypes = useMemo(() => {
+        const set = new Set<string>();
+        for (const m of modelos) {
+            const at = getBaseActType(m);
+            if (at) set.add(at);
+        }
+        return Array.from(set).sort();
+    }, [modelos]);
+
+    // Filtered modelos
+    const filteredModelos = useMemo(() => {
+        return modelos.filter((m) => {
+            // Active/archived filter
+            if (!showArchived && !m.is_active) return false;
+
+            // Scope filter
+            if (filterScope !== "all" && getModelScope(m) !== filterScope) return false;
+
+            // Counterparty filter
+            if (filterCounterparty !== "all") {
+                const cp = getCounterpartyName(m);
+                if (cp !== filterCounterparty) return false;
+            }
+
+            // Act type filter
+            if (filterActType !== "all") {
+                const at = getBaseActType(m);
+                if (at !== filterActType) return false;
+            }
+
+            return true;
+        });
+    }, [modelos, showArchived, filterScope, filterCounterparty, filterActType]);
+
+    const archivedCount = useMemo(() => modelos.filter((m) => !m.is_active).length, [modelos]);
 
     // ------ Upload flow ------
 
@@ -178,7 +324,6 @@ export function ModelosTab({ instrumentCategory }: ModelosTabProps) {
             const res = await uploadModeloZip(formData);
 
             if (!res.success && res.error?.includes("act_type")) {
-                // Backend couldn't determine act_type — ask user
                 setNeedsActType(true);
                 toast.info("Selecciona el tipo de acto para este template");
                 setUploading(false);
@@ -236,6 +381,9 @@ export function ModelosTab({ instrumentCategory }: ModelosTabProps) {
     // ------ Detail dialog ------
 
     if (detailModelo) {
+        const scope = getModelScope(detailModelo);
+        const counterparty = getCounterpartyName(detailModelo);
+
         return (
             <Card className="border-slate-200 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between">
@@ -248,6 +396,10 @@ export function ModelosTab({ instrumentCategory }: ModelosTabProps) {
                                     Cód. {detailModelo.act_code || detailModelo.metadata?.act_code}
                                 </span>
                             )}
+                            <Badge className={`text-xs ${SCOPE_COLORS[scope]}`}>
+                                {SCOPE_ICONS[scope]}
+                                <span className="ml-1">{getProfileLabel(detailModelo)}</span>
+                            </Badge>
                             {detailModelo.metadata?.schema_version && (
                                 <span className="text-sm font-normal text-slate-400">
                                     (schema {detailModelo.metadata.schema_version})
@@ -282,6 +434,8 @@ export function ModelosTab({ instrumentCategory }: ModelosTabProps) {
     }
 
     // ------ Main view ------
+
+    const hasFilters = filterScope !== "all" || filterCounterparty !== "all" || filterActType !== "all";
 
     return (
         <Card className="border-slate-200 shadow-sm">
@@ -376,7 +530,87 @@ export function ModelosTab({ instrumentCategory }: ModelosTabProps) {
                     </DialogContent>
                 </Dialog>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+                {/* Filters bar */}
+                {!loading && modelos.length > 0 && (
+                    <div className="flex items-center gap-4 flex-wrap">
+                        {/* Show archived toggle */}
+                        <div className="flex items-center gap-2">
+                            <Switch
+                                id="show-archived"
+                                checked={showArchived}
+                                onCheckedChange={setShowArchived}
+                            />
+                            <Label htmlFor="show-archived" className="text-xs text-muted-foreground cursor-pointer">
+                                Mostrar archivados ({archivedCount})
+                            </Label>
+                        </div>
+
+                        <div className="h-5 w-px bg-slate-200" />
+
+                        {/* Scope filter */}
+                        <Select value={filterScope} onValueChange={setFilterScope}>
+                            <SelectTrigger className="h-8 w-40 text-xs">
+                                <SelectValue placeholder="Perfil" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos los perfiles</SelectItem>
+                                <SelectItem value="generic_base">Genérico</SelectItem>
+                                <SelectItem value="entity_fixed">Fijo Entidad</SelectItem>
+                                <SelectItem value="adaptable_guided">Adaptable</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {/* Counterparty filter */}
+                        {uniqueCounterparties.length > 0 && (
+                            <Select value={filterCounterparty} onValueChange={setFilterCounterparty}>
+                                <SelectTrigger className="h-8 w-48 text-xs">
+                                    <SelectValue placeholder="Contraparte" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todas las contrapartes</SelectItem>
+                                    {uniqueCounterparties.map((cp) => (
+                                        <SelectItem key={cp} value={cp}>{cp}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+
+                        {/* Act type filter */}
+                        {uniqueActTypes.length > 1 && (
+                            <Select value={filterActType} onValueChange={setFilterActType}>
+                                <SelectTrigger className="h-8 w-48 text-xs">
+                                    <SelectValue placeholder="Tipo de acto" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todos los actos</SelectItem>
+                                    {uniqueActTypes.map((at) => {
+                                        const label = SUPPORTED_ACT_TYPES.find(t => t.value === at)?.label || at;
+                                        return (
+                                            <SelectItem key={at} value={at}>{label}</SelectItem>
+                                        );
+                                    })}
+                                </SelectContent>
+                            </Select>
+                        )}
+
+                        {hasFilters && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 text-xs text-muted-foreground"
+                                onClick={() => {
+                                    setFilterScope("all");
+                                    setFilterCounterparty("all");
+                                    setFilterActType("all");
+                                }}
+                            >
+                                Limpiar filtros
+                            </Button>
+                        )}
+                    </div>
+                )}
+
                 {loading ? (
                     <div className="flex justify-center p-12">
                         <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
@@ -389,6 +623,13 @@ export function ModelosTab({ instrumentCategory }: ModelosTabProps) {
                             Sube un ZIP del Template Builder para empezar a generar escrituras.
                         </p>
                     </div>
+                ) : filteredModelos.length === 0 ? (
+                    <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-lg">
+                        <Package className="mx-auto h-12 w-12 text-slate-200 mb-3" />
+                        <p className="text-muted-foreground text-sm">
+                            No hay modelos que coincidan con los filtros seleccionados.
+                        </p>
+                    </div>
                 ) : (
                     <div className="rounded-md border border-slate-200 overflow-hidden">
                         <Table>
@@ -396,6 +637,7 @@ export function ModelosTab({ instrumentCategory }: ModelosTabProps) {
                                 <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
                                     <TableHead>Tipo de Acto</TableHead>
                                     <TableHead>Código</TableHead>
+                                    <TableHead>Perfil</TableHead>
                                     <TableHead>Versión</TableHead>
                                     <TableHead>Variables</TableHead>
                                     <TableHead>Categorías</TableHead>
@@ -405,105 +647,123 @@ export function ModelosTab({ instrumentCategory }: ModelosTabProps) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {modelos.map((m) => (
-                                    <TableRow key={m.id} className="group">
-                                        <TableCell className="font-medium">
-                                            <div className="flex items-center gap-2">
-                                                <FileText size={16} className="text-slate-400" />
-                                                {m.label || m.act_type}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {(m.act_code || m.metadata?.act_code) ? (
-                                                <span className="text-xs font-mono bg-blue-50 px-1.5 py-0.5 rounded text-blue-700 border border-blue-200 font-semibold" title={m.metadata?.act_code_info?.description || ""}>
-                                                    {m.act_code || m.metadata?.act_code}
-                                                </span>
-                                            ) : (
-                                                <span className="text-xs text-slate-300">—</span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200">
-                                                    v{m.version}
-                                                </span>
-                                                {m.metadata?.schema_version && (
-                                                    <span className="text-xs text-slate-400" title="Schema version del metadata">
-                                                        schema {m.metadata.schema_version}
+                                {filteredModelos.map((m) => {
+                                    const scope = getModelScope(m);
+                                    const counterparty = getCounterpartyName(m);
+
+                                    return (
+                                        <TableRow key={m.id} className="group">
+                                            <TableCell className="font-medium">
+                                                <div className="flex items-center gap-2">
+                                                    <FileText size={16} className="text-slate-400" />
+                                                    {m.label || m.act_type}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                {(m.act_code || m.metadata?.act_code) ? (
+                                                    <span className="text-xs font-mono bg-blue-50 px-1.5 py-0.5 rounded text-blue-700 border border-blue-200 font-semibold" title={m.metadata?.act_code_info?.description || ""}>
+                                                        {m.act_code || m.metadata?.act_code}
                                                     </span>
+                                                ) : (
+                                                    <span className="text-xs text-slate-300">—</span>
                                                 )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200">
-                                                {m.total_variables}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                                {m.categories.slice(0, 3).map((cat) => (
-                                                    <Badge key={cat} variant="outline" className="text-xs">
-                                                        {cat}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Badge className={`text-[10px] gap-1 ${SCOPE_COLORS[scope]}`}>
+                                                        {SCOPE_ICONS[scope]}
+                                                        {SCOPE_LABELS[scope]}
                                                     </Badge>
-                                                ))}
-                                                {m.categories.length > 3 && (
-                                                    <Badge variant="outline" className="text-xs text-slate-400">
-                                                        +{m.categories.length - 3}
+                                                    {counterparty && (
+                                                        <span className="text-[10px] text-muted-foreground truncate max-w-[120px]" title={counterparty}>
+                                                            {counterparty}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200">
+                                                        v{m.version}
+                                                    </span>
+                                                    {m.metadata?.schema_version && (
+                                                        <span className="text-xs text-slate-400" title="Schema version del metadata">
+                                                            schema {m.metadata.schema_version}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200">
+                                                    {m.total_variables}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-wrap gap-1 max-w-[200px]">
+                                                    {m.categories.slice(0, 3).map((cat) => (
+                                                        <Badge key={cat} variant="outline" className="text-xs">
+                                                            {cat}
+                                                        </Badge>
+                                                    ))}
+                                                    {m.categories.length > 3 && (
+                                                        <Badge variant="outline" className="text-xs text-slate-400">
+                                                            +{m.categories.length - 3}
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-sm text-slate-500">
+                                                {new Date(m.created_at).toLocaleDateString("es-AR", {
+                                                    day: "numeric",
+                                                    month: "short",
+                                                    year: "numeric",
+                                                })}
+                                            </TableCell>
+                                            <TableCell>
+                                                {m.is_active ? (
+                                                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50">
+                                                        Activo
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="outline" className="text-slate-400">
+                                                        Archivado
                                                     </Badge>
                                                 )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-sm text-slate-500">
-                                            {new Date(m.created_at).toLocaleDateString("es-AR", {
-                                                day: "numeric",
-                                                month: "short",
-                                                year: "numeric",
-                                            })}
-                                        </TableCell>
-                                        <TableCell>
-                                            {m.is_active ? (
-                                                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50">
-                                                    Activo
-                                                </Badge>
-                                            ) : (
-                                                <Badge variant="outline" className="text-slate-400">
-                                                    Archivado
-                                                </Badge>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
-                                                    onClick={() => setDetailModelo(m)}
-                                                    title="Ver detalle"
-                                                >
-                                                    <Eye size={16} />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50"
-                                                    onClick={() => handleToggle(m)}
-                                                    title={m.is_active ? "Archivar" : "Activar"}
-                                                >
-                                                    {m.is_active ? <Archive size={16} /> : <RotateCcw size={16} />}
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
-                                                    onClick={() => setDeleteTarget(m)}
-                                                    title="Eliminar"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                                                        onClick={() => setDetailModelo(m)}
+                                                        title="Ver detalle"
+                                                    >
+                                                        <Eye size={16} />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50"
+                                                        onClick={() => handleToggle(m)}
+                                                        title={m.is_active ? "Archivar" : "Activar"}
+                                                    >
+                                                        {m.is_active ? <Archive size={16} /> : <RotateCcw size={16} />}
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                                        onClick={() => setDeleteTarget(m)}
+                                                        title="Eliminar"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     </div>

@@ -17,23 +17,41 @@ import mammoth from "mammoth";
 
 // ---------------------------------------------------------------------------
 // getActiveTemplate — busca el template activo para un act_type
+// Prioridad: entity_fixed de contraparte > personalizado de contraparte > generic_base
 // ---------------------------------------------------------------------------
 
-export async function getActiveTemplate(actType: string) {
+export async function getActiveTemplate(actType: string, counterpartyName?: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from("modelos_actos")
         .select("*")
         .eq("act_type", actType)
         .eq("is_active", true)
-        .order("version", { ascending: false })
-        .limit(1)
-        .single();
+        .order("version", { ascending: false });
 
-    if (error || !data) {
+    if (error || !data || data.length === 0) {
         throw new Error(`No hay template activo para act_type="${actType}": ${error?.message}`);
     }
-    return data;
+
+    // If no counterparty specified, return first match (backward compat)
+    if (!counterpartyName) {
+        return data[0];
+    }
+
+    // Priority: entity_fixed for counterparty > adaptable_guided for counterparty > generic_base
+    const entityFixed = data.find(
+        (m: any) => m.metadata?.model_scope === "entity_fixed" && m.metadata?.counterparty_name === counterpartyName
+    );
+    if (entityFixed) return entityFixed;
+
+    const adaptable = data.find(
+        (m: any) => m.metadata?.model_scope === "adaptable_guided" && m.metadata?.counterparty_name === counterpartyName
+    );
+    if (adaptable) return adaptable;
+
+    // Fallback to generic_base or any available
+    const generic = data.find((m: any) => !m.metadata?.model_scope || m.metadata?.model_scope === "generic_base");
+    return generic || data[0];
 }
 
 // ---------------------------------------------------------------------------
